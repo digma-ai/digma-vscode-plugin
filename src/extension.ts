@@ -1,19 +1,21 @@
 import * as path from 'path';
 import { ExtensionContext, languages, commands, Disposable, workspace, window } from 'vscode';
-import { CodelensProvider } from './CodelensProvider';
 import { LanguageClient, TransportKind, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
+import { CodelensProvider } from './codelensProvider';
+import { DigmaAnalyticsClient, MockAnalyticsClient } from './analyticsClients';
 
 let disposables: Disposable[] = [];
 
 export async function activate(context: ExtensionContext) {
 
-    let client = createLanguageClient();
+    let analyticsClient = new DigmaAnalyticsClient();
+    let langClient = createLanguageClient();
 
-    context.subscriptions.push(client.start());
+    context.subscriptions.push(langClient.start());
         
-    await client.onReady();
+    await langClient.onReady();
 
-    const codelensProvider = new CodelensProvider(client);
+    const codelensProvider = new CodelensProvider(langClient, analyticsClient);
 
     languages.registerCodeLensProvider("python", codelensProvider);
 
