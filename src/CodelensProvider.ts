@@ -7,10 +7,29 @@ import {
     SymbolKind
 } from "vscode-languageclient";
 import { LanguageClient } from 'vscode-languageclient/node';
-import { IAnalyticsClient } from './analyticsClients';
+import { IAnalyticsClient, SymbolAnaliticData } from './analyticsClients';
 
+class CodeLensAnalitics extends vscode.CodeLens {
+    public symbolId: string
+    public data: Promise<SymbolAnaliticData>;
+    private _dataResolved: (value: SymbolAnaliticData) => void;
 
-export class CodelensProvider implements vscode.CodeLensProvider {
+    constructor(
+        symbolId: string,
+        range: vscode.Range)
+    {
+        super(range);
+        this._dataResolved = (x)=>{};
+        this.symbolId = symbolId;
+        this.data = new Promise<SymbolAnaliticData>((res,rej)=>{this._dataResolved=res});
+    };
+
+    public setData(data: SymbolAnaliticData){
+        this._dataResolved(data);
+    }
+}
+
+export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnalitics> {
 
     private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
@@ -24,12 +43,12 @@ export class CodelensProvider implements vscode.CodeLensProvider {
         });
     }
 
-    public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
+    public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<CodeLensAnalitics[]> {
 
         if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true)) 
             return [];
         
-        let symbols : SymbolOfIntrest[] = [];
+        let codelens : CodeLensAnalitics[] = [];
 
         const args: DocumentSymbolParams = {
             textDocument: this._languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
@@ -43,7 +62,7 @@ export class CodelensProvider implements vscode.CodeLensProvider {
             if ((result[0] as any).range) {
                 // Document symbols
                 const allDocSymbols = result as DocumentSymbol[];
-                symbols = this.extractSymbolsOfIntrest('', allDocSymbols);
+                codelens = this.extractCodeLens('', allDocSymbols);
             } else {
                 // Document symbols
                 const symbols = result as SymbolInformation[];
@@ -51,31 +70,21 @@ export class CodelensProvider implements vscode.CodeLensProvider {
             }
         }
 
-        let ids = symbols.map(s => s.identifier);
-        let infos = await this._analyticsClient.getSymbolAnalytics(ids);
-
-        let codelens: vscode.CodeLens[] = [];
-        for(let sym of symbols)
-        {
-            // Symbol full name
-            codelens.push(new vscode.CodeLens(sym.range, {title: sym.identifier, command: ""}));
-            
-            // Symbol errors
-            let info = infos[sym.identifier]
-            let c: vscode.Command ={
-                title: 'errors: ' + (info?.errors ?? '<unknown>'),
-                command: "digma.lensClicked",
-                arguments: [sym.identifier]
-            } 
-            codelens.push(new vscode.CodeLens(sym.range, c));
-        }
+        let ids = codelens.map(x => x.symbolId);
+        this._analyticsClient.getSymbolAnalytics(ids)
+            .then(dataBySymId => {
+                for (let lens of codelens) {
+                    var data = dataBySymId[lens.symbolId];
+                    lens.setData(data);
+                }
+            });
        
         return codelens;
     }
 
-    extractSymbolsOfIntrest(parentPath: string, symbols: DocumentSymbol[]) : SymbolOfIntrest[]
+    extractCodeLens(parentPath: string, symbols: DocumentSymbol[]) : CodeLensAnalitics[]
     {
-        let results : SymbolOfIntrest[] = [];
+        let codelens : CodeLensAnalitics[] = [];
    
         for (let sym of symbols) {
 
@@ -88,37 +97,31 @@ export class CodelensProvider implements vscode.CodeLensProvider {
                     new vscode.Position(sym.range.start.line, sym.range.start.character),
                     new vscode.Position(sym.range.end.line, sym.range.end.character));
 
-                results.push(new SymbolOfIntrest(path, range));
+                codelens.push(new CodeLensAnalitics(path, range));
             }
 
             if(sym.children){
-                results = results.concat(this.extractSymbolsOfIntrest(path, sym.children));
+                codelens = codelens.concat(this.extractCodeLens(path, sym.children));
             }
         }
 
-        return results;
+        return codelens;
     }
 
 
-    public resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken) {
-        // if (vscode.workspace.getConfiguration("digma").get("enableCodeLens", true)) {
-        //     codeLens.command = {
-        //         title: "Codelens provided by sample extension",
-        //         tooltip: "Tooltip provided by sample extension",
-        //         command: "codelens-sample.codelensAction",
-        //         arguments: ["Argument 1", false]
-        //     };
-        //     return codeLens;
-        // }
-        return null;
-    }
-}
+    public async resolveCodeLens(codeLens: CodeLensAnalitics, token: vscode.CancellationToken) : Promise<CodeLensAnalitics> {
+        if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true))
+            return codeLens;
 
+        var data = await codeLens.data;
 
-class SymbolOfIntrest {
-    constructor(
-        public identifier: string,
-        public range: vscode.Range) {
-        
+        codeLens.command = {
+            title: 'errors: ' + (data?.errors ?? '<unknown>'),
+            tooltip: codeLens.symbolId,
+            command: "digma.lensClicked",
+            arguments: [codeLens.symbolId]
+        } 
+
+        return codeLens;
     }
 }

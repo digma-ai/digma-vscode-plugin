@@ -1,17 +1,17 @@
 import fetch from "node-fetch";
 import * as vscode from 'vscode';
 
-export class SymbolInfo{
+export class SymbolAnaliticData{
     constructor(
         public errors: number = 0){}
 }
 
 interface IAnalyticsResponse{
-    analytics: { [key: string]: SymbolInfo };
+    analytics: { [key: string]: SymbolAnaliticData };
 }
 
 export interface IAnalyticsClient{
-    getSymbolAnalytics(symbolsIdentifiers: string[]) : Promise<{ [key: string]: SymbolInfo }>;
+    getSymbolAnalytics(symbolsIdentifiers: string[]) : Promise<{ [key: string]: SymbolAnaliticData }>;
 }
 
 export class DigmaAnalyticsClient implements IAnalyticsClient{
@@ -21,7 +21,7 @@ export class DigmaAnalyticsClient implements IAnalyticsClient{
         this._url = vscode.workspace.getConfiguration("digma").get("url", '')
     }
 
-    public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<{ [key: string]: SymbolInfo }> {
+    public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<{ [key: string]: SymbolAnaliticData }> {
         try{
             var response = await fetch(
                 `${this._url}/analytics_by_ids`, 
@@ -47,17 +47,17 @@ export class DigmaAnalyticsClient implements IAnalyticsClient{
 }
 
 export class MockAnalyticsClient implements IAnalyticsClient{
-    private _infosBank: SymbolInfo[];
+    private _infosBank: SymbolAnaliticData[];
     
     constructor(){
         this._infosBank = [];
         for(let i=0; i<100; i++){
-            this._infosBank.push(new SymbolInfo(Math.floor(Math.random() * 50)));
+            this._infosBank.push(new SymbolAnaliticData(Math.floor(Math.random() * 50)));
         }
     }
 
-    public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<{ [key: string]: SymbolInfo }> {
-        let infos: { [key: string]: SymbolInfo } = {};
+    public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<{ [key: string]: SymbolAnaliticData }> {
+        let infos: { [key: string]: SymbolAnaliticData } = {};
         let i=0;
         for(let symId of symbolsIdentifiers){
             infos[symId] = this._infosBank[i++];
