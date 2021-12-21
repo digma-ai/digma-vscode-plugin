@@ -3,9 +3,14 @@
   	"displayName": "Digma Plugin for Python",
   	"description": "",
   	"version": "0.0.1",
+	"publisher": "Digma",
   	"engines": {
   	  	"vscode": "^1.63.0"
   	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/digma-ai/digma-vscode-plugin-python"
+    },
   	"categories": [
   	  	"Other"
   	],
