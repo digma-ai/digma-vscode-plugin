@@ -3,22 +3,28 @@ import { ExtensionContext, languages, commands, Disposable, workspace, window } 
 import { LanguageClient, TransportKind, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 import { CodelensProvider } from './codelensProvider';
 import { DigmaAnalyticsClient, MockAnalyticsClient } from './analyticsClients';
+import { logger } from './utils';
 
 let disposables: Disposable[] = [];
 
 export async function activate(context: ExtensionContext) {
 
+    logger.appendLine("Begin activating...")
     let analyticsClient = new DigmaAnalyticsClient();
     let langClient = createLanguageClient();
 
+    logger.appendLine("Starting language client")
     context.subscriptions.push(langClient.start());
         
+    logger.appendLine("Waiting for language server")
     await langClient.onReady();
 
+    logger.appendLine("Registering code-lens")
     const codelensProvider = new CodelensProvider(langClient, analyticsClient);
 
     languages.registerCodeLensProvider("python", codelensProvider);
 
+    logger.appendLine("Registering commands")
     commands.registerCommand("digma.enableCodeLens", () => {
         workspace.getConfiguration("digma").update("enableCodeLens", true, true);
     });
@@ -30,6 +36,8 @@ export async function activate(context: ExtensionContext) {
     commands.registerCommand("digma.lensClicked", (args: any) => {
         window.showInformationMessage(`CodeLens action clicked with args=${args}`);
     });
+    
+    logger.appendLine("Finished activating")
 }
 
 // this method is called when your extension is deactivated

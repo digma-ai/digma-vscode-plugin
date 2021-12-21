@@ -1,3 +1,8 @@
+
+import * as vscode from 'vscode';
+
+export let logger = vscode.window.createOutputChannel("Digma");
+
 export class Future<T>{
     private _promise: Promise<T>;
     private _resolved: (value: T) => void;
