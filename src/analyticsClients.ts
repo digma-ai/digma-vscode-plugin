@@ -24,7 +24,7 @@ export class DigmaAnalyticsClient implements IAnalyticsClient{
     public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<{ [key: string]: SymbolAnaliticData }> {
         try{
             var response = await fetch(
-                `${this._url}/analytics_by_ids`, 
+                `${this._url}/analytics/get_by_ids`, 
                 { 
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },

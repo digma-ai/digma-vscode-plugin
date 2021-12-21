@@ -8,24 +8,20 @@ import {
 } from "vscode-languageclient";
 import { LanguageClient } from 'vscode-languageclient/node';
 import { IAnalyticsClient, SymbolAnaliticData } from './analyticsClients';
+import { Future } from './utils'
+
 
 class CodeLensAnalitics extends vscode.CodeLens {
     public symbolId: string
-    public data: Promise<SymbolAnaliticData>;
-    private _dataResolved: (value: SymbolAnaliticData) => void;
+    public symbolAnaliticData: Future<SymbolAnaliticData>;
 
     constructor(
         symbolId: string,
         range: vscode.Range)
     {
         super(range);
-        this._dataResolved = (x)=>{};
         this.symbolId = symbolId;
-        this.data = new Promise<SymbolAnaliticData>((res,rej)=>{this._dataResolved=res});
-    };
-
-    public setData(data: SymbolAnaliticData){
-        this._dataResolved(data);
+        this.symbolAnaliticData = new Future<SymbolAnaliticData>();
     }
 }
 
@@ -75,7 +71,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
             .then(dataBySymId => {
                 for (let lens of codelens) {
                     var data = dataBySymId[lens.symbolId];
-                    lens.setData(data);
+                    lens.symbolAnaliticData.value = data;
                 }
             });
        
@@ -113,10 +109,10 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true))
             return codeLens;
 
-        var data = await codeLens.data;
+        var data = await codeLens.symbolAnaliticData.wait();
 
         codeLens.command = {
-            title: 'errors: ' + (data?.errors ?? '<unknown>'),
+            title: (data?.errors) ? `errors ${data.errors}`: '(no data yet)',
             tooltip: codeLens.symbolId,
             command: "digma.lensClicked",
             arguments: [codeLens.symbolId]
