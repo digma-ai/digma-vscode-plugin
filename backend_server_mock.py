@@ -1,11 +1,36 @@
 from flask import Flask, request, jsonify
 
 storage = {
-    'A.__init__':{ 'errors': 9 },
-    'A.func':{ 'errors': 21 },
-    'B.func':{ 'errors': 4 },
-    'func1':{ 'errors': 15 },
-    'func2':{ 'errors': 3 },
+    'A.__init__':{ 
+        'trend': 'up',
+        'errorFlows':[
+            {
+                'trend': 'up',
+                'frequency': '20 per day',
+                'impact': 'high',
+                'displayName': 'NullError',
+                'stackTrace': 'stack1',
+            },
+            {
+                'trend': 'down',
+                'frequency': '3 per day',
+                'impact': 'low',
+                'displayName': 'InvalidArgumentException',
+                'stackTrace': 'stack2',
+            } ,
+            {
+                'trend': 'up',
+                'frequency': '7 per day',
+                'impact': 'high',
+                'displayName': 'TimeoutException',
+                'stackTrace': 'stack3',
+            } 
+        ]
+    },
+    'A.func':{ 'trend': 'up', 'errorFlows': [{}] },
+    'B.func':{ 'trend': 'down', 'errorFlows': [] },
+    'func1':{ 'trend': 'up', 'errorFlows': [] },
+    'func2':{ 'trend': 'down', 'errorFlows': [] },
 }
 
 app = Flask(__name__)

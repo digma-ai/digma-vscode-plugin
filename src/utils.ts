@@ -3,6 +3,10 @@ import * as vscode from 'vscode';
 
 export let logger = vscode.window.createOutputChannel("Digma");
 
+export type Dictionary<TKey extends keyof any, TValue> = Record<TKey, TValue>;
+
+// interface Dictionary<TKey, TValue> = (Record<TKey, TValue>;
+
 export class Future<T>{
     private _promise: Promise<T>;
     private _resolved: (value: T) => void;

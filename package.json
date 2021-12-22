@@ -20,10 +20,28 @@
   	  	"Other"
   	],
   	"activationEvents": [
-  	  	"onLanguage:python"
+  	  	"onLanguage:python",
+		"onView:nodeDependencies"
   	],
   	"main": "./out/extension.js",
   	"contributes": {
+		"views": {
+			"digma": [
+				{
+					"id": "errorFlows",
+					"name": "Error Flows"
+				}
+			]
+		},
+		"viewsContainers": {
+			"activitybar": [
+				{
+					"id": "digma",
+					"title": "Digma",
+					"icon": "icon.png"
+				}
+			]
+		},
   	  	"commands": [
   	  	  	{
   	  	  	  	"title": "Enable CodeLens",

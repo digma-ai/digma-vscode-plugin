@@ -1,27 +1,54 @@
 import fetch from "node-fetch";
 import * as vscode from 'vscode';
+import { Dictionary } from "./utils";
 
-export class SymbolAnaliticData{
-    constructor(
-        public errors: number = 0){}
+export enum Trend 
+{
+    NONE = "none",
+    UP = "up",
+    DOWN = "down",
 }
 
-interface IAnalyticsResponse{
-    analytics: { [key: string]: SymbolAnaliticData };
+export enum Impact 
+{
+    HIGH = "high",
+    LOW = "low",
 }
 
-export interface IAnalyticsClient{
-    getSymbolAnalytics(symbolsIdentifiers: string[]) : Promise<{ [key: string]: SymbolAnaliticData }>;
+export interface IErrorFlow
+{
+    trend: Trend;
+    frequency: string;
+    impact: Impact;
+    displayName: string;
+    stackTrace: string;
 }
 
-export class DigmaAnalyticsClient implements IAnalyticsClient{
+export interface ISymbolAnalytic
+{
+    trend: Trend;
+    errorFlows: IErrorFlow[];
+}
+
+export interface IAnalyticsResponse
+{
+    analytics: Dictionary<string, ISymbolAnalytic>;
+}
+
+export interface IAnalyticsClient
+{
+    getSymbolAnalytics(symbolsIdentifiers: string[]) : Promise<Dictionary<string, ISymbolAnalytic>>;
+}
+
+export class DigmaAnalyticsClient implements IAnalyticsClient
+{
     private _url: string;
 
     constructor(){
         this._url = vscode.workspace.getConfiguration("digma").get("url", '')
     }
 
-    public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<{ [key: string]: SymbolAnaliticData }> {
+    public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<Dictionary<string, ISymbolAnalytic>> {
         try{
             var response = await fetch(
                 `${this._url}/analytics/get_by_ids`, 
@@ -46,24 +73,24 @@ export class DigmaAnalyticsClient implements IAnalyticsClient{
 
 }
 
-export class MockAnalyticsClient implements IAnalyticsClient{
-    private _infosBank: SymbolAnaliticData[];
+// export class MockAnalyticsClient implements IAnalyticsClient{
+//     private _infosBank: SymbolAnaliticResponse[];
     
-    constructor(){
-        this._infosBank = [];
-        for(let i=0; i<100; i++){
-            this._infosBank.push(new SymbolAnaliticData(Math.floor(Math.random() * 50)));
-        }
-    }
+//     constructor(){
+//         this._infosBank = [];
+//         for(let i=0; i<100; i++){
+//             this._infosBank.push(new SymbolAnaliticResponse(Math.floor(Math.random() * 50)));
+//         }
+//     }
 
-    public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<{ [key: string]: SymbolAnaliticData }> {
-        let infos: { [key: string]: SymbolAnaliticData } = {};
-        let i=0;
-        for(let symId of symbolsIdentifiers){
-            infos[symId] = this._infosBank[i++];
-        }
+//     public async getSymbolAnalytics(symbolsIdentifiers: string[]): Promise<Dictionary<string, SymbolAnaliticResponse>> {
+//         let infos: Dictionary<string, SymbolAnaliticResponse> = {};
+//         let i=0;
+//         for(let symId of symbolsIdentifiers){
+//             infos[symId] = this._infosBank[i++];
+//         }
 
-        return infos;
-    }
+//         return infos;
+//     }
     
-}
+// }
