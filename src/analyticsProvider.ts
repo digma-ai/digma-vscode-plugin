@@ -1,22 +1,22 @@
 
 import * as vscode from 'vscode';
 import * as moment from 'moment';
-import { IAnalyticsClient, ISymbolAnalytic as ISymbolAnalytic, Trend } from './analyticsClients';
+import { IAnalyticsClient, ICodeObjectData as ICodeObjectData } from './analyticsClients';
 import { SymbolInfo, SymbolProvider } from './symbolProvider';
 import { Dictionary, Future } from './utils';
 
-export function trendToAsciiIcon(trend: Trend): string 
+export function trendToAsciiIcon(trend: number): string 
 {
-    if(trend == Trend.DOWN)
-        return '\u2193';  // ArrowDown
-    if(trend == Trend.UP)
-        return '\u2191';  // ArrowUp
+    if(trend < 0)
+        return `-${trend}\u2193`;  // \u2193 = ArrowDown
+    if(trend > 0)
+        return `+${trend}\u2191`;  // \u2191 = ArrowUp
     return '';
 }
 
 export class FileAnalytics
 {
-    public symbolAnalytics: Future<Dictionary<string, ISymbolAnalytic>> = new Future<Dictionary<string, ISymbolAnalytic>>();
+    public codeObjects: Future<ICodeObjectData[]> = new Future<ICodeObjectData[]>();
     public symbolInfos: SymbolInfo[] = []
     public lastAnalyticsUpdate: moment.Moment | null = null;
     constructor(public path: string){}
@@ -49,14 +49,14 @@ export class AnalyticsProvider
         if (file.didAnalyticsExpire())
         {
             vscode.window.showInformationMessage("fetching Analytics for "+document.uri.toString());
-            if(file.symbolAnalytics)
-                file.symbolAnalytics.value = {};
-            file.symbolAnalytics = new Future<Dictionary<string, ISymbolAnalytic>>();
+            if(file.codeObjects)
+                file.codeObjects.value = [];
+            file.codeObjects = new Future<ICodeObjectData[]>();
             let ids = symbols.map(s => s.id);
             this._analyticsClient.getSymbolAnalytics(ids)
                 .then(datas => 
                 {
-                    file.symbolAnalytics.value = datas;
+                    file.codeObjects.value = datas;
                     file.lastAnalyticsUpdate = moment.utc();
                 });
         }

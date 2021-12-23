@@ -3,19 +3,19 @@
   	"displayName": "Digma Plugin for Python",
   	"description": "",
   	"version": "0.0.1",
-	"publisher": "Digma",
-	"icon": "icon.png",
+  	"publisher": "Digma",
+  	"icon": "icon.png",
   	"engines": {
   	  	"vscode": "^1.63.0"
   	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/digma-ai/digma-vscode-plugin-python"
-    },
-	"bugs": {
-        "url": "https://github.com/digma-ai/digma-vscode-plugin-python/issues"
-    },
-	"homepage": "https://github.com/digma-ai/digma-vscode-plugin-python",
+  	"repository": {
+  	  	"type": "git",
+  	  	"url": "https://github.com/digma-ai/digma-vscode-plugin-python"
+  	},
+  	"bugs": {
+  	  	"url": "https://github.com/digma-ai/digma-vscode-plugin-python/issues"
+  	},
+  	"homepage": "https://github.com/digma-ai/digma-vscode-plugin-python",
   	"categories": [
   	  	"Other"
   	],
@@ -24,29 +24,29 @@
   	],
   	"main": "./out/extension.js",
   	"contributes": {
-		"views": {
-			"digma": [
-				{
-					"type": "tree",
-					"id": "errorFlows",
-					"name": "Error Flows"
-				},
-				{
-					"type": "webview",
-					"id": "errorFlowDetail",
-					"name": "Error Flow Details"
-				}
-			]
-		},
-		"viewsContainers": {
-			"activitybar": [
-				{
-					"id": "digma",
-					"title": "Digma",
-					"icon": "icon.png"
-				}
-			]
-		},
+  	  	"views": {
+  	  	  	"digma": [
+  	  	  	  	{
+  	  	  	  	  	"type": "tree",
+  	  	  	  	  	"id": "errorFlows",
+  	  	  	  	  	"name": "Error Flows"
+  	  	  	  	},
+  	  	  	  	{
+  	  	  	  	  	"type": "webview",
+  	  	  	  	  	"id": "errorFlowDetail",
+  	  	  	  	  	"name": "Error Flow Details"
+  	  	  	  	}
+  	  	  	]
+  	  	},
+  	  	"viewsContainers": {
+  	  	  	"activitybar": [
+  	  	  	  	{
+  	  	  	  	  	"id": "digma",
+  	  	  	  	  	"title": "Digma",
+  	  	  	  	  	"icon": "icon.png"
+  	  	  	  	}
+  	  	  	]
+  	  	},
   	  	"commands": [
   	  	  	{
   	  	  	  	"title": "Enable CodeLens",
@@ -67,16 +67,17 @@
   	  	  	  	},
   	  	  	  	"digma.url": {
   	  	  	  	  	"type": "string",
-  	  	  	  	  	"default": "http://127.0.0.1:5000"
+  	  	  	  	  	"default": "https://localhost:7106"
   	  	  	  	}
   	  	  	}
   	  	}
   	},
   	"dependencies": {
-  	  	"vscode-languageclient": "^7.0.0",
+  	  	"https": "^1.0.0",
+  	  	"moment": "^2.29.1",
   	  	"node-fetch": "^2.6.6",
   	  	"pyright": "1.1.197",
-		"moment": "^2.29.1"
+  	  	"vscode-languageclient": "^7.0.0"
   	},
   	"scripts": {
   	  	"vscode:prepublish": "npm run compile",
@@ -90,8 +91,8 @@
   	  	"@types/glob": "^7.1.4",
   	  	"@types/mocha": "^9.0.0",
   	  	"@types/node": "14.x",
+  	  	"@types/node-fetch": "^2.5.10",
   	  	"@types/vscode": "^1.63.0",
-		"@types/node-fetch": "^2.5.10",
   	  	"@typescript-eslint/eslint-plugin": "^5.1.0",
   	  	"@typescript-eslint/parser": "^5.1.0",
   	  	"@vscode/test-electron": "^1.6.2",

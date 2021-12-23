@@ -1,4 +1,4 @@
-import { IErrorFlow } from "./analyticsClients";
+import { ICodeObjectErrorFlow } from "./analyticsClients";
 import * as vscode from 'vscode';
 
 export class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider
@@ -17,12 +17,12 @@ export class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider
 		webviewView.webview.html = "";
 	}
 
-    public setErrorFlow(e: IErrorFlow){
+    public setErrorFlow(e: ICodeObjectErrorFlow){
         if(this._view)
             this._view.webview.html = this.getErrorFlowInfoAsHtml(e);
     }
 
-    getErrorFlowInfoAsHtml(e: IErrorFlow) : string {
+    getErrorFlowInfoAsHtml(e: ICodeObjectErrorFlow) : string {
         return `
         <html>
         <head>

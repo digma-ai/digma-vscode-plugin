@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { Trend } from './analyticsClients';
 import { AnalyticsProvider, FileAnalytics, trendToAsciiIcon } from './analyticsProvider';
 import { SymbolInfo } from './symbolProvider';
 import { Future } from './utils'
@@ -47,12 +46,12 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true))
             return codeLens;
 
-        const symbolAnalytics = await codeLens.fileAnalytics.symbolAnalytics.wait();
-        const data = symbolAnalytics[codeLens.symbolInfo.id];
+        const codeObjects = await codeLens.fileAnalytics.codeObjects.wait();
+        const data = codeObjects.find(s => s.codeObjectId == codeLens.symbolInfo.id);
         
         let title = '';
-        if(data){
-            title = `${data.errorFlows.length} Error flows ${trendToAsciiIcon(data.trend)}`;
+        if(data?.errorFlows && data?.summary?.trend){
+            title = `${data.errorFlows.length} Error flows (${trendToAsciiIcon(data.summary.trend)})`;
         }
         else{
             title = '(no data yet)';

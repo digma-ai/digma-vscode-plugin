@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { AnalyticsProvider, trendToAsciiIcon } from './analyticsProvider';
-import { IErrorFlow, ISymbolAnalytic } from './analyticsClients';
+import { ICodeObjectErrorFlow, ICodeObjectData } from './analyticsClients';
 
 export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
 {
@@ -37,20 +37,20 @@ export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.Tr
             return [];
 
         const fileAnalytics = await this._analyticsProvider.getFileAnalytics(document, new vscode.CancellationTokenSource().token);
-        const symbolAnalytics = await fileAnalytics.symbolAnalytics.wait();
+        const codeObjects = await fileAnalytics.codeObjects.wait();
 
         if(!element)
         {
             let items = [];
-            for(let symId in symbolAnalytics)
-                items.push(new SymbolItem(symId, symbolAnalytics[symId]));
+            for(let obj of codeObjects)
+                items.push(new SymbolItem(obj));
             return items;
         }
 
         if (element instanceof SymbolItem) 
         {
             let items = [];
-            for(let errorFlow of symbolAnalytics[element.symbolId].errorFlows)
+            for(let errorFlow of codeObjects.find(x => x.codeObjectId == element.codeObject.codeObjectId)?.errorFlows ?? [])
                 items.push(new ErrorFlowItem(element, errorFlow));
             return items;
         }
@@ -61,23 +61,25 @@ export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.Tr
 
 class SymbolItem extends vscode.TreeItem
 {
-    constructor(public symbolId: string, public symbolAnalytic: ISymbolAnalytic)
+    constructor(public codeObject: ICodeObjectData)
     {
-        super(symbolId, vscode.TreeItemCollapsibleState.Expanded)
-        this.description = `(${symbolAnalytic.errorFlows.length})`;
-        this.iconPath = new vscode.ThemeIcon('symbol-function');
+        super(codeObject.codeObjectId, vscode.TreeItemCollapsibleState.Expanded)
+        this.description = `(${codeObject.errorFlows?.length})`;
+        this.iconPath = new vscode.ThemeIcon(
+            'symbol-function',
+            (codeObject.summary?.alert) ? new vscode.ThemeColor("errorForeground") : undefined);
     }
 }
 
 class ErrorFlowItem extends vscode.TreeItem
 {
-    constructor(public parent: SymbolItem, public errorFlow: IErrorFlow)
+    constructor(public parent: SymbolItem, public errorFlow: ICodeObjectErrorFlow)
     {
-        super(errorFlow.displayName, vscode.TreeItemCollapsibleState.None)
-        this.description = `${trendToAsciiIcon(errorFlow.trend)} ${errorFlow.frequency}`;
-        this.iconPath = new vscode.ThemeIcon('warning');
+        super(errorFlow?.alias ?? '', vscode.TreeItemCollapsibleState.None)
+        this.description = `${errorFlow.frequency} (${trendToAsciiIcon(errorFlow.trend)})`;
+        this.iconPath = new vscode.ThemeIcon('issue-opened');
         this.command = {
-            title: 'asasas',
+            title: 'more details',
             tooltip: 'more details',
             command: "digma.openErrorFlowInfoView",
             arguments: [errorFlow]

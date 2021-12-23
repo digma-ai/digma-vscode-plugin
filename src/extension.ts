@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { ExtensionContext, languages, commands, Disposable, workspace, window } from 'vscode';
 import { LanguageClient, TransportKind, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 import { CodelensProvider } from './codelensProvider';
-import { DigmaAnalyticsClient, IErrorFlow } from './analyticsClients';
+import { DigmaAnalyticsClient, ICodeObjectErrorFlow } from './analyticsClients';
 import { logger } from './utils';
 import { FileErrorFlowsProvider } from './fileErrorFlowsProvider';
 import { AnalyticsProvider } from './analyticsProvider';
@@ -61,7 +61,7 @@ export async function activate(context: ExtensionContext)
         fileErrorsTree.reveal({label: args[0]})
     });
     
-    commands.registerCommand("digma.openErrorFlowInfoView", (e: IErrorFlow) => {
+    commands.registerCommand("digma.openErrorFlowInfoView", (e: ICodeObjectErrorFlow) => {
         errorFlowDetailsViewProvider.setErrorFlow(e);
     });
     
