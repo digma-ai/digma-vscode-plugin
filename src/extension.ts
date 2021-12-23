@@ -3,16 +3,17 @@ import * as vscode from 'vscode';
 import { ExtensionContext, languages, commands, Disposable, workspace, window } from 'vscode';
 import { LanguageClient, TransportKind, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 import { CodelensProvider } from './codelensProvider';
-import { DigmaAnalyticsClient } from './analyticsClients';
+import { DigmaAnalyticsClient, IErrorFlow } from './analyticsClients';
 import { logger } from './utils';
 import { FileErrorFlowsProvider } from './fileErrorFlowsProvider';
 import { AnalyticsProvider } from './analyticsProvider';
 import { SymbolProvider } from './symbolProvider';
+import { ErrorFlowDetailsViewProvider } from './errorFlowInfoHtml';
 
 let disposables: Disposable[] = [];
 
-export async function activate(context: ExtensionContext) {
-
+export async function activate(context: ExtensionContext) 
+{
     logger.appendLine("Begin activating...")
     const analyticsClient = new DigmaAnalyticsClient();
     const langClient = createLanguageClient();
@@ -38,6 +39,10 @@ export async function activate(context: ExtensionContext) {
     });
     context.subscriptions.push(fileErrorsTree);
 
+    const errorFlowDetailsViewProvider = new ErrorFlowDetailsViewProvider();
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider("errorFlowDetail", errorFlowDetailsViewProvider));
+
     vscode.window.onDidChangeActiveTextEditor(() => {
         fileErrorsTreeProvider.refresh();
     });
@@ -53,6 +58,11 @@ export async function activate(context: ExtensionContext) {
 
     commands.registerCommand("digma.lensClicked", (args: any) => {
         window.showInformationMessage(`CodeLens action clicked with args=${args}`);
+        fileErrorsTree.reveal({label: args[0]})
+    });
+    
+    commands.registerCommand("digma.openErrorFlowInfoView", (e: IErrorFlow) => {
+        errorFlowDetailsViewProvider.setErrorFlow(e);
     });
     
     logger.appendLine("Finished activating")

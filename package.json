@@ -20,16 +20,21 @@
   	  	"Other"
   	],
   	"activationEvents": [
-  	  	"onLanguage:python",
-		"onView:nodeDependencies"
+  	  	"onLanguage:python"
   	],
   	"main": "./out/extension.js",
   	"contributes": {
 		"views": {
 			"digma": [
 				{
+					"type": "tree",
 					"id": "errorFlows",
 					"name": "Error Flows"
+				},
+				{
+					"type": "webview",
+					"id": "errorFlowDetail",
+					"name": "Error Flow Details"
 				}
 			]
 		},

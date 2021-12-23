@@ -49,6 +49,9 @@ export class AnalyticsProvider
         if (file.didAnalyticsExpire())
         {
             vscode.window.showInformationMessage("fetching Analytics for "+document.uri.toString());
+            if(file.symbolAnalytics)
+                file.symbolAnalytics.value = {};
+            file.symbolAnalytics = new Future<Dictionary<string, ISymbolAnalytic>>();
             let ids = symbols.map(s => s.id);
             this._analyticsClient.getSymbolAnalytics(ids)
                 .then(datas => 

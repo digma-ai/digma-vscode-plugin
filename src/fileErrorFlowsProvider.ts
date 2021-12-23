@@ -17,12 +17,21 @@ export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.Tr
         this._onDidChangeTreeData.fire();
     }
 
-    getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
+    async getParent?(element: vscode.TreeItem): Promise<vscode.TreeItem | null>
+    {
+        if (element instanceof ErrorFlowItem) 
+            return element.parent;
+        
+        return null;
+    }
+
+    getTreeItem(element: vscode.TreeItem): vscode.TreeItem 
+    {
         return element;
     }
 
-    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
-
+    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> 
+    {
         const document = vscode.window.activeTextEditor?.document;
         if(!document)
             return [];
@@ -42,7 +51,7 @@ export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.Tr
         {
             let items = [];
             for(let errorFlow of symbolAnalytics[element.symbolId].errorFlows)
-                items.push(new ErrorFlowItem(errorFlow));
+                items.push(new ErrorFlowItem(element, errorFlow));
             return items;
         }
 
@@ -62,10 +71,16 @@ class SymbolItem extends vscode.TreeItem
 
 class ErrorFlowItem extends vscode.TreeItem
 {
-    constructor(public errorFlow: IErrorFlow)
+    constructor(public parent: SymbolItem, public errorFlow: IErrorFlow)
     {
         super(errorFlow.displayName, vscode.TreeItemCollapsibleState.None)
         this.description = `${trendToAsciiIcon(errorFlow.trend)} ${errorFlow.frequency}`;
         this.iconPath = new vscode.ThemeIcon('warning');
+        this.command = {
+            title: 'asasas',
+            tooltip: 'more details',
+            command: "digma.openErrorFlowInfoView",
+            arguments: [errorFlow]
+        } 
     }
 }
