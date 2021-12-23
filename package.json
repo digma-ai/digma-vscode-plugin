@@ -70,7 +70,8 @@
   	"dependencies": {
   	  	"vscode-languageclient": "^7.0.0",
   	  	"node-fetch": "^2.6.6",
-  	  	"pyright": "1.1.197"
+  	  	"pyright": "1.1.197",
+		"moment": "^2.29.1"
   	},
   	"scripts": {
   	  	"vscode:prepublish": "npm run compile",
