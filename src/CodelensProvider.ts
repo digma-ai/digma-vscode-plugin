@@ -46,7 +46,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true))
             return codeLens;
 
-        const codeObjects = await codeLens.fileAnalytics.codeObjects.wait();
+        const codeObjects = await codeLens.fileAnalytics.codeObjects!.wait();
         const data = codeObjects.find(s => s.codeObjectId == codeLens.symbolInfo.id);
         
         let title = '';

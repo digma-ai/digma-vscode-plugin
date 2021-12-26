@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { AnalyticsProvider, trendToAsciiIcon } from './analyticsProvider';
 import { ICodeObjectErrorFlow, ICodeObjectData } from './analyticsClients';
+import { SymbolInfo } from './symbolProvider';
 
 export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
 {
@@ -37,13 +38,18 @@ export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.Tr
             return [];
 
         const fileAnalytics = await this._analyticsProvider.getFileAnalytics(document, new vscode.CancellationTokenSource().token);
-        const codeObjects = await fileAnalytics.codeObjects.wait();
+        const codeObjects = await fileAnalytics.codeObjects!.wait();
 
         if(!element)
         {
             let items = [];
             for(let obj of codeObjects)
-                items.push(new SymbolItem(obj));
+            {
+                let symInfo = fileAnalytics.symbolInfos.find(s => s.id == obj.codeObjectId);
+                if(symInfo)
+                    items.push(new SymbolItem(symInfo, obj));
+            }
+                
             return items;
         }
 
@@ -61,9 +67,11 @@ export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.Tr
 
 class SymbolItem extends vscode.TreeItem
 {
-    constructor(public codeObject: ICodeObjectData)
+    constructor(
+        public symInfo: SymbolInfo,
+        public codeObject: ICodeObjectData)
     {
-        super(codeObject.codeObjectId, vscode.TreeItemCollapsibleState.Expanded)
+        super(symInfo.displayName, vscode.TreeItemCollapsibleState.Expanded)
         this.description = `(${codeObject.errorFlows?.length})`;
         this.iconPath = new vscode.ThemeIcon(
             'symbol-function',

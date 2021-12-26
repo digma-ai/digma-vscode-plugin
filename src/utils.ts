@@ -1,4 +1,5 @@
 
+import moment = require('moment');
 import * as vscode from 'vscode';
 
 export let logger = vscode.window.createOutputChannel("Digma");
@@ -11,7 +12,7 @@ export class Future<T>{
     private _promise: Promise<T>;
     private _resolved: (value: T) => void;
     private _value: T;
-    private _isResolved: boolean = false;
+    private _resolvingTimeStamp?: moment.Moment;
 
     constructor(){
         this._value = <any>null;
@@ -29,11 +30,11 @@ export class Future<T>{
 
     set value(newValue: T) {
         this._value = newValue;
-        this._isResolved = true;
+        this._resolvingTimeStamp = moment.utc();
         this._resolved(newValue);
     }
 
-    get isResolved(): boolean{
-        return this._isResolved;
+    get resolvingTimeStamp(): moment.Moment | undefined{
+        return this._resolvingTimeStamp;
     }
 }

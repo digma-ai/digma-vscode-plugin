@@ -16,14 +16,14 @@ export function trendToAsciiIcon(trend: number): string
 
 export class FileAnalytics
 {
-    public codeObjects: Future<ICodeObjectData[]> = new Future<ICodeObjectData[]>();
+    public codeObjects?: Future<ICodeObjectData[]>;
     public symbolInfos: SymbolInfo[] = []
-    public lastAnalyticsUpdate: moment.Moment | null = null;
+    public lastAnalyticsUpdate?: moment.Moment;
     constructor(public path: string){}
 
     public didAnalyticsExpire() : boolean{
-        return this.lastAnalyticsUpdate == null || 
-               this.lastAnalyticsUpdate.clone().add(30, 'seconds') < moment.utc();
+        return !this.codeObjects?.resolvingTimeStamp || 
+               this.codeObjects.resolvingTimeStamp.clone().add(30, 'seconds') < moment.utc();
     }
 }
 
@@ -49,15 +49,13 @@ export class AnalyticsProvider
         if (file.didAnalyticsExpire())
         {
             vscode.window.showInformationMessage("fetching Analytics for "+document.uri.toString());
-            if(file.codeObjects)
-                file.codeObjects.value = [];
+
             file.codeObjects = new Future<ICodeObjectData[]>();
             let ids = symbols.map(s => s.id);
             this._analyticsClient.getSymbolAnalytics(ids)
                 .then(datas => 
                 {
-                    file.codeObjects.value = datas;
-                    file.lastAnalyticsUpdate = moment.utc();
+                    file.codeObjects!.value = datas;
                 });
         }
         return file;

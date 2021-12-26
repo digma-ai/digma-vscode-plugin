@@ -15,6 +15,7 @@ import { logger } from './utils';
 export class SymbolInfo{
     constructor(
         public id: string,
+        public displayName: string,
         public range: vscode.Range
     ){}
 }
@@ -113,16 +114,18 @@ export class SymbolProviderForPython extends SymbolProviderBase
     protected extractSymbolInfos(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
                 
         const filePath = this.getRelativePath(document);
-        const symbolInfos = this.extractFunctions(filePath, docSymbols);
+        const symbolInfos = this.extractFunctions(filePath, '', docSymbols);
         return symbolInfos;
     }
 
-    extractFunctions(filePath: string, symbols: DocumentSymbol[]) : SymbolInfo[]
+    extractFunctions(filePath: string, parentSymPath: string, symbols: DocumentSymbol[]) : SymbolInfo[]
     {
         let symbolInfos : SymbolInfo[] = [];
    
         for (let sym of symbols) 
         {
+            let symPath = (parentSymPath ? parentSymPath+'.' : '')+sym.name
+
             if (sym.kind == SymbolKind.Function ||
                 sym.kind == SymbolKind.Method)
             {
@@ -133,11 +136,11 @@ export class SymbolProviderForPython extends SymbolProviderBase
                 // id template: project/../file.py$_$funcName$_$lineNumber
                 const id = `${filePath}$_$${sym.name}$_$${sym.range.start.line+1}`;
 
-                symbolInfos.push(new SymbolInfo(id, range));
+                symbolInfos.push(new SymbolInfo(id, symPath, range));
             }
 
             if(sym.children){
-                symbolInfos = symbolInfos.concat(this.extractFunctions(filePath, sym.children));
+                symbolInfos = symbolInfos.concat(this.extractFunctions(filePath, symPath, sym.children));
             }
         }
 
