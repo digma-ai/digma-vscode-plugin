@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { IAnalyticsClient, ICodeObjectData as ICodeObjectData } from './analyticsClients';
-import { SymbolInfo, SymbolProvider } from './symbolProvider';
+import { SymbolInfo, SymbolProviderBase } from './symbolProvider';
 import { Dictionary, Future } from './utils';
 
 export function trendToAsciiIcon(trend: number): string 
@@ -33,7 +33,7 @@ export class AnalyticsProvider
 
     constructor(
         private _analyticsClient: IAnalyticsClient,
-        public _symbolProvider: SymbolProvider) {
+        public _symbolProvider: SymbolProviderBase) {
         this._filesCache = {};
     }
 
