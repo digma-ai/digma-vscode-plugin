@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { AnalyticsProvider, FileAnalytics, trendToAsciiIcon } from './analyticsProvider';
-import { SymbolInfo } from './symbolProvider';
-import { Future } from './utils'
+import { SymbolInfo } from './languageSupport';
 
 
 class CodeLensAnalitics extends vscode.CodeLens 
@@ -24,6 +23,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         vscode.workspace.onDidChangeConfiguration((_) => {
             this._onDidChangeCodeLenses.fire();
         });
+        this._onDidChangeCodeLenses.fire();
     }
 
     public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<CodeLensAnalitics[]> 
@@ -31,7 +31,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true)) 
             return [];
 
-        let fileAnalytics = await this._analyticsProvider.getFileAnalytics(document, token);
+        let fileAnalytics = await this._analyticsProvider.getFileAnalytics(document);
 
         let codelens : CodeLensAnalitics[] = [];
 

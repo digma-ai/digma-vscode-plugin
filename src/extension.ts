@@ -1,30 +1,27 @@
-import * as path from 'path';
 import * as vscode from 'vscode';
-import { ExtensionContext, languages, commands, Disposable, workspace, window } from 'vscode';
-import { LanguageClient, TransportKind, LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node';
 import { CodelensProvider } from './codelensProvider';
 import { DigmaAnalyticsClient, ICodeObjectErrorFlow } from './analyticsClients';
 import { logger } from './utils';
 import { FileErrorFlowsProvider } from './fileErrorFlowsProvider';
 import { AnalyticsProvider } from './analyticsProvider';
-import { SymbolProviderForPython } from './symbolProvider';
 import { ErrorFlowDetailsViewProvider } from './errorFlowInfoHtml';
+import { PythonSupport } from './languageSupport';
 
-let disposables: Disposable[] = [];
+let disposables: vscode.Disposable[] = [];
 
-export async function activate(context: ExtensionContext) 
+export async function activate(context: vscode.ExtensionContext) 
 {
     logger.appendLine("Begin activating...")
 
-    const symbolProvider = new SymbolProviderForPython();
-    context.subscriptions.push(symbolProvider);
-
+    const supportedLanguages = [
+        new PythonSupport()
+    ];
     const analyticsClient = new DigmaAnalyticsClient();
-    const analyticsProvider = new AnalyticsProvider(analyticsClient, symbolProvider);
+    const analyticsProvider = new AnalyticsProvider(analyticsClient, supportedLanguages);
     const codelensProvider = new CodelensProvider(analyticsProvider);
 
-    languages.registerCodeLensProvider(
-        { scheme: 'file', language: 'python' }, 
+    vscode.languages.registerCodeLensProvider(
+        supportedLanguages.map(x => x.documentFilter), 
         codelensProvider);
 
     const fileErrorsTreeProvider = new FileErrorFlowsProvider(analyticsProvider);
@@ -37,25 +34,12 @@ export async function activate(context: ExtensionContext)
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider("errorFlowDetail", errorFlowDetailsViewProvider));
 
-    vscode.window.onDidChangeActiveTextEditor(() => {
-        fileErrorsTreeProvider.refresh();
-    });
-
-    logger.appendLine("Registering commands")
-    commands.registerCommand("digma.enableCodeLens", () => {
-        workspace.getConfiguration("digma").update("enableCodeLens", true, true);
-    });
-
-    commands.registerCommand("digma.disableCodeLens", () => {
-        workspace.getConfiguration("digma").update("enableCodeLens", false, true);
-    });
-
-    commands.registerCommand("digma.lensClicked", (args: any) => {
-        window.showInformationMessage(`CodeLens action clicked with args=${args}`);
+    vscode.commands.registerCommand("digma.lensClicked", (args: any) => {
+        vscode.window.showInformationMessage(`CodeLens action clicked with args=${args}`);
         fileErrorsTree.reveal({label: args[0]})
     });
     
-    commands.registerCommand("digma.openErrorFlowInfoView", (e: ICodeObjectErrorFlow) => {
+    vscode.commands.registerCommand("digma.openErrorFlowInfoView", (e: ICodeObjectErrorFlow) => {
         errorFlowDetailsViewProvider.setErrorFlow(e);
     });
     

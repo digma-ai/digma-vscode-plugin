@@ -20,7 +20,7 @@
   	  	"Other"
   	],
   	"activationEvents": [
-  	  	"onLanguage:python"
+  	  	"onStartupFinished"
   	],
   	"main": "./out/extension.js",
   	"contributes": {
@@ -47,18 +47,6 @@
   	  	  	  	}
   	  	  	]
   	  	},
-  	  	"commands": [
-  	  	  	{
-  	  	  	  	"title": "Enable CodeLens",
-  	  	  	  	"command": "digma.enableCodeLens",
-  	  	  	  	"category": "Digma"
-  	  	  	},
-  	  	  	{
-  	  	  	  	"title": "Disable Codelens",
-  	  	  	  	"command": "digma.disableCodeLens",
-  	  	  	  	"category": "Digma"
-  	  	  	}
-  	  	],
   	  	"configuration": {
   	  	  	"properties": {
   	  	  	  	"digma.enableCodeLens": {
@@ -76,7 +64,6 @@
   	  	"https": "^1.0.0",
   	  	"moment": "^2.29.1",
   	  	"node-fetch": "^2.6.6",
-  	  	"pyright": "1.1.197",
   	  	"vscode-languageclient": "^7.0.0"
   	},
   	"scripts": {

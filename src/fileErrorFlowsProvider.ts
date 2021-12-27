@@ -1,16 +1,18 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
 import { AnalyticsProvider, trendToAsciiIcon } from './analyticsProvider';
 import { ICodeObjectErrorFlow, ICodeObjectData } from './analyticsClients';
-import { SymbolInfo } from './symbolProvider';
+import { SymbolInfo } from './languageSupport';
 
 export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
 {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
-    constructor(private _analyticsProvider: AnalyticsProvider) {
+    constructor(private _analyticsProvider: AnalyticsProvider) 
+    {
+        vscode.window.onDidChangeActiveTextEditor(() => {
+            this.refresh();
+        });
     }
 
     refresh() 
@@ -37,7 +39,7 @@ export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.Tr
         if(!document)
             return [];
 
-        const fileAnalytics = await this._analyticsProvider.getFileAnalytics(document, new vscode.CancellationTokenSource().token);
+        const fileAnalytics = await this._analyticsProvider.getFileAnalytics(document);
         const codeObjects = await fileAnalytics.codeObjects!.wait();
 
         if(!element)

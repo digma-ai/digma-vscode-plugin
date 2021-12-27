@@ -1,9 +1,10 @@
 
 import * as vscode from 'vscode';
 import * as moment from 'moment';
+import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { IAnalyticsClient, ICodeObjectData as ICodeObjectData } from './analyticsClients';
-import { SymbolInfo, SymbolProviderBase } from './symbolProvider';
 import { Dictionary, Future } from './utils';
+import { ISupportedLanguage, SymbolInfo } from './languageSupport';
 
 export function trendToAsciiIcon(trend: number): string 
 {
@@ -18,7 +19,6 @@ export class FileAnalytics
 {
     public codeObjects?: Future<ICodeObjectData[]>;
     public symbolInfos: SymbolInfo[] = []
-    public lastAnalyticsUpdate?: moment.Moment;
     constructor(public path: string){}
 
     public didAnalyticsExpire() : boolean{
@@ -33,25 +33,33 @@ export class AnalyticsProvider
 
     constructor(
         private _analyticsClient: IAnalyticsClient,
-        public _symbolProvider: SymbolProviderBase) {
+        public _supportedLanguages: ISupportedLanguage[]) {
         this._filesCache = {};
     }
 
-    public async getFileAnalytics(document: vscode.TextDocument, token?: vscode.CancellationToken) : Promise<FileAnalytics> 
+    public async getFileAnalytics(document: vscode.TextDocument) : Promise<FileAnalytics> 
     {
         const filePath = document.uri.toString();
         let file = this._filesCache[filePath] || new FileAnalytics(filePath);
         this._filesCache[filePath] = file;
 
-        let symbols = await this._symbolProvider.getSymbols(document, token);
-        file.symbolInfos = symbols;
+        const supportedLanguage = this._supportedLanguages.find(x => vscode.languages.match(x.documentFilter, document) > 0);
+        if (!supportedLanguage ||
+            !(supportedLanguage.requiredExtentionLoaded || await this.loadRequiredExtention(supportedLanguage)))
+        {
+            file.codeObjects = new Future<ICodeObjectData[]>();
+            file.codeObjects.value = [];
+            return file;
+        }
+
+        file.symbolInfos = await this.getSymbols(document, supportedLanguage);
 
         if (file.didAnalyticsExpire())
         {
             vscode.window.showInformationMessage("fetching Analytics for "+document.uri.toString());
 
             file.codeObjects = new Future<ICodeObjectData[]>();
-            let ids = symbols.map(s => s.id);
+            let ids = file.symbolInfos.map(s => s.id);
             this._analyticsClient.getSymbolAnalytics(ids)
                 .then(datas => 
                 {
@@ -59,5 +67,50 @@ export class AnalyticsProvider
                 });
         }
         return file;
+    }
+
+    private async loadRequiredExtention(language: ISupportedLanguage) : Promise<boolean>
+    {
+        var extention = vscode.extensions.getExtension(language.requiredExtentionId);
+        if (!extention) 
+        {
+            const installOption = `Install ${language.requiredExtentionId}`;
+            const ignoreOption = `Ignore python files`;
+            let sel = await vscode.window.showErrorMessage(
+                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtentionId}' installed.`,
+                ignoreOption,
+                installOption
+            )
+            if(sel == installOption)
+                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtentionId);
+            else if(sel == ignoreOption)
+                this._supportedLanguages = this._supportedLanguages.filter(x => x != language);
+            return false;
+        }
+        if(!extention.isActive)
+            await extention.activate();
+
+        language.requiredExtentionLoaded = true;
+        return true;
+    }
+
+    private async getSymbols(document: vscode.TextDocument, languagesSupport: ISupportedLanguage) : Promise<SymbolInfo[]>
+    {
+        const result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
+
+        if (result && result.length) {
+            if ((result[0] as any).range) {
+                // Document symbols
+                const allDocSymbols = result as DocumentSymbol[];
+                const symbolInfos = languagesSupport.extractSymbolInfos(document, allDocSymbols);
+                return symbolInfos;
+            } else {
+                // Document symbols
+                const symbols = result as SymbolInformation[];
+                // TODO: ?
+            }
+        }
+
+        return [];
     }
 }
