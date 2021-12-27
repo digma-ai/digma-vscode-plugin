@@ -2,10 +2,12 @@ import * as vscode from 'vscode';
 import { CodelensProvider } from './codelensProvider';
 import { DigmaAnalyticsClient, ICodeObjectErrorFlow } from './analyticsClients';
 import { logger } from './utils';
-import { FileErrorFlowsProvider } from './fileErrorFlowsProvider';
+import { ErrorFlowsListProvider } from './fileErrorFlowsProvider';
 import { AnalyticsProvider } from './analyticsProvider';
 import { ErrorFlowDetailsViewProvider } from './errorFlowInfoHtml';
 import { PythonSupport } from './languageSupport';
+import { ErrorFlowStackView } from './errorFlowStackView';
+import { ErrorFlowListView } from './errorFlowListView';
 
 let disposables: vscode.Disposable[] = [];
 
@@ -24,21 +26,13 @@ export async function activate(context: vscode.ExtensionContext)
         supportedLanguages.map(x => x.documentFilter), 
         codelensProvider);
 
-    const fileErrorsTreeProvider = new FileErrorFlowsProvider(analyticsProvider);
-    const fileErrorsTree = vscode.window.createTreeView('errorFlows', {
-        treeDataProvider: fileErrorsTreeProvider
-    });
-    context.subscriptions.push(fileErrorsTree);
+    context.subscriptions.push(new ErrorFlowListView(analyticsProvider));
+    //context.subscriptions.push(new ErrorFlowStackView(analyticsProvider));
 
     const errorFlowDetailsViewProvider = new ErrorFlowDetailsViewProvider();
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider("errorFlowDetail", errorFlowDetailsViewProvider));
 
-    vscode.commands.registerCommand("digma.lensClicked", (args: any) => {
-        vscode.window.showInformationMessage(`CodeLens action clicked with args=${args}`);
-        fileErrorsTree.reveal({label: args[0]})
-    });
-    
     vscode.commands.registerCommand("digma.openErrorFlowInfoView", (e: ICodeObjectErrorFlow) => {
         errorFlowDetailsViewProvider.setErrorFlow(e);
     });

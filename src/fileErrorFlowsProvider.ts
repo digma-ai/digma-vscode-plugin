@@ -3,7 +3,7 @@ import { AnalyticsProvider, trendToAsciiIcon } from './analyticsProvider';
 import { ICodeObjectErrorFlow, ICodeObjectData } from './analyticsClients';
 import { SymbolInfo } from './languageSupport';
 
-export class FileErrorFlowsProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
+export class ErrorFlowsListProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
 {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;

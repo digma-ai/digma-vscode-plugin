@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
-import { AnalyticsProvider, FileAnalytics, trendToAsciiIcon } from './analyticsProvider';
+import { AnalyticsProvider, FileAnalytics, trendToCodIcon } from './analyticsProvider';
+import { ErrorFlowListView } from './errorFlowListView';
 import { SymbolInfo } from './languageSupport';
 
 
 class CodeLensAnalitics extends vscode.CodeLens 
 {
     constructor(
+        public document: vscode.TextDocument,
         public fileAnalytics: FileAnalytics, 
         public symbolInfo: SymbolInfo)
     {
@@ -20,6 +22,10 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
 
     constructor(private _analyticsProvider: AnalyticsProvider)
     {
+        vscode.commands.registerCommand("digma.lensClicked", async (document: vscode.TextDocument, symbolId: string) => {
+            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForDocument, document);
+            await vscode.commands.executeCommand(ErrorFlowListView.Commands.SelectCodeObject, symbolId);
+        });
         vscode.workspace.onDidChangeConfiguration((_) => {
             this._onDidChangeCodeLenses.fire();
         });
@@ -36,7 +42,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         let codelens : CodeLensAnalitics[] = [];
 
         for(let sym of fileAnalytics.symbolInfos){
-            codelens.push(new CodeLensAnalitics(fileAnalytics, sym));
+            codelens.push(new CodeLensAnalitics(document, fileAnalytics, sym));
         }
 
         return codelens;
@@ -51,7 +57,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         
         let title = '';
         if(data?.errorFlows && data?.summary?.trend){
-            title = `${data.errorFlows.length} Error flows (${trendToAsciiIcon(data.summary.trend)})`;
+            title = `${data.errorFlows.length} Error flows (${trendToCodIcon(data.summary.trend)})`;
         }
         else{
             title = '(no data yet)';
@@ -61,7 +67,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
             title: title,
             tooltip: codeLens.symbolInfo.id,
             command: "digma.lensClicked",
-            arguments: [codeLens.symbolInfo.id]
+            arguments: [codeLens.document, codeLens.symbolInfo.id]
         } 
 
         return codeLens;

@@ -28,8 +28,8 @@
   	  	  	"digma": [
   	  	  	  	{
   	  	  	  	  	"type": "tree",
-  	  	  	  	  	"id": "errorFlows",
-  	  	  	  	  	"name": "Error Flows"
+  	  	  	  	  	"id": "errorFlowList",
+  	  	  	  	  	"name": "Error Flows List"
   	  	  	  	},
   	  	  	  	{
   	  	  	  	  	"type": "webview",

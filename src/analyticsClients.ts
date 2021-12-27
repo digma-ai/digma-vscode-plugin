@@ -8,8 +8,14 @@ export enum Impact
     LOW = "Low",
 }
 
+export interface IErrorFlowFrame{
+    moduleName: string;
+    line: number;
+}
+
 export interface ICodeObjectErrorFlow
 {
+    id: string;
     trend: number;
     frequency?: string;
     impact?: Impact;

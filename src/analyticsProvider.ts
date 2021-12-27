@@ -2,14 +2,23 @@
 import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
-import { IAnalyticsClient, ICodeObjectData as ICodeObjectData } from './analyticsClients';
+import { IAnalyticsClient, ICodeObjectData as ICodeObjectData, IErrorFlowFrame } from './analyticsClients';
 import { Dictionary, Future } from './utils';
 import { ISupportedLanguage, SymbolInfo } from './languageSupport';
+
+export function trendToCodIcon(trend: number): string 
+{
+    if(trend < 0)
+        return `${trend}$(arrow-down)`;
+    if(trend > 0)
+        return `+${trend}$(arrow-up)`;
+    return '';
+}
 
 export function trendToAsciiIcon(trend: number): string 
 {
     if(trend < 0)
-        return `-${trend}\u2193`;  // \u2193 = ArrowDown
+        return `${trend}\u2193`;  // \u2193 = ArrowDown
     if(trend > 0)
         return `+${trend}\u2191`;  // \u2191 = ArrowUp
     return '';
@@ -35,6 +44,20 @@ export class AnalyticsProvider
         private _analyticsClient: IAnalyticsClient,
         public _supportedLanguages: ISupportedLanguage[]) {
         this._filesCache = {};
+    }
+
+    public async getErrorFlowFrames(errorFlowId: string) : Promise<IErrorFlowFrame[]> 
+    {
+        return [
+            {
+                moduleName: 'asaf.py',
+                line: 5
+            },
+            {
+                moduleName: 'chen.py',
+                line: 10
+            }
+        ];
     }
 
     public async getFileAnalytics(document: vscode.TextDocument) : Promise<FileAnalytics> 
