@@ -1,4 +1,4 @@
-# digma-lens README
+# digma README
 
 Digma lens is an extension that provides continuous feedback to developers.
 
