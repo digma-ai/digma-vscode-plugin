@@ -33,7 +33,7 @@
   	  	  	  	},
   	  	  	  	{
   	  	  	  	  	"type": "webview",
-  	  	  	  	  	"id": "errorFlowDetail",
+  	  	  	  	  	"id": "errorFlowDetails",
   	  	  	  	  	"name": "Error Flow Details"
   	  	  	  	}
   	  	  	]

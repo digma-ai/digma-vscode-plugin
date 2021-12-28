@@ -1,74 +1,125 @@
+import { AnalyticsProvider, IErrorFlowResponse } from "./analyticsProvider";
 import * as vscode from 'vscode';
-import { Disposable } from 'vscode-languageclient';
-import { IErrorFlowFrame } from './analyticsClients';
-import { AnalyticsProvider } from './analyticsProvider';
+import { trendToAsciiIcon } from "./symbolProvider";
 
-
-export class ErrorFlowStackView implements Disposable
+export class ErrorFlowStackView implements vscode.Disposable
 {
-    public static readonly viewId = 'errorFlowStack';
+    public static readonly viewId = 'errorFlowDetails';
     public static Commands = class {
         public static readonly ShowForErrorFlow = `digma.${ErrorFlowStackView.viewId}.showForErrorFlow`;
     }
 
-    private _treeProvider: ErrorFlowStackProvider;
-    private _treeViewer: vscode.TreeView<vscode.TreeItem>;
+    private _provider: ErrorFlowDetailsViewProvider;
+    private _disposable: vscode.Disposable;
 
-    constructor(analyticsProvider: AnalyticsProvider)
+    constructor(analyticsProvider: AnalyticsProvider) 
     {
-        this._treeProvider = new ErrorFlowStackProvider(analyticsProvider);
-        this._treeViewer = vscode.window.createTreeView(ErrorFlowStackView.viewId, {
-            treeDataProvider: this._treeProvider
-        });
-        vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, (errorFlowId: string) => {
-            this._treeProvider.refresh(errorFlowId);
+        this._provider = new ErrorFlowDetailsViewProvider(analyticsProvider);
+        this._disposable = vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider);
+        vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string) => {
+            await this._provider.setErrorFlow(errorFlowId);
         });
     }
 
-    public dispose(): void 
+    public dispose() 
     {
-        this._treeViewer.dispose();
+        this._disposable.dispose();
     }
 }
 
-class ErrorFlowStackProvider implements vscode.TreeDataProvider<vscode.TreeItem> 
+class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider
 {
-    private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
-    readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
-    private _errorFlowId?: string;
-    private _items?: ErrorFlowFrameItem[];
+	private _view?: vscode.WebviewView;
 
-    constructor(private _analyticsProvider: AnalyticsProvider) 
-    {
-    }
-
-    public async refresh(errorFlowId: string) 
-    {
-        this._errorFlowId = errorFlowId;
-        const frames = await this._analyticsProvider.getErrorFlowFrames(this._errorFlowId);
-        this._items = frames.map(f => new ErrorFlowFrameItem(f));
-        this._onDidChangeTreeData.fire();
-    }
-
-    getTreeItem(element: vscode.TreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> 
-    {
-        return element;
-    }
-
-    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> 
-    {
-        if(element || !this._items)
-            return [];
+    constructor(private _analyticsProvider: AnalyticsProvider) {
         
-        return this._items;
     }
 
-}
+    public resolveWebviewView(
+		webviewView: vscode.WebviewView,
+		context: vscode.WebviewViewResolveContext,
+		_token: vscode.CancellationToken,
+	) {
+		this._view = webviewView;
+		webviewView.webview.html = "";
+	}
 
-class ErrorFlowFrameItem extends vscode.TreeItem
-{
-    constructor(frame: IErrorFlowFrame){
-        super(frame.moduleName, vscode.TreeItemCollapsibleState.None);
-        this.description =  `line ${frame.line}`;
+    public async setErrorFlow(errorFlowId: string)
+    {
+        if(!this._view)
+            return;
+
+        const response = await this._analyticsProvider.getErrorFlow(errorFlowId);
+        if(response){
+            this._view.webview.html = this.getErrorFlowInfoAsHtml(response);
+        }
+        else{
+            this._view.webview.html = "";
+        }
+    }
+
+    private getErrorFlowInfoAsHtml(e: IErrorFlowResponse) : string {
+        return `
+        <html>
+        <head>
+            <style>
+                body{
+                    background-color: var(--vscode-background);
+                    color: var(--vscode-foreground);
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+                    font-family: Segoe WPC,Segoe UI,sans-serif;
+                    font-size: 13px;
+                }
+                .row {
+                    display: flex;
+                    flex-direction: row;
+                    flex-wrap: wrap;
+                    width: 100%;
+                }
+                .column {
+                    display: flex;
+                    flex-direction: column;
+                    flex-basis: 100%;
+                    flex: 1;
+                    margin: 2px 0px;
+                }
+                .column:first-child{
+                    flex: 0 0 80px;
+                }
+                .value{
+                    opacity: 0.8;
+                }
+                .seperator{
+                    border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
+                    margin: 10px 0;
+                }
+                pre {
+                    white-space: pre-wrap;
+                }        
+            </style>
+        </head>
+        <body>
+            <div class="row">
+                <div class="column label">Message</div>
+                <div class="column value">${e.exceptionMessage}</div>
+            </div>
+            <div class="row">
+                <div class="column label">Impact</div>
+                <div class="column value">${e.summary.impact}</div>
+            </div>
+            <div class="row">
+                <div class="column label">Frequency</div>
+                <div class="column value">${e.summary.frequency}</div>
+            </div>
+            <div class="row">
+                <div class="column label">Trend</div>
+                <div class="column value">${trendToAsciiIcon(e.summary.trend)}</div>
+            </div>
+            <div class="seperator"></div>
+            <div class="label">Stacktrace</div>
+            <div class="value"><pre>${e.stackTrace}</pre></div>
+        </body>
+        </html>
+        `;
     }
 }

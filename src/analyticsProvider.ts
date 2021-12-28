@@ -1,139 +1,152 @@
-
+import fetch from "node-fetch";
 import * as vscode from 'vscode';
-import * as moment from 'moment';
-import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
-import { IAnalyticsClient, ICodeObjectData as ICodeObjectData, IErrorFlowFrame } from './analyticsClients';
-import { Dictionary, Future } from './utils';
-import { ISupportedLanguage, SymbolInfo } from './languageSupport';
+import * as https from 'https';
 
-export function trendToCodIcon(trend: number): string 
+export enum Impact 
 {
-    if(trend < 0)
-        return `${trend}$(arrow-down)`;
-    if(trend > 0)
-        return `+${trend}$(arrow-up)`;
-    return '';
+    HIGH = "High",
+    LOW = "Low",
 }
 
-export function trendToAsciiIcon(trend: number): string 
-{
-    if(trend < 0)
-        return `${trend}\u2193`;  // \u2193 = ArrowDown
-    if(trend > 0)
-        return `+${trend}\u2191`;  // \u2191 = ArrowUp
-    return '';
+export interface IErrorFlowFrame{
+    moduleName: string;
+    functionName: string;
+    lineNumber: number;
+    excutedCode: string;
 }
 
-export class FileAnalytics
+export interface IErrorFlowResponse
 {
-    public codeObjects?: Future<ICodeObjectData[]>;
-    public symbolInfos: SymbolInfo[] = []
-    constructor(public path: string){}
+    summary: IErrorFlowSummary;
+    stackTrace: string;
+    exceptionMessage: string;
+    exceptionType: string;
+    frames: IErrorFlowFrame[];
+}
 
-    public didAnalyticsExpire() : boolean{
-        return !this.codeObjects?.resolvingTimeStamp || 
-               this.codeObjects.resolvingTimeStamp.clone().add(30, 'seconds') < moment.utc();
+export interface IErrorFlowSummary
+{
+    id: string;
+    name: string;
+    trend: number;
+    frequency: string;
+    impact: Impact;
+}
+
+export interface ICodeObjectErrorFlow
+{
+    codeObjectId: string;
+    errorFlows: IErrorFlowSummary[];
+}
+
+export interface ICodeObjectErrorFlowsResponse
+{
+    errorFlows: ICodeObjectErrorFlow[];
+}
+
+export interface ICodeObjectSummary{
+    alert: boolean;
+    trend: number;
+    impact: Impact;
+}
+
+export interface ICodeObjectSummary
+{
+    id: string;
+    errorFlowCount: number;
+    trend: number;
+}
+
+export interface ICodeObjectsSummaryResponse
+{
+    codeObjects: ICodeObjectSummary[];
+}
+
+export class AnalyticsProvider
+{
+    private _url: string;
+    private _agent: https.Agent;
+
+    constructor(){
+        this._url = vscode.workspace.getConfiguration("digma").get("url", '');
+        this._agent = new https.Agent({
+            rejectUnauthorized: false,
+        });
     }
-}
 
-export class AnalyticsProvider 
-{
-    private _filesCache : Dictionary<string, FileAnalytics>;
-
-    constructor(
-        private _analyticsClient: IAnalyticsClient,
-        public _supportedLanguages: ISupportedLanguage[]) {
-        this._filesCache = {};
-    }
-
-    public async getErrorFlowFrames(errorFlowId: string) : Promise<IErrorFlowFrame[]> 
+    public async getSummary(symbolsIdentifiers: string[]): Promise<ICodeObjectSummary[]> 
     {
-        return [
-            {
-                moduleName: 'asaf.py',
-                line: 5
-            },
-            {
-                moduleName: 'chen.py',
-                line: 10
-            }
-        ];
-    }
-
-    public async getFileAnalytics(document: vscode.TextDocument) : Promise<FileAnalytics> 
-    {
-        const filePath = document.uri.toString();
-        let file = this._filesCache[filePath] || new FileAnalytics(filePath);
-        this._filesCache[filePath] = file;
-
-        const supportedLanguage = this._supportedLanguages.find(x => vscode.languages.match(x.documentFilter, document) > 0);
-        if (!supportedLanguage ||
-            !(supportedLanguage.requiredExtentionLoaded || await this.loadRequiredExtention(supportedLanguage)))
-        {
-            file.codeObjects = new Future<ICodeObjectData[]>();
-            file.codeObjects.value = [];
-            return file;
-        }
-
-        file.symbolInfos = await this.getSymbols(document, supportedLanguage);
-
-        if (file.didAnalyticsExpire())
-        {
-            vscode.window.showInformationMessage("fetching Analytics for "+document.uri.toString());
-
-            file.codeObjects = new Future<ICodeObjectData[]>();
-            let ids = file.symbolInfos.map(s => s.id);
-            this._analyticsClient.getSymbolAnalytics(ids)
-                .then(datas => 
+        try{
+            var response = await fetch(
+                `${this._url}/CodeAnalytics/summary`, 
                 {
-                    file.codeObjects!.value = datas;
+                    agent: this._agent,
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json' },
+                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers}) 
                 });
-        }
-        return file;
-    }
-
-    private async loadRequiredExtention(language: ISupportedLanguage) : Promise<boolean>
-    {
-        var extention = vscode.extensions.getExtension(language.requiredExtentionId);
-        if (!extention) 
-        {
-            const installOption = `Install ${language.requiredExtentionId}`;
-            const ignoreOption = `Ignore python files`;
-            let sel = await vscode.window.showErrorMessage(
-                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtentionId}' installed.`,
-                ignoreOption,
-                installOption
-            )
-            if(sel == installOption)
-                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtentionId);
-            else if(sel == ignoreOption)
-                this._supportedLanguages = this._supportedLanguages.filter(x => x != language);
-            return false;
-        }
-        if(!extention.isActive)
-            await extention.activate();
-
-        language.requiredExtentionLoaded = true;
-        return true;
-    }
-
-    private async getSymbols(document: vscode.TextDocument, languagesSupport: ISupportedLanguage) : Promise<SymbolInfo[]>
-    {
-        const result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
-
-        if (result && result.length) {
-            if ((result[0] as any).range) {
-                // Document symbols
-                const allDocSymbols = result as DocumentSymbol[];
-                const symbolInfos = languagesSupport.extractSymbolInfos(document, allDocSymbols);
-                return symbolInfos;
-            } else {
-                // Document symbols
-                const symbols = result as SymbolInformation[];
-                // TODO: ?
+            if(!response.ok){
+                console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
+                return [];
             }
+                
+            var reponseJson = await response.json();
+            return (<ICodeObjectsSummaryResponse>reponseJson).codeObjects;
         }
-
+        catch(error){
+            console.error(error);
+        }
         return [];
     }
+
+    public async getErrorFlows(symbolsIdentifiers: string[]): Promise<ICodeObjectErrorFlow[]> 
+    {
+        try{
+            var response = await fetch(
+                `${this._url}/CodeAnalytics/errorFlows`, 
+                {
+                    agent: this._agent,
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json' },
+                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers}) 
+                });
+            if(!response.ok){
+                console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
+                return [];
+            }
+                
+            var reponseJson = await response.json();
+            return (<ICodeObjectErrorFlowsResponse>reponseJson).errorFlows;
+        }
+        catch(error){
+            console.error(error);
+        }
+        return [];
+    }
+
+    public async getErrorFlow(errorFlowId: string): Promise<IErrorFlowResponse | undefined> 
+    {
+        try{
+            var response = await fetch(
+                `${this._url}/CodeAnalytics/errorFlow`, 
+                {
+                    agent: this._agent,
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json' },
+                    body: JSON.stringify({id: errorFlowId}) 
+                });
+            if(!response.ok){
+                console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
+                return;
+            }
+                
+            var reponseJson = await response.json();
+            return <IErrorFlowResponse>reponseJson;
+        }
+        catch(error){
+            console.error(error);
+        }
+        return;
+    }
+
 }

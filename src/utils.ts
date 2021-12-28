@@ -7,6 +7,15 @@ export let logger = vscode.window.createOutputChannel("Digma");
 export type Dictionary<TKey extends keyof any, TValue> = Record<TKey, TValue>;
 
 // interface Dictionary<TKey, TValue> = (Record<TKey, TValue>;
+declare global {
+    interface Array<T> {
+        firstOrDefault(predicate?: (item: T) => boolean): T;
+    }
+}
+
+Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
+    return this.find(predicate || (x => true));
+}
 
 export class Future<T>{
     private _promise: Promise<T>;

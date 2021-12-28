@@ -51,8 +51,9 @@ export class PythonSupport implements ISupportedLanguage
                     new vscode.Position(sym.range.start.line, sym.range.start.character),
                     new vscode.Position(sym.range.end.line, sym.range.end.character));
                 
-                // id template: project/../file.py$_$funcName$_$lineNumber
-                const id = `${filePath}$_$${sym.name}$_$${sym.range.start.line+1}`;
+                // Template: <RelativePathToFile>$_$<FunctionName>
+                // Example:  numpy/tools/linter.py$_$get_branch_diff
+                const id = `${filePath}$_$${sym.name}`;
 
                 symbolInfos.push(new SymbolInfo(id, symPath, range));
             }

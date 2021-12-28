@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode-languageclient';
-import { ICodeObjectData, ICodeObjectErrorFlow, IErrorFlowFrame } from './analyticsClients';
-import { AnalyticsProvider, trendToAsciiIcon } from './analyticsProvider';
-import { ErrorFlowStackView } from './errorFlowStackView';
+import { ICodeObjectErrorFlow, AnalyticsProvider, IErrorFlowSummary } from './analyticsProvider';
+import { SymbolProvider, trendToAsciiIcon } from './symbolProvider';
 import { SymbolInfo } from './languageSupport';
+import { ErrorFlowStackView } from './errorFlowStackView';
 
 
 export class ErrorFlowListView implements Disposable
@@ -17,9 +17,11 @@ export class ErrorFlowListView implements Disposable
     private _treeProvider: ErrorFlowsListProvider;
     private _treeViewer: vscode.TreeView<vscode.TreeItem>;
 
-    constructor(analyticsProvider: AnalyticsProvider)
+    constructor(
+        symbolProvider: SymbolProvider,
+        analyticsProvider: AnalyticsProvider)
     {
-        this._treeProvider = new ErrorFlowsListProvider(analyticsProvider);
+        this._treeProvider = new ErrorFlowsListProvider(symbolProvider, analyticsProvider);
         this._treeViewer = vscode.window.createTreeView(ErrorFlowListView.viewId, {
             treeDataProvider: this._treeProvider
         });
@@ -44,7 +46,9 @@ class ErrorFlowsListProvider implements vscode.TreeDataProvider<vscode.TreeItem>
     private _document?: vscode.TextDocument;
     private _codeObjectItems: CodeObjectItem[] = [];
 
-    constructor(private _analyticsProvider: AnalyticsProvider) 
+    constructor(
+        private _symbolProvider: SymbolProvider,
+        private _analyticsProvider: AnalyticsProvider) 
     {
     }
 
@@ -54,17 +58,17 @@ class ErrorFlowsListProvider implements vscode.TreeDataProvider<vscode.TreeItem>
         this._codeObjectItems = [];
         if(document)
         {
-            const fileAnalytics = await this._analyticsProvider.getFileAnalytics(document);
-            const codeObjects = await fileAnalytics.codeObjects!.wait();
+            const symbols = await this._symbolProvider.getSymbols(document);
+            const codeObjects = await this._analyticsProvider.getErrorFlows(symbols.map(s => s.id));
 
-            for(let obj of codeObjects)
+            for(let codeObject of codeObjects)
             {
-                let symInfo = fileAnalytics.symbolInfos.find(s => s.id == obj.codeObjectId);
-                if(symInfo)
+                let symbol = symbols.find(s => s.id == codeObject.codeObjectId);
+                if(symbol)
                 {
-                    let codeObjectItem = new CodeObjectItem(symInfo, obj);
+                    let codeObjectItem = new CodeObjectItem(symbol, codeObject);
         
-                    for(let errorFlow of obj.errorFlows ?? [])
+                    for(let errorFlow of codeObject.errorFlows ?? [])
                         codeObjectItem.errorFlowItems.push(new ErrorFlowItem(codeObjectItem, errorFlow));
 
                     this._codeObjectItems.push(codeObjectItem);
@@ -117,28 +121,26 @@ class CodeObjectItem extends vscode.TreeItem
 
     constructor(
         public symInfo: SymbolInfo,
-        public codeObject: ICodeObjectData)
+        public codeObject: ICodeObjectErrorFlow)
     {
         super(symInfo.displayName, vscode.TreeItemCollapsibleState.Expanded)
         this.description = `(${codeObject.errorFlows?.length})`;
-        this.iconPath = new vscode.ThemeIcon(
-            'symbol-function',
-            (codeObject.summary?.alert) ? new vscode.ThemeColor("errorForeground") : undefined);
+        this.iconPath = new vscode.ThemeIcon('symbol-function');
     }
 }
 
 class ErrorFlowItem extends vscode.TreeItem
 {
-    constructor(public parent: CodeObjectItem, public errorFlow: ICodeObjectErrorFlow)
+    constructor(public parent: CodeObjectItem, public errorFlow: IErrorFlowSummary)
     {
-        super(errorFlow?.alias ?? '', vscode.TreeItemCollapsibleState.None)
+        super(errorFlow.name, vscode.TreeItemCollapsibleState.None)
         this.description = `${errorFlow.frequency} (${trendToAsciiIcon(errorFlow.trend)})`;
         this.iconPath = new vscode.ThemeIcon('issue-opened');
         this.command = {
             title: 'more details',
             tooltip: 'more details',
-            command: 'digma.openErrorFlowInfoView', //ErrorFlowStackView.Commands.ShowForErrorFlow,
-            arguments: [errorFlow]// [errorFlow.id]
+            command: ErrorFlowStackView.Commands.ShowForErrorFlow,
+            arguments: [errorFlow.id]
         } 
     }
 }

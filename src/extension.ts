@@ -1,10 +1,8 @@
 import * as vscode from 'vscode';
-import { CodelensProvider } from './codelensProvider';
-import { DigmaAnalyticsClient, ICodeObjectErrorFlow } from './analyticsClients';
 import { logger } from './utils';
-import { ErrorFlowsListProvider } from './fileErrorFlowsProvider';
-import { AnalyticsProvider } from './analyticsProvider';
-import { ErrorFlowDetailsViewProvider } from './errorFlowInfoHtml';
+import { CodelensProvider } from './codelensProvider';
+import { AnalyticsProvider} from './analyticsProvider';
+import { SymbolProvider } from './symbolProvider';
 import { PythonSupport } from './languageSupport';
 import { ErrorFlowStackView } from './errorFlowStackView';
 import { ErrorFlowListView } from './errorFlowListView';
@@ -18,24 +16,24 @@ export async function activate(context: vscode.ExtensionContext)
     const supportedLanguages = [
         new PythonSupport()
     ];
-    const analyticsClient = new DigmaAnalyticsClient();
-    const analyticsProvider = new AnalyticsProvider(analyticsClient, supportedLanguages);
-    const codelensProvider = new CodelensProvider(analyticsProvider);
+    const symbolProvider = new SymbolProvider(supportedLanguages);
+    const analyticsProvider = new AnalyticsProvider();
+    const codelensProvider = new CodelensProvider(symbolProvider, analyticsProvider);
 
     vscode.languages.registerCodeLensProvider(
         supportedLanguages.map(x => x.documentFilter), 
         codelensProvider);
 
-    context.subscriptions.push(new ErrorFlowListView(analyticsProvider));
-    //context.subscriptions.push(new ErrorFlowStackView(analyticsProvider));
+    context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider));
+    context.subscriptions.push(new ErrorFlowStackView(analyticsProvider));
 
-    const errorFlowDetailsViewProvider = new ErrorFlowDetailsViewProvider();
-    context.subscriptions.push(
-        vscode.window.registerWebviewViewProvider("errorFlowDetail", errorFlowDetailsViewProvider));
+    // const errorFlowDetailsViewProvider = new ErrorFlowDetailsViewProvider();
+    // context.subscriptions.push(
+    //     vscode.window.registerWebviewViewProvider("errorFlowDetail", errorFlowDetailsViewProvider));
 
-    vscode.commands.registerCommand("digma.openErrorFlowInfoView", (e: ICodeObjectErrorFlow) => {
-        errorFlowDetailsViewProvider.setErrorFlow(e);
-    });
+    // vscode.commands.registerCommand("digma.openErrorFlowInfoView", (e: ICodeObjectErrorFlow) => {
+    //     errorFlowDetailsViewProvider.setErrorFlow(e);
+    // });
     
     logger.appendLine("Finished activating")
 }
