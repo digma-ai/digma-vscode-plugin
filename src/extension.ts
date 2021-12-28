@@ -7,7 +7,6 @@ import { PythonSupport } from './languageSupport';
 import { ErrorFlowStackView } from './errorFlowStackView';
 import { ErrorFlowListView } from './errorFlowListView';
 
-let disposables: vscode.Disposable[] = [];
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -40,8 +39,5 @@ export async function activate(context: vscode.ExtensionContext)
 
 // this method is called when your extension is deactivated
 export function deactivate() {
-    if (disposables) {
-        disposables.forEach(item => item.dispose());
-    }
-    disposables = [];
+    
 }

@@ -6,6 +6,10 @@ export let logger = vscode.window.createOutputChannel("Digma");
 
 export type Dictionary<TKey extends keyof any, TValue> = Record<TKey, TValue>;
 
+export async function delay(ms: number) : Promise<any>{
+    return new Promise(res => setTimeout(res, ms));
+}
+
 // interface Dictionary<TKey, TValue> = (Record<TKey, TValue>;
 declare global {
     interface Array<T> {

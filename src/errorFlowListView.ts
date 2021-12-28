@@ -28,8 +28,8 @@ export class ErrorFlowListView implements Disposable
         vscode.commands.registerCommand(ErrorFlowListView.Commands.ShowForDocument, async (document: vscode.TextDocument) => {
             await this._treeProvider.refresh(document);
         });
-        vscode.commands.registerCommand(ErrorFlowListView.Commands.SelectCodeObject, (codeObjectId: string) => {
-            this._treeProvider.selectCodeObject(this._treeViewer, codeObjectId);
+        vscode.commands.registerCommand(ErrorFlowListView.Commands.SelectCodeObject, async (codeObjectId: string) => {
+            await this._treeProvider.selectCodeObject(this._treeViewer, codeObjectId);
         });
     }
 
@@ -43,7 +43,6 @@ class ErrorFlowsListProvider implements vscode.TreeDataProvider<vscode.TreeItem>
 {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | void> = this._onDidChangeTreeData.event;
-    private _document?: vscode.TextDocument;
     private _codeObjectItems: CodeObjectItem[] = [];
 
     constructor(
@@ -54,7 +53,6 @@ class ErrorFlowsListProvider implements vscode.TreeDataProvider<vscode.TreeItem>
 
     public async refresh(document: vscode.TextDocument)
     {
-        this._document = document;
         this._codeObjectItems = [];
         if(document)
         {
@@ -79,11 +77,11 @@ class ErrorFlowsListProvider implements vscode.TreeDataProvider<vscode.TreeItem>
         this._onDidChangeTreeData.fire();
     }
 
-    public selectCodeObject(parentTreeView: vscode.TreeView<vscode.TreeItem>, codeObjectId: string)
+    public async selectCodeObject(parentTreeView: vscode.TreeView<vscode.TreeItem>, codeObjectId: string)
     {
         const item = this._codeObjectItems.find(x => x.codeObject.codeObjectId == codeObjectId);
         if(item)
-            parentTreeView.reveal(item, {select: true, expand: true});
+            await parentTreeView.reveal(item, {select: true, expand: true});
     }
 
     async getParent?(element: vscode.TreeItem): Promise<vscode.TreeItem | null>

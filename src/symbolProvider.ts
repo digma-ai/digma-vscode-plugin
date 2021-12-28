@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { AnalyticsProvider, ICodeObjectSummary as ICodeObjectSummary, IErrorFlowFrame } from './analyticsProvider';
-import { Dictionary, Future } from './utils';
+import { delay, Dictionary, Future } from './utils';
 import { ISupportedLanguage, SymbolInfo } from './languageSupport';
 
 export function trendToCodIcon(trend: number): string 
@@ -26,6 +26,8 @@ export function trendToAsciiIcon(trend: number): string
 
 export class SymbolProvider 
 {
+    private _creationTime: moment.Moment = moment.utc();
+
     constructor(private _supportedLanguages: ISupportedLanguage[]) 
     {
     }
@@ -39,9 +41,13 @@ export class SymbolProvider
             return [];
         }
 
-        const result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
+        let result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
+        if(!result?.length && this._creationTime.clone().add(10, 'second') > moment.utc()){
+            await delay(2000);
+            result = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
+        }
 
-        if (result && result.length) {
+        if (result?.length) {
             if ((result[0] as any).range) {
                 // Document symbols
                 const allDocSymbols = result as DocumentSymbol[];
