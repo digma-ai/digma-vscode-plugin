@@ -24,18 +24,13 @@
   	],
   	"main": "./out/extension.js",
   	"contributes": {
-  	  	"commands": [
-  	  	  	{
-  	  	  	  	"command": "helloworld.helloWorld",
-  	  	  	  	"title": "Hello World"
-  	  	  	},
-  	  	  	{
-  	  	  	  	"command": "helloworld.refactor",
-  	  	  	  	"title": "Hello Refactor"
-  	  	  	}
-  	  	],
   	  	"views": {
-  	  	  	"digma": [
+  	  	  	"digma": [  
+  	  	  	  	{
+  	  	  	  	  	"type": "webview",
+  	  	  	  	  	"id": "context",
+  	  	  	  	  	"name": "Context"
+  	  	  	  	},	  
   	  	  	  	{
   	  	  	  	  	"type": "tree",
   	  	  	  	  	"id": "errorFlowList",
@@ -66,12 +61,18 @@
   	  	  	  	"digma.url": {
   	  	  	  	  	"type": "string",
   	  	  	  	  	"default": "https://localhost:7106"
+  	  	  	  	},
+  	  	  	  	"digma.environment": {
+  	  	  	  	  	"type": "string",
+  	  	  	  	  	"default": "Production",
+					"enum": ["Production", "Staging", "Testing", "Local"]
   	  	  	  	}
   	  	  	}
   	  	}
   	},
   	"dependencies": {
   	  	"@vscode/webview-ui-toolkit": "^0.8.4",
+		"@vscode/codicons": "0.0.20",
   	  	"https": "^1.0.0",
   	  	"moment": "^2.29.1",
   	  	"node-fetch": "^2.6.6",

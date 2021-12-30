@@ -4,8 +4,9 @@ import { CodelensProvider } from './codelensProvider';
 import { AnalyticsProvider} from './analyticsProvider';
 import { SymbolProvider } from './symbolProvider';
 import { PythonSupport } from './languageSupport';
-import { ErrorFlowStackView } from './errorFlowStackView';
-import { ErrorFlowListView } from './errorFlowListView';
+import { ErrorFlowStackView } from './views/errorFlowStackView';
+import { ErrorFlowListView } from './views/errorFlowListView';
+import { ContextView } from './views/contextView';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -23,6 +24,7 @@ export async function activate(context: vscode.ExtensionContext)
         supportedLanguages.map(x => x.documentFilter), 
         codelensProvider);
 
+    context.subscriptions.push(new ContextView(context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider));
     context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, context.extensionUri));
 

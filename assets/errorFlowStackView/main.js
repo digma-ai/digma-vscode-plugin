@@ -19,7 +19,7 @@ function refresh(errorFlowResponse, codeObjectId)
         let path = `${frame.moduleName}#${frame.functionName}`;
         let selectedClass = frame.codeObjectId == codeObjectId ? "selected" : "";
         let frameItem = $(`
-            <div class="frame-item ${selectedClass}">
+            <div class="list-item ellipsis ${selectedClass}">
                 <vscode-link title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>
                 <div title="${path}">${path}</div>
             </div>

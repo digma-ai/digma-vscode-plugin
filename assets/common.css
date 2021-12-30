@@ -1,0 +1,20 @@
+
+.list{
+    inline-size: 100%;
+}
+
+.list-item:hover {
+    background: var(--vscode-list-hoverBackground);
+}
+
+.list-item {
+    padding: 0px 5px 8px 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--vscode-tree-tableColumnsBorder);
+    border-bottom-style: solid;
+}
+
+.list-item.selected {
+    background: var(--vscode-list-inactiveSelectionBackground);
+    border: none;
+}

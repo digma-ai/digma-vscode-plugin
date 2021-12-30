@@ -1,0 +1,14 @@
+
+.env-container {
+    display: flex;
+    width: 100%;
+}
+.env-label{
+    padding-right: 10px;
+    display: inline-flex;
+    align-items: center;
+}
+.env-dropdown{
+    display: block;
+    flex: 1;
+}

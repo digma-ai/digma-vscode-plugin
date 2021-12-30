@@ -1,6 +1,8 @@
 import fetch from "node-fetch";
 import * as vscode from 'vscode';
 import * as https from 'https';
+import * as os from 'os';
+import { Environment, Settings } from "./settings";
 
 export enum Impact 
 {
@@ -68,7 +70,7 @@ export class AnalyticsProvider
     private _agent: https.Agent;
 
     constructor(){
-        this._url = vscode.workspace.getConfiguration("digma").get("url", '');
+        this._url = Settings.url;
         this._agent = new https.Agent({
             rejectUnauthorized: false,
         });
@@ -83,7 +85,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers}) 
+                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: this.getEnvironmet()}) 
                 });
             if(!response.ok){
                 console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
@@ -108,7 +110,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers}) 
+                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: this.getEnvironmet()}) 
                 });
             if(!response.ok){
                 console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
@@ -133,7 +135,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({id: errorFlowId}) 
+                    body: JSON.stringify({id: errorFlowId, environment: this.getEnvironmet()}) 
                 });
             if(!response.ok){
                 console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
@@ -149,4 +151,7 @@ export class AnalyticsProvider
         return;
     }
 
+    private getEnvironmet(): string{
+        return Settings.environment == Environment.Local ? os.hostname() : Settings.environment;
+    }
 }

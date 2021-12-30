@@ -1,8 +1,7 @@
-import { AnalyticsProvider, IErrorFlowFrame, IErrorFlowResponse } from "./analyticsProvider";
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { trendToAsciiIcon } from "./symbolProvider";
-import { getUri } from "./utils";
+import { AnalyticsProvider, IErrorFlowFrame } from "../analyticsProvider";
+import { WebViewUris } from "./webViewUris";
+
 
 export class ErrorFlowStackView implements vscode.Disposable
 {
@@ -36,11 +35,13 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 {
 	private _view?: vscode.WebviewView;
     private _disposables: vscode.Disposable[] = [];
+    private _webViewUris: WebViewUris;
 
     constructor(
         private _analyticsProvider: AnalyticsProvider,
-        private _extensionUri: vscode.Uri) {
-        
+        extensionUri: vscode.Uri) 
+    {
+        this._webViewUris = new WebViewUris(extensionUri, "errorFlowStackView", ()=>this._view!.webview);
     }
 
     public resolveWebviewView(
@@ -104,34 +105,24 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getHtml() : string 
     {
-        const toolkitUri = getUri(this._view!.webview, this._extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
-            "toolkit.js",
-          ]);
-        const mainJsUri = getUri(this._view!.webview, this._extensionUri, ["media","main.js"]);
-        const mainCssUri = getUri(this._view!.webview, this._extensionUri, ["media","main.css"]);
-        const jqueryUri = getUri(this._view!.webview, this._extensionUri, ["media","jquery-3.6.0.min.js"]);
         return /*html*/ `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-                <link rel="stylesheet" href="${mainCssUri}">
-                <script src="${jqueryUri}"></script>
-                <script type="module" src="${toolkitUri}"></script>
-                <script type="module" src="${mainJsUri}"></script>
-                <title>Hello World!</title>
+                <link rel="stylesheet" href="${this._webViewUris.commonCss}">
+                <link rel="stylesheet" href="${this._webViewUris.mainCss}">
+                <script type="module" src="${this._webViewUris.jQueryJs}"></script>
+                <script type="module" src="${this._webViewUris.toolkitJs}"></script>
+                <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body style="padding: 0 5px;">
                 <vscode-panels aria-label="Default">
                     <vscode-panel-tab id="tab-1">Frames</vscode-panel-tab>
                     <vscode-panel-tab id="tab-2">Raw</vscode-panel-tab>
                     <vscode-panel-view id="view-1">
-                        <div id="frames-list"></div>
+                        <div id="frames-list" class="list"></div>
                     </vscode-panel-view>
                     <vscode-panel-view id="view-2">
                         <div id="raw"></div>

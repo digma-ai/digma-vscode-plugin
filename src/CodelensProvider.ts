@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 import { SymbolProvider, trendToCodIcon } from './symbolProvider';
-import { ErrorFlowListView } from './errorFlowListView';
+import { ErrorFlowListView } from './views/errorFlowListView';
 import { SymbolInfo } from './languageSupport';
 import { AnalyticsProvider } from './analyticsProvider';
+import { Settings } from './settings';
 
 
 class CodeLensAnalitics extends vscode.CodeLens 
@@ -37,7 +38,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
 
     public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<CodeLensAnalitics[]> 
     {
-        if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true)) 
+        if (!Settings.enableCodeLens) 
             return [];
 
         const symbolInfos = await this._symbolProvider.getSymbols(document);
@@ -48,7 +49,7 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
 
     public async resolveCodeLens(codeLens: CodeLensAnalitics, token: vscode.CancellationToken) : Promise<CodeLensAnalitics> 
     {
-        if (!vscode.workspace.getConfiguration("digma").get("enableCodeLens", true))
+        if (!Settings.enableCodeLens)
             return codeLens;
 
         const summary = (await this._analyticsProvider.getSummary([codeLens.symbolInfo.id])).firstOrDefault();
