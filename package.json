@@ -63,9 +63,7 @@
   	  	  	  	  	"default": "https://localhost:7106"
   	  	  	  	},
   	  	  	  	"digma.environment": {
-  	  	  	  	  	"type": "string",
-  	  	  	  	  	"default": "Production",
-					"enum": ["Production", "Staging", "Testing", "Local"]
+  	  	  	  	  	"type": "string"
   	  	  	  	}
   	  	  	}
   	  	}

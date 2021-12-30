@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 import * as vscode from 'vscode';
 import * as https from 'https';
 import * as os from 'os';
-import { Environment, Settings } from "./settings";
+import { Settings } from "./settings";
 
 export enum Impact 
 {
@@ -76,6 +76,30 @@ export class AnalyticsProvider
         });
     }
 
+    public async getEnvironments() : Promise<string[]> 
+    {
+        try{
+            var response = await fetch(
+                `${this._url}/CodeAnalytics/environments`, 
+                {
+                    agent: this._agent,
+                    method: 'GET', 
+                    headers: {'Content-Type': 'application/json' }
+                });
+            if(!response.ok){
+                console.error(`Failed to get environments from digma: ${response.status} ${response.statusText}`);
+                return [];
+            }
+                
+            var reponseJson = await response.json();
+            return <string[]>reponseJson;
+        }
+        catch(error){
+            console.error(error);
+        }
+        return [];
+    }
+
     public async getSummary(symbolsIdentifiers: string[]): Promise<ICodeObjectSummary[]> 
     {
         try{
@@ -85,7 +109,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: this.getEnvironmet()}) 
+                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment}) 
                 });
             if(!response.ok){
                 console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
@@ -110,7 +134,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: this.getEnvironmet()}) 
+                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment}) 
                 });
             if(!response.ok){
                 console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
@@ -135,7 +159,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({id: errorFlowId, environment: this.getEnvironmet()}) 
+                    body: JSON.stringify({id: errorFlowId, environment: Settings.environment}) 
                 });
             if(!response.ok){
                 console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
@@ -149,9 +173,5 @@ export class AnalyticsProvider
             console.error(error);
         }
         return;
-    }
-
-    private getEnvironmet(): string{
-        return Settings.environment == Environment.Local ? os.hostname() : Settings.environment;
     }
 }

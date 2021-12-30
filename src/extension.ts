@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
 import { logger } from './utils';
-import { AnaliticsCodeLens } from './codelensProvider';
+import { AnaliticsCodeLens } from './analiticsCodeLens';
 import { AnalyticsProvider} from './analyticsProvider';
 import { SymbolProvider } from './symbolProvider';
 import { PythonSupport } from './languageSupport';
 import { ErrorFlowStackView } from './views/errorFlowStackView';
 import { ErrorFlowListView } from './views/errorFlowListView';
 import { ContextView } from './views/contextView';
+import { Settings } from './settings';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -19,8 +20,12 @@ export async function activate(context: vscode.ExtensionContext)
     const symbolProvider = new SymbolProvider(supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
 
+    if(!Settings.environment){
+        Settings.environment = (await analyticsProvider.getEnvironments()).firstOrDefault();
+    }
+
     context.subscriptions.push(new AnaliticsCodeLens(symbolProvider, analyticsProvider));
-    context.subscriptions.push(new ContextView(context.extensionUri));
+    context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider));
     context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, context.extensionUri));
 

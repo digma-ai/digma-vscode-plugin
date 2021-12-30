@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
 import { WebViewUris } from "./webViewUris";
-import { Environment, Settings } from '../settings';
+import { Settings } from '../settings';
+import { AnalyticsProvider } from '../analyticsProvider';
 
 
 export class ContextView implements vscode.Disposable
@@ -11,9 +12,9 @@ export class ContextView implements vscode.Disposable
     private _provider: ContextViewProvider;
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(extensionUri: vscode.Uri) 
+    constructor(analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
     {
-        this._provider = new ContextViewProvider(extensionUri);
+        this._provider = new ContextViewProvider(analyticsProvider, extensionUri);
         this._disposables.push(vscode.window.registerWebviewViewProvider(ContextView.viewId, this._provider));
     }
 
@@ -32,17 +33,17 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
     private _disposables: vscode.Disposable[] = [];
     private _webViewUris: WebViewUris;
 
-    constructor(extensionUri: vscode.Uri) 
+    constructor(private _analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
     {
         this._webViewUris = new WebViewUris(extensionUri, "contextView", ()=>this._view!.webview);
-        vscode.workspace.onDidChangeConfiguration((event: vscode.ConfigurationChangeEvent) => {
+        vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
             if(this._view && event.affectsConfiguration(Settings.keys.environment)){
-                this._view.webview.html = this.getHtml();
+                this._view.webview.html = await this.getHtml(Settings.environment);
             }
         }, this._disposables);
     }
 
-    public resolveWebviewView(
+    public async resolveWebviewView(
 		webviewView: vscode.WebviewView,
 		context: vscode.WebviewViewResolveContext,
 		_token: vscode.CancellationToken,
@@ -62,17 +63,19 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
             undefined,
             this._disposables
         );
-		webviewView.webview.html = this.getHtml();
+		webviewView.webview.html = await this.getHtml(Settings.environment);
 	}
 
-    private getHtml() : string 
+    private async getHtml(selectedEnv: string) : Promise<string> 
     {
-        const environments = ['Production', 'Staging', 'Testing', 'Local'];
+        const environments = await this._analyticsProvider.getEnvironments();
         let options = '';
+        if(!environments.includes(selectedEnv)){
+            options += `<vscode-option id="${selectedEnv}" selected>${selectedEnv} (custom)</vscode-option>`;
+        }
         for(let env of environments){
-            const selected = Settings.environment == env ? "selected" : "";
-            const label = env == Environment.Local ? os.hostname : env;
-            options += `<vscode-option id="${env}" ${selected}>${label}</vscode-option>`;
+            const selected = env == selectedEnv ? "selected" : "";
+            options += `<vscode-option id="${env}" ${selected}>${env}</vscode-option>`;
         }
         return /*html*/ `
             <!DOCTYPE html>

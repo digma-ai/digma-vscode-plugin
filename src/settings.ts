@@ -1,11 +1,5 @@
 import * as vscode from 'vscode';
 
-export enum Environment{
-    Production="Production", 
-    Staging="Staging", 
-    Testing="Testing", 
-    Local="Local"
-}
 
 export class Settings {
     public static readonly keys = {
@@ -34,11 +28,11 @@ export class Settings {
         Settings.section.update("enableCodeLens", value);
     }
 
-    public static get environment() : Environment{
-        return Settings.section.get("environment", Environment.Production);
+    public static get environment() : string{
+        return Settings.section.get("environment", '');
     }
 
-    public static set environment(value: Environment){
+    public static set environment(value: string){
         Settings.section.update("environment", value);
     }
 }
