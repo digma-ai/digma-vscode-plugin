@@ -24,6 +24,16 @@
   	],
   	"main": "./out/extension.js",
   	"contributes": {
+  	  	"commands": [
+  	  	  	{
+  	  	  	  	"command": "helloworld.helloWorld",
+  	  	  	  	"title": "Hello World"
+  	  	  	},
+  	  	  	{
+  	  	  	  	"command": "helloworld.refactor",
+  	  	  	  	"title": "Hello Refactor"
+  	  	  	}
+  	  	],
   	  	"views": {
   	  	  	"digma": [
   	  	  	  	{
@@ -61,6 +71,7 @@
   	  	}
   	},
   	"dependencies": {
+  	  	"@vscode/webview-ui-toolkit": "^0.8.4",
   	  	"https": "^1.0.0",
   	  	"moment": "^2.29.1",
   	  	"node-fetch": "^2.6.6",

@@ -24,16 +24,8 @@ export async function activate(context: vscode.ExtensionContext)
         codelensProvider);
 
     context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider));
-    context.subscriptions.push(new ErrorFlowStackView(analyticsProvider));
+    context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, context.extensionUri));
 
-    // const errorFlowDetailsViewProvider = new ErrorFlowDetailsViewProvider();
-    // context.subscriptions.push(
-    //     vscode.window.registerWebviewViewProvider("errorFlowDetail", errorFlowDetailsViewProvider));
-
-    // vscode.commands.registerCommand("digma.openErrorFlowInfoView", (e: ICodeObjectErrorFlow) => {
-    //     errorFlowDetailsViewProvider.setErrorFlow(e);
-    // });
-    
     logger.appendLine("Finished activating")
 }
 

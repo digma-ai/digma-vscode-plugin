@@ -61,17 +61,19 @@ class ErrorFlowsListProvider implements vscode.TreeDataProvider<vscode.TreeItem>
 
             for(let codeObject of codeObjects)
             {
-                let symbol = symbols.find(s => s.id == codeObject.codeObjectId);
-                if(symbol)
-                {
-                    let codeObjectItem = new CodeObjectItem(symbol, codeObject);
-        
-                    for(let errorFlow of codeObject.errorFlows ?? [])
-                        codeObjectItem.errorFlowItems.push(new ErrorFlowItem(codeObjectItem, errorFlow));
+                if(codeObject.errorFlows.length == 0)
+                    continue;
 
-                    this._codeObjectItems.push(codeObjectItem);
-                }
+                let symbol = symbols.find(s => s.id == codeObject.codeObjectId);
+                if(!symbol)
+                    continue;
                 
+                let codeObjectItem = new CodeObjectItem(symbol, codeObject);
+    
+                for(let errorFlow of codeObject.errorFlows ?? [])
+                    codeObjectItem.errorFlowItems.push(new ErrorFlowItem(codeObjectItem, errorFlow));
+
+                this._codeObjectItems.push(codeObjectItem);
             }
         }
         this._onDidChangeTreeData.fire();
@@ -138,7 +140,7 @@ class ErrorFlowItem extends vscode.TreeItem
             title: 'more details',
             tooltip: 'more details',
             command: ErrorFlowStackView.Commands.ShowForErrorFlow,
-            arguments: [errorFlow.id]
+            arguments: [errorFlow.id, parent.symInfo.id]
         } 
     }
 }

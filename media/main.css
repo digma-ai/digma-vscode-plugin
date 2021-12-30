@@ -1,0 +1,39 @@
+
+vscode-panel-view {
+    padding-right: 0;
+    padding-left: 0;
+}
+
+#raw{
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    inline-size: 100%;
+}
+
+#frames-list{
+    inline-size: 100%;
+}
+
+.frame-item:hover {
+    background: var(--vscode-list-hoverBackground);
+}
+
+.frame-item {
+    padding: 0px 5px 8px 5px;
+    border-bottom-width: 1px;
+    border-bottom-color: var(--vscode-tree-tableColumnsBorder);
+    border-bottom-style: solid;
+}
+
+.frame-item.selected {
+    background: var(--vscode-list-inactiveSelectionBackground);
+}
+
+.frame-item > * {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    display: block;
+}

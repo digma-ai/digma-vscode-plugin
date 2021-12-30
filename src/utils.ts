@@ -4,6 +4,10 @@ import * as vscode from 'vscode';
 
 export let logger = vscode.window.createOutputChannel("Digma");
 
+export function getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathList: string[]) {
+    return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
+}
+
 export type Dictionary<TKey extends keyof any, TValue> = Record<TKey, TValue>;
 
 export async function delay(ms: number) : Promise<any>{

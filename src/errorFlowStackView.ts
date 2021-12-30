@@ -1,6 +1,8 @@
-import { AnalyticsProvider, IErrorFlowResponse } from "./analyticsProvider";
+import { AnalyticsProvider, IErrorFlowFrame, IErrorFlowResponse } from "./analyticsProvider";
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { trendToAsciiIcon } from "./symbolProvider";
+import { getUri } from "./utils";
 
 export class ErrorFlowStackView implements vscode.Disposable
 {
@@ -10,28 +12,34 @@ export class ErrorFlowStackView implements vscode.Disposable
     }
 
     private _provider: ErrorFlowDetailsViewProvider;
-    private _disposable: vscode.Disposable;
+    private _disposables: vscode.Disposable[] = [];
 
-    constructor(analyticsProvider: AnalyticsProvider) 
+    constructor(analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
     {
-        this._provider = new ErrorFlowDetailsViewProvider(analyticsProvider);
-        this._disposable = vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider);
-        vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string) => {
-            await this._provider.setErrorFlow(errorFlowId);
-        });
+        this._provider = new ErrorFlowDetailsViewProvider(analyticsProvider, extensionUri);
+        this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider));
+        this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
+            await this._provider.setErrorFlow(errorFlowId, originCodeObjectId);
+        }));
     }
 
     public dispose() 
     {
-        this._disposable.dispose();
+        this._provider.dispose();
+
+        for(let dis of this._disposables)
+            dis.dispose();
     }
 }
 
-class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider
+class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode.Disposable
 {
 	private _view?: vscode.WebviewView;
+    private _disposables: vscode.Disposable[] = [];
 
-    constructor(private _analyticsProvider: AnalyticsProvider) {
+    constructor(
+        private _analyticsProvider: AnalyticsProvider,
+        private _extensionUri: vscode.Uri) {
         
     }
 
@@ -41,85 +49,100 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider
 		_token: vscode.CancellationToken,
 	) {
 		this._view = webviewView;
-		webviewView.webview.html = "";
+        webviewView.webview.options = {
+            enableScripts: true
+        };
+        webviewView.webview.onDidReceiveMessage(
+            (message: any) => {
+                switch (message.command) {
+                    case "goToFrame":
+                        this.goToFrame(message.frame);
+                        return;
+                }
+            },
+            undefined,
+            this._disposables
+        );
+		webviewView.webview.html = this.getHtml();
 	}
 
-    public async setErrorFlow(errorFlowId: string)
+    public async setErrorFlow(errorFlowId: string, originCodeObjectId: string)
     {
         if(!this._view)
             return;
 
-        const response = await this._analyticsProvider.getErrorFlow(errorFlowId);
-        if(response){
-            this._view.webview.html = this.getErrorFlowInfoAsHtml(response);
+        const errorFlow = await this._analyticsProvider.getErrorFlow(errorFlowId);
+        this._view.webview.postMessage({
+            errorFlow: errorFlow,
+            originCodeObjectId: originCodeObjectId
+        });
+    }
+
+    private async goToFrame(frame: IErrorFlowFrame)
+    {
+        const moduleRootFolder = frame.moduleName.split('/').firstOrDefault();
+        const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name == moduleRootFolder);
+        if(!moduleWorkspace){
+            vscode.window.showWarningMessage(`File ${frame.moduleName} is not part of the workspace`)
+            return;
         }
-        else{
-            this._view.webview.html = "";
+
+        const uri = vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.moduleName);
+        try{
+            const doc = await vscode.workspace.openTextDocument(uri);
+            await vscode.window.showTextDocument(doc, { preview: true });
+            if(vscode.window.activeTextEditor){
+                let line = doc.lineAt(frame.lineNumber-1);
+                vscode.window.activeTextEditor.selection = new vscode.Selection(line.range.start, line.range.start);
+            }
+        }
+        catch(e){
+            vscode.window.showErrorMessage(`File ${frame.moduleName} was not found`)
         }
     }
 
-    private getErrorFlowInfoAsHtml(e: IErrorFlowResponse) : string {
-        return `
-        <html>
-        <head>
-            <style>
-                body{
-                    background-color: var(--vscode-background);
-                    color: var(--vscode-foreground);
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-                    font-family: Segoe WPC,Segoe UI,sans-serif;
-                    font-size: 13px;
-                }
-                .row {
-                    display: flex;
-                    flex-direction: row;
-                    flex-wrap: wrap;
-                    width: 100%;
-                }
-                .column {
-                    display: flex;
-                    flex-direction: column;
-                    flex-basis: 100%;
-                    flex: 1;
-                    margin: 2px 0px;
-                }
-                .column:first-child{
-                    flex: 0 0 80px;
-                }
-                .value{
-                    opacity: 0.8;
-                }
-                .seperator{
-                    border-top: 1px solid var(--vscode-sideBarSectionHeader-border);
-                    margin: 10px 0;
-                }
-                pre {
-                    white-space: pre-wrap;
-                }        
-            </style>
-        </head>
-        <body>
-            <div class="row">
-                <div class="column label">Message</div>
-                <div class="column value">${e.exceptionMessage}</div>
-            </div>
-            <div class="row">
-                <div class="column label">Impact</div>
-                <div class="column value">${e.summary.impact}</div>
-            </div>
-            <div class="row">
-                <div class="column label">Frequency</div>
-                <div class="column value">${e.summary.frequency}</div>
-            </div>
-            <div class="row">
-                <div class="column label">Trend</div>
-                <div class="column value">${trendToAsciiIcon(e.summary.trend)}</div>
-            </div>
-            <div class="seperator"></div>
-            <div class="label">Stacktrace</div>
-            <div class="value"><pre>${e.stackTrace}</pre></div>
-        </body>
-        </html>
-        `;
+    private getHtml() : string 
+    {
+        const toolkitUri = getUri(this._view!.webview, this._extensionUri, [
+            "node_modules",
+            "@vscode",
+            "webview-ui-toolkit",
+            "dist",
+            "toolkit.js",
+          ]);
+        const mainJsUri = getUri(this._view!.webview, this._extensionUri, ["media","main.js"]);
+        const mainCssUri = getUri(this._view!.webview, this._extensionUri, ["media","main.css"]);
+        const jqueryUri = getUri(this._view!.webview, this._extensionUri, ["media","jquery-3.6.0.min.js"]);
+        return /*html*/ `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width,initial-scale=1.0">
+                <link rel="stylesheet" href="${mainCssUri}">
+                <script src="${jqueryUri}"></script>
+                <script type="module" src="${toolkitUri}"></script>
+                <script type="module" src="${mainJsUri}"></script>
+                <title>Hello World!</title>
+            </head>
+            <body style="padding: 0 5px;">
+                <vscode-panels aria-label="Default">
+                    <vscode-panel-tab id="tab-1">Frames</vscode-panel-tab>
+                    <vscode-panel-tab id="tab-2">Raw</vscode-panel-tab>
+                    <vscode-panel-view id="view-1">
+                        <div id="frames-list"></div>
+                    </vscode-panel-view>
+                    <vscode-panel-view id="view-2">
+                        <div id="raw"></div>
+                    </vscode-panel-view>
+                </vscode-panels>
+            </body>
+            </html>`;
+    }
+
+    public dispose() 
+    {
+        for(let dis of this._disposables)
+            dis.dispose();
     }
 }
