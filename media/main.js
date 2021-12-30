@@ -1,18 +1,20 @@
 const vscode = acquireVsCodeApi();
 
 window.addEventListener("load", main);
+window.addEventListener('message', event => refresh(event.data.errorFlow, event.data.originCodeObjectId));
 
 function main() {
-
+    const previousState = vscode.getState();
+    if(previousState){
+        refresh(previousState.errorFlowResponse, previousState.codeObjectId);
+    }
 }
 
-window.addEventListener('message', event => 
+function refresh(errorFlowResponse, codeObjectId)
 {
-    let errorFlowResponse = event.data.errorFlow;
-    let codeObjectId = event.data.originCodeObjectId;
     $('#raw').html(errorFlowResponse.stackTrace);
     $('#frames-list').html('');
-    for(let frame of errorFlowResponse.frames.reverse())
+    for(let frame of errorFlowResponse.frames)
     {
         let path = `${frame.moduleName}#${frame.functionName}`;
         let selectedClass = frame.codeObjectId == codeObjectId ? "selected" : "";
@@ -30,6 +32,6 @@ window.addEventListener('message', event =>
             });
         });
         frameItem.appendTo('#frames-list');
-
     }
-});
+    vscode.setState({ errorFlowResponse, codeObjectId });
+}

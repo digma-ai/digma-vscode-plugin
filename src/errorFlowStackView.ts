@@ -72,6 +72,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             return;
 
         const errorFlow = await this._analyticsProvider.getErrorFlow(errorFlowId);
+        errorFlow?.frames.reverse();
         this._view.webview.postMessage({
             errorFlow: errorFlow,
             originCodeObjectId: originCodeObjectId
