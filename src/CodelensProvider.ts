@@ -1,22 +1,45 @@
 import * as vscode from 'vscode';
 import { SymbolProvider, trendToCodIcon } from './symbolProvider';
 import { ErrorFlowListView } from './views/errorFlowListView';
-import { SymbolInfo } from './languageSupport';
 import { AnalyticsProvider } from './analyticsProvider';
 import { Settings } from './settings';
 
 
-class CodeLensAnalitics extends vscode.CodeLens 
+export class AnaliticsCodeLens implements vscode.Disposable
 {
+    private _provider: CodelensProvider;
+    private _disposables: vscode.Disposable[] = [];
+
     constructor(
-        public document: vscode.TextDocument,
-        public symbolInfo: SymbolInfo)
+        symbolProvider: SymbolProvider,
+        analyticsProvider: AnalyticsProvider)
     {
-        super(symbolInfo.range);
+        this._provider = new CodelensProvider(symbolProvider, analyticsProvider);
+
+        this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string) => {
+            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForDocument, document);
+            await vscode.commands.executeCommand(ErrorFlowListView.Commands.SelectCodeObject, symbolId);
+        }));
+
+        this._disposables.push(vscode.workspace.onDidChangeConfiguration((_) => {
+            this._provider.raiseOnDidChangeCodeLenses();
+        },this._disposables));
+
+        this._provider.raiseOnDidChangeCodeLenses();
+
+        this._disposables.push(vscode.languages.registerCodeLensProvider(
+            symbolProvider.supportedLanguages.map(x => x.documentFilter), 
+            this._provider)
+        );
+    }
+
+    public dispose() {
+        for(let dis of this._disposables)
+            dis.dispose();
     }
 }
 
-export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnalitics> 
+class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens> 
 {
     public static readonly clickCommand = 'digma.lensClicked';
     private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
@@ -26,49 +49,40 @@ export class CodelensProvider implements vscode.CodeLensProvider<CodeLensAnaliti
         private _symbolProvider: SymbolProvider,
         private _analyticsProvider: AnalyticsProvider)
     {
-        vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string) => {
-            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForDocument, document);
-            await vscode.commands.executeCommand(ErrorFlowListView.Commands.SelectCodeObject, symbolId);
-        });
-        vscode.workspace.onDidChangeConfiguration((_) => {
-            this._onDidChangeCodeLenses.fire();
-        });
+    }
+
+    public raiseOnDidChangeCodeLenses(){
         this._onDidChangeCodeLenses.fire();
     }
 
-    public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<CodeLensAnalitics[]> 
+    public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> 
     {
         if (!Settings.enableCodeLens) 
             return [];
 
         const symbolInfos = await this._symbolProvider.getSymbols(document);
+        const codeObjectSummary = await this._analyticsProvider.getSummary(symbolInfos.map(s => s.id));
+        
+        const codelens: vscode.CodeLens[] = [];
+        for(let symbol of symbolInfos)
+        {
+            const summary = codeObjectSummary.firstOrDefault(x => x.id == symbol.id);
+            if(!summary || summary.errorFlowCount == 0)
+                continue;
 
-        const codelens = symbolInfos.map(s => new CodeLensAnalitics(document, s));
+            codelens.push(new vscode.CodeLens(symbol.range, {
+                title:  `${summary.errorFlowCount} Error flows (${trendToCodIcon(summary.trend)})`,
+                tooltip: symbol.id,
+                command: CodelensProvider.clickCommand,
+                arguments: [document, symbol.id]
+            }));
+        }
+
         return codelens;
     }
 
-    public async resolveCodeLens(codeLens: CodeLensAnalitics, token: vscode.CancellationToken) : Promise<CodeLensAnalitics> 
+    public async resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken) : Promise<vscode.CodeLens> 
     {
-        if (!Settings.enableCodeLens)
-            return codeLens;
-
-        const summary = (await this._analyticsProvider.getSummary([codeLens.symbolInfo.id])).firstOrDefault();
-        
-        let title = '';
-        if(summary){
-            title = `${summary.errorFlowCount} Error flows (${trendToCodIcon(summary.trend)})`;
-        }
-        else{
-            title = '(no data yet)';
-        }
-       
-        codeLens.command = {
-            title: title,
-            tooltip: codeLens.symbolInfo.id,
-            command: CodelensProvider.clickCommand,
-            arguments: [codeLens.document, codeLens.symbolInfo.id]
-        } 
-
         return codeLens;
     }
 }

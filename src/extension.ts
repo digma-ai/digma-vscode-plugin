@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { logger } from './utils';
-import { CodelensProvider } from './codelensProvider';
+import { AnaliticsCodeLens } from './codelensProvider';
 import { AnalyticsProvider} from './analyticsProvider';
 import { SymbolProvider } from './symbolProvider';
 import { PythonSupport } from './languageSupport';
@@ -18,12 +18,8 @@ export async function activate(context: vscode.ExtensionContext)
     ];
     const symbolProvider = new SymbolProvider(supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
-    const codelensProvider = new CodelensProvider(symbolProvider, analyticsProvider);
 
-    vscode.languages.registerCodeLensProvider(
-        supportedLanguages.map(x => x.documentFilter), 
-        codelensProvider);
-
+    context.subscriptions.push(new AnaliticsCodeLens(symbolProvider, analyticsProvider));
     context.subscriptions.push(new ContextView(context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider));
     context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, context.extensionUri));

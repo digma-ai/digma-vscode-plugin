@@ -28,13 +28,13 @@ export class SymbolProvider
 {
     private _creationTime: moment.Moment = moment.utc();
 
-    constructor(private _supportedLanguages: ISupportedLanguage[]) 
+    constructor(public supportedLanguages: ISupportedLanguage[]) 
     {
     }
 
     public async getSymbols(document: vscode.TextDocument) : Promise<SymbolInfo[]>
     {
-        const supportedLanguage = this._supportedLanguages.find(x => vscode.languages.match(x.documentFilter, document) > 0);
+        const supportedLanguage = this.supportedLanguages.find(x => vscode.languages.match(x.documentFilter, document) > 0);
         if (!supportedLanguage ||
             !(supportedLanguage.requiredExtentionLoaded || await this.loadRequiredExtention(supportedLanguage)))
         {
@@ -78,7 +78,7 @@ export class SymbolProvider
             if(sel == installOption)
                 vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtentionId);
             else if(sel == ignoreOption)
-                this._supportedLanguages = this._supportedLanguages.filter(x => x != language);
+                this.supportedLanguages = this.supportedLanguages.filter(x => x != language);
             return false;
         }
         if(!extention.isActive)
