@@ -10,6 +10,11 @@ export enum Impact
     LOW = "Low",
 }
 
+export interface IErrorFlowStack{
+    exceptionType: string;
+    frames: IErrorFlowFrame[];
+}
+
 export interface IErrorFlowFrame{
     moduleName: string;
     functionName: string;
@@ -24,7 +29,7 @@ export interface IErrorFlowResponse
     stackTrace: string;
     exceptionMessage: string;
     exceptionType: string;
-    frames: IErrorFlowFrame[];
+    frameStacks: IErrorFlowStack[];
 }
 
 export interface IErrorFlowSummary

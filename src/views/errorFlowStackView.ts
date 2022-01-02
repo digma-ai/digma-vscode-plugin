@@ -98,9 +98,13 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getHtml(errorFlow: IErrorFlowResponse | undefined, originCodeObjectId: string | undefined) : string 
     {
-        const framesHtml = errorFlow?.frames.reverse()
+
+        const framesHtml = errorFlow?.frameStacks.flatMap(f=> f.frames).reverse()
             .map(f => this.getFrameItemHtml(f, originCodeObjectId!))
             .join('') ?? '';
+        // const framesHtml = errorFlow?.frameStacks[0].frames.reverse()
+        //     .map(f => this.getFrameItemHtml(f, originCodeObjectId!))
+        //     .join('') ?? '';
         const checked = Settings.hideFramesOutsideWorkspace ? "checked" : "";
 
         return /*html*/ `
