@@ -20,8 +20,8 @@ function refresh(errorFlowResponse, codeObjectId)
         let selectedClass = frame.codeObjectId == codeObjectId ? "selected" : "";
         let frameItem = $(`
             <div class="list-item ellipsis ${selectedClass}">
-                <vscode-link title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>
-                <div title="${path}">${path}</div>
+                <vscode-link title="${path}">${path}</vscode-link>
+                <div title="${frame.excutedCode}">${frame.excutedCode} [${frame.lineNumber}]</div>
             </div>
         `);
         frameItem.find('vscode-link').click((e)=>
