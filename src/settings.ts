@@ -35,4 +35,12 @@ export class Settings {
     public static set environment(value: string){
         Settings.section.update("environment", value);
     }
+
+    public static get hideFramesOutsideWorkspace() : boolean{
+        return Settings.section.get("hideFramesOutsideWorkspace", true);
+    }
+
+    public static set hideFramesOutsideWorkspace(value: boolean){
+        Settings.section.update("hideFramesOutsideWorkspace", value);
+    }
 }

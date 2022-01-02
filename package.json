@@ -64,6 +64,10 @@
   	  	  	  	},
   	  	  	  	"digma.environment": {
   	  	  	  	  	"type": "string"
+  	  	  	  	},
+  	  	  	  	"digma.hideFramesOutsideWorkspace": {
+  	  	  	  	  	"type": "bool",
+					"defult": true
   	  	  	  	}
   	  	  	}
   	  	}

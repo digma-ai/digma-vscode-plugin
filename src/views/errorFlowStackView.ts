@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
-import { AnalyticsProvider, IErrorFlowFrame } from "../analyticsProvider";
+import { AnalyticsProvider, IErrorFlowFrame, IErrorFlowResponse } from "../analyticsProvider";
+import { Settings } from '../settings';
 import { WebViewUris } from "./webViewUris";
 
 
@@ -47,11 +48,8 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
     public resolveWebviewView(
 		webviewView: vscode.WebviewView,
 		context: vscode.WebviewViewResolveContext<any>,
-		_token: vscode.CancellationToken,
-	) {
-        context.state.stackFrames = []; 
-        context.state.stackTrace = ''; 
-         
+		_token: vscode.CancellationToken) 
+    {
 		this._view = webviewView;
         webviewView.webview.options = {
             enableScripts: true
@@ -59,15 +57,18 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         webviewView.webview.onDidReceiveMessage(
             (message: any) => {
                 switch (message.command) {
+                    case "setWorkspaceOnly":
+                        Settings.hideFramesOutsideWorkspace = message.value
+                        return;
                     case "goToFileAndLine":
-                        this.goToFrame(message.fileUri, message.fileLine);
+                        this.goToFileAndLine(message.fileUri, message.fileLine);
                         return;
                 }
             },
             undefined,
             this._disposables
         );
-		webviewView.webview.html = this.getHtml();
+		webviewView.webview.html = this.getHtml(undefined, undefined);
 	}
 
     public async setErrorFlow(errorFlowId: string, originCodeObjectId: string)
@@ -76,28 +77,10 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             return;
 
         const errorFlow = await this._analyticsProvider.getErrorFlow(errorFlowId);
-        const stackFrames = errorFlow?.frames.reverse().map(f => {
-            const moduleRootFolder = f.moduleName.split('/').firstOrDefault();
-            const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name == moduleRootFolder);
-            const uri = moduleWorkspace
-                ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', f.moduleName)
-                : undefined;
-            return {
-                moduleName: f.moduleName,
-                functionName: f.functionName,
-                lineNumber: f.lineNumber,
-                excutedCode: f.excutedCode,
-                selected: f.codeObjectId == originCodeObjectId,
-                workspaceUri: uri?.toString()
-            }
-        });
-        this._view.webview.postMessage({
-            stackFrames: stackFrames,
-            stackTrace: errorFlow?.stackTrace
-        });
+        this._view.webview.html = this.getHtml(errorFlow, originCodeObjectId);
     }
 
-    private async goToFrame(fileUri: string, fileLine: number)
+    private async goToFileAndLine(fileUri: string, fileLine: number)
     {
         try{
             const uri = vscode.Uri.parse(fileUri);
@@ -113,8 +96,13 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         }
     }
 
-    private getHtml() : string 
+    private getHtml(errorFlow: IErrorFlowResponse | undefined, originCodeObjectId: string | undefined) : string 
     {
+        const framesHtml = errorFlow?.frames.reverse()
+            .map(f => this.getFrameItemHtml(f, originCodeObjectId!))
+            .join('') ?? '';
+        const checked = Settings.hideFramesOutsideWorkspace ? "checked" : "";
+
         return /*html*/ `
             <!DOCTYPE html>
             <html lang="en">
@@ -128,19 +116,52 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body style="padding: 0 5px;">
-                <vscode-checkbox class="workspace-only-checkbox" checked>Workspace only</vscode-checkbox>
+                <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
                 <vscode-panels aria-label="Default">
                     <vscode-panel-tab id="tab-1">Frames</vscode-panel-tab>
                     <vscode-panel-tab id="tab-2">Raw</vscode-panel-tab>
                     <vscode-panel-view id="view-1">
-                        <div id="frames-list" class="list"></div>
+                        <div id="frames-list" class="list">${framesHtml}</div>
                     </vscode-panel-view>
                     <vscode-panel-view id="view-2">
-                        <div id="raw"></div>
+                        <div id="raw">${errorFlow?.stackTrace ?? ''}</div>
                     </vscode-panel-view>
                 </vscode-panels>
             </body>
             </html>`;
+    }
+
+    private getFrameItemHtml(frame: IErrorFlowFrame, originCodeObjectId: string)
+    {
+        const workspaceUri = this.getWorkspaceFileUri(frame.moduleName);
+        const path = `${frame.moduleName} in ${frame.functionName}`;
+        const selectedClass = frame.codeObjectId == originCodeObjectId ? "selected" : "";
+        const disabledClass = workspaceUri ? "" : "disabled";
+        const hideAttr = workspaceUri || !Settings.hideFramesOutsideWorkspace ? "" : "hidden";
+        
+        const linkTag = workspaceUri
+            ? /*html*/`<vscode-link class="link-cell" data-uri="${workspaceUri}" data-line="${frame.lineNumber}" title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>`
+            : /*html*/`<span class="link-cell look-like-link" title="${frame.excutedCode}">${frame.excutedCode}</span>`;
+        
+        return /*html*/`
+            <div class="list-item ellipsis ${selectedClass} ${disabledClass}" ${hideAttr}>
+                <div title="${path}">${path}</div>
+                <div class="bottom-line">
+                    ${linkTag}
+                    <div class="number-cell">line ${frame.lineNumber}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    private getWorkspaceFileUri(moduleName: string) : string | undefined
+    {
+        const moduleRootFolder = moduleName.split('/').firstOrDefault();
+        const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name == moduleRootFolder);
+        const workspaceUri = moduleWorkspace
+            ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', moduleName).toString()
+            : undefined;
+        return workspaceUri;
     }
 
     public dispose() 
