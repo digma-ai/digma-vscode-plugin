@@ -18,3 +18,21 @@ vscode-panel-view {
     overflow: hidden;
     display: block;
 }
+
+.bottom-line {
+    display: flex;
+    width: 100%;
+}
+.bottom-line .link{
+    display: block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    flex: 1;
+}
+.bottom-line .number{
+    display: inline-flex;
+    align-items: flex-end;
+    opacity: 0.5;
+    margin-left: 10px;
+}

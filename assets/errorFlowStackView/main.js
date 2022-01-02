@@ -16,12 +16,15 @@ function refresh(errorFlowResponse, codeObjectId)
     $('#frames-list').html('');
     for(let frame of errorFlowResponse.frames)
     {
-        let path = `${frame.moduleName}#${frame.functionName}`;
+        let path = `${frame.moduleName} in ${frame.functionName}`;
         let selectedClass = frame.codeObjectId == codeObjectId ? "selected" : "";
         let frameItem = $(`
             <div class="list-item ellipsis ${selectedClass}">
-                <vscode-link title="${path}">${path}</vscode-link>
-                <div title="${frame.excutedCode}">${frame.excutedCode} [${frame.lineNumber}]</div>
+                <div title="${path}">${path}</div>
+                <div class="bottom-line">
+                    <vscode-link class="link" title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>
+                    <div class="number">line ${frame.lineNumber}</div>
+                </div>
             </div>
         `);
         frameItem.find('vscode-link').click((e)=>

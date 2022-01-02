@@ -8,7 +8,7 @@
 }
 
 .list-item {
-    padding: 0px 5px 8px 5px;
+    padding: 4px 5px 4px 5px;
     border-bottom-width: 1px;
     border-bottom-color: var(--vscode-tree-tableColumnsBorder);
     border-bottom-style: solid;
