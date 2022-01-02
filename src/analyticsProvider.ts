@@ -15,6 +15,7 @@ export interface IErrorFlowFrame{
     functionName: string;
     lineNumber: number;
     excutedCode: string;
+    codeObjectId: string;
 }
 
 export interface IErrorFlowResponse

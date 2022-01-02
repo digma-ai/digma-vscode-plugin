@@ -46,9 +46,12 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     public resolveWebviewView(
 		webviewView: vscode.WebviewView,
-		context: vscode.WebviewViewResolveContext,
+		context: vscode.WebviewViewResolveContext<any>,
 		_token: vscode.CancellationToken,
 	) {
+        context.state.stackFrames = []; 
+        context.state.stackTrace = ''; 
+         
 		this._view = webviewView;
         webviewView.webview.options = {
             enableScripts: true
@@ -56,8 +59,8 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         webviewView.webview.onDidReceiveMessage(
             (message: any) => {
                 switch (message.command) {
-                    case "goToFrame":
-                        this.goToFrame(message.frame);
+                    case "goToFileAndLine":
+                        this.goToFrame(message.fileUri, message.fileLine);
                         return;
                 }
             },
@@ -73,33 +76,40 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             return;
 
         const errorFlow = await this._analyticsProvider.getErrorFlow(errorFlowId);
-        errorFlow?.frames.reverse();
+        const stackFrames = errorFlow?.frames.reverse().map(f => {
+            const moduleRootFolder = f.moduleName.split('/').firstOrDefault();
+            const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name == moduleRootFolder);
+            const uri = moduleWorkspace
+                ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', f.moduleName)
+                : undefined;
+            return {
+                moduleName: f.moduleName,
+                functionName: f.functionName,
+                lineNumber: f.lineNumber,
+                excutedCode: f.excutedCode,
+                selected: f.codeObjectId == originCodeObjectId,
+                workspaceUri: uri?.toString()
+            }
+        });
         this._view.webview.postMessage({
-            errorFlow: errorFlow,
-            originCodeObjectId: originCodeObjectId
+            stackFrames: stackFrames,
+            stackTrace: errorFlow?.stackTrace
         });
     }
 
-    private async goToFrame(frame: IErrorFlowFrame)
+    private async goToFrame(fileUri: string, fileLine: number)
     {
-        const moduleRootFolder = frame.moduleName.split('/').firstOrDefault();
-        const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name == moduleRootFolder);
-        if(!moduleWorkspace){
-            vscode.window.showWarningMessage(`File ${frame.moduleName} is not part of the workspace`)
-            return;
-        }
-
-        const uri = vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.moduleName);
         try{
+            const uri = vscode.Uri.parse(fileUri);
             const doc = await vscode.workspace.openTextDocument(uri);
             await vscode.window.showTextDocument(doc, { preview: true });
             if(vscode.window.activeTextEditor){
-                let line = doc.lineAt(frame.lineNumber-1);
+                let line = doc.lineAt(fileLine-1);
                 vscode.window.activeTextEditor.selection = new vscode.Selection(line.range.start, line.range.start);
             }
         }
         catch(e){
-            vscode.window.showErrorMessage(`File ${frame.moduleName} was not found`)
+            vscode.window.showErrorMessage(`File ${fileUri} was not found`)
         }
     }
 
@@ -118,6 +128,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body style="padding: 0 5px;">
+                <vscode-checkbox class="workspace-only-checkbox" checked>Workspace only</vscode-checkbox>
                 <vscode-panels aria-label="Default">
                     <vscode-panel-tab id="tab-1">Frames</vscode-panel-tab>
                     <vscode-panel-tab id="tab-2">Raw</vscode-panel-tab>

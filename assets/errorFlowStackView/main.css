@@ -11,7 +11,11 @@ vscode-panel-view {
     overflow-wrap: break-word;
     inline-size: 100%;
 }
-
+.workspace-only-checkbox{
+    position: absolute;
+    right: 0;
+    top: 6px;
+}
 .ellipsis > * {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -19,20 +23,27 @@ vscode-panel-view {
     display: block;
 }
 
+.look-like-link{
+    color: var(--vscode-textLink-foreground);
+    padding-top: 5px;
+}
+.list-item.disabled {
+    opacity: 0.4;
+}
 .bottom-line {
     display: flex;
     width: 100%;
 }
-.bottom-line .link{
+.bottom-line .link-cell{
     display: block;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
     flex: 1;
 }
-.bottom-line .number{
+.bottom-line .number-cell{
     display: inline-flex;
     align-items: flex-end;
-    opacity: 0.5;
+    opacity: 0.4;
     margin-left: 10px;
 }
