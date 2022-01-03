@@ -9,6 +9,7 @@ export class ErrorFlowStackView implements vscode.Disposable
     public static readonly viewId = 'errorFlowDetails';
     public static Commands = class {
         public static readonly ShowForErrorFlow = `digma.${ErrorFlowStackView.viewId}.showForErrorFlow`;
+        public static readonly ClearErrorFlow = `digma.${ErrorFlowStackView.viewId}.clearErrorFlow`;
     }
 
     private _provider: ErrorFlowDetailsViewProvider;
@@ -20,6 +21,9 @@ export class ErrorFlowStackView implements vscode.Disposable
         this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider));
         this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
             await this._provider.setErrorFlow(errorFlowId, originCodeObjectId);
+        }));        
+        this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ClearErrorFlow, async () => {
+            await this._provider.clearErrorFlow();
         }));
     }
 
@@ -71,6 +75,13 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 		webviewView.webview.html = this.getHtml(undefined, undefined);
 	}
 
+    public async clearErrorFlow()
+    {
+        if(!this._view)
+            return;
+
+        this._view.webview.html = this.getHtml(undefined, undefined);
+    }
     public async setErrorFlow(errorFlowId: string, originCodeObjectId: string)
     {
         if(!this._view)

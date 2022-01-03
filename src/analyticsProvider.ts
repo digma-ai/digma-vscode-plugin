@@ -27,6 +27,7 @@ export interface IErrorFlowResponse
     stackTrace: string;
     exceptionMessage: string;
     exceptionType: string;
+    lastInstanceCommitId: string;
     frameStacks: IErrorFlowStack[];
 }
 

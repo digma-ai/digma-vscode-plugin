@@ -3,6 +3,7 @@ import { SymbolProvider, trendToCodIcon } from './symbolProvider';
 import { ErrorFlowListView } from './views/errorFlowListView';
 import { AnalyticsProvider } from './analyticsProvider';
 import { Settings } from './settings';
+import { ErrorFlowStackView } from './views/errorFlowStackView';
 
 
 export class AnaliticsCodeLens implements vscode.Disposable
@@ -19,6 +20,7 @@ export class AnaliticsCodeLens implements vscode.Disposable
         this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string) => {
             await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForDocument, document);
             await vscode.commands.executeCommand(ErrorFlowListView.Commands.SelectCodeObject, symbolId);
+            await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ClearErrorFlow);
         }));
 
         this._disposables.push(vscode.workspace.onDidChangeConfiguration((_) => {
