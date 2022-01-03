@@ -1,7 +1,5 @@
 import fetch from "node-fetch";
-import * as vscode from 'vscode';
 import * as https from 'https';
-import * as os from 'os';
 import { Settings } from "./settings";
 
 export enum Impact 
@@ -18,13 +16,18 @@ export interface IErrorFlowFrame{
     codeObjectId: string;
 }
 
+export interface IErrorFlowStack{
+    exceptionType: string;
+    frames: IErrorFlowFrame[];
+}
+
 export interface IErrorFlowResponse
 {
     summary: IErrorFlowSummary;
     stackTrace: string;
     exceptionMessage: string;
     exceptionType: string;
-    frames: IErrorFlowFrame[];
+    frameStacks: IErrorFlowStack[];
 }
 
 export interface IErrorFlowSummary

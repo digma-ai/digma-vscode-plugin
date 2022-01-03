@@ -22,7 +22,14 @@ vscode-panel-view {
     overflow: hidden;
     display: block;
 }
-
+.flow-stack-title{
+    font-weight: 500;
+}
+.flow-stack-frames{
+    border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
+    padding-left: 5px;
+    margin: 4px 0px 20px 3px;
+}
 .look-like-link{
     color: var(--vscode-textLink-foreground);
     padding-top: 5px;

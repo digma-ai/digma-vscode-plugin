@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AnalyticsProvider, IErrorFlowFrame, IErrorFlowResponse } from "../analyticsProvider";
+import { AnalyticsProvider, IErrorFlowFrame, IErrorFlowResponse, IErrorFlowStack } from "../analyticsProvider";
 import { Settings } from '../settings';
 import { WebViewUris } from "./webViewUris";
 
@@ -98,8 +98,8 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getHtml(errorFlow: IErrorFlowResponse | undefined, originCodeObjectId: string | undefined) : string 
     {
-        const framesHtml = errorFlow?.frames.reverse()
-            .map(f => this.getFrameItemHtml(f, originCodeObjectId!))
+        const stacksHtml = errorFlow?.frameStacks
+            .map(s => this.getFlowStackHtml(s, originCodeObjectId!))
             .join('') ?? '';
         const checked = Settings.hideFramesOutsideWorkspace ? "checked" : "";
 
@@ -121,7 +121,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                     <vscode-panel-tab id="tab-1">Frames</vscode-panel-tab>
                     <vscode-panel-tab id="tab-2">Raw</vscode-panel-tab>
                     <vscode-panel-view id="view-1">
-                        <div id="frames-list" class="list">${framesHtml}</div>
+                        <div class="list">${stacksHtml}</div>
                     </vscode-panel-view>
                     <vscode-panel-view id="view-2">
                         <div id="raw">${errorFlow?.stackTrace ?? ''}</div>
@@ -131,7 +131,22 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             </html>`;
     }
 
-    private getFrameItemHtml(frame: IErrorFlowFrame, originCodeObjectId: string)
+    private getFlowStackHtml(stack: IErrorFlowStack, originCodeObjectId?: string)
+    {
+        if(!stack)
+            return '';
+
+        const framesHtml = stack.frames
+            .map(f => this.getFrameItemHtml(f, originCodeObjectId))
+            .join('') ?? '';
+
+        return /*html*/`
+            <div class="flow-stack-title">${stack.exceptionType}</div>
+            <div class="flow-stack-frames">${framesHtml}</div>
+        `;
+    }
+
+    private getFrameItemHtml(frame: IErrorFlowFrame, originCodeObjectId?: string)
     {
         const workspaceUri = this.getWorkspaceFileUri(frame.moduleName);
         const path = `${frame.moduleName} in ${frame.functionName}`;

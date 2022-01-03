@@ -12,6 +12,7 @@
     border-bottom-width: 1px;
     border-bottom-color: var(--vscode-tree-tableColumnsBorder);
     border-bottom-style: solid;
+    border-radius: 2px;
 }
 
 .list-item.selected {
