@@ -4,6 +4,7 @@ import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
 export class SymbolInfo{
     constructor(
         public id: string,
+        public name: string,
         public displayName: string,
         public range: vscode.Range
     ){}
@@ -55,7 +56,7 @@ export class PythonSupport implements ISupportedLanguage
                 // Example:  numpy/tools/linter.py$_$get_branch_diff
                 const id = `${filePath}$_$${sym.name}`;
 
-                symbolInfos.push(new SymbolInfo(id, symPath, range));
+                symbolInfos.push(new SymbolInfo(id, sym.name, symPath, range));
             }
 
             if(sym.children){

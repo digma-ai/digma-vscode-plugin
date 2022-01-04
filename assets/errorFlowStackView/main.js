@@ -20,8 +20,7 @@ function main() {
     {
         vscode.postMessage({
             command: "goToFileAndLine",
-            fileUri: $(this).data('uri'),
-            fileLine: parseInt($(this).data('line')),
+            frameId: $(this).data('frame-id')
         });
     });
 }

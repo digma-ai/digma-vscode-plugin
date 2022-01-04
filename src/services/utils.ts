@@ -2,8 +2,6 @@
 import moment = require('moment');
 import * as vscode from 'vscode';
 
-export let logger = vscode.window.createOutputChannel("Digma");
-
 export function getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathList: string[]) {
     return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
 }
@@ -18,11 +16,31 @@ export async function delay(ms: number) : Promise<any>{
 declare global {
     interface Array<T> {
         firstOrDefault(predicate?: (item: T) => boolean): T;
+        all(predicate: (item: T) => boolean) : boolean;
     }
 }
 
 Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
     return this.find(predicate || (x => true));
+}
+
+Array.prototype.all = function (predicate: (item: any) => boolean) {
+    for(let item of this){
+        if(!predicate(item))
+            return false;
+    }
+    return true;
+}
+
+export async function fileExits(uri: vscode.Uri) : Promise<boolean>
+{
+    try{
+        await vscode.workspace.fs.stat(uri);
+        return true;
+    }
+    catch{
+        return false;
+    }
 }
 
 export class Future<T>{

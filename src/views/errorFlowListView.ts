@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode-languageclient';
-import { ICodeObjectErrorFlow, AnalyticsProvider, IErrorFlowSummary } from '../analyticsProvider';
-import { SymbolProvider, trendToAsciiIcon } from '../symbolProvider';
+import { ICodeObjectErrorFlow, AnalyticsProvider, IErrorFlowSummary } from '../services/analyticsProvider';
+import { SymbolProvider, trendToAsciiIcon } from '../services/symbolProvider';
 import { SymbolInfo } from '../languageSupport';
 import { ErrorFlowStackView } from './errorFlowStackView';
 

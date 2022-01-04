@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import { WebViewUris } from "./webViewUris";
 import { Settings } from '../settings';
-import { AnalyticsProvider } from '../analyticsProvider';
+import { AnalyticsProvider } from '../services/analyticsProvider';
 
 
 export class ContextView implements vscode.Disposable

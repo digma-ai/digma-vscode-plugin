@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
-import { SymbolProvider, trendToCodIcon } from './symbolProvider';
+import { SymbolProvider, trendToCodIcon } from './services/symbolProvider';
 import { ErrorFlowListView } from './views/errorFlowListView';
-import { AnalyticsProvider } from './analyticsProvider';
+import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
 import { ErrorFlowStackView } from './views/errorFlowStackView';
 

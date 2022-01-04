@@ -1,6 +1,7 @@
 import fetch from "node-fetch";
 import * as https from 'https';
-import { Settings } from "./settings";
+import { Settings } from "../settings";
+import { Logger } from "./logger";
 
 export enum Impact 
 {
@@ -91,16 +92,12 @@ export class AnalyticsProvider
                     method: 'GET', 
                     headers: {'Content-Type': 'application/json' }
                 });
-            if(!response.ok){
-                console.error(`Failed to get environments from digma: ${response.status} ${response.statusText}`);
-                return [];
-            }
                 
             var reponseJson = await response.json();
             return <string[]>reponseJson;
         }
         catch(error){
-            console.error(error);
+            Logger.error('Failed to get environments', error);
         }
         return [];
     }
@@ -116,16 +113,12 @@ export class AnalyticsProvider
                     headers: {'Content-Type': 'application/json' },
                     body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment}) 
                 });
-            if(!response.ok){
-                console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
-                return [];
-            }
                 
             var reponseJson = await response.json();
             return (<ICodeObjectsSummaryResponse>reponseJson).codeObjects;
         }
         catch(error){
-            console.error(error);
+            Logger.error('Failed to get summary', error);
         }
         return [];
     }
@@ -141,16 +134,12 @@ export class AnalyticsProvider
                     headers: {'Content-Type': 'application/json' },
                     body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment}) 
                 });
-            if(!response.ok){
-                console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
-                return [];
-            }
                 
             var reponseJson = await response.json();
             return (<ICodeObjectErrorFlowsResponse>reponseJson).errorFlows;
         }
         catch(error){
-            console.error(error);
+            Logger.error('Failed to get error flows', error);
         }
         return [];
     }
@@ -166,16 +155,12 @@ export class AnalyticsProvider
                     headers: {'Content-Type': 'application/json' },
                     body: JSON.stringify({id: errorFlowId, environment: Settings.environment}) 
                 });
-            if(!response.ok){
-                console.error(`Failed to get analytics from digma: ${response.status} ${response.statusText}`);
-                return;
-            }
-                
+
             var reponseJson = await response.json();
             return <IErrorFlowResponse>reponseJson;
         }
         catch(error){
-            console.error(error);
+            Logger.error('Failed to get error flow', error);
         }
         return;
     }

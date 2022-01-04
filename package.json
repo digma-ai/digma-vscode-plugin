@@ -68,6 +68,11 @@
   	  	  	  	"digma.hideFramesOutsideWorkspace": {
   	  	  	  	  	"type": "bool",
 					"defult": true
+  	  	  	  	},
+  	  	  	  	"digma.sourceControl": {
+  	  	  	  	  	"type": "string",
+					"default": "None",
+					"enum": ["None", "Git"]
   	  	  	  	}
   	  	  	}
   	  	}

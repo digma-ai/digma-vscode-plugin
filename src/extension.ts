@@ -1,22 +1,24 @@
 import * as vscode from 'vscode';
-import { logger } from './utils';
 import { AnaliticsCodeLens } from './analiticsCodeLens';
-import { AnalyticsProvider} from './analyticsProvider';
-import { SymbolProvider } from './symbolProvider';
+import { AnalyticsProvider} from './services/analyticsProvider';
+import { SymbolProvider } from './services/symbolProvider';
 import { PythonSupport } from './languageSupport';
 import { ErrorFlowStackView } from './views/errorFlowStackView';
 import { ErrorFlowListView } from './views/errorFlowListView';
 import { ContextView } from './views/contextView';
 import { Settings } from './settings';
+import { SourceControl, Git } from './services/sourceControl';
 
 
 export async function activate(context: vscode.ExtensionContext) 
 {
-    logger.appendLine("Begin activating...")
-
     const supportedLanguages = [
         new PythonSupport()
     ];
+    const supportedSourceControls = [
+        new Git()
+    ];
+    const sourceControl = new SourceControl(supportedSourceControls);
     const symbolProvider = new SymbolProvider(supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
 
@@ -27,9 +29,8 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new AnaliticsCodeLens(symbolProvider, analyticsProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider));
-    context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, context.extensionUri));
-
-    logger.appendLine("Finished activating")
+    context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, symbolProvider, sourceControl, context.extensionUri));
+    context.subscriptions.push(sourceControl);
 }
 
 // this method is called when your extension is deactivated

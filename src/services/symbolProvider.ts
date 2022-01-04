@@ -2,9 +2,8 @@
 import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
-import { AnalyticsProvider, ICodeObjectSummary as ICodeObjectSummary, IErrorFlowFrame } from './analyticsProvider';
-import { delay, Dictionary, Future } from './utils';
-import { ISupportedLanguage, SymbolInfo } from './languageSupport';
+import { delay } from './utils';
+import { ISupportedLanguage, SymbolInfo } from '../languageSupport';
 
 export function trendToCodIcon(trend: number): string 
 {
