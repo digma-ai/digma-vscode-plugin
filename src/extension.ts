@@ -28,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext)
 
     context.subscriptions.push(new AnaliticsCodeLens(symbolProvider, analyticsProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
-    context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider));
+    context.subscriptions.push(new ErrorFlowListView(symbolProvider, analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, symbolProvider, sourceControl, context.extensionUri));
     context.subscriptions.push(sourceControl);
 }

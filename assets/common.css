@@ -11,7 +11,7 @@
     padding: 4px 5px 4px 5px;
     border-bottom-width: 1px;
     border-bottom-color: var(--vscode-tree-tableColumnsBorder);
-    border-bottom-style: solid;
+    border-bottom-style: dashed;
     border-radius: 2px;
 }
 

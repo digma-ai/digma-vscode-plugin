@@ -1,0 +1,29 @@
+.error-name:hover{
+    cursor: pointer;
+    text-decoration: underline;
+}
+.property-row{
+    display: flex;
+    flex-direction: row;
+    margin: 3px 0;
+}
+.property-col{
+    flex-direction: column;
+    flex: 1;
+    flex-basis: auto;
+}
+.label {
+    opacity: 0.3;
+    margin-right: 4px;
+    font-size: calc(var(--vscode-font-size) - 2px);
+}
+.value{
+    white-space: nowrap;
+}
+.font-red{
+    /* color: var(--vscode-errorForeground); */
+    color: var(--vscode-notebookStatusErrorIcon-foreground);
+}
+.font-green{
+    color: var(--vscode-notebookStatusSuccessIcon-foreground);
+}

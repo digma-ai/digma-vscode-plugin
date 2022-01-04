@@ -94,6 +94,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         this._viewModel = undefined;
         this._view.webview.html = this.getHtml();
     }
+    
     public async setErrorFlow(errorFlowId: string, originCodeObjectId: string)
     {
         if(!this._view)

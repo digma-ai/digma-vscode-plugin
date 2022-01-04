@@ -17,9 +17,8 @@ export class AnaliticsCodeLens implements vscode.Disposable
     {
         this._provider = new CodelensProvider(symbolProvider, analyticsProvider);
 
-        this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string) => {
-            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForDocument, document);
-            await vscode.commands.executeCommand(ErrorFlowListView.Commands.SelectCodeObject, symbolId);
+        this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string, displayName: string) => {
+            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, symbolId, displayName);
             await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ClearErrorFlow);
         }));
 
@@ -76,7 +75,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 title:  `${summary.errorFlowCount} Error flows (${trendToCodIcon(summary.trend)})`,
                 tooltip: symbol.id,
                 command: CodelensProvider.clickCommand,
-                arguments: [document, symbol.id]
+                arguments: [document, symbol.id, symbol.displayName]
             }));
         }
 

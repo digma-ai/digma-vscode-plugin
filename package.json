@@ -32,7 +32,7 @@
   	  	  	  	  	"name": "Context"
   	  	  	  	},	  
   	  	  	  	{
-  	  	  	  	  	"type": "tree",
+  	  	  	  	  	"type": "webview",
   	  	  	  	  	"id": "errorFlowList",
   	  	  	  	  	"name": "Error Flows List"
   	  	  	  	},

@@ -37,8 +37,14 @@ export interface IErrorFlowSummary
     id: string;
     name: string;
     trend: number;
-    frequency: string;
+    frequency: IFrequency;
     impact: Impact;
+}
+
+export interface IFrequency{
+    avg: number;
+    unit: string;
+    period: number;
 }
 
 export interface ICodeObjectErrorFlow
