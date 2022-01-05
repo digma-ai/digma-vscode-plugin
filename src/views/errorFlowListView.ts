@@ -1,8 +1,6 @@
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode-languageclient';
-import { ICodeObjectErrorFlow, AnalyticsProvider, IErrorFlowSummary, Impact } from '../services/analyticsProvider';
-import { SymbolProvider, trendToAsciiIcon } from '../services/symbolProvider';
-import { SymbolInfo } from '../languageSupport';
+import { AnalyticsProvider, IErrorFlowSummary, Impact } from '../services/analyticsProvider';
 import { ErrorFlowStackView } from './errorFlowStackView';
 import { WebViewUris } from './webViewUris';
 
@@ -18,11 +16,10 @@ export class ErrorFlowListView implements Disposable
     private _disposables: vscode.Disposable[] = [];
 
     constructor(
-        symbolProvider: SymbolProvider,
         analyticsProvider: AnalyticsProvider,
         extensionUri: vscode.Uri)
     {
-        this._provider = new ErrorFlowsListProvider(analyticsProvider, symbolProvider, extensionUri);
+        this._provider = new ErrorFlowsListProvider(analyticsProvider, extensionUri);
         this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowListView.viewId, this._provider));
         this._disposables.push(vscode.commands.registerCommand(ErrorFlowListView.Commands.ShowForCodeObject, async (codeObjectId: string, codeObjectDisplayName: string) => {
             await this._provider.showForCodeObject(codeObjectId, codeObjectDisplayName);
@@ -47,7 +44,6 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
     constructor(
         private _analyticsProvider: AnalyticsProvider,
-        private _symbolProvider: SymbolProvider,
         extensionUri: vscode.Uri) 
     {
         this._webViewUris = new WebViewUris(extensionUri, "errorFlowListView", ()=>this._view!.webview);
@@ -65,50 +61,68 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         webviewView.webview.onDidReceiveMessage(
             (message: any) => {
                 switch (message.command) {
+                    case "setSort":
+                        this._viewModel!.sortBy = message.parameter;
+                        this.reloadHtml();
+                        return;
+                    case "clearFilter":
+                        this.showForAll();
+                        return;
                     case "showForErrorFlow":
                         vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, 
                             message.errorFlowId, 
-                            this._viewModel?.codeObjectId);
+                            this._viewModel!.filterBy?.codeObjectId);
                         return;
                 }
             },
             undefined,
             this._disposables
         );
-		webviewView.webview.html = this.getHtml();
+		this.showForAll();
 	}
 
-    public async showForCodeObject(codeObjectId: string, codeObjectDisplayName: string)
+    public async showForCodeObject(codeObjectId: string, codeObjectName: string)
     {
-        if(!this._view)
-            return;
-
         const codeObject = (await this._analyticsProvider.getErrorFlows([codeObjectId])).firstOrDefault();
-        this._viewModel = this.createViewModel(codeObject, codeObjectDisplayName);
-        this._view.webview.html = this.getHtml();
+        this._viewModel = {
+            sortBy: SoryBy.New,
+            filterBy: {
+                codeObjectId,
+                codeObjectName
+            },
+            errorFlows: this.createErrorViewModels(codeObject?.errorFlows || [])
+        };
+        this.reloadHtml();
     }
 
-    private createViewModel(codeObject: ICodeObjectErrorFlow | undefined, selectedFilter: string): ViewModel
+    public async showForAll()
     {
-        const vm: ViewModel = {
-            codeObjectId: codeObject?.codeObjectId,
-            selectedFilter,
-            errorFlows: []
+        this._viewModel = {
+            sortBy: SoryBy.New,
+            errorFlows: [] // TBD
         };
+        this.reloadHtml();
+    }
 
-        if(!codeObject?.errorFlows.length)
-            return vm;
+    private reloadHtml()
+    {
+        this._view!.webview.html = this.getHtml();
+    }
 
-        for(let errorFlow of codeObject.errorFlows ?? [])
+    private createErrorViewModels(errorFlows: IErrorFlowSummary[]): ErrorFlowViewModel[]
+    {
+        const errorFlowVms: ErrorFlowViewModel[] = [];
+
+        for(let errorFlow of errorFlows ?? [])
         {
-            vm.errorFlows.push({ 
+            errorFlowVms.push({ 
                 ...errorFlow, 
                 frequencyShort: `${errorFlow.frequency.avg}/${errorFlow.frequency.unit[0].toLocaleLowerCase()}`, 
                 frequencyLong: `${errorFlow.frequency.avg} per ${errorFlow.frequency.unit}`, 
             });
         }
 
-        return vm;
+        return errorFlowVms;
     }
 
     private getHtml(): string
@@ -118,7 +132,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         {
             items += /* html */`
                 <div class="list-item">
-                    <div class="error-name" data-error-id="${errorVm.id}">${errorVm.name}</div>
+                    <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">${errorVm.name}</div>
                     <div class="property-row">
                         <div class="property-col">
                             <span class="label">Impact: </span>
@@ -136,6 +150,17 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                 </div>`;
         }
 
+        let filterTag = '';
+        if(this._viewModel?.filterBy)
+        {
+            const filterLabel = this._viewModel.filterBy.codeObjectName;
+            filterTag = /*html*/ ` 
+                <div class="filter-tag">
+                    <span class="filter-tag-label" title="${filterLabel}">${filterLabel}</span>
+                    <span class="filter-tag-close codicon codicon-close"></span>
+                </div>`;
+        }
+
         return /*html*/ `
         <!DOCTYPE html>
         <html lang="en">
@@ -149,7 +174,19 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             <script type="module" src="${this._webViewUris.toolkitJs}"></script>
             <script type="module" src="${this._webViewUris.mainJs}"></script>
         </head>
-        <body style="padding: 0 5px;">
+        <body>
+            <div class="control-row">
+                <vscode-dropdown class="control-col-sort sort-dropdown">
+                    <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
+                    <vscode-option id="${SoryBy.New}">New</vscode-option>
+                    <vscode-option id="${SoryBy.Frequency}">Frequency</vscode-option>
+                    <vscode-option id="${SoryBy.Tend}">Trend</vscode-option>
+                    <vscode-option id="${SoryBy.Impact}">Impact</vscode-option>
+                </vscode-dropdown>
+                <div class="control-col-filter">
+                    ${filterTag}
+                </div>
+            </div>
             <div class="list">${items}</div>
         </body>
         </html>`;
@@ -176,9 +213,21 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     }
 }
 
+enum SoryBy{
+    New = "new",
+    Tend = "tend",
+    Frequency = "frequency",
+    Impact = "impact"
+}
+
+interface FilterBy{
+    codeObjectId: string;
+    codeObjectName: string;
+}
+
 interface ViewModel{
-    selectedFilter: string,
-    codeObjectId?: string;
+    filterBy?: FilterBy;
+    sortBy: SoryBy;
     errorFlows: ErrorFlowViewModel[];
 }
 
@@ -190,33 +239,3 @@ interface ErrorFlowViewModel{
     frequencyLong: string;
     impact: Impact;
 }
-
-// class CodeObjectItem extends vscode.TreeItem
-// {
-//     public errorFlowItems: ErrorFlowItem[] = [];
-
-//     constructor(
-//         public symInfo: SymbolInfo,
-//         public codeObject: ICodeObjectErrorFlow)
-//     {
-//         super(symInfo.displayName, vscode.TreeItemCollapsibleState.Expanded)
-//         this.description = `(${codeObject.errorFlows?.length})`;
-//         this.iconPath = new vscode.ThemeIcon('symbol-function');
-//     }
-// }
-
-// class ErrorFlowItem extends vscode.TreeItem
-// {
-//     constructor(public parent: CodeObjectItem, public errorFlow: IErrorFlowSummary)
-//     {
-//         super(errorFlow.name, vscode.TreeItemCollapsibleState.None)
-//         this.description = `${errorFlow.frequency} (${trendToAsciiIcon(errorFlow.trend)})`;
-//         this.iconPath = new vscode.ThemeIcon('issue-opened');
-//         this.command = {
-//             title: 'more details',
-//             tooltip: 'more details',
-//             command: ErrorFlowStackView.Commands.ShowForErrorFlow,
-//             arguments: [errorFlow.id, parent.symInfo.id]
-//         } 
-//     }
-// }

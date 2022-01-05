@@ -1,3 +1,21 @@
+.control-row{
+    display: flex;
+    flex-direction: row;
+    margin: 5px 0;
+    align-items: center;
+}
+.control-col-filter{
+    padding-left: 10px;
+    overflow: hidden;
+}
+.control-col-sort{
+}
+
+.error-name {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
 .error-name:hover{
     cursor: pointer;
     text-decoration: underline;

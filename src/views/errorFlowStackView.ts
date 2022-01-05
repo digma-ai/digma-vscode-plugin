@@ -229,7 +229,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 <script type="module" src="${this._webViewUris.toolkitJs}"></script>
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
-            <body style="padding: 0 5px;">
+            <body>
                 <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
                 <vscode-panels aria-label="Default">
                     <vscode-panel-tab id="tab-1">Frames</vscode-panel-tab>

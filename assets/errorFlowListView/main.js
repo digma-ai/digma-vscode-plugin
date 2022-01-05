@@ -9,24 +9,18 @@ function main()
             command: 'showForErrorFlow',
             errorFlowId: $(this).data('error-id')
         });
+    });    
+    $('.filter-tag-close').click(function() {
+        vscode.postMessage({
+            command: 'clearFilter'
+        });
     });
-    // $(".workspace-only-checkbox").change(function() {
-    //     if(this.checked)
-    //         $('.list-item.disabled').hide();
-    //     else
-    //         $('.list-item.disabled').show();
-
-    //     vscode.postMessage({
-    //         command: "setWorkspaceOnly",
-    //         value: this.checked
-    //     });
-    // });
-
-    // $("vscode-link").click(function()
-    // {
-    //     vscode.postMessage({
-    //         command: "goToFileAndLine",
-    //         frameId: $(this).data('frame-id')
-    //     });
-    // });
+    $('.sort-dropdown').change(e => 
+    {
+        const parameter = $(e.target).find('vscode-option:selected').attr('id'); 
+        vscode.postMessage({
+             command: "setSort",
+             parameter: parameter,
+         });
+    });
 }

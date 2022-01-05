@@ -15,6 +15,7 @@ export interface IErrorFlowFrame{
     lineNumber: number;
     excutedCode: string;
     codeObjectId: string;
+    repeat: number;
 }
 
 export interface IErrorFlowStack{

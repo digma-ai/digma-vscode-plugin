@@ -6,7 +6,6 @@ vscode-panel-view {
 
 #raw{
     font-family: var(--vscode-editor-font-family);
-    font-size: var(--vscode-editor-font-size);
     white-space: pre-wrap;
     overflow-wrap: break-word;
     inline-size: 100%;
