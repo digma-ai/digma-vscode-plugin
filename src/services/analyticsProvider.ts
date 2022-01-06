@@ -2,14 +2,23 @@ import fetch from "node-fetch";
 import * as https from 'https';
 import { Settings } from "../settings";
 import { Logger } from "./logger";
+import { Dictionary } from "./utils";
 
 export enum Impact 
 {
-    HIGH = "High",
-    LOW = "Low",
+    High = "High",
+    Low = "Low",
 }
 
-export interface IErrorFlowFrame{
+export enum ErrorFlowsSortBy
+{
+    New = "New",
+    Tend = "Trend",
+    Frequency = "Frequency",
+    Impact = "Impact"
+}
+
+export interface ErrorFlowFrame{
     moduleName: string;
     functionName: string;
     lineNumber: number;
@@ -18,63 +27,58 @@ export interface IErrorFlowFrame{
     repeat: number;
 }
 
-export interface IErrorFlowStack{
+export interface ErrorFlowStack{
     exceptionType: string;
-    frames: IErrorFlowFrame[];
+    frames: ErrorFlowFrame[];
 }
 
-export interface IErrorFlowResponse
+export interface ErrorFlowResponse
 {
-    summary: IErrorFlowSummary;
+    summary: ErrorFlowSummary;
     stackTrace: string;
     exceptionMessage: string;
     exceptionType: string;
     lastInstanceCommitId: string;
-    frameStacks: IErrorFlowStack[];
+    frameStacks: ErrorFlowStack[];
 }
 
-export interface IErrorFlowSummary
+export interface ErrorFlowSummary
 {
     id: string;
     name: string;
-    trend: number;
-    frequency: IFrequency;
+    trend: Trend;
+    frequency: Frequency;
     impact: Impact;
 }
 
-export interface IFrequency{
+export interface Frequency{
     avg: number;
     unit: string;
     period: number;
 }
 
-export interface ICodeObjectErrorFlow
+export interface Trend{
+    timeSeries: Dictionary<string, number>;
+    value: number;
+    period: number;
+}
+
+export interface CodeObjectErrorFlowsResponse
 {
-    codeObjectId: string;
-    errorFlows: IErrorFlowSummary[];
+    errorFlows: ErrorFlowSummary[];
 }
 
-export interface ICodeObjectErrorFlowsResponse
-{
-    errorFlows: ICodeObjectErrorFlow[];
-}
-
-export interface ICodeObjectSummary{
-    alert: boolean;
-    trend: number;
-    impact: Impact;
-}
-
-export interface ICodeObjectSummary
+export interface CodeObjectSummary
 {
     id: string;
     errorFlowCount: number;
     trend: number;
+    impact: Impact;
 }
 
-export interface ICodeObjectsSummaryResponse
+export interface CodeObjectsSummaryResponse
 {
-    codeObjects: ICodeObjectSummary[];
+    codeObjects: CodeObjectSummary[];
 }
 
 export class AnalyticsProvider
@@ -109,7 +113,7 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getSummary(symbolsIdentifiers: string[]): Promise<ICodeObjectSummary[]> 
+    public async getSummary(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
     {
         try{
             var response = await fetch(
@@ -122,7 +126,7 @@ export class AnalyticsProvider
                 });
                 
             var reponseJson = await response.json();
-            return (<ICodeObjectsSummaryResponse>reponseJson).codeObjects;
+            return (<CodeObjectsSummaryResponse>reponseJson).codeObjects;
         }
         catch(error){
             Logger.error('Failed to get summary', error);
@@ -130,20 +134,19 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getErrorFlows(symbolsIdentifiers: string[]): Promise<ICodeObjectErrorFlow[]> 
+    public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> 
     {
         try{
-            var response = await fetch(
-                `${this._url}/CodeAnalytics/errorFlows`, 
-                {
-                    agent: this._agent,
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment}) 
-                });
+            let url = `${this._url}/CodeAnalytics/errorFlows?environment=${encodeURIComponent(Settings.environment)}`;
+            if(sort)
+                url += `&sort=${encodeURIComponent(sort)}`;
+            if(filterByCodeObjectId)
+                url += `&codeObjectId=${encodeURIComponent(filterByCodeObjectId)}`;
+
+            var response = await fetch(url, { agent: this._agent, method: 'GET' });
                 
             var reponseJson = await response.json();
-            return (<ICodeObjectErrorFlowsResponse>reponseJson).errorFlows;
+            return (<CodeObjectErrorFlowsResponse>reponseJson).errorFlows;
         }
         catch(error){
             Logger.error('Failed to get error flows', error);
@@ -151,7 +154,7 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getErrorFlow(errorFlowId: string): Promise<IErrorFlowResponse | undefined> 
+    public async getErrorFlow(errorFlowId: string): Promise<ErrorFlowResponse | undefined> 
     {
         try{
             var response = await fetch(
@@ -164,7 +167,7 @@ export class AnalyticsProvider
                 });
 
             var reponseJson = await response.json();
-            return <IErrorFlowResponse>reponseJson;
+            return <ErrorFlowResponse>reponseJson;
         }
         catch(error){
             Logger.error('Failed to get error flow', error);

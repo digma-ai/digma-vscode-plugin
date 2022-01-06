@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode-languageclient';
-import { AnalyticsProvider, IErrorFlowSummary, Impact } from '../services/analyticsProvider';
+import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy } from '../services/analyticsProvider';
+import { Settings } from '../settings';
 import { ErrorFlowStackView } from './errorFlowStackView';
 import { WebViewUris } from './webViewUris';
 
@@ -40,13 +41,22 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     private _view?: vscode.WebviewView;
     private _disposables: vscode.Disposable[] = [];
     private _webViewUris: WebViewUris;
-    private _viewModel?: ViewModel;
+    private _viewModel: ViewModel;
 
     constructor(
         private _analyticsProvider: AnalyticsProvider,
         extensionUri: vscode.Uri) 
     {
         this._webViewUris = new WebViewUris(extensionUri, "errorFlowListView", ()=>this._view!.webview);
+        this._viewModel = {
+            sortBy: ErrorFlowsSortBy.New,
+            errorFlows: []
+        };
+        this._disposables.push(vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
+            if(this._view && event.affectsConfiguration(Settings.keys.environment)){
+                this.reloadErrorFlows();
+            }
+        }));
     }
 
     public resolveWebviewView(
@@ -62,54 +72,45 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             (message: any) => {
                 switch (message.command) {
                     case "setSort":
-                        this._viewModel!.sortBy = message.parameter;
-                        this.reloadHtml();
+                        this._viewModel.sortBy = message.parameter;
+                        this.reloadErrorFlows();
                         return;
                     case "clearFilter":
-                        this.showForAll();
+                        this._viewModel.filterBy = undefined;
+                        this.reloadErrorFlows();
                         return;
                     case "showForErrorFlow":
                         vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, 
                             message.errorFlowId, 
-                            this._viewModel!.filterBy?.codeObjectId);
+                            this._viewModel.filterBy?.codeObjectId);
                         return;
                 }
             },
             undefined,
             this._disposables
         );
-		this.showForAll();
+		this.reloadErrorFlows();
 	}
 
     public async showForCodeObject(codeObjectId: string, codeObjectName: string)
     {
-        const codeObject = (await this._analyticsProvider.getErrorFlows([codeObjectId])).firstOrDefault();
-        this._viewModel = {
-            sortBy: SoryBy.New,
-            filterBy: {
-                codeObjectId,
-                codeObjectName
-            },
-            errorFlows: this.createErrorViewModels(codeObject?.errorFlows || [])
+        this._viewModel.filterBy = {
+            codeObjectId,
+            codeObjectName
         };
-        this.reloadHtml();
+        await this.reloadErrorFlows();
     }
 
-    public async showForAll()
+    private async reloadErrorFlows()
     {
-        this._viewModel = {
-            sortBy: SoryBy.New,
-            errorFlows: [] // TBD
-        };
-        this.reloadHtml();
-    }
-
-    private reloadHtml()
-    {
+        const errorFlows = await this._analyticsProvider.getErrorFlows(
+            this._viewModel.sortBy, 
+            this._viewModel.filterBy?.codeObjectId);
+        this._viewModel.errorFlows = this.createErrorViewModels(errorFlows);
         this._view!.webview.html = this.getHtml();
     }
 
-    private createErrorViewModels(errorFlows: IErrorFlowSummary[]): ErrorFlowViewModel[]
+    private createErrorViewModels(errorFlows: ErrorFlowSummary[]): ErrorFlowViewModel[]
     {
         const errorFlowVms: ErrorFlowViewModel[] = [];
 
@@ -117,6 +118,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         {
             errorFlowVms.push({ 
                 ...errorFlow, 
+                trend: errorFlow.trend.value,
                 frequencyShort: `${errorFlow.frequency.avg}/${errorFlow.frequency.unit[0].toLocaleLowerCase()}`, 
                 frequencyLong: `${errorFlow.frequency.avg} per ${errorFlow.frequency.unit}`, 
             });
@@ -178,10 +180,10 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             <div class="control-row">
                 <vscode-dropdown class="control-col-sort sort-dropdown">
                     <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
-                    <vscode-option id="${SoryBy.New}">New</vscode-option>
-                    <vscode-option id="${SoryBy.Frequency}">Frequency</vscode-option>
-                    <vscode-option id="${SoryBy.Tend}">Trend</vscode-option>
-                    <vscode-option id="${SoryBy.Impact}">Impact</vscode-option>
+                    <vscode-option id="${ErrorFlowsSortBy.New}">New</vscode-option>
+                    <vscode-option id="${ErrorFlowsSortBy.Frequency}">Frequency</vscode-option>
+                    <vscode-option id="${ErrorFlowsSortBy.Tend}">Trend</vscode-option>
+                    <vscode-option id="${ErrorFlowsSortBy.Impact}">Impact</vscode-option>
                 </vscode-dropdown>
                 <div class="control-col-filter">
                     ${filterTag}
@@ -193,15 +195,15 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     }
 
     private getImpactHtml(impact: Impact){
-        const alterClass = impact == Impact.HIGH ? "font-red" : "";
+        const alterClass = impact == Impact.High ? "font-red" : "";
         return /*html*/ `<span class="value ${alterClass}">${impact}</span>`;
     }
 
     private getTrendHtml(trend: number){
         if(trend > 0)
-            return /*html*/ `<span class="value font-red">+${trend}</span>`;
+            return /*html*/ `<span class="value font-red" title="${trend}">+${Math.ceil(trend)}</span>`;
         if(trend < 0)
-            return /*html*/ `<span class="value font-green">${trend}</span>`;
+            return /*html*/ `<span class="value font-green" title="${trend}">${Math.floor(trend)}</span>`;
         else
             return /*html*/ `<span>${trend}</span>`;
     }
@@ -213,12 +215,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     }
 }
 
-enum SoryBy{
-    New = "new",
-    Tend = "tend",
-    Frequency = "frequency",
-    Impact = "impact"
-}
+
 
 interface FilterBy{
     codeObjectId: string;
@@ -227,7 +224,7 @@ interface FilterBy{
 
 interface ViewModel{
     filterBy?: FilterBy;
-    sortBy: SoryBy;
+    sortBy: ErrorFlowsSortBy;
     errorFlows: ErrorFlowViewModel[];
 }
 
