@@ -4,6 +4,7 @@ import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { delay } from './utils';
 import { ISupportedLanguage, SymbolInfo } from '../languageSupport';
+import { Logger } from './logger';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -23,6 +24,13 @@ export function trendToAsciiIcon(trend: number): string
     return '';
 }
 
+interface Token {
+    line: number;
+    char: number;
+    length: number;
+    type: string;
+    modifiers: string[];
+}
 export class SymbolProvider 
 {
     private _creationTime: moment.Moment = moment.utc();
@@ -39,7 +47,7 @@ export class SymbolProvider
         {
             return [];
         }
-
+      
         let result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
         if(!result?.length && this._creationTime.clone().add(10, 'second') > moment.utc()){
             await delay(2000);
@@ -51,6 +59,7 @@ export class SymbolProvider
                 // Document symbols
                 const allDocSymbols = result as DocumentSymbol[];
                 const symbolInfos = supportedLanguage.extractSymbolInfos(document, allDocSymbols);
+
                 return symbolInfos;
             } else {
                 // Document symbols
@@ -58,8 +67,59 @@ export class SymbolProvider
                 // TODO: ?
             }
         }
-
+        
         return [];
+    }
+
+    public async getTokens(document: vscode.TextDocument, range: vscode.Range): Promise<Token[]>
+    {
+        let tokes: Token[] = [];
+        try
+        {
+            //  at index `5*i`   - `deltaLine`: token line number, relative to the previous token
+            //  at index `5*i+1` - `deltaStart`: token start character, relative to the previous token (relative to 0 or the previous token's start if they are on the same line)
+            //  at index `5*i+2` - `length`: the length of the token. A token cannot be multiline.
+            //  at index `5*i+3` - `tokenType`: will be looked up in `SemanticTokensLegend.tokenTypes`. We currently ask that `tokenType` < 65536.
+            //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
+            let legends: vscode.SemanticTokensLegend = await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri);
+            // let semanticTokens: vscode.SemanticTokens = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri);
+            let semanticTokens: vscode.SemanticTokens = await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens ', document.uri, range);
+            if(!semanticTokens)
+                return tokes;
+            
+            let line = 0;
+            let char = 0;
+            for(let i=0; i<semanticTokens.data.length; i += 5)
+            {
+                const deltaLine = semanticTokens.data[i];
+                const deltaStart = semanticTokens.data[i+1];
+                const length = semanticTokens.data[i+2];
+                const tokenType = semanticTokens.data[i+3];
+                const tokenModifiers = semanticTokens.data[i+4];
+                
+                if(deltaLine == 0){
+                    char += deltaStart;
+                }
+                else{ 
+                    line += deltaLine;
+                    char = deltaStart;
+                }
+                
+                tokes.push({
+                    line: line,
+                    char: char,
+                    length: length,
+                    type: legends.tokenTypes[tokenType],
+                    modifiers: legends.tokenModifiers.filter((m, i) => i & tokenModifiers).map(m => m)
+                });
+            }
+        }
+        catch(e)
+        {
+            Logger.error('Failed to get tokens', e);
+        }
+
+        return tokes;
     }
 
     private async loadRequiredExtention(language: ISupportedLanguage) : Promise<boolean>

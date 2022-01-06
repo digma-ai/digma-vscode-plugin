@@ -13,7 +13,7 @@ export enum Impact
 export enum ErrorFlowsSortBy
 {
     New = "New",
-    Tend = "Trend",
+    Trend = "Trend",
     Frequency = "Frequency",
     Impact = "Impact"
 }

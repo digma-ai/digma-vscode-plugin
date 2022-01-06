@@ -180,10 +180,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             <div class="control-row">
                 <vscode-dropdown class="control-col-sort sort-dropdown">
                     <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
-                    <vscode-option id="${ErrorFlowsSortBy.New}">New</vscode-option>
-                    <vscode-option id="${ErrorFlowsSortBy.Frequency}">Frequency</vscode-option>
-                    <vscode-option id="${ErrorFlowsSortBy.Tend}">Trend</vscode-option>
-                    <vscode-option id="${ErrorFlowsSortBy.Impact}">Impact</vscode-option>
+                    ${this.getSortOptions()}
                 </vscode-dropdown>
                 <div class="control-col-filter">
                     ${filterTag}
@@ -192,6 +189,17 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             <div class="list">${items}</div>
         </body>
         </html>`;
+    }
+
+    private getSortOptions()
+    {
+        let html = '';
+        for(let item in ErrorFlowsSortBy)
+        {
+            const selected = this._viewModel.sortBy == item ? 'selected' : '';
+            html += /*html*/ `<vscode-option id="${item}" ${selected}>${item}</vscode-option>`
+        }
+        return html;
     }
 
     private getImpactHtml(impact: Impact){
