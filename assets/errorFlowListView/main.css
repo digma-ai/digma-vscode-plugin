@@ -45,3 +45,7 @@
 .font-green{
     color: var(--vscode-notebookStatusSuccessIcon-foreground);
 }
+
+.font-orange{
+    color: #FFA500;
+}

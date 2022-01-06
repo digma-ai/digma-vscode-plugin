@@ -208,12 +208,12 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     }
 
     private getTrendHtml(trend: number){
+        if(trend < 0 && trend > -2)
+            return /*html*/ `<span class="value font-orange" title="${trend}">${Math.floor(trend)}</span>`;
         if(trend > 0)
-            return /*html*/ `<span class="value font-red" title="${trend}">+${Math.ceil(trend)}</span>`;
-        if(trend < 0)
-            return /*html*/ `<span class="value font-green" title="${trend}">${Math.floor(trend)}</span>`;
+            return /*html*/ `<span class="value font-green" title="${trend}">${Math.ceil(trend)}</span>`;
         else
-            return /*html*/ `<span>${trend}</span>`;
+            return /*html*/ `<span class="value font-red" title="${trend}">${Math.floor(trend)}</span>`;
     }
 
     public dispose(): void 
