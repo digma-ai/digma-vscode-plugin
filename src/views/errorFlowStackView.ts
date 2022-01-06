@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as utils from '../services/utils';
-import { AnalyticsProvider, IErrorFlowFrame, IErrorFlowResponse, IErrorFlowStack } from "../services/analyticsProvider";
+import { AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack } from "../services/analyticsProvider";
 import { SourceControl } from '../services/sourceControl';
 import { SymbolProvider } from '../services/symbolProvider';
 import { Settings } from '../settings';
@@ -311,7 +311,7 @@ interface StackViewModel {
     frames: FrameViewModel[];
 }
 
-interface FrameViewModel extends IErrorFlowFrame{
+interface FrameViewModel extends ErrorFlowFrame{
     id: number;
     selected: boolean;
     workspaceUri?: vscode.Uri;
