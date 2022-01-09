@@ -60,7 +60,7 @@
   	  	  	  	},
   	  	  	  	"digma.url": {
   	  	  	  	  	"type": "string",
-  	  	  	  	  	"default": "https://localhost:7106"
+  	  	  	  	  	"default": "http://localhost:5051"
   	  	  	  	},
   	  	  	  	"digma.environment": {
   	  	  	  	  	"type": "string"

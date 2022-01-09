@@ -80,6 +80,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                         this.reloadErrorFlows();
                         return;
                     case "showForErrorFlow":
+                        this.reloadErrorFlows(message.errorFlowId);
                         vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, 
                             message.errorFlowId, 
                             this._viewModel.filterBy?.codeObjectId);
@@ -101,16 +102,16 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         await this.reloadErrorFlows();
     }
 
-    private async reloadErrorFlows()
+    private async reloadErrorFlows(selectErrorFlowId: string | undefined = undefined)
     {
         const errorFlows = await this._analyticsProvider.getErrorFlows(
             this._viewModel.sortBy, 
             this._viewModel.filterBy?.codeObjectId);
-        this._viewModel.errorFlows = this.createErrorViewModels(errorFlows);
+        this._viewModel.errorFlows = this.createErrorViewModels(errorFlows, selectErrorFlowId);
         this._view!.webview.html = this.getHtml();
     }
 
-    private createErrorViewModels(errorFlows: ErrorFlowSummary[]): ErrorFlowViewModel[]
+    private createErrorViewModels(errorFlows: ErrorFlowSummary[], selectErrorFlowId?: string): ErrorFlowViewModel[]
     {
         const errorFlowVms: ErrorFlowViewModel[] = [];
 
@@ -119,6 +120,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             errorFlowVms.push({ 
                 ...errorFlow, 
                 trend: errorFlow.trend.value,
+                selected: errorFlow.id == selectErrorFlowId,
                 frequencyShort: `${errorFlow.frequency.avg}/${errorFlow.frequency.unit[0].toLocaleLowerCase()}`, 
                 frequencyLong: `${errorFlow.frequency.avg} per ${errorFlow.frequency.unit}`, 
             });
@@ -132,8 +134,9 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         let items = '';
         for(let errorVm of this._viewModel?.errorFlows ?? [])
         {
+            const selectedCss = errorVm.selected ? "selected" : "";
             items += /* html */`
-                <div class="list-item">
+                <div class="list-item ${selectedCss}">
                     <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">${errorVm.name}</div>
                     <div class="property-row">
                         <div class="property-col">
@@ -243,4 +246,5 @@ interface ErrorFlowViewModel{
     frequencyShort: string;
     frequencyLong: string;
     impact: Impact;
+    selected: boolean;
 }

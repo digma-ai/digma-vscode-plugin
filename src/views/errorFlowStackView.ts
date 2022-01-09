@@ -21,11 +21,11 @@ export class ErrorFlowStackView implements vscode.Disposable
 
     constructor(
         analyticsProvider: AnalyticsProvider, 
-        symbolProvider: SymbolProvider,
+        private _symbolProvider: SymbolProvider,
         sourceControl: SourceControl, 
         extensionUri: vscode.Uri) 
     {
-        this._provider = new ErrorFlowDetailsViewProvider(analyticsProvider, symbolProvider, sourceControl, extensionUri);
+        this._provider = new ErrorFlowDetailsViewProvider(analyticsProvider, _symbolProvider, sourceControl, extensionUri);
         this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider));
         this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
             await this._provider.setErrorFlow(errorFlowId, originCodeObjectId);
@@ -33,9 +33,19 @@ export class ErrorFlowStackView implements vscode.Disposable
         this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ClearErrorFlow, async () => {
             await this._provider.clearErrorFlow();
         }));
+        this._disposables.push(vscode.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
+            await this.reSelectFrame(e.textEditor.document, e.selections[0].anchor);
+        }));
     }
 
-    public dispose() 
+    private async reSelectFrame(document: vscode.TextDocument, position: vscode.Position)
+    {
+        const symbols = await this._symbolProvider.getSymbols(document);
+        const focusedMethod = symbols.firstOrDefault(s => s.range.contains(position));
+        this._provider.selectFrame(focusedMethod?.id);
+    }
+
+    public dispose()
     {
         this._provider.dispose();
 
@@ -85,6 +95,19 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         );
 		webviewView.webview.html = this.getHtml();
 	}
+
+    public async selectFrame(codeObjectId?: string)
+    {
+        if(!this._view)
+        return;
+
+        const frames = this._viewModel?.stacks?.flatMap(s => s.frames) || [];
+        for(let frame of frames)
+        {
+            frame.selected = frame.codeObjectId == codeObjectId;
+        }
+        this._view.webview.html = this.getHtml();
+    }
 
     public async clearErrorFlow()
     {

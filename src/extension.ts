@@ -8,6 +8,7 @@ import { ErrorFlowListView } from './views/errorFlowListView';
 import { ContextView } from './views/contextView';
 import { Settings } from './settings';
 import { SourceControl, Git } from './services/sourceControl';
+import { ParameterDecorator } from './services/parameterDecorator';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -26,6 +27,7 @@ export async function activate(context: vscode.ExtensionContext)
         Settings.environment = (await analyticsProvider.getEnvironments()).firstOrDefault();
     }
 
+    //context.subscriptions.push(new ParameterDecorator(symbolProvider));
     context.subscriptions.push(new AnaliticsCodeLens(analyticsProvider, symbolProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));

@@ -17,6 +17,7 @@ declare global {
     interface Array<T> {
         firstOrDefault(predicate?: (item: T) => boolean): T;
         all(predicate: (item: T) => boolean) : boolean;
+        any(predicate: (item: T) => boolean) : boolean;
     }
 }
 
@@ -30,6 +31,13 @@ Array.prototype.all = function (predicate: (item: any) => boolean) {
             return false;
     }
     return true;
+}
+Array.prototype.any = function (predicate: (item: any) => boolean) {
+    for(let item of this){
+        if(predicate(item))
+            return true;
+    }
+    return false;
 }
 
 export async function fileExits(uri: vscode.Uri) : Promise<boolean>

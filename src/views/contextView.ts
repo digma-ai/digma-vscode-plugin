@@ -55,6 +55,9 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
         webviewView.webview.onDidReceiveMessage(
             async (message: any) => {
                 switch (message.command) {
+                    case "refreshEnvList":
+                        await this.reloadHtml();
+                        break;
                     case "setEnv":
                         Settings.environment = message.env;
                         break;
@@ -63,8 +66,13 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
             undefined,
             this._disposables
         );
-		webviewView.webview.html = await this.getHtml(Settings.environment);
+		await this.reloadHtml();
 	}
+
+    private async reloadHtml()
+    {
+        this._view!.webview.html = await this.getHtml(Settings.environment);
+    }
 
     private async getHtml(selectedEnv: string) : Promise<string> 
     {
@@ -93,9 +101,12 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
             <body>
                 <div class="env-container">
                     <span class="env-label">Environment</span>
-                    <vscode-dropdown class='env-dropdown'>
+                    <vscode-dropdown class="env-dropdown">
                         ${options}
                     </vscode-dropdown>
+                    <vscode-button appearance="icon" aria-label="Confirm" class="env-refresh-btn">
+                        <span class="codicon codicon-refresh"></span>
+                    </vscode-button>
                 </div>
             </body>
             </html>`;

@@ -84,13 +84,13 @@ export interface CodeObjectsSummaryResponse
 export class AnalyticsProvider
 {
     private _url: string;
-    private _agent: https.Agent;
+    private _agent?: https.Agent;
 
     constructor(){
         this._url = Settings.url;
-        this._agent = new https.Agent({
-            rejectUnauthorized: false,
-        });
+        this._agent = this._url.startsWith('https')
+            ? new https.Agent({rejectUnauthorized: false })
+            : undefined;
     }
 
     public async getEnvironments() : Promise<string[]> 

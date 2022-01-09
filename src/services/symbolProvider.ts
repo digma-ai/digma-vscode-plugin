@@ -39,6 +39,22 @@ export class SymbolProvider
     {
     }
 
+    private async retryOnStartup<T>(lspCall: () => Promise<T | undefined>, predicate: (result: T | undefined) => boolean): Promise<T | undefined>
+    {
+        let result = await lspCall();
+        if(!predicate(result) && this._creationTime.clone().add(10, 'second') > moment.utc())
+        {
+            for(let delayMs of [100, 200, 400, 800, 1600])
+            {
+                await delay(delayMs);
+                result = await lspCall();
+                if(predicate(result))
+                    break;
+            }
+        }
+        return result;
+    }
+
     public async getSymbols(document: vscode.TextDocument) : Promise<SymbolInfo[]>
     {
         const supportedLanguage = this.supportedLanguages.find(x => vscode.languages.match(x.documentFilter, document) > 0);
@@ -48,11 +64,14 @@ export class SymbolProvider
             return [];
         }
       
-        let result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
-        if(!result?.length && this._creationTime.clone().add(10, 'second') > moment.utc()){
-            await delay(2000);
-            result = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
-        }
+        let result = await this.retryOnStartup<any[]>(
+            async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
+            value => value?.length ? true : false);
+        // let result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
+        // if(!result?.length && this._creationTime.clone().add(10, 'second') > moment.utc()){
+        //     await delay(2000);
+        //     result = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
+        // }
 
         if (result?.length) {
             if ((result[0] as any).range) {
@@ -81,9 +100,17 @@ export class SymbolProvider
             //  at index `5*i+2` - `length`: the length of the token. A token cannot be multiline.
             //  at index `5*i+3` - `tokenType`: will be looked up in `SemanticTokensLegend.tokenTypes`. We currently ask that `tokenType` < 65536.
             //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
-            let legends: vscode.SemanticTokensLegend = await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri);
+            
+            let legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
+                async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
+                value => value?.tokenTypes ? true : false);
+            if(!legends)
+                return tokes;
+
             // let semanticTokens: vscode.SemanticTokens = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri);
-            let semanticTokens: vscode.SemanticTokens = await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens ', document.uri, range);
+            let semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
+                async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
+                value => value?.data?.length ? true : false);
             if(!semanticTokens)
                 return tokes;
             
