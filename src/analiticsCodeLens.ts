@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { SymbolProvider, trendToCodIcon } from './services/symbolProvider';
-import { ErrorFlowListView } from './views/errorFlowListView';
+import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
-import { ErrorFlowStackView } from './views/errorFlowStackView';
+import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
+import { DocumentInfoProvider } from './services/documentInfoProvider';
 
 
 export class AnaliticsCodeLens implements vscode.Disposable
@@ -11,11 +12,9 @@ export class AnaliticsCodeLens implements vscode.Disposable
     private _provider: CodelensProvider;
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(
-        analyticsProvider: AnalyticsProvider,
-        symbolProvider: SymbolProvider)
+    constructor(documentInfoProvider: DocumentInfoProvider)
     {
-        this._provider = new CodelensProvider(symbolProvider, analyticsProvider);
+        this._provider = new CodelensProvider(documentInfoProvider);
 
         this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string, displayName: string) => {
             await vscode.commands.executeCommand("workbench.view.extension.digma");
@@ -30,7 +29,7 @@ export class AnaliticsCodeLens implements vscode.Disposable
         this._provider.raiseOnDidChangeCodeLenses();
 
         this._disposables.push(vscode.languages.registerCodeLensProvider(
-            symbolProvider.supportedLanguages.map(x => x.documentFilter), 
+            documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter), 
             this._provider)
         );
     }
@@ -47,9 +46,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
     private _onDidChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
 
-    constructor(
-        private _symbolProvider: SymbolProvider,
-        private _analyticsProvider: AnalyticsProvider)
+    constructor(private _documentInfoProvider: DocumentInfoProvider)
     {
     }
 
@@ -62,21 +59,19 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         if (!Settings.enableCodeLens) 
             return [];
 
-        const symbolInfos = await this._symbolProvider.getSymbols(document);
-        const codeObjectSummary = await this._analyticsProvider.getSummary(symbolInfos.map(s => s.id));
-        
+        const documentInfo = await this._documentInfoProvider.getDocumentInfo(document);
         const codelens: vscode.CodeLens[] = [];
-        for(let symbol of symbolInfos)
+        for(let methodInfo of documentInfo.methods)
         {
-            const summary = codeObjectSummary.firstOrDefault(x => x.id == symbol.id);
+            const summary = documentInfo.codeObjectSummaries.firstOrDefault(x => x.id == methodInfo.symbol.id);
             if(!summary || summary.errorFlowCount == 0)
                 continue;
 
-            codelens.push(new vscode.CodeLens(symbol.range, {
+            codelens.push(new vscode.CodeLens(methodInfo.range, {
                 title:  `${summary.errorFlowCount} Error flows (${trendToCodIcon(summary.trend)})`,
-                tooltip: symbol.id,
+                // tooltip: methodInfo.symbol.id,
                 command: CodelensProvider.clickCommand,
-                arguments: [document, symbol.id, symbol.displayName]
+                arguments: [document, methodInfo.symbol.id, methodInfo.displayName]
             }));
         }
 

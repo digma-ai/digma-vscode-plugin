@@ -4,100 +4,99 @@ import { SymbolInfo } from '../languageSupport';
 import { SymbolProvider } from './symbolProvider';
 import { Dictionary } from './utils';
 
-export class ParameterDecorator implements vscode.Disposable, vscode.HoverProvider
+export interface IParameter
+{
+    name: string;
+    range: vscode.Range;
+}
+
+export abstract class ParameterDecorator<TParameter extends IParameter> implements vscode.Disposable
 {
     private _disposables: vscode.Disposable[] = [];
     private _decorationType: vscode.TextEditorDecorationType;
-    private _cache: Dictionary<string, Parameter[]> = {}; 
+    private _cache: Dictionary<string, TParameter[]> = {};
 
-    constructor(private _symbolProvider: SymbolProvider)
+    constructor(
+        codicon: string, 
+        private _documentSelector: vscode.DocumentSelector)
     {
         this._decorationType = vscode.window.createTextEditorDecorationType({
             before:{
-                contentText: "\uebe2",
+                contentText: codicon, //"\uebe2",
                 textDecoration: "none; font-family: codicon; position: relative; top: 3px; color: var(--vscode-editorCodeLens-foreground); padding-right: 2px; font-size: 12px"
             }
         });
         this._disposables.push(
-            vscode.workspace.onDidChangeTextDocument(async (e:vscode.TextDocumentChangeEvent) => await this.onDidChangeTextDocument(e))
+            vscode.workspace.onDidChangeTextDocument(async (e:vscode.TextDocumentChangeEvent) => await this.refreshAll())
         );
         this._disposables.push(
-            vscode.workspace.onDidOpenTextDocument(async (d:vscode.TextDocument) => await this.onDidOpenTextDocument(d))
+            vscode.workspace.onDidOpenTextDocument(async (d:vscode.TextDocument) => await this.refreshAll())
         );
         this._disposables.push(
-            vscode.languages.registerHoverProvider(_symbolProvider.supportedLanguages.map(x => x.documentFilter), this)
+            vscode.workspace.onDidCloseTextDocument(async (d:vscode.TextDocument) => delete this._cache[d.uri.fsPath])
+        );
+        this._disposables.push(
+            vscode.languages.registerHoverProvider(
+                _documentSelector /*_symbolProvider.supportedLanguages.map(x => x.documentFilter)*/, 
+                {provideHover: (document, position, token) => this.provideHover(document, position, token)})
         );
     }
 
-    private async onDidChangeTextDocument(event :vscode.TextDocumentChangeEvent)
-    {
-        await this.refreshDecorations(event.document);
-    }
+    protected abstract getParameters(document: vscode.TextDocument): Promise<TParameter[]>;
 
-    private async onDidOpenTextDocument(document :vscode.TextDocument)
-    {
-        await this.refreshDecorations(document);
-    }
+    protected abstract getParameterHover(document: vscode.TextDocument, parameter: TParameter): vscode.Hover;
 
-    private async refreshDecorations(document: vscode.TextDocument)
+    protected async refreshAll()
     {
-        let parameters: Parameter[] = [];
-
-        const symbols = await this._symbolProvider.getSymbols(document);
-        for(let symbol of symbols)
+        for(let editor of vscode.window.visibleTextEditors)
         {
-            const tokens = await this._symbolProvider.getTokens(document, symbol.range);
-            for(let token of tokens)
-            {
-                if(token.type != 'parameter')
-                    continue;
-
-                const range = new vscode.Range(
-                    new vscode.Position(token.line, token.char), 
-                    new vscode.Position(token.line, token.char+token.length));
-                const name =  document.getText(range);
-
-                if(parameters.any(p => p.name == name))
-                    continue;
-                
-                parameters.push({ name, range, ownerSymbol: symbol });
-            }
+            await this.refreshParametersCache(editor.document);
         }
+    }
+
+    private async refreshParametersCache(document: vscode.TextDocument)
+    {   
+        if(vscode.languages.match(this._documentSelector, document) <= 0)
+            return;
+
+        let parameters = await this.getParameters(document);
+        this._cache[document.uri.fsPath] = parameters;
 
         const editor = vscode.window.visibleTextEditors.find(e => e.document == document); 
         if(!editor)
             return;
     
         editor.setDecorations(this._decorationType, parameters.map(p => p.range));
-        this._cache[document.uri.fsPath] = parameters;
     }
 
-    public provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Hover>
+    public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined>
     {
         var parameter = this._cache[document.uri.fsPath]?.firstOrDefault(p => p.range.contains(position));
         if(!parameter)
             return undefined;
         
-        const graphBuilder = new TimeSeriesGraphBuilder();
-        let startTime: moment.Moment = moment.utc(); //this._creationTime.clone().add(10, 'second') > moment.utc()
-        for(let i=0; i<40; i++)
-        {
-            graphBuilder.add(startTime.add(Math.random()*10, 'hour'), Math.random()*654);
-        }
-        const svgGraphStr = graphBuilder.toSvg(200, 100, '#8a9cf9');
-        const svgGraphBase64 = Buffer.from(svgGraphStr, 'binary').toString('base64');
-        const html = /*html*/ `<html>
-            <body>
-                <div>Min size: 5</div>
-                <div>Avg size: 7</div>
-                <div>Max size: 40</div>
-                <img height="100" src="data:image/svg+xml;base64,${svgGraphBase64}"/>
-            </body>
-            </html>`;
-        let markdown = new vscode.MarkdownString(html);
-        markdown.supportHtml = true;
-        markdown.isTrusted = true;
-        return new vscode.Hover(markdown);
+        return await this.getParameterHover(document, parameter);
+
+        // const graphBuilder = new TimeSeriesGraphBuilder();
+        // let startTime: moment.Moment = moment.utc(); //this._creationTime.clone().add(10, 'second') > moment.utc()
+        // for(let i=0; i<40; i++)
+        // {
+        //     graphBuilder.add(startTime.add(Math.random()*10, 'hour'), Math.random()*654);
+        // }
+        // const svgGraphStr = graphBuilder.toSvg(200, 100, '#8a9cf9');
+        // const svgGraphBase64 = Buffer.from(svgGraphStr, 'binary').toString('base64');
+        // const html = /*html*/ `<html>
+        //     <body>
+        //         <div>Min size: 5</div>
+        //         <div>Avg size: 7</div>
+        //         <div>Max size: 40</div>
+        //         <img height="100" src="data:image/svg+xml;base64,${svgGraphBase64}"/>
+        //     </body>
+        //     </html>`;
+        // let markdown = new vscode.MarkdownString(html);
+        // markdown.supportHtml = true;
+        // markdown.isTrusted = true;
+        // return new vscode.Hover(markdown);
     }
 
     public dispose() {

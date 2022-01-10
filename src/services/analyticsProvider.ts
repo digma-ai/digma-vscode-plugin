@@ -18,6 +18,12 @@ export enum ErrorFlowsSortBy
     Impact = "Impact"
 }
 
+export interface ParamStats
+{
+    paramName: string;
+    alwaysNoneValue: string;
+}
+
 export interface ErrorFlowFrame{
     moduleName: string;
     functionName: string;
@@ -25,6 +31,7 @@ export interface ErrorFlowFrame{
     excutedCode: string;
     codeObjectId: string;
     repeat: number;
+    parameters: ParamStats[];
 }
 
 export interface ErrorFlowStack{
@@ -157,7 +164,7 @@ export class AnalyticsProvider
     public async getErrorFlow(errorFlowId: string): Promise<ErrorFlowResponse | undefined> 
     {
         try{
-            var response = await fetch(
+            let response = await fetch(
                 `${this._url}/CodeAnalytics/errorFlow`, 
                 {
                     agent: this._agent,
@@ -165,8 +172,8 @@ export class AnalyticsProvider
                     headers: {'Content-Type': 'application/json' },
                     body: JSON.stringify({id: errorFlowId, environment: Settings.environment}) 
                 });
-
-            var reponseJson = await response.json();
+            
+            let reponseJson = await response.json();
             return <ErrorFlowResponse>reponseJson;
         }
         catch(error){

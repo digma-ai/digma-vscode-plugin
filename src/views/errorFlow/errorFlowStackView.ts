@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
-import * as utils from '../services/utils';
-import { AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack } from "../services/analyticsProvider";
-import { SourceControl } from '../services/sourceControl';
-import { SymbolProvider } from '../services/symbolProvider';
-import { Settings } from '../settings';
-import { WebViewUris } from "./webViewUris";
-import { Logger } from '../services/logger';
+import * as utils from '../../services/utils';
+import { AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack, ParamStats } from "../../services/analyticsProvider";
+import { SourceControl } from '../../services/sourceControl';
+import { SymbolProvider } from '../../services/symbolProvider';
+import { Settings } from '../../settings';
+import { WebViewUris } from "./../webViewUris";
+import { Logger } from '../../services/logger';
+import { DocumentInfoProvider } from '../../services/documentInfoProvider';
+import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -17,32 +19,47 @@ export class ErrorFlowStackView implements vscode.Disposable
     }
 
     private _provider: ErrorFlowDetailsViewProvider;
+    private _paramDecorator: ErrorFlowParameterDecorator;
     private _disposables: vscode.Disposable[] = [];
 
     constructor(
-        analyticsProvider: AnalyticsProvider, 
-        private _symbolProvider: SymbolProvider,
+        private _documentInfoProvider: DocumentInfoProvider,
         sourceControl: SourceControl, 
         extensionUri: vscode.Uri) 
     {
-        this._provider = new ErrorFlowDetailsViewProvider(analyticsProvider, _symbolProvider, sourceControl, extensionUri);
+        this._provider = new ErrorFlowDetailsViewProvider(_documentInfoProvider, sourceControl, extensionUri);
+        this._paramDecorator = new ErrorFlowParameterDecorator(_documentInfoProvider);
+
         this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider));
         this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
-            await this._provider.setErrorFlow(errorFlowId, originCodeObjectId);
+            await this.setErrorFlow(errorFlowId, originCodeObjectId);
         }));        
         this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ClearErrorFlow, async () => {
-            await this._provider.clearErrorFlow();
+            await this.clearErrorFlow();
         }));
         this._disposables.push(vscode.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
             await this.reSelectFrame(e.textEditor.document, e.selections[0].anchor);
         }));
+        this._disposables.push(this._paramDecorator);
+    }
+
+    private async setErrorFlow(errorFlowId: string, originCodeObjectId: string)
+    {
+        const response = await this._documentInfoProvider.analyticsProvider.getErrorFlow(errorFlowId);
+        this._paramDecorator.errorFlowResponse = response;
+        await this._provider.setErrorFlow(response, originCodeObjectId);
+    }
+
+    private async clearErrorFlow()
+    {
+        await this._provider.setErrorFlow();
     }
 
     private async reSelectFrame(document: vscode.TextDocument, position: vscode.Position)
     {
-        const symbols = await this._symbolProvider.getSymbols(document);
-        const focusedMethod = symbols.firstOrDefault(s => s.range.contains(position));
-        this._provider.selectFrame(focusedMethod?.id);
+        const docInfo = await this._documentInfoProvider.getDocumentInfo(document);
+        const methodInfo = docInfo?.methods.firstOrDefault(m => m.range.contains(position));
+        this._provider.selectFrame(methodInfo?.symbol.id);
     }
 
     public dispose()
@@ -62,8 +79,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
     private _viewModel?: ViewModel;
 
     constructor(
-        private _analyticsProvider: AnalyticsProvider,
-        private _symbolProvider: SymbolProvider,
+        private _documentInfoProvider: DocumentInfoProvider,
         private _sourceControl: SourceControl,
         extensionUri: vscode.Uri) 
     {
@@ -96,10 +112,15 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 		webviewView.webview.html = this.getHtml();
 	}
 
+    public get selectedFrame(): FrameViewModel | undefined
+    {
+        return this._viewModel?.stacks?.flatMap(s => s.frames).firstOrDefault(f => f.selected);
+    }
+
     public async selectFrame(codeObjectId?: string)
     {
         if(!this._view)
-        return;
+            return;
 
         const frames = this._viewModel?.stacks?.flatMap(s => s.frames) || [];
         for(let frame of frames)
@@ -109,30 +130,17 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         this._view.webview.html = this.getHtml();
     }
 
-    public async clearErrorFlow()
+    public async setErrorFlow(response?: ErrorFlowResponse, originCodeObjectId?: string)
     {
         if(!this._view)
             return;
 
-        this._viewModel = undefined;
-        this._view.webview.html = this.getHtml();
-    }
-    
-    public async setErrorFlow(errorFlowId: string, originCodeObjectId: string)
-    {
-        if(!this._view)
-            return;
-
-        this._viewModel = await this.createViewModel(errorFlowId, originCodeObjectId);
+        this._viewModel = response ? await this.createViewModel(response, originCodeObjectId) : undefined;
         this._view.webview.html = this.getHtml();
     }
 
-    private async createViewModel(errorFlowId: string, originCodeObjectId: string) :  Promise<ViewModel | undefined>
+    private async createViewModel(response: ErrorFlowResponse, originCodeObjectId?: string) :  Promise<ViewModel | undefined>
     {
-        const response = await this._analyticsProvider.getErrorFlow(errorFlowId);
-        if(!response)
-            return undefined;
-
         const stackVms: StackViewModel[] = [];
         let id = 0;
         for(let frameStack of response.frameStacks)
@@ -155,7 +163,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         }
 
         return {
-            originCodeObjectId: originCodeObjectId,
             lastInstanceCommitId: response.lastInstanceCommitId,
             stackTrace: response.stackTrace,
             stacks: stackVms
@@ -188,8 +195,9 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 }
                 else
                 {
-                    const symbols = await this._symbolProvider.getSymbols(doc);
-                    if(symbols.all(s => s.name != frame.functionName))
+                    const docInfo = await this._documentInfoProvider.getDocumentInfo(doc);
+                    const methodInfos = docInfo?.methods || [];
+                    if(methodInfos.all(m => m.symbol.name != frame.functionName))
                     {
                         doc = await this.askAndOpenFromSourceControl(frame);
                     }
@@ -325,7 +333,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 interface ViewModel{
     stacks: StackViewModel[];
     stackTrace: string;
-    originCodeObjectId: string;
     lastInstanceCommitId: string;
 }
 
@@ -338,4 +345,5 @@ interface FrameViewModel extends ErrorFlowFrame{
     id: number;
     selected: boolean;
     workspaceUri?: vscode.Uri;
+    parameters: ParamStats[];
 }

@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode-languageclient';
-import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy } from '../services/analyticsProvider';
-import { Settings } from '../settings';
+import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy } from '../../services/analyticsProvider';
+import { Settings } from '../../settings';
 import { ErrorFlowStackView } from './errorFlowStackView';
-import { WebViewUris } from './webViewUris';
+import { WebViewUris } from '../webViewUris';
 
 
 export class ErrorFlowListView implements Disposable
@@ -81,9 +81,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                         return;
                     case "showForErrorFlow":
                         this.reloadErrorFlows(message.errorFlowId);
-                        vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, 
-                            message.errorFlowId, 
-                            this._viewModel.filterBy?.codeObjectId);
+                        vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, message.errorFlowId, this._viewModel.filterBy?.codeObjectId);
                         return;
                 }
             },
@@ -92,7 +90,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         );
 		this.reloadErrorFlows();
 	}
-
+    
     public async showForCodeObject(codeObjectId: string, codeObjectName: string)
     {
         this._viewModel.filterBy = {
@@ -102,7 +100,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         await this.reloadErrorFlows();
     }
 
-    private async reloadErrorFlows(selectErrorFlowId: string | undefined = undefined)
+    private async reloadErrorFlows(selectErrorFlowId?: string)
     {
         const errorFlows = await this._analyticsProvider.getErrorFlows(
             this._viewModel.sortBy, 

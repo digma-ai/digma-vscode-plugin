@@ -24,7 +24,7 @@ export function trendToAsciiIcon(trend: number): string
     return '';
 }
 
-interface Token {
+export interface Token {
     line: number;
     char: number;
     length: number;
@@ -90,7 +90,7 @@ export class SymbolProvider
         return [];
     }
 
-    public async getTokens(document: vscode.TextDocument, range: vscode.Range): Promise<Token[]>
+    public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]>
     {
         let tokes: Token[] = [];
         try
@@ -106,11 +106,20 @@ export class SymbolProvider
                 value => value?.tokenTypes ? true : false);
             if(!legends)
                 return tokes;
-
-            // let semanticTokens: vscode.SemanticTokens = await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri);
-            let semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
-                async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
-                value => value?.data?.length ? true : false);
+            
+            let semanticTokens: vscode.SemanticTokens | undefined;
+            if(range)
+            {
+                semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
+                    async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
+                    value => value?.data?.length ? true : false);
+            }
+            else
+            {
+                semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
+                    async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
+                    value => value?.data?.length ? true : false);
+            }
             if(!semanticTokens)
                 return tokes;
             

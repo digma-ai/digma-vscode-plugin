@@ -3,12 +3,13 @@ import { AnaliticsCodeLens } from './analiticsCodeLens';
 import { AnalyticsProvider} from './services/analyticsProvider';
 import { SymbolProvider } from './services/symbolProvider';
 import { PythonSupport } from './languageSupport';
-import { ErrorFlowStackView } from './views/errorFlowStackView';
-import { ErrorFlowListView } from './views/errorFlowListView';
+import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
+import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { ContextView } from './views/contextView';
 import { Settings } from './settings';
 import { SourceControl, Git } from './services/sourceControl';
 import { ParameterDecorator } from './services/parameterDecorator';
+import { DocumentInfoProvider } from './services/documentInfoProvider';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -22,17 +23,18 @@ export async function activate(context: vscode.ExtensionContext)
     const sourceControl = new SourceControl(supportedSourceControls);
     const symbolProvider = new SymbolProvider(supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
+    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
 
     if(!Settings.environment){
         Settings.environment = (await analyticsProvider.getEnvironments()).firstOrDefault();
     }
 
-    //context.subscriptions.push(new ParameterDecorator(symbolProvider));
-    context.subscriptions.push(new AnaliticsCodeLens(analyticsProvider, symbolProvider));
+    context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
-    context.subscriptions.push(new ErrorFlowStackView(analyticsProvider, symbolProvider, sourceControl, context.extensionUri));
+    context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, sourceControl, context.extensionUri));
     context.subscriptions.push(sourceControl);
+    context.subscriptions.push(documentInfoProvider);
 }
 
 // this method is called when your extension is deactivated
