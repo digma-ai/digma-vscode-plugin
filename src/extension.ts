@@ -34,14 +34,9 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, sourceControl, context.extensionUri));
+    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
-
-    context.subscriptions.push(
-        vscode.languages.registerHoverProvider(
-            symbolProvider.supportedLanguages.map(x => x.documentFilter),
-            new MethodCallErrorTooltip(documentInfoProvider))
-    );
 }
 
 // this method is called when your extension is deactivated

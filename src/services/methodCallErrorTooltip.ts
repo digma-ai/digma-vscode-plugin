@@ -3,18 +3,35 @@ import { ErrorFlowListView } from '../views/errorFlow/errorFlowListView';
 import { ErrorFlowsSortBy } from './analyticsProvider';
 import { DocumentInfoProvider } from './documentInfoProvider';
 
-export class MethodCallErrorTooltip implements vscode.HoverProvider, vscode.Disposable
+export class MethodCallErrorTooltip implements vscode.Disposable
 {
     public static Commands = class {
         public static readonly ViewErrorFlow = `digma.errorFlowHover.viewErrorFlow`;
     }
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(private _documentInfoProvider: DocumentInfoProvider)
+    constructor(documentInfoProvider: DocumentInfoProvider)
     {
+        this._disposables.push(vscode.languages.registerHoverProvider(
+            documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter),
+            new MethodCallErrorHoverProvider(documentInfoProvider))
+        );
         this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ViewErrorFlow, async (args) => {
             await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, args.codeObjectId, args.codeObjectDisplayName, args.errorFlowId);
         }));
+    }
+
+    public dispose() 
+    {
+        for(let dis of this._disposables)
+            dis.dispose();
+    }
+}
+
+class MethodCallErrorHoverProvider implements vscode.HoverProvider
+{
+    constructor(private _documentInfoProvider: DocumentInfoProvider)
+    {
     }
 
     public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined> 
@@ -55,11 +72,5 @@ export class MethodCallErrorTooltip implements vscode.HoverProvider, vscode.Disp
             return new vscode.Hover(methodInfo.symbol.id);
         }
         return undefined;
-    }
-
-    public dispose() 
-    {
-        for(let dis of this._disposables)
-            dis.dispose();
     }
 }
