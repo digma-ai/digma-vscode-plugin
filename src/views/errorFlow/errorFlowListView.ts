@@ -22,8 +22,9 @@ export class ErrorFlowListView implements Disposable
     {
         this._provider = new ErrorFlowsListProvider(analyticsProvider, extensionUri);
         this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowListView.viewId, this._provider));
-        this._disposables.push(vscode.commands.registerCommand(ErrorFlowListView.Commands.ShowForCodeObject, async (codeObjectId: string, codeObjectDisplayName: string) => {
-            await this._provider.showForCodeObject(codeObjectId, codeObjectDisplayName);
+        this._disposables.push(vscode.commands.registerCommand(ErrorFlowListView.Commands.ShowForCodeObject, async (codeObjectId: string, codeObjectDisplayName: string, errorFlowId: string) => {
+            await vscode.commands.executeCommand("workbench.view.extension.digma");
+            await this._provider.showForCodeObject(codeObjectId, codeObjectDisplayName, errorFlowId);
         }));
     }
 
@@ -91,13 +92,16 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
 		this.reloadErrorFlows();
 	}
     
-    public async showForCodeObject(codeObjectId: string, codeObjectName: string)
+    public async showForCodeObject(codeObjectId: string, codeObjectName: string, selectedErrorFlowId: string)
     {
         this._viewModel.filterBy = {
             codeObjectId,
             codeObjectName
         };
-        await this.reloadErrorFlows();
+        await this.reloadErrorFlows(selectedErrorFlowId);
+
+        if(selectedErrorFlowId)
+            await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, selectedErrorFlowId, codeObjectId);
     }
 
     private async reloadErrorFlows(selectErrorFlowId?: string)

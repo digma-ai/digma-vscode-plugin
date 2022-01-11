@@ -17,7 +17,6 @@ export class AnaliticsCodeLens implements vscode.Disposable
         this._provider = new CodelensProvider(documentInfoProvider);
 
         this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string, displayName: string) => {
-            await vscode.commands.executeCommand("workbench.view.extension.digma");
             await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, symbolId, displayName);
             await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ClearErrorFlow);
         }));

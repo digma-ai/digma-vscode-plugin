@@ -10,6 +10,7 @@ import { Settings } from './settings';
 import { SourceControl, Git } from './services/sourceControl';
 import { ParameterDecorator } from './services/parameterDecorator';
 import { DocumentInfoProvider } from './services/documentInfoProvider';
+import { MethodCallErrorTooltip } from './services/methodCallErrorTooltip';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -35,6 +36,12 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, sourceControl, context.extensionUri));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
+
+    context.subscriptions.push(
+        vscode.languages.registerHoverProvider(
+            symbolProvider.supportedLanguages.map(x => x.documentFilter),
+            new MethodCallErrorTooltip(documentInfoProvider))
+    );
 }
 
 // this method is called when your extension is deactivated
