@@ -54,7 +54,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             errorFlows: []
         };
         this._disposables.push(vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
-            if(this._view && event.affectsConfiguration(Settings.keys.environment)){
+            if(this._view && event.affectsConfiguration(Settings.environment.key)){
                 this.reloadErrorFlows();
             }
         }));

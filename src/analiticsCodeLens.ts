@@ -55,7 +55,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
 
     public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> 
     {
-        if (!Settings.enableCodeLens) 
+        if (!Settings.enableCodeLens.value) 
             return [];
 
         const documentInfo = await this._documentInfoProvider.getDocumentInfo(document);

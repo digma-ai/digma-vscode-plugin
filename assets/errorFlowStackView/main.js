@@ -4,12 +4,8 @@ window.addEventListener("load", main);
 
 function main() {
 
-    $(".workspace-only-checkbox").change(function() {
-        if(this.checked)
-            $('.list-item.disabled').hide();
-        else
-            $('.list-item.disabled').show();
-
+    $(".workspace-only-checkbox").change(function() 
+    {
         vscode.postMessage({
             command: "setWorkspaceOnly",
             value: this.checked

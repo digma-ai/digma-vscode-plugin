@@ -8,7 +8,6 @@ import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { ContextView } from './views/contextView';
 import { Settings } from './settings';
 import { SourceControl, Git } from './services/sourceControl';
-import { ParameterDecorator } from './services/parameterDecorator';
 import { DocumentInfoProvider } from './services/documentInfoProvider';
 import { MethodCallErrorTooltip } from './services/methodCallErrorTooltip';
 
@@ -26,8 +25,10 @@ export async function activate(context: vscode.ExtensionContext)
     const analyticsProvider = new AnalyticsProvider();
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
 
-    if(!Settings.environment){
-        Settings.environment = (await analyticsProvider.getEnvironments()).firstOrDefault();
+    if(!Settings.environment.value){
+        const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();
+        if(firstEnv)
+            await Settings.environment.set(firstEnv);
     }
 
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));

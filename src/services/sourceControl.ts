@@ -27,7 +27,7 @@ export class SourceControl implements vscode.Disposable
     }
     
     public get current() : ISupportedSourceControl{
-        return this.supportedSourceControls.firstOrDefault(sc => sc.type == Settings.sourceControl);
+        return this.supportedSourceControls.firstOrDefault(sc => sc.type == Settings.sourceControl.value);
     }
 
     public dispose() 

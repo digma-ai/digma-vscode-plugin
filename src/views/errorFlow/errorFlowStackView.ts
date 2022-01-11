@@ -86,7 +86,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         this._webViewUris = new WebViewUris(extensionUri, "errorFlowStackView", ()=>this._view!.webview);
     }
 
-    public resolveWebviewView(
+    public  resolveWebviewView(
 		webviewView: vscode.WebviewView,
 		context: vscode.WebviewViewResolveContext<any>,
 		_token: vscode.CancellationToken) 
@@ -96,10 +96,11 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             enableScripts: true
         };
         webviewView.webview.onDidReceiveMessage(
-            (message: any) => {
+            async (message: any) => {
                 switch (message.command) {
                     case "setWorkspaceOnly":
-                        Settings.hideFramesOutsideWorkspace = message.value
+                        await Settings.hideFramesOutsideWorkspace.set(message.value);
+                        webviewView.webview.html = this.getHtml();
                         return;
                     case "goToFileAndLine":
                         this.goToFileAndLine(message.frameId);
@@ -158,6 +159,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
             stackVms.push({
                 exceptionType: frameStack.exceptionType,
+                exceptionMessage: frameStack.exceptionMessage,
                 frames: frameVms
             });
         }
@@ -227,7 +229,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 'File version is different from the version recorded in this flow.\nPlease configure source control.',
                 'configure');
             if(sel == 'configure')
-                await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings", {query: Settings.keys.sourceControl});
+                await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings", {query: Settings.sourceControl.key});
         }
         else
         {
@@ -246,7 +248,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         const stacksHtml = this._viewModel?.stacks
             .map(s => this.getFlowStackHtml(s))
             .join('') ?? '';
-        const checked = Settings.hideFramesOutsideWorkspace ? "checked" : "";
+        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
 
         return /*html*/ `
             <!DOCTYPE html>
@@ -281,12 +283,17 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         if(!stack)
             return '';
 
+        if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
+            return '';
+
         const framesHtml = stack.frames
+            .filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri)
             .map(f => this.getFrameItemHtml(f))
             .join('') ?? '';
 
         return /*html*/`
             <div class="flow-stack-title">${stack.exceptionType}</div>
+            <div class="flow-stack-message">${stack.exceptionMessage}</div>
             <div class="flow-stack-frames">${framesHtml}</div>
         `;
     }
@@ -296,14 +303,13 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         const path = `${frame.moduleName} in ${frame.functionName}`;
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
-        const hideAttr = frame.workspaceUri || !Settings.hideFramesOutsideWorkspace ? "" : "hidden";
         
         const linkTag = frame.workspaceUri
             ? /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>`
             : /*html*/`<span class="link-cell look-like-link" title="${frame.excutedCode}">${frame.excutedCode}</span>`;
         
         return /*html*/`
-            <div class="list-item ellipsis ${selectedClass} ${disabledClass}" ${hideAttr}>
+            <div class="list-item ellipsis ${selectedClass} ${disabledClass}">
                 <div title="${path}">${path}</div>
                 <div class="bottom-line">
                     ${linkTag}
@@ -338,6 +344,7 @@ interface ViewModel{
 
 interface StackViewModel {
     exceptionType: string;
+    exceptionMessage: string;
     frames: FrameViewModel[];
 }
 

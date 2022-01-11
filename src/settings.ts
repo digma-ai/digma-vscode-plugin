@@ -4,55 +4,42 @@ export enum SourceControlType{
     None = "None",
     Git = "Git"
 }
-export class Settings {
-    public static readonly keys = {
-        url: 'digma.url',
-        enableCodeLens: 'digma.enableCodeLens',
-        environment: 'digma.environment',
-        sourceControl: 'digma.sourceControl'
-    };
 
-    private static get section(): vscode.WorkspaceConfiguration{
+export class SettingsKey<T>
+{
+    constructor(
+        private _key: string,
+        private _defaultValue: T) 
+    {
+    }
+
+    public get key() : string {
+        return `digma.${this._key}`;
+    }
+
+    public get value() : T {
+        return this.section.get(this._key, this._defaultValue);
+    }
+
+    public async set(value: T): Promise<void>
+    {
+        return await this.section.update(this._key, value);
+    }
+
+    private get section(): vscode.WorkspaceConfiguration{
         return vscode.workspace.getConfiguration("digma");
     } 
+}
 
-    public static get url() : string{
-        return Settings.section.get("url", '');
-    }
+export class Settings 
+{
+    public static readonly url = new SettingsKey('url', '');
 
-    public static set set(value: string){
-        Settings.section.update("url", value);
-    }
+    public static readonly enableCodeLens = new SettingsKey('enableCodeLens', true);
 
-    public static get enableCodeLens() : boolean{
-        return Settings.section.get("enableCodeLens", true);
-    }
+    public static readonly environment = new SettingsKey('environment', '');
 
-    public static set enableCodeLens(value: boolean){
-        Settings.section.update("enableCodeLens", value);
-    }
+    public static readonly hideFramesOutsideWorkspace = new SettingsKey('hideFramesOutsideWorkspace', true);
 
-    public static get environment() : string{
-        return Settings.section.get("environment", '');
-    }
-
-    public static set environment(value: string){
-        Settings.section.update("environment", value);
-    }
-
-    public static get hideFramesOutsideWorkspace() : boolean{
-        return Settings.section.get("hideFramesOutsideWorkspace", true);
-    }
-
-    public static set hideFramesOutsideWorkspace(value: boolean){
-        Settings.section.update("hideFramesOutsideWorkspace", value);
-    }
-
-    public static get sourceControl() : SourceControlType {
-        return Settings.section.get("sourceControl", SourceControlType.None);
-    }
-
-    public static set sourceControl(value: SourceControlType){
-        Settings.section.update("sourceControl", value);
-    }
+    public static readonly sourceControl = new SettingsKey('sourceControl', SourceControlType.None);
 }

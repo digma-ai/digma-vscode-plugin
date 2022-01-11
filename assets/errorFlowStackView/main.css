@@ -24,6 +24,10 @@ vscode-panel-view {
 .flow-stack-title{
     font-weight: 500;
 }
+.flow-stack-message {
+    opacity: 0.3;
+    font-style: italic;
+}
 .flow-stack-frames{
     border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
     padding-left: 5px;

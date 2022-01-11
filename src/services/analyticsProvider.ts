@@ -36,6 +36,7 @@ export interface ErrorFlowFrame{
 
 export interface ErrorFlowStack{
     exceptionType: string;
+    exceptionMessage: string;
     frames: ErrorFlowFrame[];
 }
 
@@ -94,7 +95,7 @@ export class AnalyticsProvider
     private _agent?: https.Agent;
 
     constructor(){
-        this._url = Settings.url;
+        this._url = Settings.url.value;
         this._agent = this._url.startsWith('https')
             ? new https.Agent({rejectUnauthorized: false })
             : undefined;
@@ -129,7 +130,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment}) 
+                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value}) 
                 });
                 
             var reponseJson = await response.json();
@@ -144,7 +145,7 @@ export class AnalyticsProvider
     public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> 
     {
         try{
-            let url = `${this._url}/CodeAnalytics/errorFlows?environment=${encodeURIComponent(Settings.environment)}`;
+            let url = `${this._url}/CodeAnalytics/errorFlows?environment=${encodeURIComponent(Settings.environment.value)}`;
             if(sort)
                 url += `&sort=${encodeURIComponent(sort)}`;
             if(filterByCodeObjectId)
@@ -170,7 +171,7 @@ export class AnalyticsProvider
                     agent: this._agent,
                     method: 'POST', 
                     headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({id: errorFlowId, environment: Settings.environment}) 
+                    body: JSON.stringify({id: errorFlowId, environment: Settings.environment.value}) 
                 });
             
             let reponseJson = await response.json();
