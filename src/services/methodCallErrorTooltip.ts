@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ErrorFlowListView } from '../views/errorFlow/errorFlowListView';
-import { ErrorFlowsSortBy } from './analyticsProvider';
+import { ErrorFlowsSortBy, Impact } from './analyticsProvider';
 import { DocumentInfoProvider } from './documentInfoProvider';
 
 export class MethodCallErrorTooltip implements vscode.Disposable
@@ -62,8 +62,12 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
                 {
                     const command = MethodCallErrorTooltip.Commands.ViewErrorFlow;
                     const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: errorFlow.id}));
-                
-                    txt += `- \`${errorFlow.name}\` [$(link-external)](command:${command}?${args} "Show in side panel") \n`;
+                    var text = errorFlow.name;
+                    if (errorFlow.impact==Impact.High){
+                        text = `${errorFlow.name} (Unhandled)`;
+                    }
+
+                    txt += `- \`${text}\` [$(link-external)](command:${command}?${args} "Show in side panel") \n`;
                 }
                 let markdown = new vscode.MarkdownString(txt, true);
                 markdown.isTrusted = true;

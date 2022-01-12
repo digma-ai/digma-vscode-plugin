@@ -80,6 +80,9 @@ export interface CodeObjectSummary
 {
     id: string;
     errorFlowCount: number;
+    unhandledErrorFlowCount: number;
+    exceptionTypes: string[];
+    unhandledExceptionTypes: string[];
     trend: number;
     impact: Impact;
 }

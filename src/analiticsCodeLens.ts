@@ -66,12 +66,40 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             if(!summary || summary.errorFlowCount == 0)
                 continue;
 
+            var title = `${summary.errorFlowCount} Error flows (${trendToCodIcon(summary.trend)})`;
+            var unhandledExceptions = summary.unhandledExceptionTypes.map((val)=> `${val} (unhandled)`);
+            var exceptions = unhandledExceptions.concat(summary.exceptionTypes);
+
+            if (exceptions.length>0){
+                if (exceptions.length<=3){
+                    title = `${exceptions.join(' | ')}`;
+                }
+                else{
+                    var sublist = exceptions.slice(0,2).concat(['MORE']);
+                    title = `${sublist.join(' | ')}`;
+                }
+            }
+
+            else {
+                if (summary.exceptionTypes.length>0){
+                    if (summary.exceptionTypes.length<=3){
+                        title = `${summary.exceptionTypes.join('|')}`;
+                    }
+                    else{
+                        var sublist = summary.exceptionTypes.slice(0,2).concat(['MORE']);
+                        title = `${sublist.join(' | ')}`;
+                    }
+                }
+            }
+
             codelens.push(new vscode.CodeLens(methodInfo.range, {
-                title:  `${summary.errorFlowCount} Error flows (${trendToCodIcon(summary.trend)})`,
+                title:  title,
                 // tooltip: methodInfo.symbol.id,
                 command: CodelensProvider.clickCommand,
                 arguments: [document, methodInfo.symbol.id, methodInfo.displayName]
             }));
+            
+
         }
 
         return codelens;

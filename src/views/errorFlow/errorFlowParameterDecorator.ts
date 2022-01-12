@@ -60,10 +60,10 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<ErroredParam
 
     protected getParameterHover(document: vscode.TextDocument, parameter: ErroredParameter): vscode.Hover
     {
+        
         const html = /*html*/ `<html>
             <body>
-                <div>Current viewed error stats:</div>
-                <div>Is always <code>None</code></div>
+                <div><code>${parameter.name}</code> is always <code>None</code></div>
             </body>
             </html>`;
         let markdown = new vscode.MarkdownString(html);
