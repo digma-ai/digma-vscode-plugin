@@ -2,7 +2,8 @@ import fetch from "node-fetch";
 import * as https from 'https';
 import { Settings } from "../settings";
 import { Logger } from "./logger";
-import { Dictionary } from "./utils";
+import { Dictionary, momentJsDateParser } from "./utils";
+import moment = require("moment");
 
 export enum Impact 
 {
@@ -57,6 +58,8 @@ export interface ErrorFlowSummary
     trend: Trend;
     frequency: Frequency;
     impact: Impact;
+    lastOccurenceTime: moment.Moment;
+    firstOccurenceTime: moment.Moment;
 }
 
 export interface Frequency{
@@ -106,19 +109,16 @@ export class AnalyticsProvider
 
     public async getEnvironments() : Promise<string[]> 
     {
-        try{
-            var response = await fetch(
-                `${this._url}/CodeAnalytics/environments`, 
-                {
-                    agent: this._agent,
-                    method: 'GET', 
-                    headers: {'Content-Type': 'application/json' }
-                });
-                
-            var reponseJson = await response.json();
-            return <string[]>reponseJson;
+        try
+        {
+            const response = await this.send<string[]>(
+                'GET',
+                `${this._url}/CodeAnalytics/environments`);
+
+            return response;
         }
-        catch(error){
+        catch(error)
+        {
             Logger.error('Failed to get environments', error);
         }
         return [];
@@ -126,18 +126,15 @@ export class AnalyticsProvider
 
     public async getSummary(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
     {
-        try{
-            var response = await fetch(
+        try
+        {
+            const response = await this.send<CodeObjectsSummaryResponse>(
+                'POST', 
                 `${this._url}/CodeAnalytics/summary`, 
-                {
-                    agent: this._agent,
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value}) 
-                });
-                
-            var reponseJson = await response.json();
-            return (<CodeObjectsSummaryResponse>reponseJson).codeObjects;
+                undefined, 
+                {codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
+
+            return response.codeObjects;
         }
         catch(error){
             Logger.error('Failed to get summary', error);
@@ -147,19 +144,26 @@ export class AnalyticsProvider
 
     public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> 
     {
-        try{
-            let url = `${this._url}/CodeAnalytics/errorFlows?environment=${encodeURIComponent(Settings.environment.value)}`;
+        try
+        {
+            let queryParams: Dictionary<string, any> = {};
+            queryParams['environment'] = Settings.environment.value;
+            
             if(sort)
-                url += `&sort=${encodeURIComponent(sort)}`;
-            if(filterByCodeObjectId)
-                url += `&codeObjectId=${encodeURIComponent(filterByCodeObjectId)}`;
+                queryParams['sort'] = sort;
 
-            var response = await fetch(url, { agent: this._agent, method: 'GET' });
-                
-            var reponseJson = await response.json();
-            return (<CodeObjectErrorFlowsResponse>reponseJson).errorFlows;
+            if(filterByCodeObjectId)
+                queryParams['codeObjectId'] = filterByCodeObjectId;
+
+            const response = await this.send<CodeObjectErrorFlowsResponse>(
+                'GET', 
+                `${this._url}/CodeAnalytics/errorFlows`, 
+                queryParams);
+
+            return response.errorFlows;
         }
-        catch(error){
+        catch(error)
+        {
             Logger.error('Failed to get error flows', error);
         }
         return [];
@@ -167,22 +171,47 @@ export class AnalyticsProvider
 
     public async getErrorFlow(errorFlowId: string): Promise<ErrorFlowResponse | undefined> 
     {
-        try{
-            let response = await fetch(
+        try
+        {
+            const response = await this.send<ErrorFlowResponse>(
+                'POST',
                 `${this._url}/CodeAnalytics/errorFlow`, 
-                {
-                    agent: this._agent,
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json' },
-                    body: JSON.stringify({id: errorFlowId, environment: Settings.environment.value}) 
-                });
-            
-            let reponseJson = await response.json();
-            return <ErrorFlowResponse>reponseJson;
+                undefined,
+                {id: errorFlowId, environment: Settings.environment.value});
+
+            return response;
         }
         catch(error){
             Logger.error('Failed to get error flow', error);
         }
         return;
+    }
+
+    private async send<TResponse>(method: string, url: string, queryParams?: Dictionary<string, any>, body?: any): Promise<TResponse>
+    {
+        if(queryParams)
+        {
+            url += '?';
+            for(let key in queryParams)
+                url += `${key}=${encodeURIComponent(queryParams[key])}&`;
+        }
+
+        let response = await fetch(
+            url, 
+            {
+                agent: this._agent,
+                method: method, 
+                headers: {'Content-Type': 'application/json' },
+                body: body ? JSON.stringify(body) : undefined, 
+            });
+        
+        if(!response.ok)
+        {
+            const txt = await response.text();
+            throw new Error(`Request failed with http code: [${response.status}] ${response.statusText}\nResponse: ${txt}`);
+        }
+
+        var reponseJson = JSON.parse(await response.text(), momentJsDateParser);
+        return <TResponse>reponseJson;
     }
 }

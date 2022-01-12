@@ -104,6 +104,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, selectedErrorFlowId, codeObjectId);
     }
 
+    
     private async reloadErrorFlows(selectErrorFlowId?: string)
     {
         const errorFlows = await this._analyticsProvider.getErrorFlows(
@@ -137,6 +138,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         for(let errorVm of this._viewModel?.errorFlows ?? [])
         {
             const selectedCss = errorVm.selected ? "selected" : "";
+            const occurenceTooltip = `First occurence: ${errorVm.firstOccurenceTime}&#10;Last occurence: ${errorVm.lastOccurenceTime}`;
             items += /* html */`
                 <div class="list-item ${selectedCss}">
                     <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">${errorVm.name}</div>
@@ -152,6 +154,10 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                         <div class="property-col">
                             <span class="label">Frequency: </span>
                             <span class="value" title="${errorVm.frequencyLong}">${errorVm.frequencyShort}</span>
+                        </div>
+                        <div class="property-col">
+                            <span class="label">Occured: </span>
+                            <span class="value" title="${occurenceTooltip}">${errorVm.firstOccurenceTime.fromNow()}</span>
                         </div>
                     </div>
                 </div>`;
@@ -249,4 +255,6 @@ interface ErrorFlowViewModel{
     frequencyLong: string;
     impact: Impact;
     selected: boolean;
+    lastOccurenceTime: moment.Moment;
+    firstOccurenceTime: moment.Moment;
 }
