@@ -16,10 +16,22 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
     private _decorationType: vscode.TextEditorDecorationType;
     private _cache: Dictionary<string, TParameter[]> = {};
 
+    private get_icon_character(){
+        var x = "\\eabd";
+        return x.toString();
+    }
+
     constructor(
         codicon: string, 
-        private _documentSelector: vscode.DocumentSelector)
+        private _documentSelector: vscode.DocumentSelector,
+        color?: string
+        )
     {
+
+        if (typeof color !== 'undefined'){
+            color = "var(--vscode-editorCodeLens-foreground)";
+        }
+        
         this._decorationType = vscode.window.createTextEditorDecorationType({
             before:{
                 contentText: codicon, //"\uebe2",

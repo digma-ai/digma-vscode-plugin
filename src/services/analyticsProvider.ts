@@ -83,11 +83,25 @@ export interface CodeObjectSummary
 {
     id: string;
     errorFlowCount: number;
-    unhandledErrorFlowCount: number;
     exceptionTypes: string[];
     unhandledExceptionTypes: string[];
     trend: number;
     impact: Impact;
+    unhandled: boolean;
+    unexpected: boolean;
+    unhandledErrorFlowCount:number;
+    unexpectedErrorFlowCount:number;
+}
+
+export interface ExcutedCodeSummary{
+    code: string;
+    codeObjectId: string;
+    errorFlowId: string;
+    exceptionType: string;
+    exceptionMessage: string;
+    handled: boolean;
+    unexpected: boolean;
+    possibleLineNumbers: number[];
 }
 
 export interface CodeObjectsSummaryResponse

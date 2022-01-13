@@ -64,7 +64,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
                     const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: errorFlow.id}));
                     var text = errorFlow.name;
                     if (errorFlow.impact==Impact.High){
-                        text = `${errorFlow.name} (Unhandled)`;
+                        text = `[Unhandled] ${errorFlow.name}`;
                     }
 
                     txt += `- \`${text}\` [$(link-external)](command:${command}?${args} "Show in side panel") \n`;

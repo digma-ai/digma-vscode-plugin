@@ -9,8 +9,11 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<ErroredParam
 
     constructor(private _documentInfoProvider: DocumentInfoProvider)
     {
-        super("\uebe2", _documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter));
+        //"\uebe2".replace('uebe2','eabd')
+        super("\ueabd", _documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter));
     }
+
+
 
     public get errorFlowResponse(): ErrorFlowResponse | undefined
     {

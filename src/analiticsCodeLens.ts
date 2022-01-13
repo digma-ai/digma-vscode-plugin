@@ -64,33 +64,20 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         {
             const summary = documentInfo.codeObjectSummaries.firstOrDefault(x => x.id == methodInfo.symbol.id);
             if(!summary || summary.errorFlowCount == 0)
-                continue;
+                continue; 
+            
+            var title = "";
+            title = `${summary.errorFlowCount} Errors`;     
 
-            var title = `${summary.errorFlowCount} Error flows (${trendToCodIcon(summary.trend)})`;
-            var unhandledExceptions = summary.unhandledExceptionTypes.map((val)=> `${val} (unhandled)`);
-            var exceptions = unhandledExceptions.concat(summary.exceptionTypes);
-
-            if (exceptions.length>0){
-                if (exceptions.length<=3){
-                    title = `${exceptions.join(' | ')}`;
-                }
-                else{
-                    var sublist = exceptions.slice(0,2).concat(['MORE']);
-                    title = `${sublist.join(' | ')}`;
-                }
+            if (summary.unhandled){
+                title+=` $(bracket-error) `;
             }
 
-            else {
-                if (summary.exceptionTypes.length>0){
-                    if (summary.exceptionTypes.length<=3){
-                        title = `${summary.exceptionTypes.join('|')}`;
-                    }
-                    else{
-                        var sublist = summary.exceptionTypes.slice(0,2).concat(['MORE']);
-                        title = `${sublist.join(' | ')}`;
-                    }
-                }
+            if (summary.unexpected){
+                title+=` $(run-errors) `;
             }
+            
+            //(${trendToCodIcon(summary.trend)})
 
             codelens.push(new vscode.CodeLens(methodInfo.range, {
                 title:  title,
