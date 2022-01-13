@@ -70,11 +70,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
         markdown.appendText('Throws:\n');
         for(let errorFlow of errorFlows)
         {
-            const command = MethodCallErrorTooltip.Commands.ViewErrorFlow;
-            const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: errorFlow.id}));
-            markdown.appendMarkdown(`[$(link-external)](command:${command}?${args} "Show in side panel") `);
-
-            markdown.appendMarkdown(`<code>${errorFlow.name}</code> `);
+            markdown.appendMarkdown(`- \`${errorFlow.name}\``)
 
             if (errorFlow.unhandled){
                 markdown.appendMarkdown(` \u00B7 <span style="color:#f14c4c;"><i>Unhandled</i></span>`);
@@ -82,7 +78,11 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
             if (errorFlow.unexpected){
                 markdown.appendMarkdown(` \u00B7 <span style="color:#cca700"><i>Unexpected</i></span>`);
             }
-            markdown.appendText('\n');
+            
+            const command = MethodCallErrorTooltip.Commands.ViewErrorFlow;
+            const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: errorFlow.id}));
+            markdown.appendMarkdown(` \u00B7 [$(link-external)](command:${command}?${args} "Show in side panel") `);
+            markdown.appendText('\n')
         }
         markdown.supportHtml = true;
         markdown.isTrusted = true;

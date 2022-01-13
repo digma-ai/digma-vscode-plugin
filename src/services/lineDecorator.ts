@@ -57,12 +57,22 @@ export class LineDecorator implements vscode.Disposable
 
     private getTooltip(lineInfo: LineInfo): vscode.MarkdownString
     {
-        let txt = 'Throws:\n';
+        let markdown = new vscode.MarkdownString('', true);
+        markdown.appendText('Throws:\n');
         for(let exception of lineInfo.exceptions)
         {
-            txt += `- \`${exception.type}\` ${exception.message}\n`;
+            markdown.appendMarkdown(`- \`${exception.type}\``);
+            
+            if (!exception.handled){
+                markdown.appendMarkdown(` \u00B7 <span style="color:#f14c4c;"><i>Unhandled</i></span>`);
+            }
+            if (exception.unexpected){
+                markdown.appendMarkdown(` \u00B7 <span style="color:#cca700"><i>Unexpected</i></span>`);
+            }
+
+            markdown.appendMarkdown(`\\`);
+            markdown.appendMarkdown(`\n${exception.message}\n`);
         }
-        let markdown = new vscode.MarkdownString(txt, true);
         markdown.isTrusted = true;
         return markdown;
     }
