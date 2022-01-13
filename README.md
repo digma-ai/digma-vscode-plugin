@@ -10,6 +10,14 @@ Getting error information
 
 None
 
+## Build
+
+```
+npm install
+vsce package
+```
+
+
 ## Extension Settings
 
 This extension contributes the following settings:
