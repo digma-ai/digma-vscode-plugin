@@ -12,10 +12,10 @@ export async function delay(ms: number) : Promise<any>{
     return new Promise(res => setTimeout(res, ms));
 }
 
-// interface Dictionary<TKey, TValue> = (Record<TKey, TValue>;
 declare global {
     interface Array<T> {
         firstOrDefault(predicate?: (item: T) => boolean): T;
+        single(predicate?: (item: T) => boolean): T;
         all(predicate: (item: T) => boolean) : boolean;
         any(predicate: (item: T) => boolean) : boolean;
     }
@@ -24,7 +24,14 @@ declare global {
 Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
     return this.find(predicate || (x => true));
 }
-
+Array.prototype.single = function (predicate: (item: any) => boolean) {
+    let items = this.filter(predicate || (x => true));
+    if(items.length < 1)
+        throw new Error(`Sequence contains no elements`);
+    if(items.length > 1)
+        throw new Error(`Sequence contains more than one element`);
+    return items[0];
+}
 Array.prototype.all = function (predicate: (item: any) => boolean) {
     for(let item of this){
         if(!predicate(item))
@@ -38,6 +45,19 @@ Array.prototype.any = function (predicate: (item: any) => boolean) {
             return true;
     }
     return false;
+}
+
+declare module "vscode" {
+    interface Uri {
+        toModulePath(): string;
+    }
+}
+
+vscode.Uri.prototype.toModulePath = function() {
+    let fileRelativePath = vscode.workspace.asRelativePath(this, true);
+    return fileRelativePath != this.path
+        ? fileRelativePath
+        : '';
 }
 
 export async function fileExits(uri: vscode.Uri) : Promise<boolean>

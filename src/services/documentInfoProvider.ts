@@ -59,24 +59,23 @@ export class DocumentInfoProvider implements vscode.Disposable
             try
             {
                 const symbolInfos = await this.symbolProvider.getSymbols(doc);
-                const codeObjectSummaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id));
+                const codeObjectSummaries = await this.analyticsProvider.getSummary(doc.uri.toModulePath(), symbolInfos.map(s => s.id));
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
+                const lines = this.createLineInfos(doc, codeObjectSummaries, methods);
 
                 latestVersionInfo.value = {
-                    symbolInfos,
                     codeObjectSummaries,
-                    tokens,
-                    methods
+                    methods,
+                    lines
                 };
             }
             catch(e)
             {
                 latestVersionInfo.value = {
-                    symbolInfos: [],
                     codeObjectSummaries: [],
-                    tokens: [],
-                    methods: []
+                    methods: [],
+                    lines: []
                 };
                 Logger.error(`Failed to collect info for ${doc.uri} version ${doc.version}`, e);
             }
@@ -123,6 +122,40 @@ export class DocumentInfoProvider implements vscode.Disposable
         return methods;
     }
 
+    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummary[], methods: MethodInfo[]): LineInfo[]
+    {
+        const lineInfos: LineInfo[] = [];
+        for(let codeObjectSummary of codeObjectSummaries)
+        {
+            const method = methods.single(m => m.symbol.id == codeObjectSummary.id);
+
+            for(let excutedCodeSummary of codeObjectSummary.excutedCodes)
+            {
+                const matchingLines = excutedCodeSummary.possibleLineNumbers
+                    .filter(x => method.range.start.line <= x-1 &&
+                                method.range.end.line >= x-1 &&
+                                document.lineAt(x-1).text.trim() == excutedCodeSummary.code);
+
+                if(matchingLines.length != 1)
+                    continue;
+                
+                const lineNumber = matchingLines[0];
+                let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == lineNumber);
+                if(!lineInfo)
+                {
+                    lineInfo = {lineNumber, exceptions: []};
+                    lineInfos.push(lineInfo);
+                }
+
+                lineInfo.exceptions.push({
+                    type: excutedCodeSummary.exceptionType,
+                    message: excutedCodeSummary.exceptionMessage
+                });
+            }
+        }
+        return lineInfos;
+    }
+
     public dispose() 
     {
         clearInterval(this._timer);
@@ -153,10 +186,18 @@ class DocumentInfoContainer
 
 export interface DocumentInfo
 {
-    symbolInfos: SymbolInfo[];
     codeObjectSummaries: CodeObjectSummary[];
-    tokens: Token[];
     methods: MethodInfo[];
+    lines: LineInfo[];
+}
+
+export interface LineInfo
+{
+    lineNumber: number;
+    exceptions: {
+        type: string;
+        message: string;
+    }[];
 }
 
 export interface MethodInfo

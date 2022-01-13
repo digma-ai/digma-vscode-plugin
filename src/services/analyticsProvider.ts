@@ -87,13 +87,13 @@ export interface CodeObjectSummary
     id: string;
     errorFlowCount: number;
     exceptionTypes: string[];
-    unhandledExceptionTypes: string[];
     trend: number;
     impact: Impact;
     unhandled: boolean;
     unexpected: boolean;
     unhandledErrorFlowCount:number;
     unexpectedErrorFlowCount:number;
+    excutedCodes: ExcutedCodeSummary[];
 }
 
 export interface ExcutedCodeSummary{
@@ -141,7 +141,7 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getSummary(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
+    public async getSummary(moduleName: string, symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
     {
         try
         {
@@ -149,7 +149,7 @@ export class AnalyticsProvider
                 'POST', 
                 `${this._url}/CodeAnalytics/summary`, 
                 undefined, 
-                {codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
+                {moduleName: moduleName, codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
 
             return response.codeObjects;
         }

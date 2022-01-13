@@ -30,10 +30,9 @@ export class PythonSupport implements ISupportedLanguage
         return { scheme: 'file', language: 'python' };
     }
 
-    public extractSymbolInfos(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
-                
-        const filePath = this.getRelativePath(document);
-        const symbolInfos = this.extractFunctions(filePath, '', docSymbols);
+    public extractSymbolInfos(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] 
+    {       
+        const symbolInfos = this.extractFunctions(document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
     }
 
@@ -65,16 +64,5 @@ export class PythonSupport implements ISupportedLanguage
         }
 
         return symbolInfos;
-    }
-
-    getRelativePath(doc: vscode.TextDocument) : string
-    {
-        const workspaceFolder = vscode.workspace.getWorkspaceFolder(doc.uri);
-        if(!workspaceFolder)
-            return '';
-
-        let fileRelativePath = doc.uri.toString().replace(workspaceFolder.uri.toString(), '');
-        fileRelativePath = workspaceFolder.name + fileRelativePath;
-        return fileRelativePath;
     }
 }
