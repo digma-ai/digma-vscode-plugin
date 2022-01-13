@@ -154,7 +154,9 @@ export class DocumentInfoProvider implements vscode.Disposable
 
                 lineInfo.exceptions.push({
                     type: excutedCodeSummary.exceptionType,
-                    message: excutedCodeSummary.exceptionMessage
+                    message: excutedCodeSummary.exceptionMessage,
+                    handled: excutedCodeSummary.handled,
+                    unexpected: excutedCodeSummary.unexpected
                 });
             }
         }
@@ -204,6 +206,8 @@ export interface LineInfo
     exceptions: {
         type: string;
         message: string;
+        handled: boolean;
+        unexpected: boolean;
     }[];
 }
 

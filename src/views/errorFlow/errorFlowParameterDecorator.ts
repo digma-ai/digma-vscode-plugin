@@ -61,11 +61,7 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
 
     private getParameterHover(parameter: ParameterInfo): vscode.MarkdownString
     {
-        const html = /*html*/ `<html>
-            <body>
-                <div><code>${parameter.name}</code> is always <code>None</code></div>
-            </body>
-            </html>`;
+        const html = /*html*/ `<code>${parameter.name}</code> is always <code>None</code>`;
         let m = new vscode.MarkdownString(html);
         m.supportHtml = true;
         m.isTrusted = true;

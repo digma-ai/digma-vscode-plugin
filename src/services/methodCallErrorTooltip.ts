@@ -66,24 +66,25 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
         if(!errorFlows?.length)
             return;
         
-        let txt = 'Throws:\n';
+        let markdown = new vscode.MarkdownString('', true);
+        markdown.appendText('Throws:\n');
         for(let errorFlow of errorFlows)
         {
             const command = MethodCallErrorTooltip.Commands.ViewErrorFlow;
             const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: errorFlow.id}));
-            var text = "";
+            markdown.appendMarkdown(`[$(link-external)](command:${command}?${args} "Show in side panel") `);
+
+            markdown.appendMarkdown(`<code>${errorFlow.name}</code> `);
+
             if (errorFlow.unhandled){
-                text+="[Unhandled] ";
+                markdown.appendMarkdown(` \u00B7 <span style="color:#f14c4c;"><i>Unhandled</i></span>`);
             }
             if (errorFlow.unexpected){
-                text+="[Unexpected] ";   
+                markdown.appendMarkdown(` \u00B7 <span style="color:#cca700"><i>Unexpected</i></span>`);
             }
-
-            text+=errorFlow.name;
-
-            txt += `- \`${text}\` [$(link-external)](command:${command}?${args} "Show in side panel") \n`;
+            markdown.appendText('\n');
         }
-        let markdown = new vscode.MarkdownString(txt, true);
+        markdown.supportHtml = true;
         markdown.isTrusted = true;
         return new vscode.Hover(markdown);
     }
