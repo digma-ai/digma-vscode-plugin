@@ -156,7 +156,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                             <span class="value" title="${errorVm.frequencyLong}">${errorVm.frequencyShort}</span>
                         </div>
                         <div class="property-col">
-                            <span class="label">Occured: </span>
+                            <span class="label">Last: </span>
                             <span class="value" title="${occurenceTooltip}">${errorVm.firstOccurenceTime.fromNow()}</span>
                         </div>
                     </div>

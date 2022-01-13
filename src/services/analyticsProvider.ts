@@ -60,6 +60,8 @@ export interface ErrorFlowSummary
     impact: Impact;
     lastOccurenceTime: moment.Moment;
     firstOccurenceTime: moment.Moment;
+    unhandled: boolean;
+    unexpected: boolean;
 }
 
 export interface Frequency{
@@ -73,6 +75,7 @@ export interface Trend{
     value: number;
     period: number;
 }
+
 
 export interface CodeObjectErrorFlowsResponse
 {
