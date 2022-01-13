@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { ErrorFlowResponse, ParamStats } from '../../services/analyticsProvider';
-import { ParameterDecorator } from "../../services/parameterDecorator";
-import { DocumentInfoProvider } from '../../services/documentInfoProvider';
+import { IParameter, ParameterDecorator } from "../../services/parameterDecorator";
+import { DocumentInfoProvider, ParameterInfo } from '../../services/documentInfoProvider';
 
-export class ErrorFlowParameterDecorator extends ParameterDecorator<ErroredParameter>
+export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
 {
     public _errorFlowResponse?: ErrorFlowResponse;
 
@@ -12,8 +12,6 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<ErroredParam
         //"\uebe2".replace('uebe2','eabd')
         super("\ueabd", _documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter));
     }
-
-
 
     public get errorFlowResponse(): ErrorFlowResponse | undefined
     {
@@ -26,9 +24,9 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<ErroredParam
         this.refreshAll();
     }
 
-    protected async getParameters(document: vscode.TextDocument): Promise<ErroredParameter[]> 
+    protected async getParameters(document: vscode.TextDocument): Promise<IParameter[]> 
     {
-        let parameters: ErroredParameter[] = [];
+        let parameters: IParameter[] = [];
 
         const frames = this.errorFlowResponse?.frameStacks?.flatMap(s => s.frames) || [];
         if(!frames)
@@ -53,7 +51,7 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<ErroredParam
                 parameters.push({
                     name: parameterInfo.name,
                     range: parameterInfo.range,
-                    stats: parameterStats
+                    hover: this.getParameterHover(parameterInfo)
                 });
             }
         }
@@ -61,25 +59,16 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<ErroredParam
         return parameters;
     }   
 
-    protected getParameterHover(document: vscode.TextDocument, parameter: ErroredParameter): vscode.Hover
+    private getParameterHover(parameter: ParameterInfo): vscode.MarkdownString
     {
-        
         const html = /*html*/ `<html>
             <body>
                 <div><code>${parameter.name}</code> is always <code>None</code></div>
             </body>
             </html>`;
-        let markdown = new vscode.MarkdownString(html);
-        markdown.supportHtml = true;
-        markdown.isTrusted = true;
-        return new vscode.Hover(markdown);
+        let m = new vscode.MarkdownString(html);
+        m.supportHtml = true;
+        m.isTrusted = true;
+        return m;
     }
-
-}
-
-interface ErroredParameter
-{
-    name: string;
-    range: vscode.Range;
-    stats: ParamStats;
 }

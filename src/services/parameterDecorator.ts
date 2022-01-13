@@ -8,6 +8,7 @@ export interface IParameter
 {
     name: string;
     range: vscode.Range;
+    hover: vscode.MarkdownString;
 }
 
 export abstract class ParameterDecorator<TParameter extends IParameter> implements vscode.Disposable
@@ -16,25 +17,13 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
     private _decorationType: vscode.TextEditorDecorationType;
     private _cache: Dictionary<string, TParameter[]> = {};
 
-    private get_icon_character(){
-        var x = "\\eabd";
-        return x.toString();
-    }
-
     constructor(
         codicon: string, 
-        private _documentSelector: vscode.DocumentSelector,
-        color?: string
-        )
+        private _documentSelector: vscode.DocumentSelector)
     {
-
-        if (typeof color !== 'undefined'){
-            color = "var(--vscode-editorCodeLens-foreground)";
-        }
-        
         this._decorationType = vscode.window.createTextEditorDecorationType({
             before:{
-                contentText: codicon, //"\uebe2",
+                contentText: codicon,
                 textDecoration: "none; font-family: codicon; position: relative; top: 3px; color: var(--vscode-editorCodeLens-foreground); padding-right: 2px; font-size: 12px"
             }
         });
@@ -47,16 +36,9 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
         this._disposables.push(
             vscode.workspace.onDidCloseTextDocument(async (d:vscode.TextDocument) => delete this._cache[d.uri.fsPath])
         );
-        this._disposables.push(
-            vscode.languages.registerHoverProvider(
-                _documentSelector /*_symbolProvider.supportedLanguages.map(x => x.documentFilter)*/, 
-                {provideHover: (document, position, token) => this.provideHover(document, position, token)})
-        );
     }
 
     protected abstract getParameters(document: vscode.TextDocument): Promise<TParameter[]>;
-
-    protected abstract getParameterHover(document: vscode.TextDocument, parameter: TParameter): vscode.Hover;
 
     protected async refreshAll()
     {
@@ -77,40 +59,36 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
         const editor = vscode.window.visibleTextEditors.find(e => e.document == document); 
         if(!editor)
             return;
-    
-        editor.setDecorations(this._decorationType, parameters.map(p => p.range));
-    }
-
-    public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined>
-    {
-        var parameter = this._cache[document.uri.fsPath]?.firstOrDefault(p => p.range.contains(position));
-        if(!parameter)
-            return undefined;
         
-        return await this.getParameterHover(document, parameter);
-
-        // const graphBuilder = new TimeSeriesGraphBuilder();
-        // let startTime: moment.Moment = moment.utc(); //this._creationTime.clone().add(10, 'second') > moment.utc()
-        // for(let i=0; i<40; i++)
-        // {
-        //     graphBuilder.add(startTime.add(Math.random()*10, 'hour'), Math.random()*654);
-        // }
-        // const svgGraphStr = graphBuilder.toSvg(200, 100, '#8a9cf9');
-        // const svgGraphBase64 = Buffer.from(svgGraphStr, 'binary').toString('base64');
-        // const html = /*html*/ `<html>
-        //     <body>
-        //         <div>Min size: 5</div>
-        //         <div>Avg size: 7</div>
-        //         <div>Max size: 40</div>
-        //         <img height="100" src="data:image/svg+xml;base64,${svgGraphBase64}"/>
-        //     </body>
-        //     </html>`;
-        // let markdown = new vscode.MarkdownString(html);
-        // markdown.supportHtml = true;
-        // markdown.isTrusted = true;
-        // return new vscode.Hover(markdown);
+        const decorationOptions: vscode.DecorationOptions[] = parameters
+            .map(p => {return {
+                hoverMessage: p.hover, 
+                range: p.range
+            }});
+        editor.setDecorations(this._decorationType, decorationOptions);
     }
 
+    // const graphBuilder = new TimeSeriesGraphBuilder();
+    // let startTime: moment.Moment = moment.utc(); //this._creationTime.clone().add(10, 'second') > moment.utc()
+    // for(let i=0; i<40; i++)
+    // {
+    //     graphBuilder.add(startTime.add(Math.random()*10, 'hour'), Math.random()*654);
+    // }
+    // const svgGraphStr = graphBuilder.toSvg(200, 100, '#8a9cf9');
+    // const svgGraphBase64 = Buffer.from(svgGraphStr, 'binary').toString('base64');
+    // const html = /*html*/ `<html>
+    //     <body>
+    //         <div>Min size: 5</div>
+    //         <div>Avg size: 7</div>
+    //         <div>Max size: 40</div>
+    //         <img height="100" src="data:image/svg+xml;base64,${svgGraphBase64}"/>
+    //     </body>
+    //     </html>`;
+    // let markdown = new vscode.MarkdownString(html);
+    // markdown.supportHtml = true;
+    // markdown.isTrusted = true;
+    // return new vscode.Hover(markdown);
+    
     public dispose() {
         for(let dis of this._disposables)
             dis.dispose();

@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { SymbolInfo } from '../languageSupport';
 import { AnalyticsProvider, CodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
-import { SymbolProvider, Token } from './symbolProvider';
+import { SymbolProvider, Token, TokenType } from './symbolProvider';
 import { Dictionary, Future } from './utils';
 
 export class DocumentInfoProvider implements vscode.Disposable
@@ -67,7 +67,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                 latestVersionInfo.value = {
                     codeObjectSummaries,
                     methods,
-                    lines
+                    lines,
+                    tokens
                 };
             }
             catch(e)
@@ -75,7 +76,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                 latestVersionInfo.value = {
                     codeObjectSummaries: [],
                     methods: [],
-                    lines: []
+                    lines: [],
+                    tokens: []
                 };
                 Logger.error(`Failed to collect info for ${doc.uri} version ${doc.version}`, e);
             }
@@ -101,21 +103,23 @@ export class DocumentInfoProvider implements vscode.Disposable
             };
             methods.push(method);
 
-            const methodTokens = tokens.filter(t => symbol.range.contains(new vscode.Position(t.line, t.char)));
+            const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
             for(let token of methodTokens)
             {
-                if(token.type != 'parameter')
-                    continue;
+                if(token.type == TokenType.method && !method.NameRange)
+                {
+                    method.NameRange = token.range
+                }
 
-                const range = new vscode.Range(
-                    new vscode.Position(token.line, token.char), 
-                    new vscode.Position(token.line, token.char+token.length));
-                const name =  document.getText(range);
+                if(token.type == TokenType.parameter)
+                {
+                    const name =  document.getText(token.range);
 
-                if(method.parameters.any(p => p.name == name))
-                    continue;
-                
-                method.parameters.push({ name, range, token });
+                    if(method.parameters.any(p => p.name == name))
+                        continue;
+                    
+                    method.parameters.push({ name, range: token.range, token });
+                }
             }
         }
 
@@ -132,18 +136,19 @@ export class DocumentInfoProvider implements vscode.Disposable
             for(let excutedCodeSummary of codeObjectSummary.excutedCodes)
             {
                 const matchingLines = excutedCodeSummary.possibleLineNumbers
-                    .filter(x => method.range.start.line <= x-1 &&
-                                method.range.end.line >= x-1 &&
-                                document.lineAt(x-1).text.trim() == excutedCodeSummary.code);
+                    .map(x => x-1)
+                    .filter(x => method.range.start.line <= x &&
+                                method.range.end.line >= x &&
+                                document.lineAt(x).text.trim() == excutedCodeSummary.code);
 
                 if(matchingLines.length != 1)
                     continue;
                 
-                const lineNumber = matchingLines[0];
-                let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == lineNumber);
+                const textLine = document.lineAt(matchingLines[0]);
+                let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == textLine.lineNumber+1);
                 if(!lineInfo)
                 {
-                    lineInfo = {lineNumber, exceptions: []};
+                    lineInfo = {lineNumber: textLine.lineNumber, range: textLine.range, exceptions: [] };
                     lineInfos.push(lineInfo);
                 }
 
@@ -189,11 +194,13 @@ export interface DocumentInfo
     codeObjectSummaries: CodeObjectSummary[];
     methods: MethodInfo[];
     lines: LineInfo[];
+    tokens: Token[];
 }
 
 export interface LineInfo
 {
     lineNumber: number;
+    range: vscode.Range;
     exceptions: {
         type: string;
         message: string;
@@ -203,6 +210,7 @@ export interface LineInfo
 export interface MethodInfo
 {
     name: string;
+    NameRange?: vscode.Range;
     displayName: string;
     range: vscode.Range;
     parameters: ParameterInfo[];

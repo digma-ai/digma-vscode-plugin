@@ -26,10 +26,8 @@ export function trendToAsciiIcon(trend: number): string
 }
 
 export interface Token {
-    line: number;
-    char: number;
-    length: number;
-    type: string;
+    range: vscode.Range;
+    type: TokenType;
     modifiers: string[];
 }
 export class SymbolProvider 
@@ -142,11 +140,13 @@ export class SymbolProvider
                     char = deltaStart;
                 }
                 
+                const range = new vscode.Range(
+                    new vscode.Position(line, char), 
+                    new vscode.Position(line, char+length));
+
                 tokes.push({
-                    line: line,
-                    char: char,
-                    length: length,
-                    type: legends.tokenTypes[tokenType],
+                    range: range,
+                    type: <TokenType>(legends.tokenTypes[tokenType]),
                     modifiers: legends.tokenModifiers.filter((m, i) => i & tokenModifiers).map(m => m)
                 });
             }
@@ -184,3 +184,23 @@ export class SymbolProvider
         return true;
     }
 }
+
+export enum TokenType
+{
+    class = 'class',
+    interface = 'interface',
+    enum = 'enum',
+    enumMember = 'enumMember',
+    typeParameter = 'typeParameter',
+    function = 'function',
+    method = 'method',
+    property = 'property',
+    variable = 'variable',
+    parameter = 'parameter',
+    module = 'module',
+    intrinsic = 'intrinsic',
+    selfParameter = 'selfParameter',
+    clsParameter = 'clsParameter',
+    magicFunction = 'magicFunction',
+    builtinConstant = 'builtinConstant',
+} 
