@@ -42,13 +42,15 @@ export class LineDecorator implements vscode.Disposable
         const lineInfo = docInfo.lines.firstOrDefault(x => x.lineNumber == focusedLineNumber);
         if(!lineInfo)
             return;
+
+        var line_info_text = `${lineInfo.exceptions.length} errors raised here`;
         
         const decorationOption: vscode.DecorationOptions = {
             hoverMessage: this.getTooltip(lineInfo),
             range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
             renderOptions: {
                 after:{
-                    contentText: `${lineInfo.exceptions.length} errors go thought this line`
+                    contentText: line_info_text
                 }
             }
         }

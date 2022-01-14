@@ -146,11 +146,13 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         let id = 0;
         for(let frameStack of response.frameStacks)
         {
+            let stackIndex=0;
             const frameVms: FrameViewModel[] = [];
             for(let frame of frameStack.frames)
             {
                 frameVms.push({
                     id: id++,
+                    stackIndex: stackIndex++,
                     selected: frame.codeObjectId == originCodeObjectId,
                     workspaceUri: this.getWorkspaceFileUri(frame.moduleName),
                     ...frame
@@ -256,6 +258,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+                <link rel="stylesheet" href="${this._webViewUris.codiconCss}">
                 <link rel="stylesheet" href="${this._webViewUris.commonCss}">
                 <link rel="stylesheet" href="${this._webViewUris.mainCss}">
                 <script type="module" src="${this._webViewUris.jQueryJs}"></script>
@@ -304,10 +307,16 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         
-        const linkTag = frame.workspaceUri
+        let exception_html = '<span style="color:#f14c4c;line-height:25px;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
+
+
+        var linkTag = frame.workspaceUri
             ? /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>`
             : /*html*/`<span class="link-cell look-like-link" title="${frame.excutedCode}">${frame.excutedCode}</span>`;
         
+        if (frame.stackIndex===0){
+            linkTag=exception_html+linkTag;
+        }
         return /*html*/`
             <div class="list-item ellipsis ${selectedClass} ${disabledClass}">
                 <div title="${path}">${path}</div>
@@ -350,6 +359,7 @@ interface StackViewModel {
 
 interface FrameViewModel extends ErrorFlowFrame{
     id: number;
+    stackIndex: number;
     selected: boolean;
     workspaceUri?: vscode.Uri;
     parameters: ParamStats[];

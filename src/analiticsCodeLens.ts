@@ -70,11 +70,11 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             title = `${summary.errorFlowCount} Errors`;     
 
             if (summary.unhandled){
-                title+=` $(bracket-error) `;
+                title+=` $(error) `;
             }
 
             if (summary.unexpected){
-                title+=` $(run-errors) `;
+                title+=` $(bug) `;
             }
             
             //(${trendToCodIcon(summary.trend)})

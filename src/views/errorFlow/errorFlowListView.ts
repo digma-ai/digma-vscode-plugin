@@ -139,14 +139,19 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         {
             const selectedCss = errorVm.selected ? "selected" : "";
             const occurenceTooltip = `First occurence: ${errorVm.firstOccurenceTime}&#10;Last occurence: ${errorVm.lastOccurenceTime}`;
+            var error_name_text = "";
+            if (errorVm.unhandled){
+                error_name_text+= '<span title="Unhandled" style="color:#f14c4c;vertical-align:middle;margin-right:5px" class="codicon codicon-error"> </span>';
+            }
+            if (errorVm.unexpected){
+                error_name_text+= '<span title="Unexpected" style="color:#cca700;vertical-align:middle;margin-right:5px" class="codicon codicon-bug"> </span>';
+            }
+
+            error_name_text+=errorVm.name;
             items += /* html */`
                 <div class="list-item ${selectedCss}">
-                    <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">${errorVm.name}</div>
+                    <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">${error_name_text}</div>
                     <div class="property-row">
-                        <div class="property-col">
-                            <span class="label">Impact: </span>
-                            ${this.getImpactHtml(errorVm.impact)}
-                        </div>
                         <div class="property-col">
                             <span class="label">Trend: </span>
                             ${this.getTrendHtml(errorVm.trend)}
@@ -213,18 +218,13 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         return html;
     }
 
-    private getImpactHtml(impact: Impact){
-        const alterClass = impact == Impact.High ? "font-red" : "";
-        return /*html*/ `<span class="value ${alterClass}">${impact}</span>`;
-    }
-
     private getTrendHtml(trend: number){
-        if(trend < 0 && trend > -2)
-            return /*html*/ `<span class="value font-orange" title="${trend}">${Math.floor(trend)}</span>`;
+        if(trend > 0 && trend < 2)
+            return /*html*/ `<span class="value font-orange" title="${trend}">Moderate</span>`;
         if(trend > 0)
-            return /*html*/ `<span class="value font-green" title="${trend}">${Math.ceil(trend)}</span>`;
+            return /*html*/ `<span class="value font-red" title="${trend}">Escalating</span>`;
         else
-            return /*html*/ `<span class="value font-red" title="${trend}">${Math.floor(trend)}</span>`;
+            return /*html*/ `<span class="value font-green" title="${trend}">Decreasing</span>`;
     }
 
     public dispose(): void 
@@ -254,6 +254,8 @@ interface ErrorFlowViewModel{
     frequencyShort: string;
     frequencyLong: string;
     impact: Impact;
+    unhandled: boolean;
+    unexpected: boolean;
     selected: boolean;
     lastOccurenceTime: moment.Moment;
     firstOccurenceTime: moment.Moment;

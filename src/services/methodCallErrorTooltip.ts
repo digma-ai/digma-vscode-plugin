@@ -76,7 +76,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
                 markdown.appendMarkdown(` \u00B7 <span style="color:#f14c4c;"><i>Unhandled</i></span>`);
             }
             if (errorFlow.unexpected){
-                markdown.appendMarkdown(` \u00B7 <span style="color:#cca700"><i>Unexpected</i></span>`);
+                markdown.appendMarkdown(` \u00B7 <span style="color:#cca700;"><i>Unexpected</i></span>`);
             }
             
             const command = MethodCallErrorTooltip.Commands.ViewErrorFlow;
