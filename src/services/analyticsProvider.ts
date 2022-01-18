@@ -33,6 +33,8 @@ export interface ErrorFlowFrame{
     codeObjectId: string;
     repeat: number;
     parameters: ParamStats[];
+    spanName: string;
+    spanKind: string;
 }
 
 export interface ErrorFlowStack{
