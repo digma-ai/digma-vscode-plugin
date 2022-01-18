@@ -62,6 +62,10 @@ export interface ErrorFlowSummary
     firstOccurenceTime: moment.Moment;
     unhandled: boolean;
     unexpected: boolean;
+    rootSpan: string;
+    sourceModule: string;
+    sourceFunction: string;
+    exceptionName: string;
 }
 
 export interface Frequency{
