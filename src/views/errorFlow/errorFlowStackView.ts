@@ -8,6 +8,7 @@ import { WebViewUris } from "./../webViewUris";
 import { Logger } from '../../services/logger';
 import { DocumentInfoProvider } from '../../services/documentInfoProvider';
 import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
+import { privateEncrypt } from 'crypto';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -27,6 +28,7 @@ export class ErrorFlowStackView implements vscode.Disposable
         sourceControl: SourceControl, 
         extensionUri: vscode.Uri) 
     {
+
         this._provider = new ErrorFlowDetailsViewProvider(_documentInfoProvider, sourceControl, extensionUri);
         this._paramDecorator = new ErrorFlowParameterDecorator(_documentInfoProvider);
 
@@ -289,15 +291,30 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
             return '';
 
-        const framesHtml = stack.frames
-            .filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri)
-            .map(f => this.getFrameItemHtml(f))
-            .join('') ?? '';
+        let html : string='';
+        const frames = stack.frames
+            .filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
+        var lastSpan='';
+        for (var frame of frames ){
+            if (frame.spanName!==lastSpan){
+                html+=`
+                <div style="color: #4F62AD;" class="list ellipsis">
+                    <span>
+                        <span>${frame.spanName}</span> 
+                        <span style="color:#4F62AD;line-height:25px;margin-right:5px" class="codicon codicon-telescope"> 
+                        </span>
+                    </span>
+                </div>`;
+
+                lastSpan=frame.spanName;
+            }
+            html+=this.getFrameItemHtml(frame);
+        }
 
         return /*html*/`
             <div class="flow-stack-title">${stack.exceptionType}</div>
             <div class="flow-stack-message">${stack.exceptionMessage}</div>
-            <div class="flow-stack-frames">${framesHtml}</div>
+            <div class="flow-stack-frames">${html}</div>
         `;
     }
 
@@ -363,4 +380,7 @@ interface FrameViewModel extends ErrorFlowFrame{
     selected: boolean;
     workspaceUri?: vscode.Uri;
     parameters: ParamStats[];
+    spanName: string;
+    spanKind: string;
+
 }

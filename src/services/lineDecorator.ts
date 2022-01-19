@@ -43,7 +43,7 @@ export class LineDecorator implements vscode.Disposable
         if(!lineInfo)
             return;
 
-        var line_info_text = `${lineInfo.exceptions.length} errors raised here`;
+        var line_info_text = `${lineInfo.exceptions.length} Errors raised`;
         
         const decorationOption: vscode.DecorationOptions = {
             hoverMessage: this.getTooltip(lineInfo),

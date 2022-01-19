@@ -16,9 +16,7 @@ export class DocumentInfoProvider implements vscode.Disposable
         public analyticsProvider: AnalyticsProvider,
         public symbolProvider: SymbolProvider,) 
     {
-        // this._disposables.push(vscode.workspace.onDidOpenTextDocument((doc: vscode.TextDocument) => this.addOrUpdateDocumentInfo(doc)));
         this._disposables.push(vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
-        // this._disposables.push(vscode.workspace.onDidChangeTextDocument(async (e: vscode.TextDocumentChangeEvent) => this.addOrUpdateDocumentInfo(e.document)));
 
         this._timer = setInterval(
             () => this.pruneOldDocumentInfos(),     

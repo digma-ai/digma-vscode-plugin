@@ -33,6 +33,8 @@ export interface ErrorFlowFrame{
     codeObjectId: string;
     repeat: number;
     parameters: ParamStats[];
+    spanName: string;
+    spanKind: string;
 }
 
 export interface ErrorFlowStack{
@@ -62,6 +64,10 @@ export interface ErrorFlowSummary
     firstOccurenceTime: moment.Moment;
     unhandled: boolean;
     unexpected: boolean;
+    rootSpan: string;
+    sourceModule: string;
+    sourceFunction: string;
+    exceptionName: string;
 }
 
 export interface Frequency{
