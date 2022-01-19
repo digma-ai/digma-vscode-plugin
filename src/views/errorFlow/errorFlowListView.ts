@@ -382,7 +382,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     }
 
     private getRootSpans(): string[]{
-        let rootSpans = this._viewModel?.errorFlows.map(f => f.rootSpan);
+        let rootSpans = this._viewModel.errorListTabs[this._viewModel.activeTab]?.errorFlows.map(f => f.rootSpan);
         var distinctSpans = rootSpans.filter((thing, i, arr) => arr.findIndex(t => t === thing) === i);
         return distinctSpans;
     }

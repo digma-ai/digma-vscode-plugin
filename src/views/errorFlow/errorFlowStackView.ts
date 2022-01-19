@@ -8,6 +8,7 @@ import { WebViewUris } from "./../webViewUris";
 import { Logger } from '../../services/logger';
 import { DocumentInfoProvider } from '../../services/documentInfoProvider';
 import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
+import { privateEncrypt } from 'crypto';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -27,6 +28,7 @@ export class ErrorFlowStackView implements vscode.Disposable
         sourceControl: SourceControl, 
         extensionUri: vscode.Uri) 
     {
+
         this._provider = new ErrorFlowDetailsViewProvider(_documentInfoProvider, sourceControl, extensionUri);
         this._paramDecorator = new ErrorFlowParameterDecorator(_documentInfoProvider);
 
