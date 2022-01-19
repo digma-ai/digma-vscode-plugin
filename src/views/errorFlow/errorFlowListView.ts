@@ -189,8 +189,8 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                 ...errorFlow, 
                 trend: errorFlow.trend.value,
                 selected: errorFlow.id == selectErrorFlowId,
-                frequencyShort: `${errorFlow.frequency.avg}/${errorFlow.frequency.unit[0].toLocaleLowerCase()}`, 
-                frequencyLong: `${errorFlow.frequency.avg} per ${errorFlow.frequency.unit}`, 
+                frequencyShort: `${errorFlow.frequency.avg}/${errorFlow.frequency.unit}`, 
+                frequencyLong: `First occurence: ${errorFlow.firstOccurenceTime}&#10;Last occurence: ${errorFlow.lastOccurenceTime}`, 
                 sourceModuleShort: this.getShortModuleName(errorFlow.sourceModule)
 
             });
@@ -403,8 +403,13 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
             items += /* html */`
                 <div class="list-item ${selectedCss}">
-                    <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">
-                        <span>${errorNameText}</span>
+                    <div>
+                        <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">
+                            <span>${errorNameText}</span>
+                            <span style="float: right;">
+                                <span class="label" title="${errorVm.frequencyLong}">${errorVm.frequencyShort}</span>
+                            </span>
+                        </div>
                     </div>
 
                     <div class="property-row">
@@ -412,13 +417,12 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                             <span class="label">Module: </span>
                             <span class="value" title="${errorVm.sourceModule}">${errorVm.sourceModuleShort}</span>
                         </div>
-                        <div class="property-col">
-                            <span class="label">Frequency: </span>
-                            <span class="value" title="${errorVm.frequencyLong}">${errorVm.frequencyShort}</span>
-                        </div>
-                        <div class="property-col">
-                            <span class="label">Trend: </span>
-                            <span class="value" title="${errorVm.trend}">${this.getTrendHtml(errorVm.trend)}</span>
+
+                        <div class="property-col" style="float: right;" >
+                            <span style="float: right;">
+                                <span class="label" ">Trend: </span>
+                                <span class="value" title="${errorVm.trend}">${this.getTrendHtml(errorVm.trend)}</span>
+                            </div>
                         </div>
                     </div>
                 </div>`;
