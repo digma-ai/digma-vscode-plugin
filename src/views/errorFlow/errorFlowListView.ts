@@ -6,6 +6,7 @@ import { ErrorFlowStackView } from './errorFlowStackView';
 import { WebViewUris } from '../webViewUris';
 import moment = require("moment");
 import { NONAME } from 'dns';
+import { inherits } from 'util';
 
 export class ErrorFlowListView implements Disposable
 {
@@ -62,6 +63,8 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         this._viewModel.errorListTabs[ErroListTab.important] = new NewAndTendingTab();;
 
         this._viewModel.errorListTabs[ErroListTab.unexpected] = new UnexpectedErrorsTab();;
+
+        this._viewModel.errorListTabs[ErroListTab.all] = new AllErrorsTab();;
 
 
         this._disposables.push(vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
@@ -170,8 +173,10 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             activeTab.sortBy, 
             this._viewModel.codeObjectFilter?.codeObjectId);
         this._viewModel.errorFlows = this.createErrorViewModels(errorFlows, selectErrorFlowId);
-        this._viewModel.errorListTabs[ErroListTab.important].loadErrorFlows(this._viewModel);
-        this._viewModel.errorListTabs[ErroListTab.unexpected].loadErrorFlows(this._viewModel);
+        for (let tabkey in this._viewModel.errorListTabs){
+            this._viewModel.errorListTabs[tabkey].loadErrorFlows(this._viewModel);
+        }
+  
         this._view!.webview.html = this.testPanelHtml();
 
     }
@@ -311,6 +316,29 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         ${this.getErrorFlowListHTML(unexpectedTab.spanFilter ,unexpectedTab.errorFlows)}
         </section>`;
     }
+
+    private getAllErrorsTab(activeTab: ErroListTabViewModel):string{
+
+        if (this._viewModel.activeTab!==ErroListTab.all){
+            return ``;
+        }
+        let unexpectedTab: AllErrorsTab = activeTab as AllErrorsTab;
+        
+        return `<section style="display: flex; flex-direction: column; width: 100%;">
+        ${this.getTabHeaderSectionHTML("Overview of all errors detected in the system")}
+        <div class="control-row">
+        <vscode-tag>Errors Flows</vscode-tag>
+        ${this.getUhandledFilterHTML()}
+      </div>
+        <div class="control-row">
+            <vscode-dropdown class="control-col-sort sort-dropdown">
+                <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
+                ${this.getSortOptions(unexpectedTab.sortBy)}
+            </vscode-dropdown>
+        </div>
+        ${this.getErrorFlowListHTML(unexpectedTab.spanFilter ,unexpectedTab.errorFlows)}
+        </section>`;
+    }
     
     
 
@@ -330,8 +358,9 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                     UNEXPECTED
                     <vscode-badge appearance="secondary">${this._viewModel.errorListTabs[ErroListTab.unexpected].errorFlows.length}</vscode-badge>
                 </vscode-panel-tab>
-                <vscode-panel-tab id="tab-watchlist">
-                    WATCHLIST
+                <vscode-panel-tab id="tab-all">
+                    All
+                    <vscode-badge appearance="secondary">${this._viewModel.errorListTabs[ErroListTab.all].errorFlows.length}</vscode-badge>
                  </vscode-panel-tab>
                 <vscode-panel-view id="view-important">
                   ${this.getNewAndImportantTabHTML(this._viewModel.errorListTabs[ErroListTab.important])}
@@ -340,8 +369,8 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                   ${this.getUnexpectedErrorsTab(this._viewModel.errorListTabs[ErroListTab.unexpected])}
 
             </vscode-panel-view>
-            <vscode-panel-view id="view-watchlist">
-            TBD
+            <vscode-panel-view id="view-all">
+                  ${this.getAllErrorsTab(this._viewModel.errorListTabs[ErroListTab.all])}
             </vscode-panel-view>    
         </vscode-panels>
     </body>`;
@@ -573,7 +602,8 @@ class NewAndTendingTab implements ErroListTabViewModel{
 
 }
 
-class UnexpectedErrorsTab implements ErroListTabViewModel{
+
+class BasicErrorsTab implements ErroListTabViewModel{
 
     daysFilter: number=100;
     tabType: number = ErroListTab.unexpected;
@@ -581,6 +611,12 @@ class UnexpectedErrorsTab implements ErroListTabViewModel{
     sortBy: ErrorFlowsSortBy=ErrorFlowsSortBy.New;
     unhandledOnly: boolean=false;
     spanFilter: string[]=[];
+    filters: ErrorListFilter[]=[];
+
+
+    constructor( additionalFilters: ErrorListFilter[]=[]){
+        this.filters=this.filters.concat(additionalFilters);
+    }
 
     loadErrorFlows(parent: ErrorListViewModel) : any{
         let errorFlows = parent.errorFlows;
@@ -589,7 +625,10 @@ class UnexpectedErrorsTab implements ErroListTabViewModel{
         if (this.unhandledOnly){
             errorFlows = new UnhandledFilter().apply(errorFlows);
         }
-        errorFlows = new UnexpectedFilter().apply(errorFlows);
+        for (var filter of this.filters){
+            errorFlows =  filter.apply(errorFlows);
+
+        }
         this.errorFlows= errorFlows;
 
     }
@@ -603,6 +642,21 @@ class UnexpectedErrorsTab implements ErroListTabViewModel{
     }
 
 }
+
+
+class UnexpectedErrorsTab extends BasicErrorsTab{
+    constructor(){
+        super([new UnexpectedFilter()]);
+    }
+}
+
+class AllErrorsTab extends BasicErrorsTab{
+    constructor(){
+        super();
+    }
+}
+
+
 
 
 interface ErrorListFilter{
