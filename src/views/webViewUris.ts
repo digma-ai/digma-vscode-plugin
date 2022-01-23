@@ -39,6 +39,11 @@ export class WebViewUris
         return this.getUri("assets","jquery-3.6.0.min.js");
     }
 
+    public get commonJs() : vscode.Uri
+    {
+        return this.getUri("assets","common.js");
+    }
+
     public get mainJs() : vscode.Uri
     {
         return this.getUri("assets",this._assetSubFolderName,"main.js");

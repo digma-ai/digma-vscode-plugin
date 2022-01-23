@@ -216,6 +216,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                 <link rel="stylesheet" href="${this._webViewUris.mainCss}">
                 <script type="module" src="${this._webViewUris.jQueryJs}"></script>
                 <script type="module" src="${this._webViewUris.toolkitJs}"></script>
+                <script type="module" src="${this._webViewUris.commonJs}"></script>
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>`;
     }

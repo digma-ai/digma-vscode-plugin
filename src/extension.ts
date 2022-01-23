@@ -11,6 +11,7 @@ import { SourceControl, Git } from './services/sourceControl';
 import { DocumentInfoProvider } from './services/documentInfoProvider';
 import { MethodCallErrorTooltip } from './services/methodCallErrorTooltip';
 import { LineDecorator } from './services/lineDecorator';
+import { ErrorFlowRawStackEditor } from './views/errorFlow/errorFlowRawStackEditor';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -36,6 +37,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, sourceControl, context.extensionUri));
+    context.subscriptions.push(new ErrorFlowRawStackEditor());
     context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider));
     context.subscriptions.push(new LineDecorator(documentInfoProvider, context));
     context.subscriptions.push(sourceControl);

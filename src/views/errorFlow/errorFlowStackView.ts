@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as utils from '../../services/utils';
-import { AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack, ParamStats } from "../../services/analyticsProvider";
+import { AffectedSpanPathResponse, AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack, ParamStats } from "../../services/analyticsProvider";
 import { SourceControl } from '../../services/sourceControl';
 import { SymbolProvider } from '../../services/symbolProvider';
 import { Settings } from '../../settings';
@@ -9,6 +9,8 @@ import { Logger } from '../../services/logger';
 import { DocumentInfoProvider } from '../../services/documentInfoProvider';
 import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
 import { privateEncrypt } from 'crypto';
+import moment = require('moment');
+import { ErrorFlowRawStackEditor } from './errorFlowRawStackEditor';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -107,6 +109,9 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                     case "goToFileAndLine":
                         this.goToFileAndLine(message.frameId);
                         return;
+                    case "viewRaw":
+                        this.viewRawStack();
+                        return;
                 }
             },
             undefined,
@@ -171,8 +176,20 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         return {
             lastInstanceCommitId: response.lastInstanceCommitId,
             stackTrace: response.stackTrace,
-            stacks: stackVms
+            stacks: stackVms,
+            affectedSpanPaths: response.affectedSpanPaths,
+            exceptionType: response.exceptionType
         };
+    }
+
+    private async viewRawStack()
+    {
+        const uri = vscode.Uri.from({
+            scheme: ErrorFlowRawStackEditor.SCHEME, 
+            path: this._viewModel?.exceptionType + " - Stacktrace",
+            query: this._viewModel?.stackTrace});
+        const doc = await vscode.workspace.openTextDocument(uri);
+        await vscode.window.showTextDocument(doc, { preview: true });
     }
 
     private async goToFileAndLine(frameId: number)
@@ -265,24 +282,93 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 <link rel="stylesheet" href="${this._webViewUris.mainCss}">
                 <script type="module" src="${this._webViewUris.jQueryJs}"></script>
                 <script type="module" src="${this._webViewUris.toolkitJs}"></script>
+                <script type="module" src="${this._webViewUris.commonJs}"></script>
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body>
-                <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
-                <vscode-panels aria-label="Default">
-                    <vscode-panel-tab id="tab-1">Frames</vscode-panel-tab>
-                    <vscode-panel-tab id="tab-2">Raw</vscode-panel-tab>
-                    <vscode-panel-view id="view-1">
-                        <div class="list">${stacksHtml}</div>
-                    </vscode-panel-view>
-                    <vscode-panel-view id="view-2">
-                        <div id="raw">${this._viewModel?.stackTrace ?? ''}</div>
-                    </vscode-panel-view>
-                </vscode-panels>
+                
+                <div>
+                    <div class="section-header-row">
+                        <vscode-tag>Affected Spans</vscode-tag>
+                    </div>
+                    ${this.getAffectedPathHtml()}
+                </div>
+                <div>
+                    <div class="section-header-row">
+                        <vscode-tag>Frames</vscode-tag>
+                        <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
+                        <div style="flex: 1">
+                            <vscode-button appearance="icon" class="view-rows-btn" title="View Raw" style="float: right">
+                                <span class="codicon codicon-link-external"></span>
+                            </vscode-button>
+                        </div>
+                    </div>
+                    <div class="list">${stacksHtml}</div>
+                </div>
             </body>
             </html>`;
     }
 
+    private getAffectedPathHtml()
+    {
+        function getLevel(affectedPaths: AffectedPathViewModel[], level: any): string
+        {
+            let items: utils.Dictionary<string, any> = {};
+            for(let affectedPath of affectedPaths)
+            {
+                if(level >= affectedPath.path.length)
+                    return '';
+                
+                let key = JSON.stringify(affectedPath.path[level]);
+                let item = items[key];
+                if(!item)
+                {
+                    items[key] = item = {
+                        serviceName: affectedPath.path[level].serviceName,
+                        spanName: affectedPath.path[level].spanName
+                    };
+                }
+
+                if(level-1 == affectedPath.path.length)
+                    item.lastOccurrence = affectedPath.lastOccurrence;
+            }
+
+            if(Object.keys(items).length == 0)
+                return '';
+
+            let html = `<ul class="${level==0?"tree":"collapsed"}">`;
+            for(let key in items)
+            {
+                const children = getLevel(affectedPaths, level+1);
+                if(children.length)
+                {
+                    //<span class="last-occurrence">${items[key].lastOccurrence}</span>
+                    html +=/*html*/`<li>
+                        <div class="line has-items">
+                            <div class="codicon codicon-chevron-right"></div>
+                            <span class="service-name">${items[key].serviceName}</span>
+                            <span class="span-name">${items[key].spanName}</span>
+                        </div>
+                        ${children}
+                    </li>`;
+                }
+                else
+                {
+                    html +=/*html*/`<li>
+                            <div class="line">
+                                <span class="service-name">${items[key].serviceName}</span>
+                                <span class="span-name">${items[key].spanName}</span>
+                            </div>
+                        </li>`;
+                }
+            }
+            html += '</ul>';
+            return html;
+        };
+        
+        return getLevel(this._viewModel?.affectedSpanPaths || [], 0);
+    }
+    
     private getFlowStackHtml(stack: StackViewModel)
     {
         if(!stack)
@@ -366,12 +452,18 @@ interface ViewModel{
     stacks: StackViewModel[];
     stackTrace: string;
     lastInstanceCommitId: string;
+    affectedSpanPaths: AffectedPathViewModel[];
+    exceptionType: string;
 }
 
 interface StackViewModel {
     exceptionType: string;
     exceptionMessage: string;
     frames: FrameViewModel[];
+}
+
+interface AffectedPathViewModel extends AffectedSpanPathResponse{
+
 }
 
 interface FrameViewModel extends ErrorFlowFrame{

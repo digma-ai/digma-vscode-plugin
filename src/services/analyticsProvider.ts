@@ -1,5 +1,6 @@
 import fetch from "node-fetch";
 import * as https from 'https';
+import * as vscode from 'vscode';
 import { Settings } from "../settings";
 import { Logger } from "./logger";
 import { Dictionary, momentJsDateParser } from "./utils";
@@ -43,6 +44,15 @@ export interface ErrorFlowStack{
     frames: ErrorFlowFrame[];
 }
 
+export interface AffectedSpanPathResponse
+{
+    path: {
+        serviceName: string,
+        spanName: string,
+    }[];
+    lastOccurrence: moment.Moment;
+}
+
 export interface ErrorFlowResponse
 {
     summary: ErrorFlowSummary;
@@ -51,6 +61,7 @@ export interface ErrorFlowResponse
     exceptionType: string;
     lastInstanceCommitId: string;
     frameStacks: ErrorFlowStack[];
+    affectedSpanPaths: AffectedSpanPathResponse[];
 }
 
 export interface ErrorFlowSummary
@@ -120,23 +131,13 @@ export interface CodeObjectsSummaryResponse
 
 export class AnalyticsProvider
 {
-    private _url: string;
-    private _agent?: https.Agent;
-
-    constructor(){
-        this._url = Settings.url.value;
-        this._agent = this._url.startsWith('https')
-            ? new https.Agent({rejectUnauthorized: false })
-            : undefined;
-    }
-
     public async getEnvironments() : Promise<string[]> 
     {
         try
         {
             const response = await this.send<string[]>(
                 'GET',
-                `${this._url}/CodeAnalytics/environments`);
+                `/CodeAnalytics/environments`);
 
             return response;
         }
@@ -153,7 +154,7 @@ export class AnalyticsProvider
         {
             const response = await this.send<CodeObjectsSummaryResponse>(
                 'POST', 
-                `${this._url}/CodeAnalytics/summary`, 
+                `/CodeAnalytics/summary`, 
                 undefined, 
                 {moduleName: moduleName, codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
 
@@ -180,7 +181,7 @@ export class AnalyticsProvider
 
             const response = await this.send<CodeObjectErrorFlowsResponse>(
                 'GET', 
-                `${this._url}/CodeAnalytics/errorFlows`, 
+                `/CodeAnalytics/errorFlows`, 
                 queryParams);
 
             return response.errorFlows;
@@ -198,7 +199,7 @@ export class AnalyticsProvider
         {
             const response = await this.send<ErrorFlowResponse>(
                 'POST',
-                `${this._url}/CodeAnalytics/errorFlow`, 
+                `/CodeAnalytics/errorFlow`, 
                 undefined,
                 {id: errorFlowId, environment: Settings.environment.value});
 
@@ -210,8 +211,13 @@ export class AnalyticsProvider
         return;
     }
 
-    private async send<TResponse>(method: string, url: string, queryParams?: Dictionary<string, any>, body?: any): Promise<TResponse>
+    private async send<TResponse>(method: string, relativePath: string, queryParams?: Dictionary<string, any>, body?: any): Promise<TResponse>
     {
+        let url = vscode.Uri.joinPath(vscode.Uri.parse(Settings.url.value), relativePath).toString();
+        const agent = url.startsWith('https')
+            ? new https.Agent({rejectUnauthorized: false })
+            : undefined;
+
         if(queryParams)
         {
             url += '?';
@@ -222,7 +228,7 @@ export class AnalyticsProvider
         let response = await fetch(
             url, 
             {
-                agent: this._agent,
+                agent: agent,
                 method: method, 
                 headers: {'Content-Type': 'application/json' },
                 body: body ? JSON.stringify(body) : undefined, 

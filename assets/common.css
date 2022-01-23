@@ -3,6 +3,39 @@ body {
     padding-right: 5px;
 }
 
+ul.tree{
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 0;
+}
+ul.tree ul{
+    list-style-type: none;
+    padding-left: 1em;
+}
+ul.tree .has-items{
+    cursor: pointer;
+    user-select: none;
+}
+ul.tree .line{
+    padding-left: 1.4em;
+    padding-top: 0.2em;
+    padding-bottom: 0.3em;
+    position: relative;
+}
+ul.tree .line:hover{
+    background-color: var(--vscode-list-hoverBackground);
+}
+ul.tree .line>.codicon{
+    position: absolute;
+    left: 0;
+}
+ul.tree .collapsed {
+    display: none;
+}
+ul.tree .has-items.active + ul {
+    display: block;
+}
+
 .list{
     inline-size: 100%;
 }

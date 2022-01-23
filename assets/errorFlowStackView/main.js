@@ -19,4 +19,10 @@ function main() {
             frameId: $(this).data('frame-id')
         });
     });
+
+    $('.view-rows-btn').click(function(){
+        vscode.postMessage({
+            command: "viewRaw"
+        });
+    });
 }

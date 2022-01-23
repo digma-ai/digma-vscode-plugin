@@ -10,17 +10,27 @@ vscode-panel-view {
     overflow-wrap: break-word;
     inline-size: 100%;
 }
-.workspace-only-checkbox{
-    position: absolute;
-    right: 0;
-    top: 6px;
-}
+
 .ellipsis > * {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
     display: block;
 }
+
+.section-header-row{
+    margin: 5px 0;
+    display: flex;
+}
+.workspace-only-checkbox
+{
+    margin-left: 5px;
+}
+span.span-name {
+    opacity: 0.5;
+    margin-left: 5px;
+}
+
 .flow-stack-title{
     font-weight: 500;
 }
