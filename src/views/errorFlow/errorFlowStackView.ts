@@ -266,11 +266,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getHtml() : string 
     {
-        const stacksHtml = this._viewModel?.stacks
-            .map(s => this.getFlowStackHtml(s))
-            .join('') ?? '';
-        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
-
         return /*html*/ `
             <!DOCTYPE html>
             <html lang="en">
@@ -286,30 +281,13 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body>
-                
-                <div>
-                    <div class="section-header-row">
-                        <vscode-tag>Affected Spans</vscode-tag>
-                    </div>
-                    ${this.getAffectedPathHtml()}
-                </div>
-                <div>
-                    <div class="section-header-row">
-                        <vscode-tag>Frames</vscode-tag>
-                        <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
-                        <div style="flex: 1">
-                            <vscode-button appearance="icon" class="view-rows-btn" title="View Raw" style="float: right">
-                                <span class="codicon codicon-link-external"></span>
-                            </vscode-button>
-                        </div>
-                    </div>
-                    <div class="list">${stacksHtml}</div>
-                </div>
+                ${this.getAffectedPathSectionHtml()}
+                ${this.getFramesListSectionHtml()}
             </body>
             </html>`;
     }
 
-    private getAffectedPathHtml()
+    private getAffectedPathSectionHtml()
     {
         function getLevel(affectedPaths: AffectedPathViewModel[], level: any): string
         {
@@ -366,9 +344,53 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             return html;
         };
         
-        return getLevel(this._viewModel?.affectedSpanPaths || [], 0);
+        var content = getLevel(this._viewModel?.affectedSpanPaths || [], 0);
+        if(!content)
+            return '';
+        
+        return /*html*/ `
+            <div>
+                <div class="section-header-row">
+                    <vscode-tag>Affected Spans</vscode-tag>
+                </div>
+                ${content}
+            </div>`;
     }
     
+    private getFramesListSectionHtml()
+    {
+        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
+        let content = undefined;
+        if(this._viewModel)
+        {
+            const stacksHtml = this._viewModel?.stacks
+                .map(s => this.getFlowStackHtml(s))
+                .join('') ?? '';
+            
+            content = stacksHtml 
+                ? /*html*/`<div class="list">${stacksHtml}</div>`
+                : /*html*/`<div class="no-frames-msg">All the frames are outside of the workspace. Uncheck "Workspace only" to show them.</div>`;
+        }
+        else
+        {
+            content = /*html*/`<div class="no-frames-msg">No error flow has been selected.</div>`;
+        }
+
+        return /*html*/`
+            <div>
+                <div class="section-header-row">
+                    <vscode-tag>Frames</vscode-tag>
+                    <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
+                    <div style="flex: 1">
+                        <vscode-button appearance="icon" class="view-rows-btn" title="View Raw" style="float: right">
+                            <span class="codicon codicon-link-external"></span>
+                        </vscode-button>
+                    </div>
+                </div>
+                ${content}
+            </div>`;
+    }
+
     private getFlowStackHtml(stack: StackViewModel)
     {
         if(!stack)
@@ -400,7 +422,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         return /*html*/`
             <div class="flow-stack-title">${stack.exceptionType}</div>
             <div class="flow-stack-message">${stack.exceptionMessage}</div>
-            <div class="flow-stack-frames">${html}</div>
+            <div class="flow-stack-frames"><ul class="tree">${html}</ul></div>
         `;
     }
 
@@ -421,13 +443,15 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             linkTag=exception_html+linkTag;
         }
         return /*html*/`
-            <div class="list-item ellipsis ${selectedClass} ${disabledClass}">
-                <div title="${path}">${path}</div>
-                <div class="bottom-line">
-                    ${linkTag}
-                    <div class="number-cell">line ${frame.lineNumber}</div>
+            <li>
+                <div class="line ellipsis ${selectedClass} ${disabledClass}">
+                    <div title="${path}">${path}</div>
+                    <div class="bottom-line">
+                        ${linkTag}
+                        <div class="number-cell">line ${frame.lineNumber}</div>
+                    </div>
                 </div>
-            </div>
+            </li>
         `;
     }
 

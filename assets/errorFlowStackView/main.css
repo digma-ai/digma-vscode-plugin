@@ -26,6 +26,16 @@ vscode-panel-view {
 {
     margin-left: 5px;
 }
+ul.tree .line{
+    padding-left: 0.5em;
+    padding-right: 0.3em;
+    border-top: 1px solid var(--vscode-sideBar-background);
+}
+.no-frames-msg {
+    padding: 1em;
+    font-style: italic;
+    opacity: 0.5;
+}
 span.span-name {
     opacity: 0.5;
     margin-left: 5px;

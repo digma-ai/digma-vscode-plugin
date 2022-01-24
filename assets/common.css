@@ -12,6 +12,9 @@ ul.tree ul{
     list-style-type: none;
     padding-left: 1em;
 }
+ul.tree .collapsed {
+    display: none;
+}
 ul.tree .has-items{
     cursor: pointer;
     user-select: none;
@@ -21,6 +24,7 @@ ul.tree .line{
     padding-top: 0.2em;
     padding-bottom: 0.3em;
     position: relative;
+    border-radius: 2px;
 }
 ul.tree .line:hover{
     background-color: var(--vscode-list-hoverBackground);
@@ -29,32 +33,15 @@ ul.tree .line>.codicon{
     position: absolute;
     left: 0;
 }
-ul.tree .collapsed {
-    display: none;
-}
-ul.tree .has-items.active + ul {
+ul.tree .line.has-items.active + * {
     display: block;
 }
 
-.list{
-    inline-size: 100%;
-}
-
-.list-item:hover {
+ul.tree .line:hover {
     background: var(--vscode-list-hoverBackground);
 }
 
-.list-item {
-    padding: 4px 5px 4px 5px;
-    border-radius: 2px;
-}
-.list-item:not(.selected) + .list-item:not(.selected) {
-    border-top-width: 1px;
-    border-top-color: var(--vscode-tree-tableColumnsBorder);
-    border-top-style: dashed;
-}
-
-.list-item.selected {
+ul.tree .line.selected {
     background: var(--vscode-list-inactiveSelectionBackground);
 }
 
