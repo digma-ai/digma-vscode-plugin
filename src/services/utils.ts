@@ -18,6 +18,7 @@ declare global {
         single(predicate?: (item: T) => boolean): T;
         all(predicate: (item: T) => boolean) : boolean;
         any(predicate: (item: T) => boolean) : boolean;
+        groupBy<TKey extends string | number>(predicate: (item: T) => TKey) : Dictionary<TKey, T[]>;
     }
 }
 
@@ -45,6 +46,15 @@ Array.prototype.any = function (predicate: (item: any) => boolean) {
             return true;
     }
     return false;
+}
+Array.prototype.groupBy = function (predicate: (item: any) => any) {
+    const result = this.reduce(function (r, a) {
+        const key = predicate(a);
+        r[key] = r[key] || [];
+        r[key].push(a);
+        return r;
+    }, Object.create(null));
+    return result;
 }
 
 declare module "vscode" {

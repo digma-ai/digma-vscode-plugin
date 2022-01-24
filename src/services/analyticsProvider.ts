@@ -79,6 +79,7 @@ export interface ErrorFlowSummary
     sourceModule: string;
     sourceFunction: string;
     exceptionName: string;
+    serviceName: string;
 }
 
 export interface Frequency{

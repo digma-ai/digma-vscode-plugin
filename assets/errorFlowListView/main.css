@@ -11,6 +11,22 @@
 .control-col-sort{
 }
 
+ul.tree > li {
+    background: #9292922e;
+    margin-bottom: 5px;
+    border-radius: 2px;
+}
+ul.tree ul {
+    padding: 0;
+}
+ul.tree ul .line{
+    padding-left: 0.5em;
+    padding-right: 0.3em;
+    border-top: 1px solid var(--vscode-sideBar-background);
+}
+ul.tree .line.selected {
+    background: #ffffff12;
+}
 .error-name {
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -189,7 +189,6 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
         for(let errorFlow of errorFlows ?? [])
         {
-
             errorFlowVms.push({ 
                 ...errorFlow, 
                 trend: errorFlow.trend.value,
@@ -197,7 +196,6 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                 frequencyShort: `${errorFlow.frequency.avg}/${errorFlow.frequency.unit}`, 
                 frequencyLong: `First occurence: ${errorFlow.firstOccurenceTime}&#10;Last occurence: ${errorFlow.lastOccurenceTime}`, 
                 sourceModuleShort: this.getShortModuleName(errorFlow.sourceModule)
-
             });
         }
 
@@ -419,56 +417,72 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
     private getErrorFlowListHTML(spanFilters: string[], errorflows: ErrorFlowViewModel[]): string
     {
-        let items = '';
+        let html = '';
 
         errorflows = new SpanFilter(spanFilters).apply(errorflows);
+        const errorFlowsByService = errorflows.groupBy(x => x.serviceName);
+        const singleService = Object.keys(errorFlowsByService).length == 1;
 
-        for(let errorVm of errorflows)
-        {             
-            const selectedCss = errorVm.selected ? "selected" : "";
-            const occurenceTooltip = `First occurence: ${errorVm.firstOccurenceTime}&#10;Last occurence: ${errorVm.lastOccurenceTime}`;
-            var errorNameText = this.getErrorNameHTML(errorVm);
+        for(let serviceName in errorFlowsByService)
+        {   
+            let items = '';
+            let hasSelectedError = false;         
+            for(let errorVm of errorFlowsByService[serviceName])
+            {
+                const selectedCss = errorVm.selected ? "selected" : "";
+                const occurenceTooltip = `First occurence: ${errorVm.firstOccurenceTime}&#10;Last occurence: ${errorVm.lastOccurenceTime}`;
+                const errorNameText = this.getErrorNameHTML(errorVm);
+                hasSelectedError ||= errorVm.selected;
 
-            //<vscode-tag style="float:right;">${errorVm.rootSpan}</vscode-tag>
+                //<vscode-tag style="float:right;">${errorVm.rootSpan}</vscode-tag>
 
-            items += /* html */`
-                <div class="list-item ${selectedCss}">
-                    <div>
-                        <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">
-                            <span>${errorNameText}</span>
-                            <span style="float: right;">
-                                <span class="label" title="${errorVm.frequencyLong}">${errorVm.frequencyShort}</span>
-                            </span>
-                        </div>
-                    </div>
+                items += /* html */`
+                    <li>
+                        <div class="line ${selectedCss}">
+                            <div>
+                                <div class="error-name" data-error-id="${errorVm.id}" title="${errorVm.name}">
+                                    <span>${errorNameText}</span>
+                                    <span style="float: right;">
+                                        <span class="label" title="${errorVm.frequencyLong}">${errorVm.frequencyShort}</span>
+                                    </span>
+                                </div>
+                            </div>
 
-                    <div class="property-row">
-                        <div class="property-col">
-                            <span class="label">Module: </span>
-                            <span class="value" title="${errorVm.sourceModule}">${errorVm.sourceModuleShort}</span>
-                        </div>
+                            <div class="property-row">
+                                <div class="property-col">
+                                    <span class="label">Module: </span>
+                                    <span class="value" title="${errorVm.sourceModule}">${errorVm.sourceModuleShort}</span>
+                                </div>
 
-                        <div class="property-col" style="float: right;" >
-                            <span style="float: right;">
-                                <span class="label" ">Trend: </span>
-                                <span class="value" title="${errorVm.trend}">${this.getTrendHtml(errorVm.trend)}</span>
+                                <div class="property-col" style="float: right;" >
+                                    <span style="float: right;">
+                                        <span class="label" ">Trend: </span>
+                                        <span class="value" title="${errorVm.trend}">${this.getTrendHtml(errorVm.trend)}</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </li>`;
+            }
+            
+            const expanded = hasSelectedError || singleService;
+            html += /* html */`
+                <li>
+                    <div class="line has-items ${expanded?"active":""}">
+                        <div class="codicon codicon-chevron-${expanded?"down":"right"}"></div>
+                        <span>${serviceName} (${errorFlowsByService[serviceName].length})</span>
                     </div>
-                </div>`;
+                    <ul class="collapsed">
+                        ${items}
+                    </ul>
+                </li>`;
         }
 
-
-
-        return /*html*/ `
-            <!-- 
-                <div class="control-row">
-                <vscode-dropdown>
-                </vscode-dropdown>
-            </div>
-            -->
-            <div class="list">${items}</div>
-  `;
+        return /* html */`
+            <ul class="tree">
+                ${html}
+            </ul>
+        `;
     }
 
     private getShortModuleName(fullName: string) : string{
@@ -758,5 +772,5 @@ interface ErrorFlowViewModel{
     sourceFunction: string;
     sourceModuleShort:string;
     exceptionName: string;
-
+    serviceName: string;
 }
