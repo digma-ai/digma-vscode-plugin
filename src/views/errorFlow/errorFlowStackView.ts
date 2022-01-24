@@ -422,7 +422,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         return /*html*/`
             <div class="flow-stack-title">${stack.exceptionType}</div>
             <div class="flow-stack-message">${stack.exceptionMessage}</div>
-            <div class="flow-stack-frames"><ul class="tree">${html}</ul></div>
+            <div class="flow-stack-frames"><ul class="tree frames">${html}</ul></div>
         `;
     }
 

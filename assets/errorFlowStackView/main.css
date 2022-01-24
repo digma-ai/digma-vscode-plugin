@@ -26,10 +26,14 @@ vscode-panel-view {
 {
     margin-left: 5px;
 }
-ul.tree .line{
+ul.tree.frames .line {
     padding-left: 0.5em;
     padding-right: 0.3em;
-    border-top: 1px solid var(--vscode-sideBar-background);
+}
+ul.tree.frames li:not(:first-of-type) .line{
+    border-top-width: 1px;
+    border-top-color: var(--vscode-tree-tableColumnsBorder);
+    border-top-style: dashed;
 }
 .no-frames-msg {
     padding: 1em;
