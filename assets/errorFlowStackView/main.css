@@ -30,6 +30,9 @@ ul.tree.frames .line {
     padding-left: 0.5em;
     padding-right: 0.3em;
 }
+ul.tree.frames .line.disabled {
+    opacity: 0.4;
+}
 ul.tree.frames li:not(:first-of-type) .line{
     border-top-width: 1px;
     border-top-color: var(--vscode-tree-tableColumnsBorder);
@@ -60,9 +63,6 @@ span.span-name {
 .look-like-link{
     color: var(--vscode-textLink-foreground);
     padding-top: 5px;
-}
-.list-item.disabled {
-    opacity: 0.4;
 }
 .bottom-line {
     display: flex;
