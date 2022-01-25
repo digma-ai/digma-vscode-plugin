@@ -329,14 +329,21 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body>
-                ${this.getAffectedPathSectionHtml()}
-                ${this.getFramesListSectionHtml()}
+                <section id="error-traces-tree">
+                    ${this.getAffectedPathSectionHtml()}
+                </section>
+                <section id="error-frames-list>
+                    ${this.getFramesListSectionHtml()}
+                </section>
             </body>
             </html>`;
     }
 
     private getAffectedPathSectionHtml()
     {
+        if (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0){
+            return '';
+        }
         interface Node {
             parent?: Node;
             serviceName: string;
@@ -410,7 +417,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         return /*html*/ `
             <div>
                 <div class="section-header-row">
-                    <vscode-tag>Affected Spans</vscode-tag>
+                    <vscode-tag>Error Trace</vscode-tag>
                 </div>
                 ${getTree(roots, 0)}
             </div>`;
