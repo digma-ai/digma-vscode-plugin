@@ -337,53 +337,64 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getAffectedPathSectionHtml()
     {
-        function getLevel(affectedPaths: AffectedPathViewModel[], level: any): string
+        interface Node {
+            parent?: Node;
+            serviceName: string;
+            spanName: string;
+            chidlren: Set<Node>;
+        };
+
+        let nodes:utils.Dictionary<string, Node> = {};
+        for(let affectedPath of this._viewModel?.affectedSpanPaths || [])
         {
-            let items: utils.Dictionary<string, any> = {};
-            for(let affectedPath of affectedPaths)
+            for(let level=0; level<affectedPath.path.length; level++)
             {
-                if(level >= affectedPath.path.length)
-                    return '';
-                
-                let key = JSON.stringify(affectedPath.path[level]);
-                let item = items[key];
-                if(!item)
-                {
-                    items[key] = item = {
+                const key = JSON.stringify(affectedPath.path[level]);
+                let node = nodes[key];
+                if(!node)
+                    nodes[key] = node = {
                         serviceName: affectedPath.path[level].serviceName,
-                        spanName: affectedPath.path[level].spanName
+                        spanName: affectedPath.path[level].spanName,
+                        chidlren: new Set<Node>()
                     };
+                
+                let parent = level > 0
+                    ? nodes[JSON.stringify(affectedPath.path[level-1])]
+                    : undefined; 
+                if(parent){
+                    node.parent = parent;
+                    parent.chidlren.add(node);
                 }
-
-                if(level-1 == affectedPath.path.length)
-                    item.lastOccurrence = affectedPath.lastOccurrence;
             }
+            
+        }
 
-            if(Object.keys(items).length == 0)
-                return '';
+        console.log();
 
+        function getTree(nodes: Node[], level: any): string
+        {
             let html = `<ul class="${level==0?"tree":"collapsed"}">`;
-            for(let key in items)
+            for(let node of nodes)
             {
-                const children = getLevel(affectedPaths, level+1);
+                const children = node.chidlren.toArray();
                 if(children.length)
                 {
                     //<span class="last-occurrence">${items[key].lastOccurrence}</span>
                     html +=/*html*/`<li>
                         <div class="line has-items">
                             <div class="codicon codicon-chevron-right"></div>
-                            <span class="service-name">${items[key].serviceName}</span>
-                            <span class="span-name">${items[key].spanName}</span>
+                            <span class="service-name">${node.serviceName}</span>
+                            <span class="span-name">${node.spanName}</span>
                         </div>
-                        ${children}
+                        ${getTree(children, level+1)}
                     </li>`;
                 }
                 else
                 {
                     html +=/*html*/`<li>
                             <div class="line">
-                                <span class="service-name">${items[key].serviceName}</span>
-                                <span class="span-name">${items[key].spanName}</span>
+                                <span class="service-name">${node.serviceName}</span>
+                                <span class="span-name">${node.spanName}</span>
                             </div>
                         </li>`;
                 }
@@ -392,16 +403,16 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             return html;
         };
         
-        var content = getLevel(this._viewModel?.affectedSpanPaths || [], 0);
-        if(!content)
-            return '';
-        
+        var roots = Object.values(nodes).filter(n => !n.parent)
+        if(!roots.length)
+            return
+
         return /*html*/ `
             <div>
                 <div class="section-header-row">
                     <vscode-tag>Affected Spans</vscode-tag>
                 </div>
-                ${content}
+                ${getTree(roots, 0)}
             </div>`;
     }
     

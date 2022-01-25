@@ -13,6 +13,9 @@ export async function delay(ms: number) : Promise<any>{
 }
 
 declare global {
+    interface Set<T>{
+        toArray(): T[];
+    }
     interface Array<T> {
         firstOrDefault(predicate?: (item: T) => boolean): T;
         lastOrDefault(predicate?: (item: T) => boolean): T;
@@ -22,7 +25,9 @@ declare global {
         groupBy<TKey extends string | number>(predicate: (item: T) => TKey) : Dictionary<TKey, T[]>;
     }
 }
-
+Set.prototype.toArray = function(){
+    return Array.from(this);
+}
 Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
     return this.find(predicate || (x => true));
 }
