@@ -86,7 +86,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             enableScripts: true
         };
         webviewView.webview.onDidReceiveMessage(
-            (message: any) => {
+            async (message: any) => {
                 
                 let activeTab = this._viewModel.errorListTabs[this._viewModel.activeTab];
                 switch (message.command) {  
@@ -94,22 +94,36 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                         activeTab.handleUIEvents(message);
                         this.reloadErrorFlows();
                         return;
+                        
                     case "setStartFilter":
                         activeTab.daysFilter = parseInt(message.parameter);
                         this.reloadErrorFlows();
                         return;
+
                     case "changeTab":
                         this._viewModel.activeTab = this.extractTab(message.parameter);
                         this.reloadErrorFlows();
                         return;
+
                     case "clearFilter":
                         this._viewModel.codeObjectFilter = undefined;
                         this.reloadErrorFlows();
                         return;
+
                     case "showForErrorFlow":
                         this.reloadErrorFlows(message.errorFlowId);
-                        vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, message.errorFlowId, this._viewModel.codeObjectFilter?.codeObjectId);
+                        await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, message.errorFlowId, this._viewModel.codeObjectFilter?.codeObjectId);
                         return;
+
+                    case "showForErrorFlowAndFocus":
+                        this.reloadErrorFlows(message.errorFlowId);
+                        await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, message.errorFlowId,);
+                        if(this._viewModel.codeObjectFilter?.codeObjectId)
+                            await vscode.commands.executeCommand(ErrorFlowStackView.Commands.BrowseFrameByCodeObject, this._viewModel.codeObjectFilter?.codeObjectId);
+                        else
+                            await vscode.commands.executeCommand(ErrorFlowStackView.Commands.BrowseLastAccessableFrame);
+                        return;
+
                     case "getViewModels":
                         return this._viewModel.errorFlows;
                     

@@ -45,6 +45,12 @@ function main()
             command: 'showForErrorFlow',
             errorFlowId: $(this).data('error-id')
         });
+    });
+    $('.error-name').dblclick(function() {
+        vscode.postMessage({
+            command: 'showForErrorFlowAndFocus',
+            errorFlowId: $(this).data('error-id')
+        });
     });    
     $('.filter-tag-close').click(function() {
         vscode.postMessage({

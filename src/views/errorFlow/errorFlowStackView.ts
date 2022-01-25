@@ -19,6 +19,8 @@ export class ErrorFlowStackView implements vscode.Disposable
     public static Commands = class {
         public static readonly ShowForErrorFlow = `digma.${ErrorFlowStackView.viewId}.showForErrorFlow`;
         public static readonly ClearErrorFlow = `digma.${ErrorFlowStackView.viewId}.clearErrorFlow`;
+        public static readonly BrowseFrameByCodeObject = `digma.${ErrorFlowStackView.viewId}.browseFrameByCodeObject`;
+        public static readonly BrowseLastAccessableFrame = `digma.${ErrorFlowStackView.viewId}.browseLastAccessableFrame`;
     }
 
     private _provider: ErrorFlowDetailsViewProvider;
@@ -34,24 +36,41 @@ export class ErrorFlowStackView implements vscode.Disposable
         this._provider = new ErrorFlowDetailsViewProvider(_documentInfoProvider, sourceControl, extensionUri);
         this._paramDecorator = new ErrorFlowParameterDecorator(_documentInfoProvider);
 
-        this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider));
-        this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
-            await this.setErrorFlow(errorFlowId, originCodeObjectId);
-        }));        
-        this._disposables.push(vscode.commands.registerCommand(ErrorFlowStackView.Commands.ClearErrorFlow, async () => {
-            await this.clearErrorFlow();
-        }));
-        this._disposables.push(vscode.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
-            await this.reSelectFrame(e.textEditor.document, e.selections[0].anchor);
-        }));
-        this._disposables.push(this._paramDecorator);
+        this._disposables = [
+            vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider),
+
+            vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
+                await this.setErrorFlow(errorFlowId);
+                await this.selectFrameByCodeObject(originCodeObjectId);
+            }),
+
+            vscode.commands.registerCommand(ErrorFlowStackView.Commands.ClearErrorFlow, async () => {
+                await this.clearErrorFlow();
+            }),
+
+            vscode.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
+                await this.selectFrameByDocumentPosition(e.textEditor.document, e.selections[0].anchor);
+            }),
+
+            vscode.commands.registerCommand(ErrorFlowStackView.Commands.BrowseFrameByCodeObject, async (codeObjectId) => {
+                await this.selectFrameByCodeObject(codeObjectId);
+                await this._provider.goToSelectedFrameFileAndLine();
+            }),
+
+            vscode.commands.registerCommand(ErrorFlowStackView.Commands.BrowseLastAccessableFrame, async () => {
+                await this.selectLastAccessableFrame();
+                await this._provider.goToSelectedFrameFileAndLine();
+            }),
+
+            this._paramDecorator
+        ];
     }
 
-    private async setErrorFlow(errorFlowId: string, originCodeObjectId: string)
+    private async setErrorFlow(errorFlowId: string)
     {
         const response = await this._documentInfoProvider.analyticsProvider.getErrorFlow(errorFlowId);
         this._paramDecorator.errorFlowResponse = response;
-        await this._provider.setErrorFlow(response, originCodeObjectId);
+        await this._provider.setErrorFlow(response);
     }
 
     private async clearErrorFlow()
@@ -59,11 +78,29 @@ export class ErrorFlowStackView implements vscode.Disposable
         await this._provider.setErrorFlow();
     }
 
-    private async reSelectFrame(document: vscode.TextDocument, position: vscode.Position)
+    private async selectFrameByDocumentPosition(document: vscode.TextDocument, position: vscode.Position)
     {
         const docInfo = await this._documentInfoProvider.getDocumentInfo(document);
         const methodInfo = docInfo?.methods.firstOrDefault(m => m.range.contains(position));
-        this._provider.selectFrame(methodInfo?.symbol.id);
+        this.selectFrameByCodeObject(methodInfo?.symbol.id);
+    }
+    
+    private async selectFrameByCodeObject(codeObjectId: string)
+    {
+        await this._provider.selectFrame({
+            selectFrame(frames: FrameViewModel[]): FrameViewModel{
+                return frames.lastOrDefault(f => f.codeObjectId == codeObjectId);
+            }
+        });
+    }
+
+    private async selectLastAccessableFrame()
+    {
+        await this._provider.selectFrame({
+            selectFrame(frames: FrameViewModel[]): FrameViewModel{
+                return frames.lastOrDefault(f => f.workspaceUri != undefined);
+            }
+        });
     }
 
     public dispose()
@@ -107,7 +144,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                         webviewView.webview.html = this.getHtml();
                         return;
                     case "goToFileAndLine":
-                        this.goToFileAndLine(message.frameId);
+                        this.goToFileAndLineById(message.frameId);
                         return;
                     case "viewRaw":
                         this.viewRawStack();
@@ -125,29 +162,36 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         return this._viewModel?.stacks?.flatMap(s => s.frames).firstOrDefault(f => f.selected);
     }
 
-    public async selectFrame(codeObjectId?: string)
+    public async selectFrame(strategy: FrameSelectionStrategy)
     {
         if(!this._view)
             return;
 
         const frames = this._viewModel?.stacks?.flatMap(s => s.frames) || [];
+        const selectedFrame = strategy.selectFrame(frames);
         for(let frame of frames)
         {
-            frame.selected = frame.codeObjectId == codeObjectId;
+            frame.selected = frame == selectedFrame;
         }
         this._view.webview.html = this.getHtml();
     }
 
-    public async setErrorFlow(response?: ErrorFlowResponse, originCodeObjectId?: string)
+    public async goToSelectedFrameFileAndLine()
+    {
+        if(this.selectedFrame)
+            await this.goToFileAndLine(this.selectedFrame);
+    }
+
+    public async setErrorFlow(response?: ErrorFlowResponse)
     {
         if(!this._view)
             return;
 
-        this._viewModel = response ? await this.createViewModel(response, originCodeObjectId) : undefined;
+        this._viewModel = response ? await this.createViewModel(response) : undefined;
         this._view.webview.html = this.getHtml();
     }
 
-    private async createViewModel(response: ErrorFlowResponse, originCodeObjectId?: string) :  Promise<ViewModel | undefined>
+    private async createViewModel(response: ErrorFlowResponse) :  Promise<ViewModel | undefined>
     {
         const stackVms: StackViewModel[] = [];
         let id = 0;
@@ -160,7 +204,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 frameVms.push({
                     id: id++,
                     stackIndex: stackIndex++,
-                    selected: frame.codeObjectId == originCodeObjectId,
+                    selected: false,
                     workspaceUri: this.getWorkspaceFileUri(frame.moduleName),
                     ...frame
                 })
@@ -192,11 +236,15 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         await vscode.window.showTextDocument(doc, { preview: true });
     }
 
-    private async goToFileAndLine(frameId: number)
+    private async goToFileAndLineById(frameId: number)
     {
         const frame = this._viewModel?.stacks
             .flatMap(s => s.frames)
             .firstOrDefault(f => f.id == frameId);
+        await this.goToFileAndLine(frame);
+    }
+    private async goToFileAndLine(frame?: FrameViewModel)
+    {
         if(!frame?.workspaceUri)
             return;
 
@@ -470,6 +518,10 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         for(let dis of this._disposables)
             dis.dispose();
     }
+}
+
+interface FrameSelectionStrategy{
+    selectFrame(frames: FrameViewModel[]): FrameViewModel;
 }
 
 interface ViewModel{

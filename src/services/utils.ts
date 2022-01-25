@@ -15,6 +15,7 @@ export async function delay(ms: number) : Promise<any>{
 declare global {
     interface Array<T> {
         firstOrDefault(predicate?: (item: T) => boolean): T;
+        lastOrDefault(predicate?: (item: T) => boolean): T;
         single(predicate?: (item: T) => boolean): T;
         all(predicate: (item: T) => boolean) : boolean;
         any(predicate: (item: T) => boolean) : boolean;
@@ -24,6 +25,9 @@ declare global {
 
 Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
     return this.find(predicate || (x => true));
+}
+Array.prototype.lastOrDefault = function (predicate: (item: any) => boolean) {
+    return this.reverse().find(predicate || (x => true));
 }
 Array.prototype.single = function (predicate: (item: any) => boolean) {
     let items = this.filter(predicate || (x => true));
