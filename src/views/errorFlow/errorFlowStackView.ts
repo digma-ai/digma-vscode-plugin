@@ -322,7 +322,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         let disabledState = (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0) ? 'disabled' : ''; 
 
         return `
-        <div style="float:right;min-width:100px;margin-top: 25px;"> 
+        <div style="float:right;min-width:100px;"> 
             <div class="can-toggle can-toggle--size-small">
                 <input id="b" class="frame-trace-toggle" ${disabledState} type="checkbox">
                 <label for="b">
@@ -352,6 +352,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                   </span>
                   ${this.getFrameSpanToggleHtml()}
 
+
                   <div class="property-row" style="display:flex;">
 
                     <div class="property-col" style="margin-right:4px;">
@@ -362,22 +363,22 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                         <span class="label">Last: </span>
                         <span class="value" title="${this._viewModel.summmary.lastOccurenceTime}">${this._viewModel.summmary.firstOccurenceTime.fromNow()}</span>
                     </div>
-                    <div class="property-col">
+                    <div class="property-col" >
                         <span class="label">Frequency: </span>
                         <span class="value" title="${frequencyString}">${frequencyString}</span>
                     </div>
+
                   </div>
-
-
               </div>
+
     
-             </div>
+        </div>
             
          
-       </div>
        <div class="control-row" style="margin-top: 10px; margin-bottom: 10px">
          <vscode-divider></vscode-divider>
        </div>
+
        <section class="error-traces-tree" style="display:none">
            ${this.getAffectedPathSectionHtml()}
        </section>
