@@ -5,6 +5,7 @@ import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { DocumentInfoProvider } from './services/documentInfoProvider';
+import { sign } from 'crypto';
 
 
 export class AnaliticsCodeLens implements vscode.Disposable
@@ -67,7 +68,12 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 continue; 
             
             var title = "";
-            title = `${summary.errorFlowCount} Errors`;     
+            if (summary.unhandled || summary.unexpected){
+                title = `${summary.errorFlowCount} Errors`;
+            }
+            else{
+                title = `Errors information`;
+            }
 
             if (summary.unhandled){
                 title+=` $(error) `;

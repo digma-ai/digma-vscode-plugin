@@ -99,7 +99,7 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body>
-                <div class="env-container">
+                <div class="env-container" >
                     <span class="env-label">Environment</span>
                     <vscode-dropdown class="env-dropdown">
                         ${options}

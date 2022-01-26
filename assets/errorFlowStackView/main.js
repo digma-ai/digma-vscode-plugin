@@ -4,6 +4,19 @@ window.addEventListener("load", main);
 
 function main() {
 
+    $(".frame-trace-toggle").change(function(e) 
+    {
+        if (e.target.checked){
+            $(".error-traces-tree").show();
+            $(".error-frames-list").hide();
+        }
+        else{
+            $(".error-traces-tree").hide();
+            $(".error-frames-list").show();
+        }
+  
+    });
+
     $(".workspace-only-checkbox").change(function() 
     {
         vscode.postMessage({

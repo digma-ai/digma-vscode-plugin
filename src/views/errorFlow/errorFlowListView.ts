@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
 import { Disposable, integer } from 'vscode-languageclient';
-import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy } from '../../services/analyticsProvider';
+import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy, Trend, Frequency } from '../../services/analyticsProvider';
 import { Settings } from '../../settings';
 import { ErrorFlowStackView } from './errorFlowStackView';
 import { WebViewUris } from '../webViewUris';
 import moment = require("moment");
 import { NONAME } from 'dns';
 import { inherits } from 'util';
+import { ErrorFlowCommon } from './common';
 
 export class ErrorFlowListView implements Disposable
 {
@@ -205,7 +206,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         {
             errorFlowVms.push({ 
                 ...errorFlow, 
-                trend: errorFlow.trend.value,
+                trend: errorFlow.trend,
                 selected: errorFlow.id == selectErrorFlowId,
                 frequencyShort: `${errorFlow.frequency.avg}/${errorFlow.frequency.unit}`, 
                 frequencyLong: `First occurence: ${errorFlow.firstOccurenceTime}&#10;Last occurence: ${errorFlow.lastOccurenceTime}`, 
@@ -445,7 +446,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
             {
                 const selectedCss = errorVm.selected ? "selected" : "";
                 const occurenceTooltip = `First occurence: ${errorVm.firstOccurenceTime}&#10;Last occurence: ${errorVm.lastOccurenceTime}`;
-                const errorNameText = this.getErrorNameHTML(errorVm);
+                const errorNameText = ErrorFlowCommon.getErrorNameHTML(errorVm);
                 hasSelectedError ||= errorVm.selected;
 
                 //<vscode-tag style="float:right;">${errorVm.rootSpan}</vscode-tag>
@@ -563,13 +564,14 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     }
 
 
-    private getTrendHtml(trend: number){
-        if(trend > 0 && trend < 2)
-            return /*html*/ `<span class="value font-orange" title="${trend}">Moderate</span>`;
-        if(trend > 0)
-            return /*html*/ `<span class="value font-red" title="${trend}">Escalating</span>`;
+    private getTrendHtml(trend: Trend){
+        let trendValue = trend.value;
+        if(trendValue > 0 && trendValue < 2)
+            return /*html*/ `<span class="value font-orange" title="${trendValue}">Moderate</span>`;
+        if(trendValue > 0)
+            return /*html*/ `<span class="value font-red" title="${trendValue}">Escalating</span>`;
         else
-            return /*html*/ `<span class="value font-green" title="${trend}">Decreasing</span>`;
+            return /*html*/ `<span class="value font-green" title="${trendValue}">Decreasing</span>`;
     }
 
     public dispose(): void 
@@ -769,10 +771,11 @@ interface ErroListTabViewModel{
 
 }
 
-interface ErrorFlowViewModel{
+interface ErrorFlowViewModel {
     id: string;
     name: string;
-    trend: number;
+    trend: Trend;
+    frequency: Frequency;
     frequencyShort: string;
     frequencyLong: string;
     impact: Impact;

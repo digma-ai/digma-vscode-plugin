@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as utils from '../../services/utils';
-import { AffectedSpanPathResponse, AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack, ParamStats } from "../../services/analyticsProvider";
+import { AffectedSpanPathResponse, AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack, ErrorFlowSummary, ParamStats } from "../../services/analyticsProvider";
 import { SourceControl } from '../../services/sourceControl';
 import { SymbolProvider } from '../../services/symbolProvider';
 import { Settings } from '../../settings';
@@ -11,6 +11,7 @@ import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
 import { privateEncrypt } from 'crypto';
 import moment = require('moment');
 import { ErrorFlowRawStackEditor } from './errorFlowRawStackEditor';
+import { ErrorFlowCommon } from './common';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -222,7 +223,8 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             stackTrace: response.stackTrace,
             stacks: stackVms,
             affectedSpanPaths: response.affectedSpanPaths,
-            exceptionType: response.exceptionType
+            exceptionType: response.exceptionType,
+            summmary: response.summary
         };
     }
 
@@ -243,6 +245,9 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             .firstOrDefault(f => f.id == frameId);
         await this.goToFileAndLine(frame);
     }
+
+
+
     private async goToFileAndLine(frame?: FrameViewModel)
     {
         if(!frame?.workspaceUri)
@@ -312,6 +317,75 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         return undefined;
     }
 
+    private getFrameSpanToggleHtml():string{
+
+        let disabledState = (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0) ? 'disabled' : ''; 
+
+        return `
+        <div style="float:right;min-width:100px;margin-top: 25px;"> 
+            <div class="can-toggle can-toggle--size-small">
+                <input id="b" class="frame-trace-toggle" ${disabledState} type="checkbox">
+                <label for="b">
+                    <div class="can-toggle__switch" data-checked="Traces" data-unchecked="Frames"></div>
+                </label>
+            </div>
+        </div>  `;
+    }
+
+    private getContentHtml(): string{
+
+        if (!this._viewModel?.stacks || this._viewModel.stacks.length===0){
+            return `
+                <br></br>
+                <p>No error flow selected.</p>
+                <span> Please selet an error flow from the </span> <span style="font-weight: bold;"> Error Flow List </span> <span>panel to see its details here.</span>`;
+        }
+        
+        let frequencyString = `${this._viewModel.summmary.frequency.avg}/${this._viewModel.summmary.frequency.unit}`;
+        
+        return `               
+        <div class="property-row" style="min-height:25px">
+             
+             <div class="property-col">
+                  <span style="vertical-align:sub;font-size: 13px;margin-top: 5px;color: burlywood;font-weight: bold;" class="title">
+                    ${ErrorFlowCommon.getAlias(this._viewModel?.summmary)}
+                  </span>
+                  ${this.getFrameSpanToggleHtml()}
+
+                  <div class="property-row" style="display:flex;">
+
+                    <div class="property-col" style="margin-right:4px;">
+                        <span class="label">First: </span>
+                        <span class="value" title="${this._viewModel.summmary.firstOccurenceTime}">${this._viewModel.summmary.firstOccurenceTime.fromNow()}</span>
+                    </div>
+                    <div class="property-col" style="margin-right:4px;">
+                        <span class="label">Last: </span>
+                        <span class="value" title="${this._viewModel.summmary.lastOccurenceTime}">${this._viewModel.summmary.firstOccurenceTime.fromNow()}</span>
+                    </div>
+                    <div class="property-col">
+                        <span class="label">Frequency: </span>
+                        <span class="value" title="${frequencyString}">${frequencyString}</span>
+                    </div>
+                  </div>
+
+
+              </div>
+    
+             </div>
+            
+         
+       </div>
+       <div class="control-row" style="margin-top: 10px; margin-bottom: 10px">
+         <vscode-divider></vscode-divider>
+       </div>
+       <section class="error-traces-tree" style="display:none">
+           ${this.getAffectedPathSectionHtml()}
+       </section>
+       <section class="error-frames-list" >
+           ${this.getFramesListSectionHtml()}
+       </section> `;
+    }
+
     private getHtml() : string 
     {
         return /*html*/ `
@@ -329,12 +403,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 <script type="module" src="${this._webViewUris.mainJs}"></script>
             </head>
             <body>
-                <section id="error-traces-tree">
-                    ${this.getAffectedPathSectionHtml()}
-                </section>
-                <section id="error-frames-list>
-                    ${this.getFramesListSectionHtml()}
-                </section>
+                 ${this.getContentHtml()}
             </body>
             </html>`;
     }
@@ -416,9 +485,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
         return /*html*/ `
             <div>
-                <div class="section-header-row">
-                    <vscode-tag>Error Trace</vscode-tag>
-                </div>
                 ${getTree(roots, 0)}
             </div>`;
     }
@@ -444,14 +510,9 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
         return /*html*/`
             <div>
-                <div class="section-header-row">
-                    <vscode-tag>Frames</vscode-tag>
+                <div class="section-header-row" style="float:right;">
                     <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
-                    <div style="flex: 1">
-                        <vscode-button appearance="icon" class="view-rows-btn" title="View Raw" style="float: right">
-                            <span class="codicon codicon-link-external"></span>
-                        </vscode-button>
-                    </div>
+
                 </div>
                 ${content}
             </div>`;
@@ -548,6 +609,7 @@ interface ViewModel{
     lastInstanceCommitId: string;
     affectedSpanPaths: AffectedPathViewModel[];
     exceptionType: string;
+    summmary: ErrorFlowSummary;
 }
 
 interface StackViewModel {
