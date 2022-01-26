@@ -23,14 +23,16 @@ export class DocumentInfoProvider implements vscode.Disposable
             1000*60 /* 1 min */);
     }
 
-    public async getDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo>
+    public async getDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
         return await this.addOrUpdateDocumentInfo(doc);
     }
 
     private removeDocumentInfo(doc: vscode.TextDocument)
     {
-        delete this._documents[`${doc.uri.fsPath}`];
+        const docRelativePath = doc.uri.toModulePath();
+        if(!docRelativePath)
+            delete this._documents[docRelativePath];
     }
 
     private pruneOldDocumentInfos()
@@ -41,12 +43,16 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
-    private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo>
+    private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
-        let document = this._documents[doc.uri.fsPath];
+        const docRelativePath = doc.uri.toModulePath();
+        if(!docRelativePath)
+            return undefined;
+
+        let document = this._documents[docRelativePath];
         if(!document)
         {
-            document = this._documents[doc.uri.fsPath] = new DocumentInfoContainer();
+            document = this._documents[docRelativePath] = new DocumentInfoContainer();
         }
 
         let latestVersionInfo = document.versions[doc.version];
@@ -57,7 +63,7 @@ export class DocumentInfoProvider implements vscode.Disposable
             try
             {
                 const symbolInfos = await this.symbolProvider.getSymbols(doc);
-                const codeObjectSummaries = await this.analyticsProvider.getSummary(doc.uri.toModulePath(), symbolInfos.map(s => s.id));
+                const codeObjectSummaries = await this.analyticsProvider.getSummary(docRelativePath, symbolInfos.map(s => s.id));
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
                 const lines = this.createLineInfos(doc, codeObjectSummaries, methods);

@@ -83,7 +83,8 @@ export class ErrorFlowStackView implements vscode.Disposable
     {
         const docInfo = await this._documentInfoProvider.getDocumentInfo(document);
         const methodInfo = docInfo?.methods.firstOrDefault(m => m.range.contains(position));
-        this.selectFrameByCodeObject(methodInfo?.symbol.id);
+        if(methodInfo)
+            this.selectFrameByCodeObject(methodInfo?.symbol.id);
     }
     
     private async selectFrameByCodeObject(codeObjectId: string)
@@ -416,82 +417,62 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getAffectedPathSectionHtml()
     {
+        function getTree(affectedPath: AffectedPathViewModel, level: any): string
+        {
+            let pathPart = affectedPath.path[level];
+
+            if(level == affectedPath.path.length-1)
+            {
+                return /*html*/`<li>
+                    <div class="line">
+                        <span class="service-name">${pathPart.serviceName}</span>
+                        <span class="span-name">${pathPart.spanName}</span>
+                    </div>
+                </li>`;
+            }
+            else
+            {
+               //<span class="last-occurrence">${items[key].lastOccurrence}</span>
+               return /*html*/`<li>
+                    <div class="line has-items">
+                        <div class="codicon codicon-chevron-right"></div>
+                        <span class="service-name">${pathPart.serviceName}</span>
+                        <span class="span-name">${pathPart.spanName}</span>
+                    </div>
+                    <ul class="collapsed">
+                        ${getTree(affectedPath, level+1)}
+                    </ul>
+                </li>`;
+            }
+        };
+
         if (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0){
             return '';
         }
-        interface Node {
-            parent?: Node;
-            serviceName: string;
-            spanName: string;
-            chidlren: Set<Node>;
-        };
 
-        let nodes:utils.Dictionary<string, Node> = {};
-        for(let affectedPath of this._viewModel?.affectedSpanPaths || [])
+        let trees = '';
+        for(let affectedPath of this._viewModel?.affectedSpanPaths) 
         {
-            for(let level=0; level<affectedPath.path.length; level++)
+            if(affectedPath.path.length > 1)
             {
-                const key = JSON.stringify(affectedPath.path[level]);
-                let node = nodes[key];
-                if(!node)
-                    nodes[key] = node = {
-                        serviceName: affectedPath.path[level].serviceName,
-                        spanName: affectedPath.path[level].spanName,
-                        chidlren: new Set<Node>()
-                    };
-                
-                let parent = level > 0
-                    ? nodes[JSON.stringify(affectedPath.path[level-1])]
-                    : undefined; 
-                if(parent){
-                    node.parent = parent;
-                    parent.chidlren.add(node);
-                }
+                trees += getTree(affectedPath, 0);
             }
-            
-        }
-
-        console.log();
-
-        function getTree(nodes: Node[], level: any): string
-        {
-            let html = `<ul class="${level==0?"tree":"collapsed"}">`;
-            for(let node of nodes)
+            else
             {
-                const children = node.chidlren.toArray();
-                if(children.length)
-                {
-                    //<span class="last-occurrence">${items[key].lastOccurrence}</span>
-                    html +=/*html*/`<li>
-                        <div class="line has-items">
-                            <div class="codicon codicon-chevron-right"></div>
-                            <span class="service-name">${node.serviceName}</span>
-                            <span class="span-name">${node.spanName}</span>
+                trees += /*html*/`<li>
+                        <div class="line">
+                            <span class="service-name">${affectedPath.path[0].serviceName}</span>
+                            <span class="span-name">${affectedPath.path[0].spanName}</span>
                         </div>
-                        ${getTree(children, level+1)}
                     </li>`;
-                }
-                else
-                {
-                    html +=/*html*/`<li>
-                            <div class="line">
-                                <span class="service-name">${node.serviceName}</span>
-                                <span class="span-name">${node.spanName}</span>
-                            </div>
-                        </li>`;
-                }
             }
-            html += '</ul>';
-            return html;
-        };
+        }
         
-        var roots = Object.values(nodes).filter(n => !n.parent)
-        if(!roots.length)
-            return
-
         return /*html*/ `
             <div>
-                ${getTree(roots, 0)}
+                <ul class="tree">
+                    ${trees}
+                </ul>
             </div>`;
     }
     

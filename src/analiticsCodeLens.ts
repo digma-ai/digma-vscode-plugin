@@ -60,6 +60,9 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             return [];
 
         const documentInfo = await this._documentInfoProvider.getDocumentInfo(document);
+        if(!documentInfo)
+            return [];
+
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
