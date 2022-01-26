@@ -352,6 +352,11 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                   </span>
                   ${this.getFrameSpanToggleHtml()}
 
+                  <span style="font-size: 9px;color: #f14c4c;;vertical-align: bottom;margin-left: 5px;">
+                        ${this._viewModel?.summmary.unhandled ? "Unhandled" : ""}</span>
+
+                  <span style="font-size: 9px;color: #cca700;vertical-align: bottom;margin-left: 5px;">
+                        ${this._viewModel?.summmary.unexpected ? "Unexpected" : ""}</span>
 
                   <div class="property-row" style="display:flex;">
 
@@ -361,7 +366,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                     </div>
                     <div class="property-col" style="margin-right:4px;">
                         <span class="label">Last: </span>
-                        <span class="value" title="${this._viewModel.summmary.lastOccurenceTime}">${this._viewModel.summmary.firstOccurenceTime.fromNow()}</span>
+                        <span class="value" title="${this._viewModel.summmary.lastOccurenceTime}">${this._viewModel.summmary.lastOccurenceTime.fromNow()}</span>
                     </div>
                     <div class="property-col" >
                         <span class="label">Frequency: </span>
