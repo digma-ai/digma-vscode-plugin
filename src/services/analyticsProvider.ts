@@ -17,7 +17,8 @@ export enum ErrorFlowsSortBy
     New = "New",
     Trend = "Trend",
     Frequency = "Frequency",
-    Impact = "Impact"
+    Impact = "Impact",
+    NewOrTrending = "NewOrTrending",
 }
 
 export interface ParamStats

@@ -95,7 +95,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
                         activeTab.handleUIEvents(message);
                         this.reloadErrorFlows();
                         return;
-                        
+
                     case "setStartFilter":
                         activeTab.daysFilter = parseInt(message.parameter);
                         this.reloadErrorFlows();
@@ -365,11 +365,11 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
             <vscode-panels activeid="tab-${ErroListTab[this._viewModel.activeTab]}" class="errorlist-nav" aria-label="With Badge">
                 <vscode-panel-tab id="tab-important">
-                    NEW AND TRENDING
+                    New/Trending
                     <vscode-badge appearance="secondary">${this._viewModel.errorListTabs[ErroListTab.important].errorFlows.length}</vscode-badge>
                 </vscode-panel-tab>
                 <vscode-panel-tab id="tab-unexpected">
-                    UNEXPECTED
+                    Unexpected
                     <vscode-badge appearance="secondary">${this._viewModel.errorListTabs[ErroListTab.unexpected].errorFlows.length}</vscode-badge>
                 </vscode-panel-tab>
                 <vscode-panel-tab id="tab-all">
@@ -616,16 +616,13 @@ class NewAndTendingTab implements ErroListTabViewModel{
     unhandledOnly: boolean=true;
     daysFilter: number=2;
     spanFilter: string[]=[];
-    sortBy: ErrorFlowsSortBy=ErrorFlowsSortBy.New;
-
+    sortBy: ErrorFlowsSortBy=ErrorFlowsSortBy.NewOrTrending;
 
     loadErrorFlows(parent: ErrorListViewModel) : any{
-        
-        this.errorFlows = new StartTimeFilter(this.daysFilter).apply(parent.errorFlows);
+        this.errorFlows = parent.errorFlows;
         if (this.unhandledOnly){
             this.errorFlows = new UnhandledFilter().apply(this.errorFlows);
         }
-
     }
 
     handleUIEvents(message: any) {
