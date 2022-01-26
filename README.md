@@ -1,12 +1,12 @@
 # Digma vscode plugin
 
 This is an extension for [Visual Studio Code](https://code.visualstudio.com) providing continuous feedback to developers. 
-- [Method Declaration Codelens](#method-declaration-codelens-)
-- [Method Tooltip](#method-tooltip-)
-- [Line Decoration & Tooltip](#line-decoration-tooltip-)
-- [Context (panel)](#context-panel-)
-- [Error Flow List (panel)](#error-flow-list-panel-)
-- [Error Flow Details (panel)](#error-flow-details-panel-)
+- [Method Declaration Codelens](#method-declaration-codelens)
+- [Method Tooltip](#method-tooltip)
+- [Line Decoration & Tooltip](#line-decoration-tooltip)
+- [Context (panel)](#context-panel)
+- [Error Flow List (panel)](#error-flow-list-panel)
+- [Error Flow Details (panel)](#error-flow-details-panel)
 
 ## Features
 
