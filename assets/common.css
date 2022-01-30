@@ -29,7 +29,7 @@ ul.tree .line{
 ul.tree .line:hover{
     background-color: var(--vscode-list-hoverBackground);
 }
-ul.tree .line>.codicon{
+ul.tree .line>.codicon:first-of-type{
     position: absolute;
     left: 0;
 }

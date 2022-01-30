@@ -31,7 +31,7 @@ export class DocumentInfoProvider implements vscode.Disposable
     private removeDocumentInfo(doc: vscode.TextDocument)
     {
         const docRelativePath = doc.uri.toModulePath();
-        if(!docRelativePath)
+        if(docRelativePath)
             delete this._documents[docRelativePath];
     }
 
