@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Disposable, integer } from 'vscode-languageclient';
-import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy, Trend, Frequency } from '../../services/analyticsProvider';
+import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy, Trend, Frequency, TrendInterpretation } from '../../services/analyticsProvider';
 import { Settings } from '../../settings';
 import { ErrorFlowStackView } from './errorFlowStackView';
 import { WebViewUris } from '../webViewUris';
@@ -471,8 +471,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
                                 <div class="property-col" style="float: right;" >
                                     <span style="float: right;">
-                                        <span class="label" ">Trend: </span>
-                                        <span class="value" title="${errorVm.trend}">${this.getTrendHtml(errorVm.trend)}</span>
+                                        ${this.getTagHtml(errorVm)}
                                     </div>
                                 </div>
                             </div>
@@ -564,14 +563,25 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     }
 
 
-    private getTrendHtml(trend: Trend){
-        let trendValue = trend.value;
-        if(trendValue > 0 && trendValue < 2)
-            return /*html*/ `<span class="value font-orange" title="${trendValue}">Moderate</span>`;
-        if(trendValue > 0)
-            return /*html*/ `<span class="value font-red" title="${trendValue}">Escalating</span>`;
+    private getTagHtml(errorVm: ErrorFlowViewModel)
+    {
+        if(errorVm.isNew)
+        {
+            return /*html*/ `
+                <span class="font-blue" title="First seen ${errorVm.firstOccurenceTime.fromNow()}">New</span>
+            `;
+        }
         else
-            return /*html*/ `<span class="value font-green" title="${trendValue}">Decreasing</span>`;
+        {
+            const trend = errorVm.trend;
+            if(trend.interpretation == TrendInterpretation.Moderate)
+                return /*html*/ `<span class="font-orange" title="${trend.value.toFixed(2)}">Moderate</span>`;
+            if(trend.interpretation == TrendInterpretation.Escalating)
+                return /*html*/ `<span class="font-red" title="${trend.value.toFixed(2)}">Escalating</span>`;
+            if(trend.interpretation == TrendInterpretation.Decreasing)
+                return /*html*/ `<span class="font-green" title="${trend.value.toFixed(2)}">Decreasing</span>`;
+            return '';
+        }
     }
 
     public dispose(): void 
@@ -772,6 +782,7 @@ interface ErrorFlowViewModel {
     id: string;
     name: string;
     trend: Trend;
+    isNew: boolean;
     frequency: Frequency;
     frequencyShort: string;
     frequencyLong: string;

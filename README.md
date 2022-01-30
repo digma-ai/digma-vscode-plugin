@@ -43,6 +43,8 @@ Lisitng the errors by 3 categories:
 - **All**: An unfilterd list of the errors accured in the last 7 days.
 
 Clicking on the error name shows the error's details in the [Error Flow List](#errorflow-list-panel)
+Double-Clicking does the same + focus on the last visible frame.
+
 
 ![errorflow-list-panel](/.github/assets/errorflow-list-panel.png)
 
@@ -52,13 +54,13 @@ Clicking on the error name shows the error's details in the [Error Flow List](#e
 ## Extension Settings
 
 This extension contributes the following settings:
-| Syntax | Description |
-| --- | ----------- |
+| Key | Description |
+| :-- | :---------- |
 | `digma.enableCodeLens` | Enable/Disable methods codelens regarding errors.|
 | `digma.url` | Digma api endpoint url.|
 | `digma.environment` | Filter the telemtry data by environment. <br/> Can be set from the [Context](#context-panel) panel, by selecting from the **Environment** dropdown. |
 | `digma.hideFramesOutsideWorkspace` | Show/Hide frame of files that do not belog to the opened workspace(s)<br/>Can be in [Error Flow Details](#error-flow-details-panel) panel, by checking/unchecking the **Workspace only** checkbox). |
-| `digma.sourceControl` | Workspace's source control - used to open files in specific revision.<br/>Only `git` is supported for now). |
+| `digma.sourceControl` | Workspace's source control - used to open files in specific revision.<br/>Only `git` is supported for now. |
 
 ## Build
 

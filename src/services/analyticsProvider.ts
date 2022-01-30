@@ -70,6 +70,7 @@ export interface ErrorFlowSummary
     id: string;
     name: string;
     trend: Trend;
+    isNew: boolean;
     frequency: Frequency;
     impact: Impact;
     lastOccurenceTime: moment.Moment;
@@ -93,8 +94,15 @@ export interface Trend{
     timeSeries: Dictionary<string, number>;
     value: number;
     period: number;
+    interpretation: TrendInterpretation;
 }
 
+export enum TrendInterpretation
+{
+    Moderate,
+    Escalating,
+    Decreasing
+}
 
 export interface CodeObjectErrorFlowsResponse
 {
