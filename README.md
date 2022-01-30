@@ -17,6 +17,7 @@ Annotating how many errors go through the method.
 
 ### Method Tooltip
 Listing the errors that go through the method.
+
 By hovering method declaration:
 
 ![method-name-tooltip](/.github/assets/method-name-tooltip.png)
@@ -27,6 +28,7 @@ By hovering method call:
 
 ### Line Decoration & Tooltip
 Annotating how many errors go through the line and a tooltip listing them.
+
 ![line-decoration](/.github/assets/line-decoration.png)
 
 ### Context (panel)
@@ -41,6 +43,8 @@ Lisitng the errors by 3 categories:
 - **All**: An unfilterd list of the errors accured in the last 7 days.
 
 Clicking on the error name shows the error's details in the [Error Flow List](#errorflow-list-panel)
+Double-Clicking does the same + focus on the last visible frame.
+
 
 ![errorflow-list-panel](/.github/assets/errorflow-list-panel.png)
 
@@ -50,11 +54,13 @@ Clicking on the error name shows the error's details in the [Error Flow List](#e
 ## Extension Settings
 
 This extension contributes the following settings:
-- `digma.enableCodeLens`: Enable/Disable methods codelens regarding errors.
-- `digma.url`: Digma api endpoint url.
-- `digma.environment`: Filter the telemtry data by environment (can be set from the **Context** panel, by selecting from the **Environment** dropdown).
-- `digma.hideFramesOutsideWorkspace`: Show/Hide frame of files that do not belog to the opened workspace(s) (can be in **Error Flow Details** panel, by checking/unchecking the **Workspace only** checkbox).
-- `digma.sourceControl`
+| Key | Description |
+| :-- | :---------- |
+| `digma.enableCodeLens` | Enable/Disable methods codelens regarding errors.|
+| `digma.url` | Digma api endpoint url.|
+| `digma.environment` | Filter the telemtry data by environment. <br/> Can be set from the [Context](#context-panel) panel, by selecting from the **Environment** dropdown. |
+| `digma.hideFramesOutsideWorkspace` | Show/Hide frame of files that do not belog to the opened workspace(s)<br/>Can be in [Error Flow Details](#error-flow-details-panel) panel, by checking/unchecking the **Workspace only** checkbox). |
+| `digma.sourceControl` | Workspace's source control - used to open files in specific revision.<br/>Only `git` is supported for now. |
 
 ## Build
 

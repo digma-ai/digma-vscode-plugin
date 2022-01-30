@@ -54,14 +54,15 @@ ul.tree .line.selected {
 .value{
     white-space: nowrap;
 }
+.font-blue{
+    color: var(--vscode-editorInfo-foreground);
+}
 .font-red{
-    /* color: var(--vscode-errorForeground); */
-    color: var(--vscode-notebookStatusErrorIcon-foreground);
+    color: var(--vscode-editorError-foreground);
 }
 .font-green{
-    color: var(--vscode-notebookStatusSuccessIcon-foreground);
+    color: var(--vscode-charts-green);
 }
-
 .font-orange{
-    color: #FFA500;
+    color: var(--vscode-editorWarning-foreground);
 }
