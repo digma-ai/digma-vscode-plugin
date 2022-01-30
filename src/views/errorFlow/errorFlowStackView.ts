@@ -417,9 +417,15 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getAffectedPathSectionHtml()
     {
+        const errorService = this._viewModel?.summmary.serviceName ?? '';
+        const errorSpanNames = this._viewModel?.stacks.flatMap(s => s.frames).filter(f => f.stackIndex == 0).map(f => f.spanName) ?? [];
+
         function getTree(affectedPath: AffectedPathViewModel, level: any): string
         {
             let pathPart = affectedPath.path[level];
+            let exceptionIcon = pathPart.serviceName == errorService && errorSpanNames.includes(pathPart.spanName) 
+                ? '<span style="color: var(--vscode-charts-red);vertical-align: middle;" class="codicon codicon-symbol-event"> </span>'
+                : '';
 
             if(level == affectedPath.path.length-1)
             {
@@ -427,17 +433,18 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                     <div class="line">
                         <span class="service-name">${pathPart.serviceName}</span>
                         <span class="span-name">${pathPart.spanName}</span>
+                        ${exceptionIcon}
                     </div>
                 </li>`;
             }
             else
             {
-               //<span class="last-occurrence">${items[key].lastOccurrence}</span>
                return /*html*/`<li>
                     <div class="line has-items">
                         <div class="codicon codicon-chevron-right"></div>
                         <span class="service-name">${pathPart.serviceName}</span>
                         <span class="span-name">${pathPart.spanName}</span>
+                        ${exceptionIcon}
                     </div>
                     <ul class="collapsed">
                         ${getTree(affectedPath, level+1)}
