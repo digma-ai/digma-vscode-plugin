@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
-import { Disposable, integer } from 'vscode-languageclient';
-import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy, Trend, Frequency, TrendInterpretation } from '../../services/analyticsProvider';
+import { Disposable } from 'vscode-languageclient';
+import { IAnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy, Trend, Frequency, TrendInterpretation } from '../../services/analyticsProvider';
 import { Settings } from '../../settings';
 import { ErrorFlowStackView } from './errorFlowStackView';
 import { WebViewUris } from '../webViewUris';
@@ -20,7 +20,7 @@ export class ErrorFlowListView implements Disposable
     private _disposables: vscode.Disposable[] = [];
 
     constructor(
-        analyticsProvider: AnalyticsProvider,
+        analyticsProvider: IAnalyticsProvider,
         extensionUri: vscode.Uri)
     {
         this._provider = new ErrorFlowsListProvider(analyticsProvider, extensionUri);
@@ -49,7 +49,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     private _viewModel: ErrorListViewModel;
 
     constructor(
-        private _analyticsProvider: AnalyticsProvider,
+        private _analyticsProvider: IAnalyticsProvider,
         extensionUri: vscode.Uri) 
     {
         this._webViewUris = new WebViewUris(extensionUri, "errorFlowListView", ()=>this._view!.webview);

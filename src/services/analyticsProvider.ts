@@ -139,7 +139,15 @@ export interface CodeObjectsSummaryResponse
     codeObjects: CodeObjectSummary[];
 }
 
-export class AnalyticsProvider
+export interface IAnalyticsProvider
+{
+    getEnvironments() : Promise<string[]>;
+    getSummary(moduleName: string, symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]>;
+    getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]>;
+    getErrorFlow(errorFlowId: string): Promise<ErrorFlowResponse | undefined>;
+}
+
+export class AnalyticsProvider implements IAnalyticsProvider
 {
     public async getEnvironments() : Promise<string[]> 
     {

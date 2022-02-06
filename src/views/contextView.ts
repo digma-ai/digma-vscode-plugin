@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as os from 'os';
 import { WebViewUris } from "./webViewUris";
 import { Settings } from '../settings';
-import { AnalyticsProvider } from '../services/analyticsProvider';
+import { IAnalyticsProvider } from '../services/analyticsProvider';
 
 
 export class ContextView implements vscode.Disposable
@@ -12,7 +12,7 @@ export class ContextView implements vscode.Disposable
     private _provider: ContextViewProvider;
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
+    constructor(analyticsProvider: IAnalyticsProvider, extensionUri: vscode.Uri) 
     {
         this._provider = new ContextViewProvider(analyticsProvider, extensionUri);
         this._disposables.push(vscode.window.registerWebviewViewProvider(ContextView.viewId, this._provider));
@@ -33,7 +33,7 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
     private _disposables: vscode.Disposable[] = [];
     private _webViewUris: WebViewUris;
 
-    constructor(private _analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
+    constructor(private _analyticsProvider: IAnalyticsProvider, extensionUri: vscode.Uri) 
     {
         this._webViewUris = new WebViewUris(extensionUri, "contextView", ()=>this._view!.webview);
         vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {

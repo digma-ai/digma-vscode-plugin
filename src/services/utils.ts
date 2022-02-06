@@ -66,15 +66,9 @@ Array.prototype.groupBy = function (predicate: (item: any) => any) {
     return result;
 }
 
-declare module "vscode" {
-    interface Uri {
-        toModulePath(): string;
-    }
-}
-
-vscode.Uri.prototype.toModulePath = function() {
-    let fileRelativePath = vscode.workspace.asRelativePath(this, true);
-    return fileRelativePath != this.path
+export function toModulePath(uri: vscode.Uri) {
+    let fileRelativePath = vscode.workspace.asRelativePath(uri, true);
+    return fileRelativePath != uri.path
         ? fileRelativePath
         : '';
 }

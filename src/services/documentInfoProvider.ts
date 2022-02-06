@@ -1,10 +1,10 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
 import { SymbolInfo } from '../languageSupport';
-import { AnalyticsProvider, CodeObjectSummary } from './analyticsProvider';
+import { IAnalyticsProvider, CodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
-import { SymbolProvider, Token, TokenType } from './symbolProvider';
-import { Dictionary, Future } from './utils';
+import { ISymbolProvider, Token, TokenType } from './symbolProvider';
+import { Dictionary, Future, toModulePath } from './utils';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -13,8 +13,8 @@ export class DocumentInfoProvider implements vscode.Disposable
     private _timer;
 
     constructor( 
-        public analyticsProvider: AnalyticsProvider,
-        public symbolProvider: SymbolProvider,) 
+        public analyticsProvider: IAnalyticsProvider,
+        public symbolProvider: ISymbolProvider) 
     {
         this._disposables.push(vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
 
@@ -30,7 +30,7 @@ export class DocumentInfoProvider implements vscode.Disposable
 
     private removeDocumentInfo(doc: vscode.TextDocument)
     {
-        const docRelativePath = doc.uri.toModulePath();
+        const docRelativePath = toModulePath(doc.uri);
         if(!docRelativePath)
             delete this._documents[docRelativePath];
     }
@@ -45,7 +45,7 @@ export class DocumentInfoProvider implements vscode.Disposable
 
     private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
-        const docRelativePath = doc.uri.toModulePath();
+        const docRelativePath = toModulePath(doc.uri);
         if(!docRelativePath)
             return undefined;
 

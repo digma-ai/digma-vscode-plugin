@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
+import { toModulePath } from './services/utils';
 
 export class SymbolInfo{
     constructor(
@@ -32,7 +33,7 @@ export class PythonSupport implements ISupportedLanguage
 
     public extractSymbolInfos(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] 
     {       
-        const symbolInfos = this.extractFunctions(document.uri.toModulePath(), '', docSymbols);
+        const symbolInfos = this.extractFunctions(toModulePath(document.uri), '', docSymbols);
         return symbolInfos;
     }
 

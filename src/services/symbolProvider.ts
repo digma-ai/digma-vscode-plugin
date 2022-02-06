@@ -30,6 +30,14 @@ export interface Token {
     type: TokenType;
     modifiers: string[];
 }
+
+export interface ISymbolProvider
+{
+    supportedLanguages: ISupportedLanguage[];
+    getSymbols(document: vscode.TextDocument) : Promise<SymbolInfo[]>;
+    getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]>;
+}
+
 export class SymbolProvider 
 {
     private _creationTime: moment.Moment = moment.utc();

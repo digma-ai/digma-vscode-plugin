@@ -1,11 +1,8 @@
 import * as vscode from 'vscode';
-import { SymbolProvider, trendToCodIcon } from './services/symbolProvider';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
-import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { DocumentInfoProvider } from './services/documentInfoProvider';
-import { sign } from 'crypto';
 
 
 export class AnaliticsCodeLens implements vscode.Disposable

@@ -1,14 +1,12 @@
 import * as vscode from 'vscode';
 import * as utils from '../../services/utils';
-import { AffectedSpanPathResponse, AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack, ErrorFlowSummary, ParamStats } from "../../services/analyticsProvider";
+import { AffectedSpanPathResponse, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowSummary, ParamStats } from "../../services/analyticsProvider";
 import { SourceControl } from '../../services/sourceControl';
-import { SymbolProvider } from '../../services/symbolProvider';
 import { Settings } from '../../settings';
 import { WebViewUris } from "./../webViewUris";
 import { Logger } from '../../services/logger';
 import { DocumentInfoProvider } from '../../services/documentInfoProvider';
 import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
-import { privateEncrypt } from 'crypto';
 import moment = require('moment');
 import { ErrorFlowRawStackEditor } from './errorFlowRawStackEditor';
 import { ErrorFlowCommon } from './common';
