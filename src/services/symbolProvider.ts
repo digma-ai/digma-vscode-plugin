@@ -5,6 +5,7 @@ import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { delay } from './utils';
 import { ISupportedLanguage, SymbolInfo } from '../languageSupport';
 import { Logger } from './logger';
+import { IVscodeApi } from '../vscodeEnv';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -42,7 +43,9 @@ export class SymbolProvider
 {
     private _creationTime: moment.Moment = moment.utc();
 
-    constructor(public supportedLanguages: ISupportedLanguage[]) 
+    constructor(
+        private _vscodeApi: IVscodeApi, 
+        public supportedLanguages: ISupportedLanguage[]) 
     {
     }
 
@@ -72,7 +75,7 @@ export class SymbolProvider
         }
       
         let result = await this.retryOnStartup<any[]>(
-            async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
+            async () => await this._vscodeApi.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
             value => value?.length ? true : false);
         // let result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
         // if(!result?.length && this._creationTime.clone().add(10, 'second') > moment.utc()){
@@ -109,7 +112,7 @@ export class SymbolProvider
             //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
             
             let legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
-                async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
+                async () => await this._vscodeApi.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
                 value => value?.tokenTypes ? true : false);
             if(!legends)
                 return tokes;
@@ -118,13 +121,13 @@ export class SymbolProvider
             if(range)
             {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
-                    async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
+                    async () => await this._vscodeApi.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
                     value => value?.data?.length ? true : false);
             }
             else
             {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
-                    async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
+                    async () => await this._vscodeApi.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
                     value => value?.data?.length ? true : false);
             }
             if(!semanticTokens)

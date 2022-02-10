@@ -25,9 +25,9 @@ export async function activate(context: vscode.ExtensionContext)
         new Git()
     ];
     const sourceControl = new SourceControl(supportedSourceControls);
-    const symbolProvider = new SymbolProvider(supportedLanguages);
+    const symbolProvider = new SymbolProvider(vscodeApi, supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
-    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
+    const documentInfoProvider = new DocumentInfoProvider(vscodeApi, analyticsProvider, symbolProvider);
 
     if(!Settings.environment.value){
         const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();

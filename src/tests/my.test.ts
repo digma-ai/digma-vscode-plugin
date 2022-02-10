@@ -1,5 +1,5 @@
 
-import { mock, instance } from 'ts-mockito';
+import { mock, instance, when } from 'ts-mockito';
 import { DocumentInfoProvider } from '../services/documentInfoProvider';
 import { IAnalyticsProvider } from '../services/analyticsProvider';
 import { ISymbolProvider } from '../services/symbolProvider';
@@ -20,12 +20,15 @@ describe('Config', () =>
 
 	beforeEach(() => 
 	{
-		vscodeApi.workspace.workspaceFolders = [
+		when(vscodeApi.workspace.workspaceFolders).thenReturn([
 			{ uri: Uri.file('/user/repo-1'), name: 'repo-1', index: 0 },
 			{ uri: Uri.file('/user/repo-2'), name: 'repo-2', index: 1 }
-		];
+		]);
 	
-		documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
+		documentInfoProvider = new DocumentInfoProvider(
+			instance(vscodeApi), 
+			instance(analyticsProvider),
+			instance(symbolProvider));
 	});
 
 	afterEach(()=>
@@ -35,10 +38,10 @@ describe('Config', () =>
 
     it('Return nothing for files outside the workspace', async () => 
 	{
-		// let textDoc = mock<Writeable<TextDocument>>();
-		// textDoc.uri = Uri.file('/user/repo-999/src/main.py');
+		let textDoc = mock<Writeable<TextDocument>>();
+		textDoc.uri = Uri.file('/user/repo-999/src/main.py');
 
-		// const docInfo = await documentInfoProvider.getDocumentInfo(textDoc);
-		// expect(docInfo).toBeUndefined();
+		const docInfo = await documentInfoProvider.getDocumentInfo(textDoc);
+		expect(docInfo).toBeUndefined();
 	});
 });

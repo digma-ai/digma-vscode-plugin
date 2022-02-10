@@ -14,7 +14,8 @@ import {
     ConfigurationChangeEvent,
     CodeLens,
     WebviewViewProvider,
-    TextEditorSelectionChangeEvent
+    TextEditorSelectionChangeEvent,
+    HoverProvider
     } from 'vscode';
 
 export interface IVscodeApi{
@@ -37,6 +38,7 @@ export interface IVscodeApi{
     };
     languages:{
         registerCodeLensProvider(selector: DocumentSelector, provider: CodeLensProvider): Disposable;
+        registerHoverProvider(selector: DocumentSelector, provider: HoverProvider): Disposable;
     }
 }
 
@@ -47,7 +49,11 @@ export class VscodeApi implements IVscodeApi
         registerCodeLensProvider(selector: DocumentSelector, provider: CodeLensProvider<CodeLens>): Disposable
         {
             return vsLanguages.registerCodeLensProvider(selector, provider);
-        } 
+        },
+        registerHoverProvider(selector: DocumentSelector, provider: HoverProvider): Disposable
+        {
+            return vsLanguages.registerHoverProvider(selector, provider);
+        }
     };
     public readonly commands =
     {
