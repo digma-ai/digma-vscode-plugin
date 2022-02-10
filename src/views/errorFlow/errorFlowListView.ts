@@ -8,6 +8,7 @@ import moment = require("moment");
 import { NONAME } from 'dns';
 import { inherits } from 'util';
 import { ErrorFlowCommon } from './common';
+import { IVscodeApi } from '../../vscodeEnv';
 
 export class ErrorFlowListView implements Disposable
 {
@@ -20,13 +21,14 @@ export class ErrorFlowListView implements Disposable
     private _disposables: vscode.Disposable[] = [];
 
     constructor(
+        vscodeApi: IVscodeApi,
         analyticsProvider: IAnalyticsProvider,
         extensionUri: vscode.Uri)
     {
         this._provider = new ErrorFlowsListProvider(analyticsProvider, extensionUri);
-        this._disposables.push(vscode.window.registerWebviewViewProvider(ErrorFlowListView.viewId, this._provider));
-        this._disposables.push(vscode.commands.registerCommand(ErrorFlowListView.Commands.ShowForCodeObject, async (codeObjectId: string, codeObjectDisplayName: string, errorFlowId: string) => {
-            await vscode.commands.executeCommand("workbench.view.extension.digma");
+        this._disposables.push(vscodeApi.window.registerWebviewViewProvider(ErrorFlowListView.viewId, this._provider));
+        this._disposables.push(vscodeApi.commands.registerCommand(ErrorFlowListView.Commands.ShowForCodeObject, async (codeObjectId: string, codeObjectDisplayName: string, errorFlowId: string) => {
+            await vscodeApi.commands.executeCommand("workbench.view.extension.digma");
             await this._provider.showForCodeObject(codeObjectId, codeObjectDisplayName, errorFlowId);
         }));
         

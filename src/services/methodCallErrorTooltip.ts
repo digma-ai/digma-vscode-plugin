@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ErrorFlowListView } from '../views/errorFlow/errorFlowListView';
+import { IVscodeApi } from '../vscodeEnv';
 import { ErrorFlowsSortBy, Impact } from './analyticsProvider';
 import { DocumentInfoProvider } from './documentInfoProvider';
 import { TokenType } from './symbolProvider';
@@ -11,14 +12,16 @@ export class MethodCallErrorTooltip implements vscode.Disposable
     }
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(documentInfoProvider: DocumentInfoProvider)
+    constructor(
+        vscodeApi: IVscodeApi, 
+        documentInfoProvider: DocumentInfoProvider)
     {
-        this._disposables.push(vscode.languages.registerHoverProvider(
+        this._disposables.push(vscodeApi.languages.registerHoverProvider(
             documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter),
             new MethodCallErrorHoverProvider(documentInfoProvider))
         );
-        this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ViewErrorFlow, async (args) => {
-            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, args.codeObjectId, args.codeObjectDisplayName, args.errorFlowId);
+        this._disposables.push(vscodeApi.commands.registerCommand(MethodCallErrorTooltip.Commands.ViewErrorFlow, async (args) => {
+            await vscodeApi.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, args.codeObjectId, args.codeObjectDisplayName, args.errorFlowId);
         }));
     }
 

@@ -8,6 +8,8 @@ export function getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathLi
 
 export type Dictionary<TKey extends keyof any, TValue> = Record<TKey, TValue>;
 
+export type Writeable<T> = { -readonly [K in keyof T]: T[K] };
+
 export async function delay(ms: number) : Promise<any>{
     return new Promise(res => setTimeout(res, ms));
 }

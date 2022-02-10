@@ -10,6 +10,7 @@ import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
 import moment = require('moment');
 import { ErrorFlowRawStackEditor } from './errorFlowRawStackEditor';
 import { ErrorFlowCommon } from './common';
+import { IVscodeApi } from '../../vscodeEnv';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -27,6 +28,7 @@ export class ErrorFlowStackView implements vscode.Disposable
     private _disposables: vscode.Disposable[] = [];
 
     constructor(
+        vscodeApi: IVscodeApi,
         private _documentInfoProvider: DocumentInfoProvider,
         sourceControl: SourceControl, 
         extensionUri: vscode.Uri) 
@@ -36,27 +38,27 @@ export class ErrorFlowStackView implements vscode.Disposable
         this._paramDecorator = new ErrorFlowParameterDecorator(_documentInfoProvider);
 
         this._disposables = [
-            vscode.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider),
+            vscodeApi.window.registerWebviewViewProvider(ErrorFlowStackView.viewId, this._provider),
 
-            vscode.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
+            vscodeApi.commands.registerCommand(ErrorFlowStackView.Commands.ShowForErrorFlow, async (errorFlowId: string, originCodeObjectId: string) => {
                 await this.setErrorFlow(errorFlowId);
                 await this.selectFrameByCodeObject(originCodeObjectId);
             }),
 
-            vscode.commands.registerCommand(ErrorFlowStackView.Commands.ClearErrorFlow, async () => {
+            vscodeApi.commands.registerCommand(ErrorFlowStackView.Commands.ClearErrorFlow, async () => {
                 await this.clearErrorFlow();
             }),
 
-            vscode.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
+            vscodeApi.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
                 await this.selectFrameByDocumentPosition(e.textEditor.document, e.selections[0].anchor);
             }),
 
-            vscode.commands.registerCommand(ErrorFlowStackView.Commands.BrowseFrameByCodeObject, async (codeObjectId) => {
+            vscodeApi.commands.registerCommand(ErrorFlowStackView.Commands.BrowseFrameByCodeObject, async (codeObjectId) => {
                 await this.selectFrameByCodeObject(codeObjectId);
                 await this._provider.goToSelectedFrameFileAndLine();
             }),
 
-            vscode.commands.registerCommand(ErrorFlowStackView.Commands.BrowseLastAccessableFrame, async () => {
+            vscodeApi.commands.registerCommand(ErrorFlowStackView.Commands.BrowseLastAccessableFrame, async () => {
                 await this.selectLastAccessableFrame();
                 await this._provider.goToSelectedFrameFileAndLine();
             }),

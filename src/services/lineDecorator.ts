@@ -1,5 +1,6 @@
 
 import * as vscode from 'vscode';
+import { IVscodeApi } from '../vscodeEnv';
 import { DocumentInfoProvider, LineInfo } from './documentInfoProvider';
 
 export class LineDecorator implements vscode.Disposable
@@ -8,8 +9,8 @@ export class LineDecorator implements vscode.Disposable
     private _disposables: vscode.Disposable[] = [];
 
     constructor(
-        private _documentInfoProvider: DocumentInfoProvider,
-        context: vscode.ExtensionContext)
+        vscodeApi: IVscodeApi,
+        private _documentInfoProvider: DocumentInfoProvider)
     {
         this._decorationType = vscode.window.createTextEditorDecorationType({
             after:{
@@ -18,7 +19,7 @@ export class LineDecorator implements vscode.Disposable
             }
         });   
         this._disposables.push(this._decorationType);   
-        this._disposables.push(vscode.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
+        this._disposables.push(vscodeApi.window.onDidChangeTextEditorSelection(async (e: vscode.TextEditorSelectionChangeEvent) => {
             await this.refreshDecorators(e.textEditor.document, e.selections[0].anchor.line);
         }));
     }

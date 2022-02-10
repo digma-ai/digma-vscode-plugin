@@ -3,6 +3,7 @@ import * as os from 'os';
 import { WebViewUris } from "./webViewUris";
 import { Settings } from '../settings';
 import { IAnalyticsProvider } from '../services/analyticsProvider';
+import { IVscodeApi } from '../vscodeEnv';
 
 
 export class ContextView implements vscode.Disposable
@@ -12,10 +13,16 @@ export class ContextView implements vscode.Disposable
     private _provider: ContextViewProvider;
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(analyticsProvider: IAnalyticsProvider, extensionUri: vscode.Uri) 
+    constructor(vscodeApi: IVscodeApi, analyticsProvider: IAnalyticsProvider, extensionUri: vscode.Uri) 
     {
         this._provider = new ContextViewProvider(analyticsProvider, extensionUri);
-        this._disposables.push(vscode.window.registerWebviewViewProvider(ContextView.viewId, this._provider));
+        this._disposables.push(vscodeApi.window.registerWebviewViewProvider(ContextView.viewId, this._provider));
+
+        vscodeApi.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
+            if(event.affectsConfiguration(Settings.environment.key)){
+                this._provider.refresh();
+            }
+        }, this._disposables);
     }
 
     public dispose() 
@@ -36,11 +43,11 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
     constructor(private _analyticsProvider: IAnalyticsProvider, extensionUri: vscode.Uri) 
     {
         this._webViewUris = new WebViewUris(extensionUri, "contextView", ()=>this._view!.webview);
-        vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
-            if(this._view && event.affectsConfiguration(Settings.environment.key)){
-                this._view.webview.html = await this.getHtml(Settings.environment.value);
-            }
-        }, this._disposables);
+    }
+
+    public async refresh(){
+        if(this._view)
+            this._view.webview.html = await this.getHtml(Settings.environment.value);
     }
 
     public async resolveWebviewView(

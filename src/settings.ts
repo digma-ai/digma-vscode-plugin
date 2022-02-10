@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as vscodeEnv from './vscodeEnv';
 
 export enum SourceControlType{
     None = "None",

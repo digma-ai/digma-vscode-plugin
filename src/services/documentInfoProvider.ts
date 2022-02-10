@@ -1,5 +1,6 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
+import { IVscodeApi } from '../vscodeEnv';
 import { SymbolInfo } from '../languageSupport';
 import { IAnalyticsProvider, CodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
@@ -13,10 +14,11 @@ export class DocumentInfoProvider implements vscode.Disposable
     private _timer;
 
     constructor( 
+        public vscodeApi: IVscodeApi,
         public analyticsProvider: IAnalyticsProvider,
         public symbolProvider: ISymbolProvider) 
     {
-        this._disposables.push(vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
+        this._disposables.push(vscodeApi.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
 
         this._timer = setInterval(
             () => this.pruneOldDocumentInfos(),     

@@ -12,10 +12,12 @@ import { DocumentInfoProvider } from './services/documentInfoProvider';
 import { MethodCallErrorTooltip } from './services/methodCallErrorTooltip';
 import { LineDecorator } from './services/lineDecorator';
 import { ErrorFlowRawStackEditor } from './views/errorFlow/errorFlowRawStackEditor';
+import { VscodeApi } from './vscodeEnv';
 
 
 export async function activate(context: vscode.ExtensionContext) 
 {
+    const vscodeApi = new VscodeApi();
     const supportedLanguages = [
         new PythonSupport()
     ];
@@ -33,13 +35,13 @@ export async function activate(context: vscode.ExtensionContext)
             await Settings.environment.set(firstEnv);
     }
 
-    context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
-    context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
-    context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
-    context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, sourceControl, context.extensionUri));
+    context.subscriptions.push(new AnaliticsCodeLens(vscodeApi, documentInfoProvider));
+    context.subscriptions.push(new ContextView(vscodeApi, analyticsProvider, context.extensionUri));
+    context.subscriptions.push(new ErrorFlowListView(vscodeApi, analyticsProvider, context.extensionUri));
+    context.subscriptions.push(new ErrorFlowStackView(vscodeApi, documentInfoProvider, sourceControl, context.extensionUri));
     context.subscriptions.push(new ErrorFlowRawStackEditor());
-    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider));
-    context.subscriptions.push(new LineDecorator(documentInfoProvider, context));
+    context.subscriptions.push(new MethodCallErrorTooltip(vscodeApi, documentInfoProvider));
+    context.subscriptions.push(new LineDecorator(vscodeApi, documentInfoProvider));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
 }

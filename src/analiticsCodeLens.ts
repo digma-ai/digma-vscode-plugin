@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { IVscodeApi } from './vscodeEnv';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { Settings } from './settings';
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
@@ -10,22 +11,22 @@ export class AnaliticsCodeLens implements vscode.Disposable
     private _provider: CodelensProvider;
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(documentInfoProvider: DocumentInfoProvider)
+    constructor(vscodeApi: IVscodeApi, documentInfoProvider: DocumentInfoProvider)
     {
         this._provider = new CodelensProvider(documentInfoProvider);
 
-        this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string, displayName: string) => {
-            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, symbolId, displayName);
-            await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ClearErrorFlow);
+        this._disposables.push(vscodeApi.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string, displayName: string) => {
+            await vscodeApi.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, symbolId, displayName);
+            await vscodeApi.commands.executeCommand(ErrorFlowStackView.Commands.ClearErrorFlow);
         }));
 
-        this._disposables.push(vscode.workspace.onDidChangeConfiguration((_) => {
+        this._disposables.push(vscodeApi.workspace.onDidChangeConfiguration((_) => {
             this._provider.raiseOnDidChangeCodeLenses();
         },this._disposables));
 
         this._provider.raiseOnDidChangeCodeLenses();
 
-        this._disposables.push(vscode.languages.registerCodeLensProvider(
+        this._disposables.push(vscodeApi.languages.registerCodeLensProvider(
             documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter), 
             this._provider)
         );
