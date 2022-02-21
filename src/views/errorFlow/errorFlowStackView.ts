@@ -12,6 +12,8 @@ import { privateEncrypt } from 'crypto';
 import moment = require('moment');
 import { ErrorFlowRawStackEditor } from './errorFlowRawStackEditor';
 import { ErrorFlowCommon } from './common';
+import { Console } from 'console';
+import { WorkspaceFolder } from 'vscode-languageclient';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -193,6 +195,28 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         this._view.webview.html = this.getHtml();
     }
 
+    private async fileFile(file: string) : Promise<vscode.Uri | undefined>
+    {
+        const moduleRootFolder = file.split('/').firstOrDefault();
+    
+        var rootFolder = vscode.workspace.workspaceFolders?.
+            find(w => w.name === moduleRootFolder);
+        
+        if (rootFolder){
+            const relativePattern = new vscode.RelativePattern(
+                rootFolder,      
+                `{**/${file}}`
+                );
+
+                return vscode.workspace.findFiles(relativePattern)
+                    .then(value=>{
+                        if (value.length===1){
+                            return value[0];
+                        }
+                        return undefined;
+                    });
+        }
+    }
     private async createViewModel(response: ErrorFlowResponse) :  Promise<ViewModel | undefined>
     {
         const stackVms: StackViewModel[] = [];
@@ -203,13 +227,15 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             const frameVms: FrameViewModel[] = [];
             for(let frame of frameStack.frames)
             {
+                var uri = await this.fileFile(frame.moduleName);
+
                 frameVms.push({
                     id: id++,
                     stackIndex: stackIndex++,
                     selected: false,
-                    workspaceUri: this.getWorkspaceFileUri(frame.moduleName),
+                    workspaceUri: uri,
                     ...frame
-                })
+                });
             }
 
             stackVms.push({
@@ -265,8 +291,20 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             else
             {
                 doc = await vscode.workspace.openTextDocument(frame.workspaceUri);
+
                 const txtLine = doc.lineAt(frame.lineNumber-1);
-                if(txtLine.text.trim() != frame.excutedCode)
+                var fileChanged:boolean = false;
+                if (frame.excutedCode){
+                    fileChanged = (txtLine.text.trim() !== frame.excutedCode);
+                }
+                else {
+                    var sourceDoc = await this.GetFromSourceControl(frame.workspaceUri,
+                        this._viewModel?.lastInstanceCommitId!);
+                    if (sourceDoc){
+                        fileChanged = (txtLine.text.trim() !== sourceDoc.lineAt(frame.lineNumber-1).text.trim());
+                    }
+                }
+                if(fileChanged)
                 {
                     doc = await this.askAndOpenFromSourceControl(frame);;
                 }
@@ -316,6 +354,22 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         }
        
         return undefined;
+    }
+
+    private async GetFromSourceControl(uri: vscode.Uri, commit:string) : Promise<vscode.TextDocument | undefined>{
+        if(!this._sourceControl.current)
+        {
+            const sel = await vscode.window.showWarningMessage(
+                'File version is different from the version recorded in this flow.\nPlease configure source control.',
+                'configure');
+
+            if(sel === 'configure'){
+
+                await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings", {query: Settings.sourceControl.key});
+            }
+        }
+        
+        return await this._sourceControl.current?.getFile(uri, commit);
     }
 
     private getFrameSpanToggleHtml():string{
@@ -576,14 +630,32 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         `;
     }
 
-    private getWorkspaceFileUri(moduleName: string) : vscode.Uri | undefined
+
+    private getWorkspaceFileUri(frame: ErrorFlowFrame) : vscode.Uri | undefined
     {
-        const moduleRootFolder = moduleName.split('/').firstOrDefault();
+        if (frame.lineNumber<=0){
+            return undefined;
+        }
+        const moduleRootFolder = frame.moduleName.split('/').firstOrDefault();
         const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name == moduleRootFolder);
-        const workspaceUri = moduleWorkspace
-            ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', moduleName)
-            : undefined;
-        return workspaceUri;
+        if (moduleWorkspace){
+
+            const relativePattern = new vscode.RelativePattern(
+                moduleWorkspace,      
+                `{**/${frame.moduleName}}`
+              );
+    
+            var result = vscode.workspace.findFiles(relativePattern).then(value=>{
+                console.log(value);
+            });
+        
+            const workspaceUri = moduleWorkspace
+                ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.moduleName)
+                : undefined;
+            return workspaceUri;
+        }
+
+
     }
 
     public dispose() 
