@@ -275,12 +275,12 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         if (frame.lineNumber<=0){
             return undefined;
         }
-        const moduleRootFolder = frame.moduleName.split('/').firstOrDefault();
+        const moduleRootFolder = frame.modulePhysicalPath.split('/').firstOrDefault();
         const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name === moduleRootFolder);
         if (moduleWorkspace){
     
             const workspaceUri = moduleWorkspace
-                ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.moduleName)
+                ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.modulePhysicalPath)
                 : undefined;
             return workspaceUri;
         }
@@ -369,8 +369,8 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         }
         catch(error)
         {
-            Logger.error(`Failed to open file: ${frame.moduleName}`, error);
-            vscode.window.showErrorMessage(`Failed to open file: ${frame.moduleName}`)
+            Logger.error(`Failed to open file: ${frame.modulePhysicalPath}`, error);
+            vscode.window.showErrorMessage(`Failed to open file: ${frame.modulePhysicalPath}`)
         }
     }
 
@@ -643,7 +643,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getFrameItemHtml(frame: FrameViewModel)
     {
-        const path = `${frame.moduleName} in ${frame.functionName}`;
+        const path = `${frame.modulePhysicalPath} in ${frame.functionName}`;
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         
@@ -679,23 +679,23 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
     private async getWorkspaceFileUri(frame: ErrorFlowFrame) : Promise<vscode.Uri | undefined>    {
         
         //Try first using the logical name of the function if we have it
-        if (frame.functionFullName){
+        if (frame.moduleLogicalPath){
 
-            var symbols = await this.lookupCodeObjectByFullName(frame.functionFullName);
+            var symbols = await this.lookupCodeObjectByFullName(frame.moduleLogicalPath);
             //We have a match
             if (symbols.length===1){
                 return symbols[0].location.uri;
             }
         }
 
-        if (frame.moduleName){
+        if (frame.modulePhysicalPath){
 
-            const moduleRootFolder = frame.moduleName.split('/').firstOrDefault();
+            const moduleRootFolder = frame.modulePhysicalPath.split('/').firstOrDefault();
             const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name === moduleRootFolder);
             if (moduleWorkspace){
         
                 const workspaceUri = moduleWorkspace
-                    ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.moduleName)
+                    ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.modulePhysicalPath)
                     : undefined;
                 
                 return workspaceUri;
