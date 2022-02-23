@@ -29,6 +29,7 @@ export interface ParamStats
 
 export interface ErrorFlowFrame{
     moduleName: string;
+    functionFullName: string;
     functionName: string;
     lineNumber: number;
     excutedCode: string;

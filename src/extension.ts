@@ -3,6 +3,7 @@ import { AnaliticsCodeLens } from './analiticsCodeLens';
 import { AnalyticsProvider} from './services/analyticsProvider';
 import { SymbolProvider } from './services/symbolProvider';
 import { PythonSupport } from './languageSupport';
+import { CSharpSupport } from './languageSupport';
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { ContextView } from './views/contextView';
@@ -17,7 +18,7 @@ import { ErrorFlowRawStackEditor } from './views/errorFlow/errorFlowRawStackEdit
 export async function activate(context: vscode.ExtensionContext) 
 {
     const supportedLanguages = [
-        new PythonSupport()
+        new PythonSupport(), new CSharpSupport()
     ];
     const supportedSourceControls = [
         new Git()
