@@ -41,7 +41,7 @@ export class CSharpSupport implements ISupportedLanguage {
     private removeParenthesis(funcName :string):string{
         var parenthesisIndex = funcName.indexOf('(');
         if (parenthesisIndex>0){
-            return funcName.substring(0,3);
+            return funcName.substring(0,parenthesisIndex);
         }
         else{
             return funcName;
