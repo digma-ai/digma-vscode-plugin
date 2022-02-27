@@ -12,6 +12,8 @@ import { privateEncrypt } from 'crypto';
 import moment = require('moment');
 import { ErrorFlowRawStackEditor } from './errorFlowRawStackEditor';
 import { ErrorFlowCommon } from './common';
+import { Console } from 'console';
+import { integer, WorkspaceFolder } from 'vscode-languageclient';
 
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -193,6 +195,14 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         this._view.webview.html = this.getHtml();
     }
 
+    private async GetExecutedCodeFromScm(uri: vscode.Uri, commit: string, line:integer) : Promise<string |undefined>{
+
+        var doc = await this.GetFromSourceControl(uri,commit);
+        if (doc){
+            return doc.lineAt(line-1).text.trim();
+        }
+
+    }
     private async createViewModel(response: ErrorFlowResponse) :  Promise<ViewModel | undefined>
     {
         const stackVms: StackViewModel[] = [];
@@ -203,13 +213,23 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             const frameVms: FrameViewModel[] = [];
             for(let frame of frameStack.frames)
             {
+                //workspace = this.findWorkSpace(frame)
+                //var uri = await this.fileFile(frame.moduleName);
+                var uri = await this.getWorkspaceFileUri(frame);
+                if (!frame.excutedCode && uri && response.lastInstanceCommitId && frame.lineNumber>0)
+                {
+                    var scmExecutedCode = await this.GetExecutedCodeFromScm(uri,response.lastInstanceCommitId,frame.lineNumber);
+                    if (scmExecutedCode){
+                        frame.excutedCode=scmExecutedCode;
+                    } 
+                }
                 frameVms.push({
                     id: id++,
                     stackIndex: stackIndex++,
                     selected: false,
-                    workspaceUri: this.getWorkspaceFileUri(frame.moduleName),
+                    workspaceUri: uri,
                     ...frame
-                })
+                });
             }
 
             stackVms.push({
@@ -265,8 +285,28 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             else
             {
                 doc = await vscode.workspace.openTextDocument(frame.workspaceUri);
+
                 const txtLine = doc.lineAt(frame.lineNumber-1);
-                if(txtLine.text.trim() != frame.excutedCode)
+                var fileChanged:boolean = false;
+                if (frame.excutedCode){
+                    fileChanged = (txtLine.text.trim() !== frame.excutedCode);
+                }
+                else {
+                    try {
+                        var sourceDoc = await this.GetFromSourceControl(frame.workspaceUri,
+                            this._viewModel?.lastInstanceCommitId!);
+                        if (sourceDoc){
+                            fileChanged = (txtLine.text.trim() !== sourceDoc.lineAt(frame.lineNumber-1).text.trim());
+                        }
+                    }
+                    catch (exeption){
+                        await vscode.window.showWarningMessage(
+                            'Cannot locate file in source control. Please make sure its checked in');
+                    }
+                
+
+                }
+                if(fileChanged)
                 {
                     doc = await this.askAndOpenFromSourceControl(frame);;
                 }
@@ -291,8 +331,8 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         }
         catch(error)
         {
-            Logger.error(`Failed to open file: ${frame.moduleName}`, error);
-            vscode.window.showErrorMessage(`Failed to open file: ${frame.moduleName}`)
+            Logger.error(`Failed to open file: ${frame.modulePhysicalPath}`, error);
+            vscode.window.showErrorMessage(`Failed to open file: ${frame.modulePhysicalPath}`)
         }
     }
 
@@ -316,6 +356,22 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         }
        
         return undefined;
+    }
+
+    private async GetFromSourceControl(uri: vscode.Uri, commit:string) : Promise<vscode.TextDocument | undefined>{
+        if(!this._sourceControl.current)
+        {
+            const sel = await vscode.window.showWarningMessage(
+                'File version is different from the version recorded in this flow.\nPlease configure source control.',
+                'configure');
+
+            if(sel === 'configure'){
+
+                await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings", {query: Settings.sourceControl.key});
+            }
+        }
+        
+        return await this._sourceControl.current?.getFile(uri, commit);
     }
 
     private getFrameSpanToggleHtml():string{
@@ -549,7 +605,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     private getFrameItemHtml(frame: FrameViewModel)
     {
-        const path = `${frame.moduleName} in ${frame.functionName}`;
+        const path = `${frame.modulePhysicalPath} in ${frame.functionName}`;
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         
@@ -576,14 +632,37 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         `;
     }
 
-    private getWorkspaceFileUri(moduleName: string) : vscode.Uri | undefined
-    {
-        const moduleRootFolder = moduleName.split('/').firstOrDefault();
-        const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name == moduleRootFolder);
-        const workspaceUri = moduleWorkspace
-            ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', moduleName)
-            : undefined;
-        return workspaceUri;
+
+    private async lookupCodeObjectByFullName(name:string) : Promise<vscode.SymbolInformation[]>{
+
+       return await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", name);
+
+    }
+    private async getWorkspaceFileUri(frame: ErrorFlowFrame) : Promise<vscode.Uri | undefined>    {
+        
+        //Try first using the logical name of the function if we have it
+        if (frame.moduleLogicalPath){
+
+            var symbols = await this.lookupCodeObjectByFullName(frame.moduleLogicalPath);
+            //We have a match
+            if (symbols.length===1){
+                return symbols[0].location.uri;
+            }
+        }
+
+        if (frame.modulePhysicalPath){
+
+            const moduleRootFolder = frame.modulePhysicalPath.split('/').firstOrDefault();
+            const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name === moduleRootFolder);
+            if (moduleWorkspace){
+        
+                const workspaceUri = moduleWorkspace
+                    ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.modulePhysicalPath)
+                    : undefined;
+                
+                return workspaceUri;
+            }
+        }
     }
 
     public dispose() 

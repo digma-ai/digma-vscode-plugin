@@ -28,6 +28,8 @@ export interface ParamStats
 }
 
 export interface ErrorFlowFrame{
+    modulePhysicalPath: string;
+    moduleLogicalPath: string;
     moduleName: string;
     functionName: string;
     lineNumber: number;
