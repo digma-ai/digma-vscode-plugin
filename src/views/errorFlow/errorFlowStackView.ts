@@ -195,29 +195,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         this._view.webview.html = this.getHtml();
     }
 
-    private async fileFile(file: string) : Promise<vscode.Uri | undefined>
-    {
-        const moduleRootFolder = file.split('/').firstOrDefault();
-    
-        var rootFolder = vscode.workspace.workspaceFolders?.
-            find(w => w.name === moduleRootFolder);
-        
-        if (rootFolder){
-            const relativePattern = new vscode.RelativePattern(
-                rootFolder,      
-                `{**/${file}}`
-                );
-
-                return vscode.workspace.findFiles(relativePattern)
-                    .then(value=>{
-                        if (value.length===1){
-                            return value[0];
-                        }
-                        return undefined;
-                    });
-        }
-    }
-
     private async GetExecutedCodeFromScm(uri: vscode.Uri, commit: string, line:integer) : Promise<string |undefined>{
 
         var doc = await this.GetFromSourceControl(uri,commit);
@@ -270,21 +247,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             exceptionType: response.exceptionType,
             summmary: response.summary
         };
-    }
-    private findWorkSpace(frame: ErrorFlowFrame): vscode.Uri | undefined {
-        if (frame.lineNumber<=0){
-            return undefined;
-        }
-        const moduleRootFolder = frame.modulePhysicalPath.split('/').firstOrDefault();
-        const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name === moduleRootFolder);
-        if (moduleWorkspace){
-    
-            const workspaceUri = moduleWorkspace
-                ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.modulePhysicalPath)
-                : undefined;
-            return workspaceUri;
-        }
-
     }
 
     private async viewRawStack()

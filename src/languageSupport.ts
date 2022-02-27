@@ -63,8 +63,8 @@ export class CSharpSupport implements ISupportedLanguage {
                     new vscode.Position(sym.range.end.line, sym.range.end.character));
                 
                 var funcName = this.removeParenthesis(sym.name);
-                // Template: <RelativePathToFile>$_$<FunctionName>
-                // Example:  numpy/tools/linter.py$_$get_branch_diff
+                // Template: <FunctionNamespace>$_$<FunctionName>
+                // Example:  Code.Analytics.MyClass$_$get
                 const id = `${namespace}$_$${funcName}`;
 
                 symbolInfos.push(new SymbolInfo(id, funcName, namespace+"."+funcName, range));
