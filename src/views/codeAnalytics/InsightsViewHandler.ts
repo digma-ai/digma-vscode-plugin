@@ -40,9 +40,9 @@ export class InsightsViewHandler extends CodeAnalyticsViewHandler {
 
     if (errorsInfo) {
       let errorsHtml: string = "";
-      errorsInfo.errorNames.forEach((errorName) => {
+      errorsInfo.topErrorAliases.forEach((alias) => {
         errorsHtml += `<div class="control-row">
-        ${errorName}      
+        ${alias}      
         </div>`;
       });
       html += `

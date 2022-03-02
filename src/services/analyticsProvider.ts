@@ -146,7 +146,7 @@ export interface CodeObjectInsightErrorsResponse
     errorFlowsCount: number,
     unhandledCount: number,
     unexpectedCount: number,
-    errorNames: [string]
+    topErrorAliases: [string]
 }
 export interface CodeObjectInsightHotSpotResponse
 {
