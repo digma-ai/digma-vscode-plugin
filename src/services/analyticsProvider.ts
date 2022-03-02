@@ -141,6 +141,24 @@ export interface CodeObjectsSummaryResponse
     codeObjects: CodeObjectSummary[];
 }
 
+export interface CodeObjectInsightErrorsResponse
+{
+    errorFlowsCount: number,
+    unhandledCount: number,
+    unexpectedCount: number,
+    errorNames: [string]
+}
+export interface CodeObjectInsightHotSpotResponse
+{
+    score: number,
+}
+export interface CodeObjectInsightResponse
+{
+    codeObjectId: string;
+    spot ? : CodeObjectInsightHotSpotResponse
+    errors ? : CodeObjectInsightErrorsResponse
+}
+
 export class AnalyticsProvider
 {
     public async getEnvironments() : Promise<string[]> 
@@ -159,7 +177,26 @@ export class AnalyticsProvider
         }
         return [];
     }
+    public async getCodeObjectInsights(codeObjectId: string): Promise<CodeObjectInsightResponse| undefined> 
+    {
+        try
+        {
+            const response = await this.send<CodeObjectInsightResponse>(
+                'GET', 
+                `/CodeAnalytics/codeObjects/insights`, 
+                {
+                    codeObjectId: codeObjectId,
+                    environment: Settings.environment.value
+                }, 
+                undefined);
 
+            return response;
+        }
+        catch(error){
+            Logger.error(`Failed to get codeObject ${codeObjectId} insights`, error);
+        }
+        return;
+    }
     public async getSummary(moduleName: string, symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
     {
         try

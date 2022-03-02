@@ -25,12 +25,12 @@
   	"main": "./out/extension.js",
   	"contributes": {
   	  	"views": {
-  	  	  	"digma": [  
+  	  	  	"digma": [
   	  	  	  	{
   	  	  	  	  	"type": "webview",
   	  	  	  	  	"id": "context",
   	  	  	  	  	"name": "Context"
-  	  	  	  	},	  
+  	  	  	  	},
   	  	  	  	{
   	  	  	  	  	"type": "webview",
   	  	  	  	  	"id": "errorFlowList",
@@ -40,6 +40,11 @@
   	  	  	  	  	"type": "webview",
   	  	  	  	  	"id": "errorFlowDetails",
   	  	  	  	  	"name": "Error Flow Details"
+  	  	  	  	},
+  	  	  	  	{
+  	  	  	  	  	"type": "webview",
+  	  	  	  	  	"id": "codeAnalytics",
+  	  	  	  	  	"name": "CodeAnalytics"
   	  	  	  	}
   	  	  	]
   	  	},
@@ -67,19 +72,22 @@
   	  	  	  	},
   	  	  	  	"digma.hideFramesOutsideWorkspace": {
   	  	  	  	  	"type": "bool",
-					"defult": true
+  	  	  	  	  	"defult": true
   	  	  	  	},
   	  	  	  	"digma.sourceControl": {
   	  	  	  	  	"type": "string",
-					"default": "None",
-					"enum": ["None", "Git"]
+  	  	  	  	  	"default": "None",
+  	  	  	  	  	"enum": [
+  	  	  	  	  	  	"None",
+  	  	  	  	  	  	"Git"
+  	  	  	  	  	]
   	  	  	  	}
   	  	  	}
   	  	}
   	},
   	"dependencies": {
-  	  	"@vscode/webview-ui-toolkit": "^0.8.4",
-		"@vscode/codicons": "0.0.20",
+  	  	"@vscode/codicons": "0.0.20",
+  	  	"@vscode/webview-ui-toolkit": "^0.8.5",
   	  	"https": "^1.0.0",
   	  	"moment": "^2.29.1",
   	  	"node-fetch": "^2.6.6",
