@@ -86,6 +86,7 @@
   	  	}
   	},
   	"dependencies": {
+  	  	"@types/jquery": "^3.5.14",
   	  	"@vscode/codicons": "0.0.20",
   	  	"@vscode/webview-ui-toolkit": "^0.8.5",
   	  	"https": "^1.0.0",
@@ -95,7 +96,11 @@
   	},
   	"scripts": {
   	  	"vscode:prepublish": "npm run compile",
-  	  	"compile": "tsc -p ./",
+  	  	"compile": "npm run compile:all && npm run compile:views && npm run copy:css && npm run copy:js",
+		"compile:all": "tsc -p ./",
+		"compile:views": "tsc -p ./src/views-ui/codeAnalytics/tsconfig.json",
+		"copy:css": "copyfiles -u 1 src/**/*.css out",
+		"copy:js": "copyfiles -u 1 src/**/*.js out",
   	  	"watch": "tsc -watch -p ./",
   	  	"pretest": "npm run compile && npm run lint",
   	  	"lint": "eslint src --ext ts",

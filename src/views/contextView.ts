@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as os from 'os';
-import { WebViewUris } from "./webViewUris";
+import { WebViewUris } from "./webViewUtils";
 import { Settings } from '../settings';
 import { AnalyticsProvider } from '../services/analyticsProvider';
 
