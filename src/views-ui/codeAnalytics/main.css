@@ -1,0 +1,52 @@
+  .list{
+    padding: 0px;
+    display: flex;
+    flex-direction: column;
+  }
+  .list-item {
+    border: 1px solid #ddd;
+    padding: 0px;
+    margin: 2px;
+    display: flex;
+  }
+  
+  .list-item > div {
+    margin: 2px;
+    font-size: 12px;
+  }
+  .list-item-content-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1
+  }
+  .list-item-content-area > div {
+    margin: 2px;
+    font-size: 12px;
+  }
+  .list-item-header
+  {
+    font-weight: bold;
+  }
+  .list-item-right-area
+  {
+    flex: 0 0 50px;
+    display: flex;
+    flex-direction: column;
+    margin: 3px;
+    align-items: center;
+  }
+  .score-box{
+    height:50px;
+    flex: 0 0 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--vscode-button-background)
+  }
+  .expand
+  {
+    margin-top: auto
+  }
+  .spacer{
+      height: 3px;
+  }

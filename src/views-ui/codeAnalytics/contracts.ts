@@ -23,3 +23,13 @@ export class ErrorsResponse{
 export interface ErrorFlowViewModel {
     name: string;
 }
+
+
+
+export class CodeObjectInsightRequested
+{
+    constructor(
+        public codeObjectId?: string
+    ){}
+}
+

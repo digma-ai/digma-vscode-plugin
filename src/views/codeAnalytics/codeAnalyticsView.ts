@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider } from "../../services/analyticsProvider";
+import { AnalyticsProvider, CodeObjectInsightResponse } from "../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { Logger } from "../../services/logger";
-import { CodeObjectChanged, DismissErrorFlow, ErrorsRequest, ErrorsResponse } from "../../views-ui/codeAnalytics/contracts";
+import { CodeObjectChanged, CodeObjectInsightRequested, DismissErrorFlow, ErrorsRequest, ErrorsResponse } from "../../views-ui/codeAnalytics/contracts";
 import { ErrorFlowListView } from "../errorFlow/errorFlowListView";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeAnalyticsViewHandler } from "./CodeAnalyticsViewHandler";
@@ -90,6 +90,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 		);
         this._channel = new WebviewChannel();
         this._channel.consume(ErrorsRequest, this.onErrorsRequest.bind(this));
+        this._channel.consume(CodeObjectInsightRequested, this.onCodeObjectInsightRequested.bind(this));
+
 	}
 
 	public async resolveWebviewView(
@@ -110,6 +112,19 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 		this._channel?.publish(new CodeObjectChanged(codeObject?.id, codeObject?.methodName));
 	}
 
+    public async onCodeObjectInsightRequested(request: CodeObjectInsightRequested)
+    {
+        if(request.codeObjectId === undefined)
+        {
+            return;
+        }
+        let response = await this._analyticsProvider.getCodeObjectInsights(request.codeObjectId);
+        var dd = new CodeObjectInsightResponse();
+        if(response)
+        {
+            this._channel?.publishByType(response, CodeObjectInsightResponse.name);
+        }
+    }
     public async onErrorsRequest(e: ErrorsRequest)
     {
         let results = await this._analyticsProvider.getErrorFlows(undefined, e.codeObjectId);
@@ -140,7 +155,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
             </head>
             <body>
                 <script>require(['codeAnalytics/main']);</script>
-                <vscode-panels activeid="tab-errors" class="analytics-nav" aria-label="With Active Tab">
+                <vscode-panels activeid="tab-insights" class="analytics-nav" aria-label="With Active Tab">
                     <vscode-panel-tab id="tab-insights">Insights</vscode-panel-tab>
                     <vscode-panel-tab id="tab-errors">Errors</vscode-panel-tab>
                     <vscode-panel-tab id="tab-usage">Usage</vscode-panel-tab>
