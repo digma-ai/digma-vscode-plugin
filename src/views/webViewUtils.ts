@@ -75,9 +75,14 @@ export class WebviewChannel implements vscode.Disposable
 {
     private readonly _disposables: vscode.Disposable[] = [];
     private readonly _consumers: IConsumer[] = [];
+    private _webview?: vscode.Webview;
 
-    constructor(private _webview: vscode.Webview)
+    public subscrib(value: vscode.Webview) 
     {
+        if(this._webview)
+            return;
+
+        this._webview = value;
         this._webview.onDidReceiveMessage(async (message: any) => 
             {
                 for(let consumer of this._consumers)
@@ -89,7 +94,7 @@ export class WebviewChannel implements vscode.Disposable
             },
             undefined,
             this._disposables
-          );
+        );
     }
 
     public consume<T>(type: { new(): T ;}, handler: MessageReceivedHandler<T>)
@@ -102,7 +107,7 @@ export class WebviewChannel implements vscode.Disposable
 
     public publish<T extends object>(message: T)
     {
-        this._webview.postMessage(<IMessage>{
+        this._webview?.postMessage(<IMessage>{
             type: message.constructor.name,
             data: message
         })

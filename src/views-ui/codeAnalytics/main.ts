@@ -1,12 +1,27 @@
-import { integer } from "vscode-languageclient";
-import { vscode, consume, publish } from "../common/contracts";
-import { CodeObjectChanged, DismissErrorFlow } from "./contracts";
+import { ITab } from "./tabs/baseTab";
+import { ErrorsTab } from "./tabs/errors";
 
-$(document).on('click', '#bbb', () =>
+let tabs:ITab[] = [];
+
+window.addEventListener("load", () => 
 {
-    publish(new DismissErrorFlow('111'));
+    tabs.push(new ErrorsTab('tab-errors', '#view-errors'));
+
+    for(let tab of tabs)
+        tab.init();
+
+    $('.analytics-nav').on('change', e => 
+    {
+        activateTab((<any>e.originalEvent).detail.id)
+    });
+    activateTab($('.analytics-nav').attr('activeid'))
 });
 
-consume(CodeObjectChanged, m => {
-    console.log(m.codeObjectId);
-})
+function activateTab(tabId?: string){
+    for(let tab of tabs){
+        if(tab.tabId == tabId)
+            tab.activate();
+        else
+            tab.deactivate();
+    }
+}
