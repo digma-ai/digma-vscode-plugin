@@ -4,31 +4,6 @@ vscode-panel-view {
     padding-left: 0;
 }
 
-ul#error-list {
-    list-style-type: none;
-    padding: 0;
-}
-ul#error-list li {
-    display: flex;
-    background: #ffffff14;
-    padding: 5PX 5PX 5PX 9PX;
-    margin-bottom: 3px;
-}
-ul#error-list li .left-side {
-    flex: 1;
-}
-ul#error-list li .score {
-    border: 2px solid #ff9866;
-    width: 40px;
-    height: 40px;
-    line-height: 39px;
-    text-align: center;
-    border-radius: 25px;
-}
-ul#error-list li .title {
-    font-weight: 700;
-}
-
 
 .list{
     padding: 0px;
