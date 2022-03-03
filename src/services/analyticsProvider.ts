@@ -152,11 +152,11 @@ export interface CodeObjectInsightHotSpotResponse
 {
     score: number,
 }
-export interface CodeObjectInsightResponse
+export class CodeObjectInsightResponse
 {
-    codeObjectId: string;
-    spot ? : CodeObjectInsightHotSpotResponse
-    errors ? : CodeObjectInsightErrorsResponse
+    constructor(public codeObjectId ?: string,
+        public spot ? : CodeObjectInsightHotSpotResponse,
+        public errors ? : CodeObjectInsightErrorsResponse){};
 }
 
 export class AnalyticsProvider

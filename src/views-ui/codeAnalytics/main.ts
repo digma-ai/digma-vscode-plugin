@@ -1,11 +1,13 @@
 import { ITab } from "./tabs/baseTab";
 import { ErrorsTab } from "./tabs/errors";
+import { InsightsTab } from "./tabs/insights";
 
 let tabs:ITab[] = [];
 
 window.addEventListener("load", () => 
 {
     tabs.push(new ErrorsTab('tab-errors', '#view-errors'));
+    tabs.push(new InsightsTab('tab-insights', '#view-insights'));
 
     for(let tab of tabs)
         tab.init();
