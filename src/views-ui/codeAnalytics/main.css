@@ -36,15 +36,11 @@ ul#error-list li .title {
     flex-direction: column;
 }
 .list-item {
-    border: 1px solid #ddd;
-    padding: 0px;
-    margin: 2px;
+    padding: 3px;
     display: flex;
-}
-
-.list-item > div {
-    margin: 2px;
-    font-size: 12px;
+    background: #ffffff0d;
+    margin-top: 3px;
+    border-radius: 2px;
 }
 .list-item-content-area {
     display: flex;
@@ -68,12 +64,13 @@ ul#error-list li .title {
     align-items: center;
 }
 .score-box{
-    height:50px;
-    flex: 0 0 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--vscode-button-background)
+    border-radius: 5px;
+    border: 2px solid #d9861f;
+    margin: 4px;
+    width: 40px;
+    height: 40px;
+    line-height: 39px;
+    text-align: center;
 }
 .expand
 {

@@ -1,3 +1,4 @@
+import { getCodeObjectLabel } from "../../common/common";
 import { consume, publish } from "../../common/contracts";
 import { CodeObjectChanged, ErrorsRequest, ErrorsResponse } from "../contracts";
 import { ITab } from "./baseTab";
@@ -27,10 +28,7 @@ export class ErrorsTab implements ITab
     public init()
     {
         this._tab.html(/*html*/`
-            <div>
-                <span>Project: </span>
-                <span id="code-object-name"></span>
-            </div>
+            <div class="codeobject-selection"></div>
             <vscode-dropdown id="sort-options" class="control-col-sort sort-dropdown">
                 <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
                 <vscode-option id="New" selected>New</vscode-option>
@@ -38,7 +36,7 @@ export class ErrorsTab implements ITab
                 <vscode-option id="Frequency">Frequency</vscode-option>
                 <vscode-option id="Impact">Impact</vscode-option>
             </vscode-dropdown>
-            <ul id="error-list"></ul>`)
+            <div id="error-list"></div>`)
     }
 
     public activate() {
@@ -55,7 +53,8 @@ export class ErrorsTab implements ITab
         if(this._viewedCodeObjectId == this._codeObjectId)
             return;
             
-        this._tab.find('#code-object-name').html(this._codeObjectName ?? '');
+        let html = getCodeObjectLabel(this._codeObjectName ?? '');
+        this._tab.find(".codeobject-selection").html(html);
         this.list.html('');
         publish(new ErrorsRequest(this._codeObjectId));
         this._viewedCodeObjectId = this._codeObjectId;
@@ -74,15 +73,15 @@ export class ErrorsTab implements ITab
         let html = '';
         for(let error of e.errors ?? [])
         {
-            html += /*html*/`<li class='error-list-item'>
-                    <div class='left-side'>
-                        <div class='title'>${error.name}</div>
-                        <div class='body'>bla bla bla</div>
-                    </div>
-                    <div class='right-side'>
-                        <div class='score'>80</div>
-                    </div>
-                </li>`
+            html += /*html*/`
+                <div class="list-item">
+                    <div class="list-item-content-area">
+                        <div class="list-item-header">${error.name}</div>
+                        <div><vscode-link href="#">See how this was calculated</vscode-link></div>
+                    </div> 
+                    
+                    <div class="score-box">80</div>
+                </div>`
         }
         this.list.html(html);
     }
