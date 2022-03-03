@@ -12,7 +12,8 @@ window.addEventListener("load", () =>
 
     $('.analytics-nav').on('change', e => 
     {
-        activateTab((<any>e.originalEvent).detail.id)
+        if(e.target == $('.analytics-nav')[0])
+            activateTab((<any>e.originalEvent).detail.id)
     });
     activateTab($('.analytics-nav').attr('activeid'))
 });

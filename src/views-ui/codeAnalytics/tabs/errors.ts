@@ -27,14 +27,16 @@ export class ErrorsTab implements ITab
     public init()
     {
         this._tab.html(/*html*/`
-            <span>Project</span>
-            <span id="code-object-name"></span>
+            <div>
+                <span>Project: </span>
+                <span id="code-object-name"></span>
+            </div>
             <vscode-dropdown id="sort-options" class="control-col-sort sort-dropdown">
                 <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
-                <vscode-option id="New" selected></vscode-option>
-                <vscode-option id="Trend" selected></vscode-option>
-                <vscode-option id="Frequency" selected></vscode-option>
-                <vscode-option id="Impact" selected></vscode-option>
+                <vscode-option id="New" selected>New</vscode-option>
+                <vscode-option id="Trend">Trend</vscode-option>
+                <vscode-option id="Frequency">Frequency</vscode-option>
+                <vscode-option id="Impact">Impact</vscode-option>
             </vscode-dropdown>
             <ul id="error-list"></ul>`)
     }
@@ -46,14 +48,15 @@ export class ErrorsTab implements ITab
 
     public deactivate() {
         this._isActive = false;
-        this.list.html('');
     }
 
     private refreshListIfNeeded()
     {
-        this._tab.find('#code-object-name').html(this._codeObjectName ?? '');
         if(this._viewedCodeObjectId == this._codeObjectId)
             return;
+            
+        this._tab.find('#code-object-name').html(this._codeObjectName ?? '');
+        this.list.html('');
         publish(new ErrorsRequest(this._codeObjectId));
         this._viewedCodeObjectId = this._codeObjectId;
     }
@@ -71,7 +74,15 @@ export class ErrorsTab implements ITab
         let html = '';
         for(let error of e.errors ?? [])
         {
-            html += /*html*/`<li>${error.name}</li>`
+            html += /*html*/`<li class='error-list-item'>
+                    <div class='left-side'>
+                        <div class='title'>${error.name}</div>
+                        <div class='body'>bla bla bla</div>
+                    </div>
+                    <div class='right-side'>
+                        <div class='score'>80</div>
+                    </div>
+                </li>`
         }
         this.list.html(html);
     }
