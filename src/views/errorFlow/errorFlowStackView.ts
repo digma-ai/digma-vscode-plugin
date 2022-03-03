@@ -4,7 +4,7 @@ import { AffectedSpanPathResponse, AnalyticsProvider, ErrorFlowFrame, ErrorFlowR
 import { SourceControl } from '../../services/sourceControl';
 import { SymbolProvider } from '../../services/symbolProvider';
 import { Settings } from '../../settings';
-import { WebViewUris } from "./../webViewUris";
+import { WebViewUris } from "../webViewUtils";
 import { Logger } from '../../services/logger';
 import { DocumentInfoProvider } from '../../services/documentInfoProvider';
 import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';

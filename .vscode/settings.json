@@ -10,5 +10,6 @@
     "typescript.tsc.autoDetect": "off",
     "python.linting.enabled": true,
     "digma.environment": "ASAF",
-    "torque.activeProfile": ""
+    "torque.activeProfile": "",
+    "editor.detectIndentation": false
 }
