@@ -36,7 +36,7 @@ export class ErrorsTab implements ITab
                 <vscode-option id="Frequency" selected></vscode-option>
                 <vscode-option id="Impact" selected></vscode-option>
             </vscode-dropdown>
-            <ul id="error-list"></ul>`)
+            <ul id="error-list"></ul>`);
     }
 
     public activate() {

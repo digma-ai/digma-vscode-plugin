@@ -2,11 +2,12 @@
     padding: 0px;
     display: flex;
     flex-direction: column;
+    flex-wrap: wrap;
   }
   .list-item {
     border: 1px solid #ddd;
     padding: 0px;
-    margin: 2px;
+    margin: 2px 0px;
     display: flex;
   }
   
@@ -29,20 +30,35 @@
   }
   .list-item-right-area
   {
-    flex: 0 0 50px;
+    width: 50px;
     display: flex;
     flex-direction: column;
     margin: 3px;
     align-items: center;
+    justify-content: center;
   }
   .score-box{
-    height:50px;
-    flex: 0 0 50px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--vscode-button-background)
+    line-height: 50px;
+    width: 50px;
+    text-align: center;
+    font-size: 20px;
   }
+
+  .score-red {
+    color:black;
+      background-color:#f95959
+    }
+  .score-orange 
+  {
+    color:black;
+      background-color:#fdb44b
+    }
+  .score-green 
+  {
+    color:black;
+    background-color:#7dd87d;
+    }
+
   .expand
   {
     margin-top: auto

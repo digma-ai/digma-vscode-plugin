@@ -88,15 +88,32 @@ export class InsightsTab implements ITab
         this._currentViewCodeObjectId = undefined;
     }
 
+    private getScoreColorClass(score: number): string
+    {
+        if(score <=40) {
+            return "score-green";
+        }
+        if(score <=80) {
+            return "score-orange";
+        }
+        if(score <=100) {
+            return "score-red";
+        }
+
+        return "";
+
+    }
     private addHotspotListItem(spot: CodeObjectInsightHotSpotResponse, listItems:string[]): void{
+        
         listItems.push (`
         <div class="list-item">
         <div class="list-item-content-area">
             <div class="list-item-header">This is an error spot</div>
             <div><vscode-link href="#">See how this was calculated</vscode-link></div>
         </div> 
-        
-        <div class="score-box">${spot.score}</div>
+        <div class="list-item-right-area">
+            <div class="score-box ${this.getScoreColorClass(spot.score)}">${spot.score}</div>
+        </div>
       </div>
         `);
     }
@@ -154,7 +171,7 @@ export class InsightsTab implements ITab
           className = tokens[0];
           funcName = tokens[1];
         }
-        html += `<span style="font-size: small;">Project: </span>`;
+        html += `<span style="font-size: small;">Code: </span>`;
         if (funcName) {
           html += `
           <span style="font-size: small;color: #389EDB;">def</span>`;

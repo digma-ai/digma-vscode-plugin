@@ -118,8 +118,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         {
             return;
         }
+        
         let response = await this._analyticsProvider.getCodeObjectInsights(request.codeObjectId);
-        var dd = new CodeObjectInsightResponse();
         if(response)
         {
             this._channel?.publishByType(response, CodeObjectInsightResponse.name);
