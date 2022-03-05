@@ -3,7 +3,7 @@ import { Disposable, integer } from 'vscode-languageclient';
 import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy, Trend, Frequency, TrendInterpretation } from '../../services/analyticsProvider';
 import { Settings } from '../../settings';
 import { ErrorFlowStackView } from './errorFlowStackView';
-import { WebViewUris } from '../webViewUtils';
+import { WebViewUris } from '../webViewUris';
 import moment = require("moment");
 import { NONAME } from 'dns';
 import { inherits } from 'util';

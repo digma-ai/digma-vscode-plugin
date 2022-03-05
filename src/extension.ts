@@ -13,7 +13,6 @@ import { DocumentInfoProvider } from './services/documentInfoProvider';
 import { MethodCallErrorTooltip } from './services/methodCallErrorTooltip';
 import { LineDecorator } from './services/lineDecorator';
 import { ErrorFlowRawStackEditor } from './views/errorFlow/errorFlowRawStackEditor';
-import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -44,7 +43,6 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new LineDecorator(documentInfoProvider, context));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
-    context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, context.extensionUri));
 }
 
 // this method is called when your extension is deactivated
