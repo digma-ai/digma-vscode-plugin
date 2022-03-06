@@ -5,6 +5,7 @@ import { CodeObjectInfo } from "./codeAnalyticsView";
 import { CodeAnalyticsViewHandler } from "./CodeAnalyticsViewHandler";
 
 export class ErrorsViewHandler extends CodeAnalyticsViewHandler {
+
   static readonly viewId: string = "errors";
   _isActive = false;
   _codeObject: CodeObjectInfo | undefined = undefined;
@@ -17,6 +18,9 @@ export class ErrorsViewHandler extends CodeAnalyticsViewHandler {
 
   public getViewId(): string {
     return ErrorsViewHandler.viewId;
+  }
+  public onReset(): void {
+   
   }
   public onActivate(): void {
     this._isActive = true;

@@ -43,3 +43,4 @@ export class TabChangedEvent {
 export class LoadEvent {
   constructor(public selectedViewId?: string) {}
 }
+

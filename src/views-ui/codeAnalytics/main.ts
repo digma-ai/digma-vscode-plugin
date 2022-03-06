@@ -21,13 +21,13 @@ window.addEventListener("load", () =>
     }
    });
 
-       
     $('.analytics-nav').on('change', e => 
     {
         if(e.target === $('.analytics-nav')[0]) {
             publish(new TabChangedEvent((<any>e.originalEvent).detail.id));
         }
     });
+
     $(document).on('click', '.expand', function () {
         var tabId = $(this).attr("tab-id");
         if (tabId) {

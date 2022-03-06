@@ -5,7 +5,10 @@ import {
   CodeObjectInsightHotSpotResponse,
   CodeObjectInsightResponse,
 } from "../../services/analyticsProvider";
-import { UpdateInsightsListViewCodeObjectUIEvent, UpdateInsightsListViewUIEvent } from "../../views-ui/codeAnalytics/contracts";
+import {
+  UpdateInsightsListViewCodeObjectUIEvent,
+  UpdateInsightsListViewUIEvent,
+} from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import {
@@ -32,9 +35,8 @@ export class InsightsViewHandler extends CodeAnalyticsViewHandler {
 
   public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {
     this._codeObject = codeObject;
-    this.refreshCodeObjectLabel();
-
     if (this._isActive) {
+      this.refreshCodeObjectLabel();
       this.refreshListViewRequested();
     } else {
       this.updateListView("");
@@ -60,27 +62,28 @@ export class InsightsViewHandler extends CodeAnalyticsViewHandler {
       this.updateListView("");
     }
   }
-
+  public onReset(): void {
+    this._listLoaded = false;
+  }
   public onActivate(): void {
     this._isActive = true;
-    this.refreshCodeObjectLabel(); //init state todo find better way
     if (!this._listLoaded) {
+      this.refreshCodeObjectLabel(); //init state todo find better way
       this.refreshListViewRequested();
     }
   }
+
   public onDectivate(): void {
     this._isActive = false;
   }
 
   private refreshCodeObjectLabel() {
     let html = this.getCodeObjectLabel(this._codeObject?.methodName);
-    this.channel?.publish(
-        new UpdateInsightsListViewCodeObjectUIEvent(html));
+    this.channel?.publish(new UpdateInsightsListViewCodeObjectUIEvent(html));
   }
 
   private updateListView(html: string): void {
-    this.channel?.publish(
-      new UpdateInsightsListViewUIEvent(html));
+    this.channel?.publish(new UpdateInsightsListViewUIEvent(html));
     if (html !== "") {
       this._listLoaded = true;
     } else {

@@ -16,8 +16,13 @@ export abstract class CodeAnalyticsViewHandler {
 
   public abstract onActivate(): void ;
   public abstract onDectivate(): void ;
+  public abstract onReset(): void;
+  
   public abstract onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void;
 
+  public reset(): void {
+    this.onReset();
+  }
   public activate(): void {
       this.onActivate();
   }

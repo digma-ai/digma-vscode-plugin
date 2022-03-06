@@ -1,9 +1,7 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider, CodeObjectInsightResponse } from "../../services/analyticsProvider";
+import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
-import { Logger } from "../../services/logger";
-import { CodeObjectChanged, CodeObjectInsightRequested, DismissErrorFlow, ErrorRequest, ErrorsRequest, ErrorsResponse, LoadEvent, TabChangedEvent } from "../../views-ui/codeAnalytics/contracts";
-import { ErrorFlowListView } from "../errorFlow/errorFlowListView";
+import { LoadEvent, TabChangedEvent } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeAnalyticsViewHandler } from "./CodeAnalyticsViewHandler";
 import { ErrorsViewHandler } from "./ErrorsViewHandler";
@@ -84,7 +82,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 	private _view?: vscode.WebviewView;
 	private _webViewUris: WebViewUris;
 	private _channel: WebviewChannel;
-    private _viewHandlers: Map<string, CodeAnalyticsViewHandler>;
+    private _viewHandlers : Map<string, CodeAnalyticsViewHandler>;
     private _activeViewHandler?: CodeAnalyticsViewHandler;
     private _codeObjectId?: CodeObjectInfo;
 
@@ -116,15 +114,21 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
           UsagesViewHandler.viewId,
           new UsagesViewHandler(this._channel, this._analyticsProvider)
         );
-
-
 	}
+
+
     public async onLoadEvent(event: LoadEvent)
     {
+        if(this._activeViewHandler)
+        {
+            this._activeViewHandler.reset();
+        }
+
         if(event.selectedViewId){
             this.onViewSelected(this.convertElementIdToViewId(event.selectedViewId));
         }
     }
+
     public async onTabChangedEvent(event: TabChangedEvent)
     {
         if(event.viewId){
@@ -158,14 +162,12 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
       }
 
     private onViewSelected(viewId: string): void {
+        if(this._activeViewHandler)
+        {
+            this._activeViewHandler.dectivate();
+        }
         this._activeViewHandler = this._viewHandlers.get(viewId);
         this._activeViewHandler?.activate();
-        this._viewHandlers.forEach((value: CodeAnalyticsViewHandler, key: string) => {
-            if(this._activeViewHandler !== value)
-            {
-                value.dectivate();
-            }
-        });
     }
 
     private convertElementIdToViewId(elementId: string): string {
