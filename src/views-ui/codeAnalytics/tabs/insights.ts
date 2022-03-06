@@ -1,5 +1,5 @@
 import { consume, publish } from "../../common/contracts";
-import { getCodeObjectLabel } from "../../common/common";
+import { getCodeObjectLabel, getScoreBoxHtml } from "../../common/common";
 import { CodeObjectChanged, CodeObjectInsightRequested as CodeObjectInsightRequest, ErrorsRequest, ErrorsResponse } from "../contracts";
 import { ITab } from "./baseTab";
 //import {CodeObjectInsightErrorsResponse, CodeObjectInsightHotSpotResponse, CodeObjectInsightResponse} from "../../../services/analyticsProvider";
@@ -88,7 +88,7 @@ export class InsightsTab implements ITab
         this.updateListView("");
         this._currentViewCodeObjectId = undefined;
     }
-
+    
     private addHotspotListItem(spot: CodeObjectInsightHotSpotResponse, listItems:string[]): void{
         listItems.push (`
         <div class="list-item">
@@ -96,8 +96,9 @@ export class InsightsTab implements ITab
             <div class="list-item-header">This is an error spot</div>
             <div><vscode-link href="#">See how this was calculated</vscode-link></div>
         </div> 
-        
-        <div class="score-box">${spot.score}</div>
+        <div class="list-item-right-area">
+            ${getScoreBoxHtml(spot.score)}
+        </div>
       </div>
         `);
     }

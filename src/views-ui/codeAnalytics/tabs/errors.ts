@@ -1,8 +1,21 @@
-import { getCodeObjectLabel } from "../../common/common";
+import { getCodeObjectLabel, getScoreBoxHtml } from "../../common/common";
 import { consume, publish } from "../../common/contracts";
-import { CodeObjectChanged, ErrorsRequest, ErrorsResponse } from "../contracts";
+import { CodeObjectChanged, ErrorFlowResponse, ErrorsRequest, ErrorsResponse } from "../contracts";
 import { ITab } from "./baseTab";
 
+export class ErrorView
+{
+    constructor()
+    {
+        consume(ErrorFlowResponse, this.onErrorFlowResponse.bind(this));
+        
+    }
+
+    private onErrorFlowResponse(response: ErrorFlowResponse)
+    {
+        
+    }
+}
 export class ErrorsTab implements ITab
 {
     private _isActive: boolean;
@@ -29,14 +42,17 @@ export class ErrorsTab implements ITab
     {
         this._tab.html(/*html*/`
             <div class="codeobject-selection"></div>
-            <vscode-dropdown id="sort-options" class="control-col-sort sort-dropdown">
-                <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
-                <vscode-option id="New" selected>New</vscode-option>
-                <vscode-option id="Trend">Trend</vscode-option>
-                <vscode-option id="Frequency">Frequency</vscode-option>
-                <vscode-option id="Impact">Impact</vscode-option>
-            </vscode-dropdown>
-            <div id="error-list"></div>`)
+            <div id="error_view"></div>
+            <div id="errors_view">
+                <vscode-dropdown id="sort-options" class="control-col-sort sort-dropdown">
+                    <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
+                    <vscode-option id="New" selected>New</vscode-option>
+                    <vscode-option id="Trend">Trend</vscode-option>
+                    <vscode-option id="Frequency">Frequency</vscode-option>
+                    <vscode-option id="Impact">Impact</vscode-option>
+                </vscode-dropdown>
+                <div id="error-list"></div>
+            <div>`);
     }
 
     public activate() {
@@ -80,9 +96,12 @@ export class ErrorsTab implements ITab
                         <div><vscode-link href="#">See how this was calculated</vscode-link></div>
                     </div> 
                     
-                    <div class="score-box">80</div>
-                </div>`
+                     <div class="list-item-right-area">
+                        ${getScoreBoxHtml(10)}
+                    </div>
+                </div>`;
         }
         this.list.html(html);
     }
 }
+
