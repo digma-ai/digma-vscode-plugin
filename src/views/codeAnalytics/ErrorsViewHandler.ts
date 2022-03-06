@@ -21,12 +21,8 @@ export class ErrorsViewHandler extends CodeAnalyticsViewHandler {
   public onActivate(): void {
     this._isActive = true;
   }
-  public onDectivate(): void {
-    throw new Error("Method not implemented.");
-  }
-  public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {
-   
-  }
+  public onDectivate(): void {}
+  public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {}
 
   public getHtml(): string {
     return `
@@ -43,5 +39,4 @@ export class ErrorsViewHandler extends CodeAnalyticsViewHandler {
         <div id="error-list"></div>
     <div>`;
   }
-
 }

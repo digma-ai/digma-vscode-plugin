@@ -1,15 +1,32 @@
-import { ITab } from "./tabs/baseTab";
-import { ErrorsTab } from "./tabs/errors";
-import { InsightsTab } from "./tabs/insights";
+import { consume, publish } from "../common/contracts";
+import { LoadEvent, TabChangedEvent, UpdateInsightsListViewCodeObjectUIEvent, UpdateInsightsListViewUIEvent } from "./contracts";
 
-let tabs:ITab[] = [];
+
 
 window.addEventListener("load", () => 
 {
+   let insightsTab = $('#view-insights');
+   consume(UpdateInsightsListViewUIEvent, (event)=>{
+       if(event.htmlContent !== undefined)
+       {
+            insightsTab.find('.list').html(event.htmlContent);
+       }
+
+   });
+
+   consume(UpdateInsightsListViewCodeObjectUIEvent, (event)=>{
+    if(event.htmlContent !== undefined)
+    {
+        insightsTab.find('.codeobject-selection').html(event.htmlContent);
+    }
+   });
+
+       
     $('.analytics-nav').on('change', e => 
     {
-        if(e.target == $('.analytics-nav')[0])
-            activateTab((<any>e.originalEvent).detail.id)
+        if(e.target === $('.analytics-nav')[0]) {
+            publish(new TabChangedEvent((<any>e.originalEvent).detail.id));
+        }
     });
     $(document).on('click', '.expand', function () {
         var tabId = $(this).attr("tab-id");
@@ -17,15 +34,6 @@ window.addEventListener("load", () =>
             $('.analytics-nav').attr("activeid", tabId);
         }
     });
-    activateTab($('.analytics-nav').attr('activeid'));
+
+    publish(new LoadEvent($('.analytics-nav').attr('activeid')));
 });
-
-
-function activateTab(tabId?: string){
-    for(let tab of tabs){
-        if(tab.tabId == tabId)
-            tab.activate();
-        else
-            tab.deactivate();
-    }
-}

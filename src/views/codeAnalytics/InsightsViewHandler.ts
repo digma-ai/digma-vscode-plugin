@@ -5,6 +5,7 @@ import {
   CodeObjectInsightHotSpotResponse,
   CodeObjectInsightResponse,
 } from "../../services/analyticsProvider";
+import { UpdateInsightsListViewCodeObjectUIEvent, UpdateInsightsListViewUIEvent } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import {
@@ -140,11 +141,3 @@ export class InsightsViewHandler extends CodeAnalyticsViewHandler {
     </section>`;
   }
 }
-
-export class UpdateInsightsListViewUIEvent {
-  constructor(public htmlContent?: string) {}
-}
-
-export class UpdateInsightsListViewCodeObjectUIEvent {
-    constructor(public htmlContent?: string) {}
-  }

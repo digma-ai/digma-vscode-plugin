@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { AnalyticsProvider, CodeObjectInsightResponse } from "../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { Logger } from "../../services/logger";
-import { CodeObjectChanged, CodeObjectInsightRequested, DismissErrorFlow, ErrorRequest, ErrorsRequest, ErrorsResponse } from "../../views-ui/codeAnalytics/contracts";
+import { CodeObjectChanged, CodeObjectInsightRequested, DismissErrorFlow, ErrorRequest, ErrorsRequest, ErrorsResponse, LoadEvent, TabChangedEvent } from "../../views-ui/codeAnalytics/contracts";
 import { ErrorFlowListView } from "../errorFlow/errorFlowListView";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeAnalyticsViewHandler } from "./CodeAnalyticsViewHandler";
@@ -14,15 +14,7 @@ interface LoadRequest {
     selectedTab: string;
   }
 
-export class TabChangedEvent
-{
-    constructor(public viewId ?: string){}
-}
 
-export class LoadEvent
-{
-    constructor(public selectedViewId ?: string){}
-}
 
 export class CodeAnalyticsView implements vscode.Disposable {
 	public static readonly viewId = "codeAnalytics";

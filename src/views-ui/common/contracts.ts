@@ -1,4 +1,3 @@
-import { UpdateInsightsListViewUIEvent } from "../../views/codeAnalytics/InsightsViewHandler";
 
 declare var acquireVsCodeApi: any;
 export const vscode = acquireVsCodeApi();
@@ -6,8 +5,6 @@ export const vscode = acquireVsCodeApi();
 window.addEventListener("load", main);
 
 function main() {
-    consume(UpdateInsightsListViewUIEvent, onUpdateInsightsListViewUIEvent.bind());
-
     window.addEventListener('message', event => {
 
         const message = <IMessage>event.data; // The JSON data our extension sent
@@ -18,11 +15,6 @@ function main() {
             }
         }
     });
-}
-
-export function onUpdateInsightsListViewUIEvent(e: UpdateInsightsListViewUIEvent)
-{
-
 }
 
 export type MessageReceivedHandler<T> = (n: T) => any;

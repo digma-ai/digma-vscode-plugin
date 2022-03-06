@@ -1,8 +1,8 @@
 
-export interface ITab
-{
-    tabId: string;
-    init(): void;
-    activate(): void;
-    deactivate(): void;
-}
+// export interface ITab
+// {
+//     tabId: string;
+//     init(): void;
+//     activate(): void;
+//     deactivate(): void;
+// }
