@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { AnalyticsProvider, CodeObjectInsightResponse } from "../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { Logger } from "../../services/logger";
-import { CodeObjectChanged, CodeObjectInsightRequested, DismissErrorFlow, ErrorsRequest, ErrorsResponse } from "../../views-ui/codeAnalytics/contracts";
+import { CodeObjectChanged, CodeObjectInsightRequested, DismissErrorFlow, ErrorRequest, ErrorsRequest, ErrorsResponse } from "../../views-ui/codeAnalytics/contracts";
 import { ErrorFlowListView } from "../errorFlow/errorFlowListView";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeAnalyticsViewHandler } from "./CodeAnalyticsViewHandler";
@@ -90,8 +90,10 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 		);
         this._channel = new WebviewChannel();
         this._channel.consume(ErrorsRequest, this.onErrorsRequest.bind(this));
-        this._channel.consume(CodeObjectInsightRequested, this.onCodeObjectInsightRequested.bind(this));
+      //  this._channel.consume(ErrorRequest, this.onErrorRequest.bind(this));
 
+        this._channel.consume(CodeObjectInsightRequested, this.onCodeObjectInsightRequested.bind(this));
+        
 	}
 
 	public async resolveWebviewView(
@@ -119,11 +121,16 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
             return;
         }
         let response = await this._analyticsProvider.getCodeObjectInsights(request.codeObjectId);
-        var dd = new CodeObjectInsightResponse();
         if(response)
         {
             this._channel?.publishByType(response, CodeObjectInsightResponse.name);
         }
+    }
+    public async onErrorRequest(request: ErrorRequest)
+    {
+        let response = await this._analyticsProvider.getErrorFlow(request.errorFlowId);
+        this._channel?.publishByType(response, 'ErrorFlowResponse');
+        
     }
     public async onErrorsRequest(e: ErrorsRequest)
     {
@@ -132,7 +139,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         for(let error of results)
         {
             response.errors?.push({
-                name: error.exceptionName
+                name: error.exceptionName,
+                id: error.id
             });
         }
 		this._channel?.publish(response);

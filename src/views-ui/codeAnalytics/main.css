@@ -49,15 +49,15 @@ vscode-panel-view {
     text-align: center;
 }
 .score-red {
-    border:#f95959
+    border: 2px solid #f95959;
     }
   .score-orange 
   {
-    border:#fdb44b
+    border: 2px solid #fdb44b;
     }
   .score-green 
   {
-    border:#7dd87d;
+    border: 2px solid #7dd87d;
     }
 
 .expand

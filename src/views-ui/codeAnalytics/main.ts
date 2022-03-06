@@ -17,7 +17,13 @@ window.addEventListener("load", () =>
         if(e.target == $('.analytics-nav')[0])
             activateTab((<any>e.originalEvent).detail.id)
     });
-    activateTab($('.analytics-nav').attr('activeid'))
+    $(document).on('click', '.expand', function () {
+        var tabId = $(this).attr("tab-id");
+        if (tabId) {
+            $('.analytics-nav').attr("activeid", tabId);
+        }
+    });
+    activateTab($('.analytics-nav').attr('activeid'));
 });
 
 function activateTab(tabId?: string){

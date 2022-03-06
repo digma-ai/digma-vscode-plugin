@@ -1,9 +1,28 @@
-import * as $ from 'jquery';
+
 
 $(document).on('click', '.has-items', function(){
     $(this).toggleClass('active');
     $(this).find('.codicon:first-of-type').toggleClass('codicon-chevron-right codicon-chevron-down');
 });
+
+function getScoreColorClass(score: number):string {
+
+    if (score <= 40) {
+        return "score-green";
+    }
+    if (score <= 80) {
+        return "score-orange";
+    }
+    if (score <= 100) {
+        return "score-red";
+    }
+    return "";
+}
+
+export function getScoreBoxHtml(score: number):string
+{
+    return `<div class="score-box ${getScoreColorClass(score)}">${score}</div>`;
+}
 
 export function getCodeObjectLabel(funcName: string): string {
     let html = "";
