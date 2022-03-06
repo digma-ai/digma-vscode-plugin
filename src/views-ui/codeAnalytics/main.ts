@@ -6,12 +6,6 @@ let tabs:ITab[] = [];
 
 window.addEventListener("load", () => 
 {
-    tabs.push(new ErrorsTab('tab-errors', '#view-errors'));
-    tabs.push(new InsightsTab('tab-insights', '#view-insights'));
-
-    for(let tab of tabs)
-        tab.init();
-
     $('.analytics-nav').on('change', e => 
     {
         if(e.target == $('.analytics-nav')[0])
@@ -25,6 +19,7 @@ window.addEventListener("load", () =>
     });
     activateTab($('.analytics-nav').attr('activeid'));
 });
+
 
 function activateTab(tabId?: string){
     for(let tab of tabs){

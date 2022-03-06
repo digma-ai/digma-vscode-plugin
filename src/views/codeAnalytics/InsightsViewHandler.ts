@@ -1,8 +1,11 @@
 import * as vscode from "vscode";
 import {
   AnalyticsProvider,
+  CodeObjectInsightErrorsResponse,
+  CodeObjectInsightHotSpotResponse,
   CodeObjectInsightResponse,
 } from "../../services/analyticsProvider";
+import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import {
   CodeAnalyticsViewHandler,
@@ -10,119 +13,138 @@ import {
 } from "./CodeAnalyticsViewHandler";
 
 export class InsightsViewHandler extends CodeAnalyticsViewHandler {
+  _isActive = false;
+  _listLoaded = false;
+  _codeObject: CodeObjectInfo | undefined = undefined;
   static readonly viewId: string = "insights";
 
   constructor(
-    viewProvider: ViewProvider,
+    channel: WebviewChannel,
     private _analyticsProvider: AnalyticsProvider
   ) {
-    super(viewProvider);
+    super(channel);
   }
+
   public getViewId(): string {
     return InsightsViewHandler.viewId;
   }
 
-  private getItemsHtml(
-    codeObjectInsightsResponse: CodeObjectInsightResponse
-  ): string {
-    let html: string = "";
-    if (codeObjectInsightsResponse.spot) {
-      html += `
-      <div class="control-row">
-      <vscode-divider></vscode-divider>
-      </div>
-      <div class="control-row">
-      Score: ${codeObjectInsightsResponse.spot.score}
-      </div>
-      `;
-    }
-    let errorsInfo = codeObjectInsightsResponse.errors;
+  public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {
+    this._codeObject = codeObject;
+    this.refreshCodeObjectLabel();
 
-    if (errorsInfo) {
-      let errorsHtml: string = "";
-      errorsInfo.topErrorAliases.forEach((alias) => {
-        errorsHtml += `<div class="control-row">
-        ${alias}      
-        </div>`;
-      });
-      html += `
-      <div class="control-row">
-      <vscode-divider></vscode-divider>
-      </div>
-      <div class="control-row">
-      ${errorsInfo.errorFlowsCount} ErrorFlows (${errorsInfo.unhandledCount} unhandled ${errorsInfo.unexpectedCount} unexpected)
-      </div>
-      ${errorsHtml} 
-      <div class="control-row">
-        <vscode-link class="expand-errors" tab-id="tab-errors"  href="#">Expand</vscode-link>
-      </div>  
-      `;
+    if (this._isActive) {
+      this.refreshListViewRequested();
+    } else {
+      this.updateListView("");
     }
-    return html;
   }
-  public async onRender(codeObject: CodeObjectInfo | undefined): Promise<void> {
-    let itemsHtml: string = "";
-    let codeObjectLabel = "undefined";
 
-    if (codeObject) {
-      codeObjectLabel = codeObject.methodName;
+  private async refreshListViewRequested() {
+    if (this._codeObject) {
       let response = await this._analyticsProvider.getCodeObjectInsights(
-        codeObject.id
+        this._codeObject.id
       );
       if (response) {
-        itemsHtml = this.getItemsHtml(response);
+        let listItems: string[] = [];
+        if (response.spot) {
+          this.addHotspotListItem(response.spot, listItems);
+        }
+        if (response.errors) {
+          this.addErrorsListItem(response.errors, listItems);
+        }
+        this.updateListView(listItems.join(""));
       }
+    } else {
+      this.updateListView("");
     }
+  }
 
-    let html = `
+  public onActivate(): void {
+    this._isActive = true;
+    this.refreshCodeObjectLabel(); //init state todo find better way
+    if (!this._listLoaded) {
+      this.refreshListViewRequested();
+    }
+  }
+  public onDectivate(): void {
+    this._isActive = false;
+  }
+
+  private refreshCodeObjectLabel() {
+    let html = this.getCodeObjectLabel(this._codeObject?.methodName);
+    this.channel?.publish(
+        new UpdateInsightsListViewCodeObjectUIEvent(html));
+  }
+
+  private updateListView(html: string): void {
+    this.channel?.publish(
+      new UpdateInsightsListViewUIEvent(html));
+    if (html !== "") {
+      this._listLoaded = true;
+    } else {
+      this._listLoaded = false;
+    }
+  }
+
+  private addHotspotListItem(
+    spot: CodeObjectInsightHotSpotResponse,
+    listItems: string[]
+  ): void {
+    listItems.push(`
+    <div class="list-item">
+    <div class="list-item-content-area">
+        <div class="list-item-header">This is an error spot</div>
+        <div><vscode-link href="#">See how this was calculated</vscode-link></div>
+    </div> 
+    <div class="list-item-right-area">
+        ${this.getScoreBoxHtml(spot.score)}
+    </div>
+  </div>
+    `);
+  }
+  private addErrorsListItem(
+    errors: CodeObjectInsightErrorsResponse,
+    listItems: string[]
+  ) {
+    let topErrorAliases: string[] = [];
+    errors.topErrorAliases.forEach((alias) => {
+      topErrorAliases.push(`<div>${alias}</div>`);
+    });
+
+    listItems.push(`
+    <div class="list-item">
+    <div class="list-item-content-area">
+        <div class="list-item-header">Errors</div>
+        <div>${errors.errorFlowsCount} ErrorFlows (${
+      errors.unhandledCount
+    } unhandled ${errors.unexpectedCount} unexpected)
+        </div>
+        <div class="spacer"></div>
+        ${topErrorAliases.join("")}
+    </div>
+    <div class="list-item-right-area">
+      <div class="expand">
+        <vscode-link class="expand" tab-id="tab-errors" href="#">Expand</vscode-link>
+      <div>
+    </div>
+  </div>
+    `);
+  }
+
+  public getHtml(): string {
+    return `
       <section style="display: flex; flex-direction: column; width: 100%;">
-
-        ${this.getHeaderSectionHTML(codeObject)}
-        ${itemsHtml}
-      </section>
-    `;
-
-    this.updateViewContent(html);
-  }
-
-  private getHeaderSectionHTML(codeObject: CodeObjectInfo | undefined): string {
-    return `          
-    <div class="control-col-filter" style="padding: 0;">
-        ${this.getCodeObjectFilterTag(codeObject)}
-    </div>`;
-  }
-
-  private getCodeObjectFilterTag(codeObject: CodeObjectInfo | undefined) {
-    let filterTag = "";
-    let funcName = codeObject?.methodName;
-    let className = "";
-    if (codeObject?.methodName.includes(".")) {
-      let tokens = codeObject.methodName.split(".");
-      className = tokens[0];
-      funcName = tokens[1];
-    }
-    filterTag += `<span style="font-size: small;">Showing for:</span>`;
-    if (funcName) {
-      filterTag += `
-      <span style="font-size: small;color: #389EDB;">def</span>`;
-    }
-
-    if (className) {
-      filterTag += `
-          <span style="font-size: small;color: #00CCAF;">${className}</span>
-          <span style="font-size: small;color: #D4D4D4;">.</span>
-          `;
-    }
-
-    filterTag += /*html*/ ` 
-              <span style="font-size: small;color: #DCDCA4;">${
-                funcName || "undefined"
-              }</span>
-              <span style="font-size: small;color: #D4D4D4;">${
-                funcName === undefined ? "" : "()"
-              }</span>
-          `;
-
-    return filterTag;
+      <div class="codeobject-selection"></div>
+      <div class="list">
+    </section>`;
   }
 }
+
+export class UpdateInsightsListViewUIEvent {
+  constructor(public htmlContent?: string) {}
+}
+
+export class UpdateInsightsListViewCodeObjectUIEvent {
+    constructor(public htmlContent?: string) {}
+  }

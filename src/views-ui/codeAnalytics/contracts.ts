@@ -41,13 +41,15 @@ export class CodeObjectInsightRequested
 
 export class ErrorFlowResponse
 {
-    summary: ErrorFlowSummary;
-    stackTrace: string;
-    exceptionMessage: string;
-    exceptionType: string;
-    lastInstanceCommitId: string;
-    frameStacks: ErrorFlowStack[];
-    affectedSpanPaths: AffectedSpanPathResponse[];
+    summary?: ErrorFlowSummary;
+    stackTrace?: string;
+    exceptionMessage?: string;
+    exceptionType?: string;
+    lastInstanceCommitId?: string;
+    frameStacks?: ErrorFlowStack[];
+    affectedSpanPaths?: AffectedSpanPathResponse[];
+
+    
 }
 
 export interface AffectedSpanPathResponse

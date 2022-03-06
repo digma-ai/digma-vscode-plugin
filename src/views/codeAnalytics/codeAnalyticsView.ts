@@ -10,6 +10,20 @@ import { ErrorsViewHandler } from "./ErrorsViewHandler";
 import { InsightsViewHandler } from "./InsightsViewHandler";
 import { UsagesViewHandler } from "./UsagesViewHandler";
 
+interface LoadRequest {
+    selectedTab: string;
+  }
+
+export class TabChangedEvent
+{
+    constructor(public viewId ?: string){}
+}
+
+export class LoadEvent
+{
+    constructor(public selectedViewId ?: string){}
+}
+
 export class CodeAnalyticsView implements vscode.Disposable {
 	public static readonly viewId = "codeAnalytics";
 
@@ -78,6 +92,9 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 	private _view?: vscode.WebviewView;
 	private _webViewUris: WebViewUris;
 	private _channel: WebviewChannel;
+    private _viewHandlers: Map<string, CodeAnalyticsViewHandler>;
+    private _activeViewHandler?: CodeAnalyticsViewHandler;
+    private _codeObjectId?: CodeObjectInfo;
 
 	constructor(
 		extensionUri: vscode.Uri,
@@ -88,13 +105,40 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 			"codeAnalytics",
 			() => this._view!.webview
 		);
-        this._channel = new WebviewChannel();
-        this._channel.consume(ErrorsRequest, this.onErrorsRequest.bind(this));
-      //  this._channel.consume(ErrorRequest, this.onErrorRequest.bind(this));
 
-        this._channel.consume(CodeObjectInsightRequested, this.onCodeObjectInsightRequested.bind(this));
+        this._channel = new WebviewChannel();
+        this._channel.consume(TabChangedEvent, this.onTabChangedEvent.bind(this));
+        this._channel.consume(LoadEvent, this.onLoadEvent.bind(this));
+
         
+        this._viewHandlers = new Map<string, CodeAnalyticsViewHandler>();
+        this._viewHandlers.set(
+          InsightsViewHandler.viewId,
+          new InsightsViewHandler(this._channel, this._analyticsProvider)
+        );
+        this._viewHandlers.set(
+          ErrorsViewHandler.viewId,
+          new ErrorsViewHandler(this._channel, this._analyticsProvider)
+        );
+        this._viewHandlers.set(
+          UsagesViewHandler.viewId,
+          new UsagesViewHandler(this._channel, this._analyticsProvider)
+        );
+
+
 	}
+    public async onLoadEvent(event: LoadEvent)
+    {
+        if(event.selectedViewId){
+            this.onViewSelected(this.convertElementIdToViewId(event.selectedViewId));
+        }
+    }
+    public async onTabChangedEvent(event: TabChangedEvent)
+    {
+        if(event.viewId){
+            this.onViewSelected(this.convertElementIdToViewId(event.viewId));
+        }
+    }
 
 	public async resolveWebviewView(
 		webviewView: vscode.WebviewView,
@@ -106,44 +150,44 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 			enableScripts: true,
 		};
 		this._channel.subscrib(webviewView.webview);
+
 		this._view.webview.html = this.getCodeAnalyticsView();
 	}
 
-	public onCodeObjectSelectionChanged(codeObject: CodeObjectInfo | undefined) 
-    {
-		this._channel?.publish(new CodeObjectChanged(codeObject?.id, codeObject?.methodName));
-	}
+    public onCodeObjectSelectionChanged(codeObject: CodeObjectInfo|undefined) {
+        if (this._codeObjectId?.id === codeObject?.id) {
+          //no codeobject changes
+          return;
+        }
+        this._codeObjectId = codeObject;
+        this._viewHandlers.forEach((value: CodeAnalyticsViewHandler, key: string) => {
+            value.codeObjectSelected(codeObject);
+        });
+      }
 
-    public async onCodeObjectInsightRequested(request: CodeObjectInsightRequested)
-    {
-        if(request.codeObjectId === undefined)
-        {
-            return;
-        }
-        let response = await this._analyticsProvider.getCodeObjectInsights(request.codeObjectId);
-        if(response)
-        {
-            this._channel?.publishByType(response, CodeObjectInsightResponse.name);
-        }
+    private onViewSelected(viewId: string): void {
+        this._activeViewHandler = this._viewHandlers.get(viewId);
+        this._activeViewHandler?.activate();
+        this._viewHandlers.forEach((value: CodeAnalyticsViewHandler, key: string) => {
+            if(this._activeViewHandler !== value)
+            {
+                value.dectivate();
+            }
+        });
     }
-    public async onErrorRequest(request: ErrorRequest)
-    {
-        let response = await this._analyticsProvider.getErrorFlow(request.errorFlowId);
-        this._channel?.publishByType(response, 'ErrorFlowResponse');
-        
+
+    private convertElementIdToViewId(elementId: string): string {
+        return elementId.split("-")[1];
     }
-    public async onErrorsRequest(e: ErrorsRequest)
+
+    private getTabPanelView(): string
     {
-        let results = await this._analyticsProvider.getErrorFlows(undefined, e.codeObjectId);
-        let response = new ErrorsResponse(e.codeObjectId, []);
-        for(let error of results)
-        {
-            response.errors?.push({
-                name: error.exceptionName,
-                id: error.id
-            });
-        }
-		this._channel?.publish(response);
+        let html: string [] = [];
+        this._viewHandlers.forEach((value: CodeAnalyticsViewHandler, key: string) => {
+            html.push(`<vscode-panel-view id="view-${key}">${value.getHtml()}</vscode-panel-view>`);
+          });
+
+        return html.join("");
     }
 
 	private getCodeAnalyticsView(): string {
@@ -167,9 +211,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
                     <vscode-panel-tab id="tab-insights">Insights</vscode-panel-tab>
                     <vscode-panel-tab id="tab-errors">Errors</vscode-panel-tab>
                     <vscode-panel-tab id="tab-usage">Usage</vscode-panel-tab>
-                    <vscode-panel-view id="view-insights"></vscode-panel-view>
-                    <vscode-panel-view id="view-errors"></vscode-panel-view>
-                    <vscode-panel-view id="view-usages"></vscode-panel-view>		
+                    ${this.getTabPanelView()}	
                 </vscode-panels>
             </body>
             </html>`;
