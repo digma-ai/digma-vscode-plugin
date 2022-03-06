@@ -23,7 +23,7 @@ export class UsagesViewHandler extends CodeAnalyticsViewHandler {
   public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {}
 
   public getHtml(): string {
-    return "TBD";
+     return "<section></section>";
   }
   public getViewId(): string {
     return UsagesViewHandler.viewId;
