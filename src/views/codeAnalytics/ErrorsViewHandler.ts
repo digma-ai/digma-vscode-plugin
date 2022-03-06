@@ -37,6 +37,6 @@ export class ErrorsViewHandler extends CodeAnalyticsViewHandler {
             <vscode-option id="Impact">Impact</vscode-option>
         </vscode-dropdown>
         <div id="error-list"></div>
-    <div>`;
+    </div>`;
   }
 }

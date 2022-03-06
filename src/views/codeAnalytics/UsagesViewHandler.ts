@@ -24,7 +24,7 @@ export class UsagesViewHandler extends CodeAnalyticsViewHandler {
     }
 
   public getHtml(): string {
-     return "TBD";
+     return "<section></section>";
   }
   public getViewId(): string {
     return UsagesViewHandler.viewId;

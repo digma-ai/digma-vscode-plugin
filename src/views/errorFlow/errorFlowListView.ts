@@ -359,7 +359,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     private testPanelHtml():string{
         
         let activeTab = this._viewModel.errorListTabs[this._viewModel.activeTab];
-        return `
+        return /*html*/`
         ${this.getHeadHTML()}
         <body>
 
