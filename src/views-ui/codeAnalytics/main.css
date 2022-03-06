@@ -9,6 +9,7 @@ vscode-panel-view {
     padding: 0px;
     display: flex;
     flex-direction: column;
+    flex-wrap: wrap;
 }
 .list-item {
     padding: 3px;
@@ -32,21 +33,33 @@ vscode-panel-view {
 }
 .list-item-right-area
 {
-    flex: 0 0 50px;
+    width: 50px;
     display: flex;
     flex-direction: column;
     margin: 3px;
     align-items: center;
+    justify-content: center;
 }
 .score-box{
     border-radius: 5px;
-    border: 2px solid #d9861f;
+    border: 2px solid;
     margin: 4px;
     width: 40px;
-    height: 40px;
-    line-height: 39px;
+    line-height: 40px;
     text-align: center;
 }
+.score-red {
+    border:#f95959
+    }
+  .score-orange 
+  {
+    border:#fdb44b
+    }
+  .score-green 
+  {
+    border:#7dd87d;
+    }
+
 .expand
 {
     margin-top: auto
