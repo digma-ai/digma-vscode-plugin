@@ -6,7 +6,27 @@ import { CodeObjectInfo } from "./codeAnalyticsView";
 export interface ViewProvider {
   (): vscode.WebviewView | undefined;
 }
-
+export class HtmlHelper
+{
+    public static getScoreBoxHtml(score: number): string {
+        return `<div class="score-box ${HtmlHelper.getScoreColorClass(
+          score
+        )}">${score}</div>`;
+      }
+      private static getScoreColorClass(score: number): string {
+        if (score <= 40) {
+          return "score-green";
+        }
+        if (score <= 80) {
+          return "score-orange";
+        }
+        if (score <= 100) {
+          return "score-red";
+        }
+        return "";
+      }
+    
+}
 export abstract class CodeAnalyticsViewHandler {
   constructor(protected channel: WebviewChannel) {}
 

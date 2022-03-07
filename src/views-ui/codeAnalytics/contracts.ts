@@ -44,3 +44,15 @@ export class LoadEvent {
   constructor(public selectedViewId?: string) {}
 }
 
+
+export class ShowErrorDetailsEvent{
+    constructor(public errorFlowId?: string) {}
+}
+
+export class SetErrorViewContentUIEvent{
+    constructor(public errorFlowId?: string, public htmlContent?: string) {}
+}
+
+export class ErrorDetailsShowWorkspaceOnly{
+    constructor(public checked?: boolean) {}
+}

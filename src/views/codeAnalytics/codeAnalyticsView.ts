@@ -1,18 +1,13 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import { SourceControl } from "../../services/sourceControl";
 import { LoadEvent, TabChangedEvent } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeAnalyticsViewHandler } from "./CodeAnalyticsViewHandler";
 import { ErrorsViewHandler } from "./ErrorsViewHandler";
 import { InsightsViewHandler } from "./InsightsViewHandler";
 import { UsagesViewHandler } from "./UsagesViewHandler";
-
-interface LoadRequest {
-    selectedTab: string;
-  }
-
-
 
 export class CodeAnalyticsView implements vscode.Disposable {
 	public static readonly viewId = "codeAnalytics";
@@ -24,11 +19,12 @@ export class CodeAnalyticsView implements vscode.Disposable {
 	constructor(
 		private _analyticsProvider: AnalyticsProvider,
 		documentInfoProvider: DocumentInfoProvider,
-		extensionUri: vscode.Uri
+		extensionUri: vscode.Uri,
+        sourceControl: SourceControl
 	) {
 		this._provider = new CodeAnalyticsViewProvider(
 			extensionUri,
-			this._analyticsProvider
+			this._analyticsProvider, sourceControl
 		);
 		this._documentInfoProvider = documentInfoProvider;
 
@@ -88,7 +84,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 
 	constructor(
 		extensionUri: vscode.Uri,
-		private _analyticsProvider: AnalyticsProvider
+		private _analyticsProvider: AnalyticsProvider,
+        sourceControl: SourceControl
 	) {
 		this._webViewUris = new WebViewUris(
 			extensionUri,
@@ -108,7 +105,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         );
         this._viewHandlers.set(
           ErrorsViewHandler.viewId,
-          new ErrorsViewHandler(this._channel, this._analyticsProvider)
+          new ErrorsViewHandler(this._channel, this._analyticsProvider, sourceControl)
         );
         this._viewHandlers.set(
           UsagesViewHandler.viewId,

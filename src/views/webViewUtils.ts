@@ -79,7 +79,7 @@ export class WebviewChannel implements vscode.Disposable
 
     public subscrib(value: vscode.Webview) 
     {
-        if(this._webview)
+        if(this._webview === value)
             return;
 
         this._webview = value;
