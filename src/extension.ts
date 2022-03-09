@@ -45,6 +45,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, context.extensionUri, sourceControl));
+
 }
 
 // this method is called when your extension is deactivated
