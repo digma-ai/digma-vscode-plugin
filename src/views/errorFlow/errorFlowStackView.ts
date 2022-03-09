@@ -128,7 +128,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         private _sourceControl: SourceControl,
         extensionUri: vscode.Uri) 
     {
-        this._webViewUris = new WebViewUris(extensionUri, "errorFlowStackView", ()=>this._view!.webview);
+        this._webViewUris = new WebViewUris(extensionUri, "errorFlowStack", ()=>this._view!.webview);
     }
 
     public  resolveWebviewView(
