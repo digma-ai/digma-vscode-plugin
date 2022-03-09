@@ -35,7 +35,7 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 
     constructor(private _analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
     {
-        this._webViewUris = new WebViewUris(extensionUri, "contextView", ()=>this._view!.webview);
+        this._webViewUris = new WebViewUris(extensionUri, "context", ()=>this._view!.webview);
         vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
             if(this._view && event.affectsConfiguration(Settings.environment.key)){
                 this._view.webview.html = await this.getHtml(Settings.environment.value);

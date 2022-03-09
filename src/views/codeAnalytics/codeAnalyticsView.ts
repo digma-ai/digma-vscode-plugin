@@ -116,14 +116,14 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         }
 
         if(event.selectedViewId){
-            this.onViewSelected(this.convertElementIdToViewId(event.selectedViewId));
+            this.onViewSelected(event.selectedViewId);
         }
     }
 
     public async onTabChangedEvent(event: TabChangedEvent)
     {
         if(event.viewId){
-            this.onViewSelected(this.convertElementIdToViewId(event.viewId));
+            this.onViewSelected(event.viewId);
         }
     }
 
@@ -159,10 +159,6 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         }
         this._activeTab = this._tabs.get(viewId);
         this._activeTab?.onActivate();
-    }
-
-    private convertElementIdToViewId(elementId: string): string {
-        return elementId.split("-")[1];
     }
 
     private getPanelTabs(): string
@@ -202,9 +198,6 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
             <body>
                 <script>require(['codeAnalytics/main']);</script>
                 <vscode-panels activeid="tab-insights" class="analytics-nav" aria-label="With Active Tab">
-                    <vscode-panel-tab id="tab-insights">Insights</vscode-panel-tab>
-                    <vscode-panel-tab id="tab-errors">Errors</vscode-panel-tab>
-                    <vscode-panel-tab id="tab-usage">Usage</vscode-panel-tab>
                     ${this.getPanelTabs()}
                     ${this.getPanelViews()}	
                 </vscode-panels>
