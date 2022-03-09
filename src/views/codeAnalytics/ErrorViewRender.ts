@@ -17,7 +17,7 @@ import {
   SetErrorViewContentUIEvent,
 } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
-import { HtmlHelper } from "./CodeAnalyticsViewHandler";
+import { HtmlHelper } from "./codeAnalyticsViewTab";
 
 export class ErrorViewRender {
     public currentErrorFlowId: string | undefined;
