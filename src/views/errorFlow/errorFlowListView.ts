@@ -3,7 +3,7 @@ import { Disposable, integer } from 'vscode-languageclient';
 import { AnalyticsProvider, ErrorFlowSummary, Impact, ErrorFlowsSortBy, Trend, Frequency, TrendInterpretation } from '../../services/analyticsProvider';
 import { Settings } from '../../settings';
 import { ErrorFlowStackView } from './errorFlowStackView';
-import { WebViewUris } from '../webViewUris';
+import { WebViewUris } from '../webViewUtils';
 import moment = require("moment");
 import { NONAME } from 'dns';
 import { inherits } from 'util';
@@ -52,7 +52,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         private _analyticsProvider: AnalyticsProvider,
         extensionUri: vscode.Uri) 
     {
-        this._webViewUris = new WebViewUris(extensionUri, "errorFlowListView", ()=>this._view!.webview);
+        this._webViewUris = new WebViewUris(extensionUri, "errorFlowList", ()=>this._view!.webview);
         this._viewModel = {
             errorFlows: [],
             activeTab: ErroListTab.unset,
@@ -359,7 +359,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
     private testPanelHtml():string{
         
         let activeTab = this._viewModel.errorListTabs[this._viewModel.activeTab];
-        return `
+        return /*html*/`
         ${this.getHeadHTML()}
         <body>
 

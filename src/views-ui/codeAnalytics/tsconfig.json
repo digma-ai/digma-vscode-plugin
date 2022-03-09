@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+      "module": "amd",
+      "target": "ES5",
+      "moduleResolution": "node",
+      "lib": ["es5", "es6", "dom"],
+      "removeComments": true,
+      "outFile": "../../../out/views-ui/codeAnalytics/build.js",
+      "sourceMap": true
+    }
+  }

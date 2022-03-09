@@ -4,7 +4,7 @@ import { AffectedSpanPathResponse, AnalyticsProvider, ErrorFlowFrame, ErrorFlowR
 import { SourceControl } from '../../services/sourceControl';
 import { SymbolProvider } from '../../services/symbolProvider';
 import { Settings } from '../../settings';
-import { WebViewUris } from "./../webViewUris";
+import { WebViewUris } from "../webViewUtils";
 import { Logger } from '../../services/logger';
 import { DocumentInfoProvider } from '../../services/documentInfoProvider';
 import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
@@ -128,7 +128,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         private _sourceControl: SourceControl,
         extensionUri: vscode.Uri) 
     {
-        this._webViewUris = new WebViewUris(extensionUri, "errorFlowStackView", ()=>this._view!.webview);
+        this._webViewUris = new WebViewUris(extensionUri, "errorFlowStack", ()=>this._view!.webview);
     }
 
     public  resolveWebviewView(
