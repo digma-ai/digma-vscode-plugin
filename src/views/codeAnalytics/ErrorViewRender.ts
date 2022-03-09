@@ -136,48 +136,53 @@ export class ErrorViewRender {
     }
     let workspaceOnly = true;
     return `
-            <div class="box error-title-box">
-              <vscode-button appearance="icon" aria-label="Close" class="error-view-close">
-                  <span class="codicon codicon-chevron-left"></span>
-              </vscode-button>
-              <span>${response.summary.exceptionName}</span>
-            </div>
-            <div class="box error-params-box">
-              <div>
+<div class="upper-container">
+    <div class="upper-left-container">
+        <div class="header">
+            <vscode-button appearance="icon" aria-label="Close" class="error-view-close">
+                <span class="codicon codicon-chevron-left"></span>
+            </vscode-button>
+            <span>${response.summary.exceptionName}</span>
+        </div>
+        <div class="params-container">
+            <div>
                 <span class="label">Started:</span>
-                <span class="value" title="${
-                  summary.firstOccurenceTime
-                }">${summary.firstOccurenceTime.fromNow()}</span>
-              </div>
-              <div>
+                <span class="value" title="${summary.firstOccurenceTime}">${summary.firstOccurenceTime.fromNow()}</span>
+            </div>
+            <div>
                 <span class="label">Freq:</span>
                 <span class="value">${freqVal}</span>
-              </div>
-              <div>
+            </div>
+            <div>
                 <span class="label">Last:</span>
-                <span class="value" title="${
-                  summary.lastOccurenceTime
-                }">${summary.lastOccurenceTime.fromNow()}</span>
-              </div>
+                <span class="value" title="${summary.lastOccurenceTime}">${summary.lastOccurenceTime.fromNow()}</span>
             </div>
-            <div class="box error-score-box">${HtmlHelper.getScoreBoxHtml(
-              30
-            )}</div>
-            <div class="box error-actions-box">
-              <vscode-button appearance="secondary" class="error_frames_btn">Frames</vscode-button>
-              <vscode-button appearance="secondary" class="error_raw_btn">Raw</vscode-button>
-              <vscode-button appearance="secondary">Resolve</vscode-button>
-            </div>
-            <div class="box error-content-box">
-                <div class="error-raw">${response.stackTrace}</div>
-                <div class="error-frames">
-                    <div class="section-header-row" style="float:right;">
-                        <vscode-checkbox class="workspace-only-checkbox" ${workspaceOnly}>Workspace only</vscode-checkbox>
-                    </div>
-                    <div class="frames-list">${stacksHtml}</div>
-                </div>
-            </div>
-            `;
+        </div>
+    </div>
+    <div class="aside-container">
+        <div>${HtmlHelper.getScoreBoxHtml(30)}</div>
+        <div>
+            <vscode-button appearance="secondary" class="error-content-toggle aside-btn">Raw</vscode-button>
+
+            <!--div class="btn-group" style="background-color:yellow" role="group" aria-label="Basic example">
+                <vscode-button appearance="secondary" class="error_frames_btn">Frames</vscode-button>
+                <vscode-button appearance="secondary" class="error_raw_btn">Raw</vscode-button>
+            </div-->
+        </div>
+        <div>
+            <vscode-button appearance="secondary" class="aside-btn">Resolve</vscode-button>
+        </div>
+    </div>
+</div>
+<div class="main-container">
+    <div class="error-raw">${response.stackTrace}</div>
+    <div class="error-frames">
+        <div class="section-header-row" style="float:right;">
+            <vscode-checkbox class="workspace-only-checkbox" ${workspaceOnly}>Workspace only</vscode-checkbox>
+        </div>
+        <div class="frames-list">${stacksHtml}</div>
+    </div>
+</div>`;
   }
 
   private async GetExecutedCodeFromScm(

@@ -64,10 +64,8 @@ vscode-panel-view {
 /* error view*/
 .error-view {
   display: none;
-  display: grid;
-  grid-template-columns: auto 50px;
-  grid-column-gap: 2px;
-  grid-row-gap: 2px;
+  display:flex;
+  flex-direction: column;
 }
 
 .error-view .box {
@@ -119,6 +117,49 @@ vscode-panel-view {
 }
 .error-frames
 {
-    display:none;
+    display: block;
 }
+
+
+
+
+  /* .content-container{
+    display:flex;
+    flex-direction: column;
+  } */
+  .upper-container{
+    display:flex;
+    flex-direction: row;
+    background-color: green;
+  }
+  .upper-left-container{
+    display:flex;
+    flex-direction: column;
+    background-color: red;
+    flex-grow: 1;
+  }
+  .header{
+      font-weight: bold;
+      background-color: purple;
+  }
+  .params-container{
+    display:flex;
+    flex-direction: row;
+  }
+  .aside-container{
+    display:flex;
+    justify-content: center;
+    flex-direction: column;
+    background-color: pink;
+    flex-shrink: 0;
+    align-items: center;
+  }
+  .main-container{
+    background-color:grey;
+  }
+
+  .aside-btn{
+    width: 60px;
+  }
+
 /* end of error view*/

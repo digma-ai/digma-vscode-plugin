@@ -72,13 +72,28 @@ window.addEventListener("load", () => {
    
   });
 
- 
+  $(document).on("click", ".error-content-toggle", function () {
+    let text = $(this).text();
+    if(text === "Raw")
+    {
+        $(".error-frames").hide();
+        $(".error-raw").show();
+        $(this).text("Frames");
+    }
+    else{
+        $(".error-raw").hide();
+        $(".error-frames").show();
+        $(this).text("Raw");
+    }
+   
+  });
 
   $(document).on("click", ".error_frames_btn", function () {
     $(".error-raw").hide();
     $(".error-frames").show();
   });
 
+  
 
   $(document).on("click", ".error_raw_btn", function () {
     $(".error-frames").hide();
