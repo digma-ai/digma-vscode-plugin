@@ -52,7 +52,7 @@ class ErrorFlowsListProvider implements vscode.WebviewViewProvider, vscode.Dispo
         private _analyticsProvider: AnalyticsProvider,
         extensionUri: vscode.Uri) 
     {
-        this._webViewUris = new WebViewUris(extensionUri, "errorFlowListView", ()=>this._view!.webview);
+        this._webViewUris = new WebViewUris(extensionUri, "errorFlowList", ()=>this._view!.webview);
         this._viewModel = {
             errorFlows: [],
             activeTab: ErroListTab.unset,
