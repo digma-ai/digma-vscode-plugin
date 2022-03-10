@@ -3,7 +3,7 @@ import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials } from "../.
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
-import { SetErrorViewContentUIEvent, ShowErrorDetailsEvent, UpdateCodeObjectLabelViewUIEvent, UpdateErrorsListViewUIEvent } from "../../views-ui/codeAnalytics/contracts";
+import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { integer } from "vscode-languageclient";
 
 
@@ -18,7 +18,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _analyticsProvider: AnalyticsProvider,
         private _sourceControl: SourceControl) 
     {
-        this._channel.consume(ShowErrorDetailsEvent, e => this.onShowErrorDetailsEvent(e));
+        this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -56,29 +56,27 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     }    
     private refreshCodeObjectLabel() {
         let html = HtmlHelper.getCodeObjectLabel(this._codeObject?.methodName);
-        this._channel?.publish(
-            new UpdateCodeObjectLabelViewUIEvent(html)
-        );
+        this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
     private async refreshList() {
         if(!this._codeObject)
             return;
         const errors = await this._analyticsProvider.getCodeObjectErrors(this._codeObject.id);
         const html = HtmlBuilder.buildErrorItems(errors);
-        this._channel.publish(new UpdateErrorsListViewUIEvent(html));
+        this._channel.publish(new UiMessage.Set.ErrorsList(html));
         this._viewedCodeObjectId = this._codeObject?.id;
     }
-    private async onShowErrorDetailsEvent(e: ShowErrorDetailsEvent){
+    private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
         if(!this._codeObject || !e.errorName || !e.sourceCodeObjectId)
             return;
 
         let html = HtmlBuilder.buildErrorDetails();
-        this._channel.publish(new SetErrorViewContentUIEvent(html));
+        this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
         const errorDetails = await this._analyticsProvider.getCodeObjectError(this._codeObject.id, e.errorName, e.sourceCodeObjectId);
         
         html = HtmlBuilder.buildErrorDetails(errorDetails);
-        this._channel.publish(new SetErrorViewContentUIEvent(html));
+        this._channel.publish(new UiMessage.Set.ErrorDetails(html));
     }
 }
 
