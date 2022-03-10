@@ -1,13 +1,5 @@
 import { consume, publish } from "../common/contracts";
-import {
-    ErrorDetailsShowWorkspaceOnly,
-    LoadEvent,
-    ShowErrorDetailsEvent,
-    SetErrorViewContentUIEvent,
-    TabChangedEvent,
-    UpdateInsightsListViewCodeObjectUIEvent,
-    UpdateInsightsListViewUIEvent,
-} from "./contracts";
+import { UiMessage } from "./contracts";
 
 window.addEventListener("load", () => 
 {
@@ -22,51 +14,49 @@ window.addEventListener("load", () =>
 
     let insightsTab = $("#view-insights");
     let errorsTab = $("#view-errors");
-    consume(UpdateInsightsListViewUIEvent, (event) => {
+
+    consume(UiMessage.Set.ErrorsList, (event) => {
+        if (event.htmlContent !== undefined) {
+            errorsTab.find("#error-list").html(event.htmlContent);
+        }
+    });
+
+    consume(UiMessage.Set.ErrorDetails, (event) => {
+        if (event.htmlContent !== undefined) {
+            $(".error-view").html(event.htmlContent);
+        }
+    });
+    
+    consume(UiMessage.Set.InsightsList, (event) => {
         if (event.htmlContent !== undefined) {
             insightsTab.find(".list").html(event.htmlContent);
         }
     });
 
-    consume(UpdateInsightsListViewCodeObjectUIEvent, (event) => {
+    consume(UiMessage.Set.CodeObjectLabel, (event) => {
         if (event.htmlContent !== undefined) {
-            insightsTab.find(".codeobject-selection").html(event.htmlContent);
+            $(".codeobject-selection").html(event.htmlContent);
         }
     });
 
     /*error-view*/
-    consume(SetErrorViewContentUIEvent, (event) => {
-        if (event.htmlContent !== undefined) {
-            $(".error-view").html(event.htmlContent);
-            currViewErrorFlowId = event.errorFlowId;
-        }
-    });
-
     $(document).on("click", ".error-view-close", function () {
         showErrorsView();
     });
 
     $(".analytics-nav").on("change", (e) => {
         if (e.target === $(".analytics-nav")[0]) {
-            publish(new TabChangedEvent((<any>e.originalEvent).detail.id));
+            publish(new UiMessage.Notify.TabChanged((<any>e.originalEvent).detail.id));
         }
     });
 
-    let currViewErrorFlowId: string | undefined;
     $(document).on("click", "#show_error_details", function () {
-        let selectedErrorFlowId = "326753634FE13FC14FFF347D029C80";
-        if (currViewErrorFlowId === selectedErrorFlowId) {
-            showErrorView();
-        } else {
-            $(".error-view").html(
-                "<vscode-progress-ring></vscode-progress-ring>"
-            );
-            $(".errors-view").hide();
-            $(".error-view").show();
-            publish(
-                new ShowErrorDetailsEvent("326753634FE13FC14FFF347D029C80")
-            );
-        }
+        let errorName = $(this).data("error-name");
+        let sourceCodeObjectId = $(this).data("error-source");
+        $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
+        $(".error-view").show();
+        $(".errors-view").hide();
+        publish(new UiMessage.Get.ErrorDetails(errorName, sourceCodeObjectId));
     });
 
     $(document).on("click", ".error_frames_btn", function () {
@@ -95,5 +85,5 @@ window.addEventListener("load", () =>
         }
     });
 
-    publish(new LoadEvent($(".analytics-nav").attr("activeid")));
+    publish(new UiMessage.Notify.TabLoaded($(".analytics-nav").attr("activeid")));
 });

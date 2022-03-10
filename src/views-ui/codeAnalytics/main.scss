@@ -25,7 +25,8 @@ vscode-panel-view {
   margin: 2px;
   font-size: 12px;
 }
-.list-item-header {
+.error-name,
+.error-source {
   font-weight: bold;
 }
 .list-item-right-area {
@@ -54,6 +55,7 @@ vscode-panel-view {
   border: 2px solid #7dd87d;
 }
 
+
 .expand {
   margin-top: auto;
 }
@@ -61,15 +63,34 @@ vscode-panel-view {
   height: 3px;
 }
 
-/* error view*/
-.error-view {
-  display: none;
-  display: grid;
-  grid-template-columns: auto 50px;
-  grid-column-gap: 2px;
-  grid-row-gap: 2px;
+.error-view{
+    .score-box {
+        margin: 0px;
+        width: 30px;
+        line-height: 30px;
+    }
+    .error-view-close{
+        margin-right: 5px;
+        width: 30px;
+    }
+    .error-title{
+        border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
+        padding-left: 5px;
+    }
+}
+.errors-view{
+    .list-item-icons-row{
+        width: 100%;
+        padding-right: 4px;
+    }
+    .list-item-icons-row .codicon{
+        float: right;
+        transform: rotate(45deg);
+    }
 }
 
+
+/* USED BY ErrorViewRender */
 .error-view .box {
   padding: 5px 5px 5px 5px;
 }
@@ -112,7 +133,6 @@ vscode-panel-view {
 .error-params-box .label {
   font-weight: bold;
 }
-
 .error-raw
 {
     display:none;

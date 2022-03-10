@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { SourceControl } from "../../services/sourceControl";
-import { LoadEvent, TabChangedEvent } from "../../views-ui/codeAnalytics/contracts";
+import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
 import { ErrorsViewTab } from "./errorsViewTab";
@@ -94,8 +94,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 		);
 
         this._channel = new WebviewChannel();
-        this._channel.consume(TabChangedEvent, this.onTabChangedEvent.bind(this));
-        this._channel.consume(LoadEvent, this.onLoadEvent.bind(this));
+        this._channel.consume(UiMessage.Notify.TabChanged, this.onTabChangedEvent.bind(this));
+        this._channel.consume(UiMessage.Notify.TabLoaded, this.onLoadEvent.bind(this));
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider),
@@ -108,7 +108,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 	}
 
 
-    public async onLoadEvent(event: LoadEvent)
+    public async onLoadEvent(event: UiMessage.Notify.TabLoaded)
     {
         if(this._activeTab)
         {
@@ -120,7 +120,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         }
     }
 
-    public async onTabChangedEvent(event: TabChangedEvent)
+    public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)
     {
         if(event.viewId){
             this.onViewSelected(event.viewId);

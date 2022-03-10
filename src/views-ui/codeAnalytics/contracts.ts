@@ -1,58 +1,47 @@
 
-export class CodeObjectChanged {
-  constructor(public id?: string, public displayName?: string) {}
-}
+export namespace UiMessage
+{
+    export namespace Notify
+    {
+        export class TabLoaded {
+            constructor(public selectedViewId?: string) {}
+          }
+        export class TabChanged {
+            constructor(public viewId?: string) {}
+        }
+    }
 
-export class DismissErrorFlow {
-  constructor(public errorFlowId?: string) {}
-}
+    export namespace Get
+    {
+        export class ErrorDetails{
+            constructor(public errorName?: string, public sourceCodeObjectId?: string) {}
+        }
+    }
 
-export class ErrorRequest {
-  constructor(public errorFlowId: string) {}
-}
-export class ErrorsRequest {
-  constructor(public codeObjectId?: string) {}
-}
-export class ErrorsResponse {
-  constructor(
-    public codeObjectId?: string,
-    public errors?: ErrorFlowViewModel[]
-  ) {}
-}
-export interface ErrorFlowViewModel {
-  name: string;
-  id: string;
-}
-
-export class CodeObjectInsightRequested {
-  constructor(public codeObjectId?: string) {}
-}
-
-export class UpdateInsightsListViewUIEvent {
-  constructor(public htmlContent?: string) {}
-}
-
-export class UpdateInsightsListViewCodeObjectUIEvent {
-  constructor(public htmlContent?: string) {}
-}
-
-export class TabChangedEvent {
-  constructor(public viewId?: string) {}
-}
-
-export class LoadEvent {
-  constructor(public selectedViewId?: string) {}
+    export namespace Set
+    {
+        export class InsightsList {
+            constructor(public htmlContent?: string) {}
+        }
+        export class ErrorsList {
+            constructor(public htmlContent?: string) {}
+        }
+        export class ErrorDetails {
+            constructor(public htmlContent?: string) {}
+        }
+        export class CodeObjectLabel {
+            constructor(public htmlContent?: string) {}
+        }
+    }
 }
 
 
-export class ShowErrorDetailsEvent{
-    constructor(public errorFlowId?: string) {}
-}
+
+
+
+
+
 
 export class SetErrorViewContentUIEvent{
-    constructor(public errorFlowId?: string, public htmlContent?: string) {}
-}
-
-export class ErrorDetailsShowWorkspaceOnly{
-    constructor(public checked?: boolean) {}
+    constructor(public htmlContent?: string) {}
 }

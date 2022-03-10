@@ -5,10 +5,7 @@ import {
     CodeObjectInsightHotSpotResponse,
     CodeObjectInsightResponse,
 } from "../../services/analyticsProvider";
-import {
-    UpdateInsightsListViewCodeObjectUIEvent,
-    UpdateInsightsListViewUIEvent,
-} from "../../views-ui/codeAnalytics/contracts";
+import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
@@ -74,12 +71,12 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     private refreshCodeObjectLabel() {
         let html = HtmlHelper.getCodeObjectLabel(this._codeObject?.methodName);
         this._channel?.publish(
-            new UpdateInsightsListViewCodeObjectUIEvent(html)
+            new UiMessage.Set.CodeObjectLabel(html)
         );
     }
 
     private updateListView(html: string): void {
-        this._channel?.publish(new UpdateInsightsListViewUIEvent(html));
+        this._channel?.publish(new UiMessage.Set.InsightsList(html));
         if (html !== "") {
             this._listLoaded = true;
         } else {
