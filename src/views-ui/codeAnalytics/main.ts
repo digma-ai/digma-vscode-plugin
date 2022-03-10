@@ -1,12 +1,12 @@
 import { consume, publish } from "../common/contracts";
 import {
-    ErrorDetailsShowWorkspaceOnly,
     LoadEvent,
     ShowErrorDetailsEvent,
     SetErrorViewContentUIEvent,
     TabChangedEvent,
-    UpdateInsightsListViewCodeObjectUIEvent,
     UpdateInsightsListViewUIEvent,
+    UpdateErrorsListViewUIEvent,
+    UpdateCodeObjectLabelViewUIEvent,
 } from "./contracts";
 
 window.addEventListener("load", () => 
@@ -22,15 +22,22 @@ window.addEventListener("load", () =>
 
     let insightsTab = $("#view-insights");
     let errorsTab = $("#view-errors");
+
+    consume(UpdateErrorsListViewUIEvent, (event) => {
+        if (event.htmlContent !== undefined) {
+            errorsTab.find("#error-list").html(event.htmlContent);
+        }
+    });
+    
     consume(UpdateInsightsListViewUIEvent, (event) => {
         if (event.htmlContent !== undefined) {
             insightsTab.find(".list").html(event.htmlContent);
         }
     });
 
-    consume(UpdateInsightsListViewCodeObjectUIEvent, (event) => {
+    consume(UpdateCodeObjectLabelViewUIEvent, (event) => {
         if (event.htmlContent !== undefined) {
-            insightsTab.find(".codeobject-selection").html(event.htmlContent);
+            $(".codeobject-selection").html(event.htmlContent);
         }
     });
 
@@ -38,7 +45,6 @@ window.addEventListener("load", () =>
     consume(SetErrorViewContentUIEvent, (event) => {
         if (event.htmlContent !== undefined) {
             $(".error-view").html(event.htmlContent);
-            currViewErrorFlowId = event.errorFlowId;
         }
     });
 
@@ -52,21 +58,13 @@ window.addEventListener("load", () =>
         }
     });
 
-    let currViewErrorFlowId: string | undefined;
     $(document).on("click", "#show_error_details", function () {
-        let selectedErrorFlowId = "326753634FE13FC14FFF347D029C80";
-        if (currViewErrorFlowId === selectedErrorFlowId) {
-            showErrorView();
-        } else {
-            $(".error-view").html(
-                "<vscode-progress-ring></vscode-progress-ring>"
-            );
-            $(".errors-view").hide();
-            $(".error-view").show();
-            publish(
-                new ShowErrorDetailsEvent("326753634FE13FC14FFF347D029C80")
-            );
-        }
+        let errorName = $(this).data("error-name");
+        let sourceCodeObjectId = $(this).data("error-source");
+        $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
+        $(".error-view").show();
+        $(".errors-view").hide();
+        publish(new ShowErrorDetailsEvent(errorName, sourceCodeObjectId));
     });
 
     $(document).on("click", ".error_frames_btn", function () {

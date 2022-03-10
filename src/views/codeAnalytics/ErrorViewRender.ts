@@ -27,10 +27,10 @@ export class ErrorViewRender {
     private _sourceControl: SourceControl
     
   ) {
-    this.channel.consume(
-      ShowErrorDetailsEvent,
-      this.onShowErrorDetailsEvent.bind(this)
-    );
+    // this.channel.consume(
+    //   ShowErrorDetailsEvent,
+    //   this.onShowErrorDetailsEvent.bind(this)
+    // );
     this.channel.consume(
       ErrorDetailsShowWorkspaceOnly,
       this.onErrorDetailsShowWorkspaceOnly.bind(this)
@@ -42,20 +42,20 @@ export class ErrorViewRender {
   ) {
     await Settings.hideFramesOutsideWorkspace.set(event.checked!);
   }
-  private async onShowErrorDetailsEvent(event: ShowErrorDetailsEvent) {
-    if(!event.errorFlowId)
-    {
-        return;
-    }
-    let response = await this._analyticsProvider.getErrorFlow(
-      event.errorFlowId
-    );
-    if (response) {
-      let html = await this.getErrorViewHtml(response);
-      this.channel.publish(new SetErrorViewContentUIEvent(event.errorFlowId, html));
-      this.currentErrorFlowId = event.errorFlowId;
-    }
-  }
+//   private async onShowErrorDetailsEvent(event: ShowErrorDetailsEvent) {
+//     if(!event.errorFlowId)
+//     {
+//         return;
+//     }
+//     let response = await this._analyticsProvider.getErrorFlow(
+//       event.errorFlowId
+//     );
+//     if (response) {
+//       let html = await this.getErrorViewHtml(response);
+//       this.channel.publish(new SetErrorViewContentUIEvent(event.errorFlowId, html));
+//       this.currentErrorFlowId = event.errorFlowId;
+//     }
+//   }
 
   private getFlowStackHtml(stack: StackViewModel) {
     if (!stack) return "";

@@ -28,11 +28,14 @@ export class CodeObjectInsightRequested {
   constructor(public codeObjectId?: string) {}
 }
 
-export class UpdateInsightsListViewUIEvent {
+export class UpdateCodeObjectLabelViewUIEvent {
+  constructor(public htmlContent?: string) {}
+}
+export class UpdateErrorsListViewUIEvent {
   constructor(public htmlContent?: string) {}
 }
 
-export class UpdateInsightsListViewCodeObjectUIEvent {
+export class UpdateInsightsListViewUIEvent {
   constructor(public htmlContent?: string) {}
 }
 
@@ -46,11 +49,11 @@ export class LoadEvent {
 
 
 export class ShowErrorDetailsEvent{
-    constructor(public errorFlowId?: string) {}
+    constructor(public errorName?: string, public sourceCodeObjectId?: string) {}
 }
 
 export class SetErrorViewContentUIEvent{
-    constructor(public errorFlowId?: string, public htmlContent?: string) {}
+    constructor(public htmlContent?: string) {}
 }
 
 export class ErrorDetailsShowWorkspaceOnly{

@@ -1,19 +1,25 @@
 import { SourceControl } from "../../services/sourceControl";
-import { AnalyticsProvider } from "../../services/analyticsProvider";
+import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
-import { ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { SetErrorViewContentUIEvent, ShowErrorDetailsEvent, UpdateCodeObjectLabelViewUIEvent, UpdateErrorsListViewUIEvent } from "../../views-ui/codeAnalytics/contracts";
+import { integer } from "vscode-languageclient";
 
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
     private _isActive = false;
     private _codeObject?: CodeObjectInfo = undefined;
+    private _viewedCodeObjectId?: string = undefined;
 
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
-        private _sourceControl: SourceControl) {}
+        private _sourceControl: SourceControl) 
+    {
+        this._channel.consume(ShowErrorDetailsEvent, e => this.onShowErrorDetailsEvent(e));
+    }
 
     get tabTitle(): string { return "Errors"; }
     get tabId(): string { return "tab-errors"; }
@@ -21,30 +27,124 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
     public onReset(): void {
         this._codeObject = undefined;
+        this._viewedCodeObjectId = undefined;
     }
     public onActivate(): void {
         this._isActive = true;
+        this.refreshList();
+        this.refreshCodeObjectLabel();
     }
     public onDectivate(): void {
         this._isActive = false;
     }
-    public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {}
-
+    public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {
+        this._codeObject = codeObject;
+        if(this._isActive){
+            this.refreshList();
+            this.refreshCodeObjectLabel();
+        }
+    }
     public getHtml(): string {
         return /*html*/`
             <div class="error-view" style="display: none">
+             <span class="codicon codicon-arrow-left" title="Back"></span>
             </div>
             <div class="errors-view">
                 <div class="codeobject-selection"></div>
-                <vscode-link id="show_error_details" href="#">temporary-show-error-details</vscode-link>
-                <vscode-dropdown id="sort-options" class="control-col-sort sort-dropdown">
-                    <span slot="indicator" class="codicon codicon-arrow-swap" style="transform: rotate(90deg);"></span>
-                    <vscode-option id="New" selected>New</vscode-option>
-                    <vscode-option id="Trend">Trend</vscode-option>
-                    <vscode-option id="Frequency">Frequency</vscode-option>
-                    <vscode-option id="Impact">Impact</vscode-option>
-                </vscode-dropdown>
                 <div id="error-list"></div>
             </div>`;
+    }    
+    private refreshCodeObjectLabel() {
+        let html = HtmlHelper.getCodeObjectLabel(this._codeObject?.methodName);
+        this._channel?.publish(
+            new UpdateCodeObjectLabelViewUIEvent(html)
+        );
+    }
+    private async refreshList() {
+        if(!this._codeObject)
+            return;
+        const errors = await this._analyticsProvider.getCodeObjectErrors(this._codeObject.id);
+        const html = HtmlBuilder.buildErrorItems(errors);
+        this._channel.publish(new UpdateErrorsListViewUIEvent(html));
+        this._viewedCodeObjectId = this._codeObject?.id;
+    }
+    private async onShowErrorDetailsEvent(e: ShowErrorDetailsEvent){
+        if(!this._codeObject || !e.errorName || !e.sourceCodeObjectId)
+            return;
+
+        let html = HtmlBuilder.buildErrorDetails();
+        this._channel.publish(new SetErrorViewContentUIEvent(html));
+
+        const errorDetails = await this._analyticsProvider.getCodeObjectError(this._codeObject.id, e.errorName, e.sourceCodeObjectId);
+        
+        html = HtmlBuilder.buildErrorDetails(errorDetails);
+        this._channel.publish(new SetErrorViewContentUIEvent(html));
+    }
+}
+
+class HtmlBuilder
+{
+    public static buildErrorItems(errors: CodeObjectError[]): string{
+        let html = '';
+        for(let error of errors){
+            html += /*html*/`
+            <div class="list-item">
+                <div class="list-item-content-area">
+                    <div class="list-item-header">
+                        <vscode-link id="show_error_details" 
+                                     data-error-name='${error.name}' 
+                                     data-error-source='${error.sourceCodeObjectId}' 
+                                     href="#">
+                            <span class="error-name">${error.name}</span>
+                            <span class="error-from">from</span>
+                            <span class="error-source">${error.sourceCodeObjectId}</span>
+                        </vscode-link>
+                    </div>
+                    <div class="error-characteristic">${error.characteristic}</div>
+                </div> 
+                <div class="list-item-right-area">
+                    ${HtmlHelper.getScoreBoxHtml(error.score, HtmlBuilder.buildScoreTooltip(error))}
+                    <div class="list-item-icons-row">
+                        ${HtmlBuilder.getErrorIcons(error)}
+                    </div>
+                </div>
+            </div>`;
+        }
+        return html;
+    }
+
+    public static buildErrorDetails(error?: CodeObjectErrorDetials): string{
+        return /*html*/`
+            <div class="flex-row">
+                <vscode-button appearance="icon" class="error-view-close">
+                    <span class="codicon codicon-arrow-left"></span>
+                </vscode-button>
+                <span class="flex-stretch flex-v-center error-title">
+                    <div>
+                        <span class="error-name">${error?.name ?? ''}</span>
+                        <span class="error-from">from</span>
+                        <span class="error-source">${error?.sourceCodeObjectId ??''}</span>
+                    </div>
+                </span>
+                ${HtmlHelper.getScoreBoxHtml(error?.score, HtmlBuilder.buildScoreTooltip(error))}
+            </div>                
+            `;
+    }
+
+    private static buildScoreTooltip(error?: CodeObjectError): string{
+        let tooltip = '';
+        error?.scoreParams.forEach((value: integer, key: string) => {
+            tooltip += `${key}: +${value}`;
+        });
+        return tooltip;
+    }
+
+    private static getErrorIcons(error: CodeObjectError): string{
+        let html = '';
+        if(error.startsHere)
+            html += /*html*/`<span class="codicon codicon-debug-step-out" title="Raised here"></span>`;
+        if(error.endsHere)
+            html += /*html*/`<span class="codicon codicon-debug-step-into" title="Handled here"></span>`;
+        return html;
     }
 }

@@ -69,3 +69,15 @@ ul.tree .line.selected {
 .filter-tag-close:hover{
     background: var(--button-icon-hover-background);
 }
+
+.flex-row{
+    display: flex;
+    flex-direction: row;
+}
+.flex-stretch{
+    flex: 1;
+}
+.flex-v-center{
+    display: flex;
+    align-items: center;
+}

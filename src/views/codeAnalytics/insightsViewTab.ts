@@ -6,7 +6,7 @@ import {
     CodeObjectInsightResponse,
 } from "../../services/analyticsProvider";
 import {
-    UpdateInsightsListViewCodeObjectUIEvent,
+    UpdateCodeObjectLabelViewUIEvent,
     UpdateInsightsListViewUIEvent,
 } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
@@ -74,7 +74,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     private refreshCodeObjectLabel() {
         let html = HtmlHelper.getCodeObjectLabel(this._codeObject?.methodName);
         this._channel?.publish(
-            new UpdateInsightsListViewCodeObjectUIEvent(html)
+            new UpdateCodeObjectLabelViewUIEvent(html)
         );
     }
 

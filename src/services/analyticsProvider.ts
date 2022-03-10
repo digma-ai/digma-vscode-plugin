@@ -5,6 +5,7 @@ import { Settings } from "../settings";
 import { Logger } from "./logger";
 import { Dictionary, momentJsDateParser } from "./utils";
 import moment = require("moment");
+import { integer } from "vscode-languageclient";
 
 export enum Impact 
 {
@@ -159,6 +160,20 @@ export class CodeObjectInsightResponse
         public errors ? : CodeObjectInsightErrorsResponse){};
 }
 
+export interface CodeObjectError{
+    name: string;
+    score: integer;
+    scoreParams: Map<string, integer>;
+    sourceCodeObjectId: string;
+    characteristic: string;
+    startsHere: boolean;
+    endsHere: boolean;
+}
+
+export interface CodeObjectErrorDetials extends CodeObjectError{
+
+}
+
 export class AnalyticsProvider
 {
     public async getEnvironments() : Promise<string[]> 
@@ -177,6 +192,42 @@ export class AnalyticsProvider
         }
         return [];
     }
+
+    public async getCodeObjectError(codeObjectId: string, errorName: string, sourceCodeObjectId: string): Promise<CodeObjectErrorDetials>{
+        return {
+            name: "TimeoutError",
+            score: 82,
+            scoreParams: new Map([["New", 10]]),
+            characteristic: "Started happening yesterday",
+            sourceCodeObjectId: "23232",
+            startsHere: true,
+            endsHere: false
+        }
+    }
+    public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>{
+        return [
+            {
+                name: "TimeoutError",
+                score: 82,
+                scoreParams: new Map([["New", 10]]),
+                characteristic: "Started happening yesterday",
+                sourceCodeObjectId: "23232",
+                startsHere: true,
+                endsHere: false
+            },
+            
+            {
+                name: "DeadlockError",
+                score: 65,
+                scoreParams: new Map([["Unhandled", 30]]),
+                characteristic: "This is an unhandled error",
+                sourceCodeObjectId: "23232",
+                startsHere: true,
+                endsHere: true
+            }
+        ]
+    }
+
     public async getCodeObjectInsights(codeObjectId: string): Promise<CodeObjectInsightResponse| undefined> 
     {
         try
