@@ -1,3 +1,9 @@
+$bg-color: black;
+
+.bg{
+    background-color: $bg-color;
+}
+
 vscode-panel-view {
   flex-direction: column;
   padding-left: 0;
