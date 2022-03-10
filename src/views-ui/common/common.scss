@@ -7,43 +7,43 @@ ul.tree{
     list-style-type: none;
     padding-left: 0;
     margin-top: 0;
-}
-ul.tree ul{
-    list-style-type: none;
-    padding-left: 1em;
-}
-ul.tree .collapsed {
-    display: none;
-}
-ul.tree .has-items{
-    cursor: pointer;
-    user-select: none;
-}
-ul.tree .line{
-    padding-left: 1.4em;
-    padding-top: 0.2em;
-    padding-bottom: 0.3em;
-    position: relative;
-    border-radius: 2px;
-}
-ul.tree .line:hover{
-    background-color: var(--vscode-list-hoverBackground);
-}
-ul.tree .line>.codicon:first-of-type{
-    position: absolute;
-    left: 0;
-}
-ul.tree .line.has-items.active + * {
-    display: block;
+
+    ul{
+        list-style-type: none;
+        padding-left: 1em;
+    }
+    .collapsed {
+        display: none;
+    }
+    .has-items{
+        cursor: pointer;
+        user-select: none;
+    }
+    .line{
+        padding-left: 1.4em;
+        padding-top: 0.2em;
+        padding-bottom: 0.3em;
+        position: relative;
+        border-radius: 2px;
+        &:hover{
+            background-color: var(--vscode-list-hoverBackground);
+        }
+        &:hover{
+            background-color: var(--vscode-list-hoverBackground);
+        }
+        &.selected {
+            background: var(--vscode-list-inactiveSelectionBackground);
+        }
+        &>.codicon:first-of-type{
+            position: absolute;
+            left: 0;
+        }
+        &.has-items.active + * {
+            display: block;
+        }
+    }
 }
 
-ul.tree .line:hover {
-    background: var(--vscode-list-hoverBackground);
-}
-
-ul.tree .line.selected {
-    background: var(--vscode-list-inactiveSelectionBackground);
-}
 
 .filter-tag {
     border-radius: 23px;

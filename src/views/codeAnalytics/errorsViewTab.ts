@@ -102,9 +102,7 @@ class HtmlBuilder
                 </div> 
                 <div class="list-item-right-area">
                     ${HtmlHelper.getScoreBoxHtml(error.score, HtmlBuilder.buildScoreTooltip(error))}
-                    <div class="list-item-icons-row">
-                        ${HtmlBuilder.getErrorIcons(error)}
-                    </div>
+                    ${HtmlBuilder.getErrorIcons(error)}
                 </div>
             </div>`;
         }
@@ -143,6 +141,7 @@ class HtmlBuilder
             html += /*html*/`<span class="codicon codicon-debug-step-out" title="Raised here"></span>`;
         if(error.endsHere)
             html += /*html*/`<span class="codicon codicon-debug-step-into" title="Handled here"></span>`;
-        return html;
+            
+        return /*html*/`<div class="list-item-icons-row">${html}</div>`;
     }
 }
