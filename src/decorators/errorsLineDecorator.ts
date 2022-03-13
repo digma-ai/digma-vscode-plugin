@@ -8,23 +8,26 @@ export class ErrorsLineDecorator implements vscode.Disposable
         public static readonly Hide = `digma.errorsLineDecorator.hide`;
     };
 
-    private _decorationType: vscode.TextEditorDecorationType;
+    private _iconDecorationType: vscode.TextEditorDecorationType;
+    private _textDecorationType: vscode.TextEditorDecorationType;
     private _disposables: vscode.Disposable[] = [];
 
     constructor(private _documentInfoProvider: DocumentInfoProvider)
     {
-        this._decorationType = vscode.window.createTextEditorDecorationType({
-            before:{
+        this._iconDecorationType = vscode.window.createTextEditorDecorationType({
+            after:{
                 contentText: "\uea86",
                 color: 'var(--vscode-editorCodeLens-foreground)',
                 margin: '0 0 0 3em',
                 textDecoration: "none; font-family: codicon; position: relative; top: 3px; padding-right: 2px; font-size: 12px"
-            },
+            }
+        });
+        this._textDecorationType = vscode.window.createTextEditorDecorationType({
             after:{
                 color: 'var(--vscode-editorCodeLens-foreground)',
             }
         });   
-        this._disposables.push(this._decorationType);   
+        this._disposables.push(this._textDecorationType);   
         this._disposables.push(vscode.commands.registerCommand(ErrorsLineDecorator.Commands.Show, this.onShow.bind(this)));
         this._disposables.push(vscode.commands.registerCommand(ErrorsLineDecorator.Commands.Hide, this.onHide.bind(this)));
     }
@@ -50,9 +53,8 @@ export class ErrorsLineDecorator implements vscode.Disposable
         if(!lines)
             return;
 
-        const decorationOptions: vscode.DecorationOptions[] = lines
-            .map(lineInfo => 
-            {
+        const textDecorationOptions: vscode.DecorationOptions[] = lines
+            .map(lineInfo => {
                 return <vscode.DecorationOptions>{
                     hoverMessage: this.getTooltip(lineInfo),
                     range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
@@ -63,8 +65,15 @@ export class ErrorsLineDecorator implements vscode.Disposable
                     }
                 }
             });
+        const iconDecorationOptions = lines
+            .map(lineInfo => {
+                return <vscode.DecorationOptions>{
+                    range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
+                }
+            });
 
-        editor.setDecorations(this._decorationType, decorationOptions);
+        editor.setDecorations(this._iconDecorationType, iconDecorationOptions);
+        editor.setDecorations(this._textDecorationType, textDecorationOptions);
     }
 
     private async onHide()
@@ -73,7 +82,8 @@ export class ErrorsLineDecorator implements vscode.Disposable
         if(!editor)
             return;
 
-        editor.setDecorations(this._decorationType, []);
+        editor.setDecorations(this._iconDecorationType, []);
+        editor.setDecorations(this._textDecorationType, []);
     }
 
     private getTooltip(lineInfo: LineInfo): vscode.MarkdownString
