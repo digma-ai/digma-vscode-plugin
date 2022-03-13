@@ -62,6 +62,7 @@ export class DocumentInfoProvider implements vscode.Disposable
 
             try
             {
+                Logger.info('Start fetching '+docRelativePath);
                 const symbolInfos = await this.symbolProvider.getSymbols(doc);
                 const codeObjectSummaries = await this.analyticsProvider.getSummary(docRelativePath, symbolInfos.map(s => s.id));
                 const tokens = await this.symbolProvider.getTokens(doc);
@@ -74,6 +75,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     lines,
                     tokens
                 };
+                Logger.info('Finished fetching '+docRelativePath);
             }
             catch(e)
             {
@@ -90,7 +92,10 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
         else
         {
-            return await latestVersionInfo.wait();
+            Logger.info('Waiting for '+docRelativePath);
+            let r = await latestVersionInfo.wait();
+            Logger.info('Got '+docRelativePath);
+            return r;
         }
     }
  

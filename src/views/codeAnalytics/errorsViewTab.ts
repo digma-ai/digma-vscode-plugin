@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import { SourceControl } from "../../services/sourceControl";
 import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
@@ -5,6 +6,7 @@ import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { integer } from "vscode-languageclient";
+import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
@@ -33,15 +35,18 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._isActive = true;
         this.refreshList();
         this.refreshCodeObjectLabel();
+        vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, this._codeObject?.id);
     }
     public onDectivate(): void {
         this._isActive = false;
+        vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Hide);
     }
     public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {
         this._codeObject = codeObject;
         if(this._isActive){
             this.refreshList();
             this.refreshCodeObjectLabel();
+            vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, this._codeObject?.id);
         }
     }
     public getHtml(): string {
