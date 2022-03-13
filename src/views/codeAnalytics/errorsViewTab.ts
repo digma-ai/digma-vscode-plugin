@@ -50,7 +50,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
              <span class="codicon codicon-arrow-left" title="Back"></span>
             </div>
             <div class="errors-view">
-                <div class="codeobject-selection"></div>
+                ${HtmlHelper.getCodeObjectPlaceholder()}
                 <div id="error-list"></div>
             </div>`;
     }    
@@ -60,11 +60,16 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     }
     private async refreshList() {
         if(!this._codeObject)
-            return;
-        const errors = await this._analyticsProvider.getCodeObjectErrors(this._codeObject.id);
-        const html = HtmlBuilder.buildErrorItems(errors);
-        this._channel.publish(new UiMessage.Set.ErrorsList(html));
-        this._viewedCodeObjectId = this._codeObject?.id;
+        {
+            this._channel.publish(new UiMessage.Set.ErrorsList(''));
+            this._viewedCodeObjectId = undefined;
+        }
+        else{
+            const errors = await this._analyticsProvider.getCodeObjectErrors(this._codeObject.id);
+            const html = HtmlBuilder.buildErrorItems(errors);
+            this._channel.publish(new UiMessage.Set.ErrorsList(html));
+            this._viewedCodeObjectId = this._codeObject?.id;
+        }
     }
     private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
         if(!this._codeObject || !e.errorName || !e.sourceCodeObjectId)

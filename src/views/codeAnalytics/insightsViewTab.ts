@@ -130,10 +130,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     public getHtml(): string {
-        return `
-      <section style="display: flex; flex-direction: column; width: 100%;">
-      <div class="codeobject-selection"></div>
-      <div class="list">
-    </section>`;
+        return /*html*/`
+            <section style="display: flex; flex-direction: column; width: 100%;">
+                ${HtmlHelper.getCodeObjectPlaceholder()}
+                <div class="list">
+            </section>`;
     }
 }

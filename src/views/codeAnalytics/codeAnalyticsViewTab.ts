@@ -34,19 +34,29 @@ export class HtmlHelper
         }
         return "";
     }
-    public static getCodeObjectLabel(funcName: string| undefined): string {
-        if (funcName?.includes(".")) {
-            let tokens = funcName.split(".");
-            if(tokens.length > 1){
-                funcName = `${tokens[tokens.length-2]}.${tokens[tokens.length-1]}`;
-            }
-        }
-
+    public static getCodeObjectPlaceholder(): string {
         return /*html*/ ` 
             <div class="codeobject-selection">
+                ${HtmlHelper.getCodeObjectLabel()}
+            </div>`;
+    }
+    public static getCodeObjectLabel(funcName?: string): string {
+        if(!funcName){
+            return /*html*/ `
+                <span class="placeholder">No code object was selected.<br/> Try to place the caret on a method.</span>`;
+        }
+        else{
+            if (funcName.includes(".")) {
+                let tokens = funcName.split(".");
+                if(tokens.length > 1){
+                    funcName = `${tokens[tokens.length-2]}.${tokens[tokens.length-1]}`;
+                }
+            }
+    
+            return /*html*/ `
                 <span class="scope">Scope:</span>
                 <span class="codicon codicon-symbol-method" title="Method"></span>
-                <span class="method-name">${funcName}</span> 
-            </div>`;
+                <span class="method-name">${funcName}</span>`;
+        }
     }
 }
