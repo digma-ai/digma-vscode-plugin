@@ -43,7 +43,7 @@ export class HtmlHelper
     public static getCodeObjectLabel(funcName?: string): string {
         if(!funcName){
             return /*html*/ `
-                <span class="placeholder">No code object was selected.<br/> Try to place the caret on a method.</span>`;
+                <span class="empty-message">No code object was selected.<br/> Try to place the caret on a method.</span>`;
         }
         else{
             if (funcName.includes(".")) {

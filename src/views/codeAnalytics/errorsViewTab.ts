@@ -56,7 +56,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             </div>
             <div class="errors-view">
                 ${HtmlHelper.getCodeObjectPlaceholder()}
-                <div id="error-list"></div>
+                <div id="error-list" class="list"></div>
             </div>`;
     }    
     private refreshCodeObjectLabel() {
@@ -94,6 +94,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 class HtmlBuilder
 {
     public static buildErrorItems(errors: CodeObjectError[]): string{
+        if(!errors.length){
+            return /*html*/`<span class="empty-message">No erros go through this code object.</span>`
+        }
+        
         let html = '';
         for(let error of errors){
             html += /*html*/`

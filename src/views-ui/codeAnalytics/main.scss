@@ -65,17 +65,17 @@ vscode-panel-view {
     opacity: 0.6;
     margin: 0 3px;
 }
+.empty-message{
+    padding: 20px 0;
+    opacity: 0.6;
+    font-style: italic;
+    text-align: center;
+    width: 100%;
+}
 .codeobject-selection{
     display: flex;
     align-items: center;
     margin-bottom: 10px;
-    .placeholder{
-        padding: 20px 10px;
-        opacity: 0.6;
-        font-style: italic;
-        text-align: center;
-        width: 100%;
-    }
     .scope{
         margin-right: 5px;
         opacity: 0.6;

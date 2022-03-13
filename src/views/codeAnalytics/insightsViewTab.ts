@@ -35,22 +35,24 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private async refreshListViewRequested() {
-        if (this._codeObject) {
-            let response = await this._analyticsProvider.getCodeObjectInsights(
-                this._codeObject.id
-            );
-            if (response) {
-                let listItems: string[] = [];
-                if (response.spot) {
-                    this.addHotspotListItem(response.spot, listItems);
-                }
-                if (response.errors) {
-                    this.addErrorsListItem(response.errors, listItems);
-                }
-                this.updateListView(listItems.join(""));
-            }
-        } else {
+        if (!this._codeObject) {
             this.updateListView("");
+            return;
+        }
+        let listItems: string[] = [];
+        let response = await this._analyticsProvider.getCodeObjectInsights(this._codeObject.id);
+        if (response) {
+            if (response.spot) {
+                this.addHotspotListItem(response.spot, listItems);
+            }
+            if (response.errors) {
+                this.addErrorsListItem(response.errors, listItems);
+            }
+        }
+        if(listItems.length > 0){
+            this.updateListView(listItems.join(""));
+        }else{
+            this.updateListView(/*html*/`<span class="empty-message">No insights about this code object yet.</span>`);
         }
     }
     public onReset(): void {
@@ -131,9 +133,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
     public getHtml(): string {
         return /*html*/`
-            <section style="display: flex; flex-direction: column; width: 100%;">
-                ${HtmlHelper.getCodeObjectPlaceholder()}
-                <div class="list">
-            </section>`;
+            ${HtmlHelper.getCodeObjectPlaceholder()}
+            <div class="list"></div>`;
     }
 }
