@@ -12,7 +12,7 @@ vscode-panel-view {
 .list-item {
   padding: 3px;
   display: flex;
-  background: #ffffff0d;
+  background: var(--vscode-list-hoverBackground);
   margin-top: 3px;
   border-radius: 2px;
 }
@@ -24,10 +24,6 @@ vscode-panel-view {
 .list-item-content-area > div {
   margin: 2px;
   font-size: 12px;
-}
-.error-name,
-.error-source {
-  font-weight: bold;
 }
 .list-item-right-area {
   width: 50px;
@@ -62,6 +58,29 @@ vscode-panel-view {
 .spacer {
   height: 3px;
 }
+.error-name {
+  font-weight: bold;
+}
+.error-from{
+    opacity: 0.6;
+    margin: 0 3px;
+}
+.codeobject-selection{
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    .scope{
+        margin-right: 5px;
+        opacity: 0.6;
+    }
+    .codicon{
+        margin-right: 5px;
+        padding-top: 1px;
+    }
+    .method-name{
+        font-family: var(--vscode-editor-font-family)
+    }
+}
 
 .error-view{
     .score-box {
@@ -86,6 +105,9 @@ vscode-panel-view {
     .list-item-icons-row .codicon{
         float: right;
         transform: rotate(45deg);
+    }
+    .time-label{
+        opacity: 0.6;
     }
 }
 

@@ -88,17 +88,18 @@ class HtmlBuilder
             html += /*html*/`
             <div class="list-item">
                 <div class="list-item-content-area">
-                    <div class="list-item-header">
+                    <div class="list-item-header flex-v-center">
                         <vscode-link id="show_error_details" 
                                      data-error-name='${error.name}' 
                                      data-error-source='${error.sourceCodeObjectId}' 
                                      href="#">
                             <span class="error-name">${error.name}</span>
-                            <span class="error-from">from</span>
-                            <span class="error-source">${error.sourceCodeObjectId}</span>
                         </vscode-link>
+                        <span class="error-from">from</span>
+                        <span class="error-source">${error.sourceCodeObjectId.split('$_$')[1]}</span>
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
+                    ${HtmlBuilder.getErrorStartEndTime(error)}
                 </div> 
                 <div class="list-item-right-area">
                     ${HtmlHelper.getScoreBoxHtml(error.score, HtmlBuilder.buildScoreTooltip(error))}
@@ -144,4 +145,18 @@ class HtmlBuilder
             
         return /*html*/`<div class="list-item-icons-row">${html}</div>`;
     }
+    private static getErrorStartEndTime(error: CodeObjectError): string{
+        return /*html*/`
+            <div class="flex-row">
+                <span class="flex-stretch">
+                    <span class="time-label">Started:</span>
+                    <span>${error.firstOccurenceTime.fromNow()}</span>
+                </span>
+                <span class="flex-stretch">
+                    <span class="time-label">Last:</span>
+                    <span>${error.lasttOccurenceTime.fromNow()}</span>
+                </span>
+            </div>`;
+    }
+
 }

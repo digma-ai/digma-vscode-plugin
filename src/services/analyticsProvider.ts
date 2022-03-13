@@ -168,6 +168,8 @@ export interface CodeObjectError{
     characteristic: string;
     startsHere: boolean;
     endsHere: boolean;
+    firstOccurenceTime: moment.Moment;
+    lasttOccurenceTime: moment.Moment;
 }
 
 export interface CodeObjectErrorDetials extends CodeObjectError{
@@ -199,9 +201,11 @@ export class AnalyticsProvider
             score: 82,
             scoreParams: new Map([["New", 10]]),
             characteristic: "Started happening yesterday",
-            sourceCodeObjectId: "23232",
+            sourceCodeObjectId: "UsersErvice$_$GetUsers",
             startsHere: true,
-            endsHere: false
+            endsHere: false,
+            firstOccurenceTime: moment().add(-3,'days'),
+            lasttOccurenceTime: moment().add(-1,'days')
         }
     }
     public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>{
@@ -211,9 +215,11 @@ export class AnalyticsProvider
                 score: 82,
                 scoreParams: new Map([["New", 10]]),
                 characteristic: "Started happening yesterday",
-                sourceCodeObjectId: "23232",
+                sourceCodeObjectId: "UsersErvice$_$GetUsers",
                 startsHere: true,
-                endsHere: false
+                endsHere: false,
+                firstOccurenceTime: moment().add(-3,'days'),
+                lasttOccurenceTime: moment().add(-1,'days')
             },
             
             {
@@ -221,9 +227,11 @@ export class AnalyticsProvider
                 score: 65,
                 scoreParams: new Map([["Unhandled", 30]]),
                 characteristic: "This is an unhandled error",
-                sourceCodeObjectId: "23232",
+                sourceCodeObjectId: "UsersErvice$_$GetUsers",
                 startsHere: true,
-                endsHere: true
+                endsHere: true,
+                firstOccurenceTime: moment().add(-3,'days'),
+                lasttOccurenceTime: moment().add(-1,'days')
             }
         ]
     }
