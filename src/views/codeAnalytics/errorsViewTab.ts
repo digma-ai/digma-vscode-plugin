@@ -69,7 +69,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             this._channel.publish(new UiMessage.Set.ErrorsList(''));
             this._viewedCodeObjectId = undefined;
         }
-        else{
+        else if(this._viewedCodeObjectId != this._codeObject?.id)
+        {
             const errors = await this._analyticsProvider.getCodeObjectErrors(this._codeObject.id);
             const html = HtmlBuilder.buildErrorItems(errors);
             this._channel.publish(new UiMessage.Set.ErrorsList(html));

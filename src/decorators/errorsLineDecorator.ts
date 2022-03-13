@@ -18,12 +18,13 @@ export class ErrorsLineDecorator implements vscode.Disposable
             after:{
                 contentText: "\uea86",
                 color: 'var(--vscode-editorCodeLens-foreground)',
-                margin: '0 0 0 3em',
-                textDecoration: "none; font-family: codicon; position: relative; top: 3px; padding-right: 2px; font-size: 12px"
+                margin: '0 0 0 2em',
+                textDecoration: "none; font-family: codicon; position: absolute; "
             }
         });
         this._textDecorationType = vscode.window.createTextEditorDecorationType({
             after:{
+                margin: '0 0 0 3em',
                 color: 'var(--vscode-editorCodeLens-foreground)',
             }
         });   
