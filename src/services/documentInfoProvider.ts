@@ -62,6 +62,7 @@ export class DocumentInfoProvider implements vscode.Disposable
 
             try
             {
+                Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
                 const symbolInfos = await this.symbolProvider.getSymbols(doc);
                 const codeObjectSummaries = await this.analyticsProvider.getSummary(docRelativePath, symbolInfos.map(s => s.id));
                 const tokens = await this.symbolProvider.getTokens(doc);
@@ -74,6 +75,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     lines,
                     tokens
                 };
+                Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
             catch(e)
             {
@@ -83,7 +85,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     lines: [],
                     tokens: []
                 };
-                Logger.error(`Failed to collect info for ${doc.uri} version ${doc.version}`, e);
+                Logger.error(`Failed to build DocumentInfo for ${doc.uri} v${doc.version}`, e);
             }
 
             return latestVersionInfo.value;

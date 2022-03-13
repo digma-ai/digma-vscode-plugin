@@ -48,6 +48,9 @@ export class CodeAnalyticsView implements vscode.Disposable {
 		document: vscode.TextDocument,
 		position: vscode.Position
 	) {
+        if(this._documentInfoProvider.symbolProvider.supportedLanguages.all(x => vscode.languages.match(x.documentFilter, document) <= 0))
+            return;
+
 		const docInfo = await this._documentInfoProvider.getDocumentInfo(document);
 		const methodInfo = docInfo?.methods.firstOrDefault((m) =>
 			m.range.contains(position)
