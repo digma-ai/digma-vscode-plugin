@@ -95,7 +95,7 @@ class HtmlBuilder
 {
     public static buildErrorItems(errors: CodeObjectError[]): string{
         if(!errors.length){
-            return /*html*/`<span class="empty-message">No erros go through this code object.</span>`;
+            return HtmlHelper.getInfoMessage("No erros go through this code object.");
         }
         
         let html = '';

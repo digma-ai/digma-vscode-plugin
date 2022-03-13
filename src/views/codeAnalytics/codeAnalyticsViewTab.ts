@@ -50,11 +50,20 @@ export class HtmlHelper
             <span class="method-name">${funcName}</span>`;
     }
 
+    public static getInfoMessage(text: string): string
+    {
+        return /*html*/ `
+            <div class="info-message">
+                <span class="codicon codicon-info"></span>
+                <span class="text">${text.replace("\n", "<br/>")}</span>
+            </div>`;
+    }
+
     public static getErrorMessage(text: string): string
     {
         return /*html*/ `
             <div class="error-message">
-                <span class="codicon codicon-warning" title="Method"></span>
+                <span class="codicon codicon-warning"></span>
                 <span class="text">${text.replace("\n", "<br/>")}</span>
             </div>`;
     }

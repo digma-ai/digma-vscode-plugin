@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { DocumentInfo } from "../../services/documentInfoProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
+import { HtmlHelper } from "./codeAnalyticsViewTab";
 
 export class OverlayView
 {
@@ -10,11 +11,11 @@ export class OverlayView
     }
 
     public getInitHtml(){
-        return /*html*/`<span class="empty-message">Loading...</span>`;
+        return HtmlHelper.getLoadingMessage("Loading...");
     }
 
     public showUnsupportedDocumentMessage(){
-        const html = /*html*/`<span class="empty-message">Select a document containing code to see its insights</span>`;
+        const html = HtmlHelper.getInfoMessage("Select a document containing code to see its insights");
         this._channel.publish(new UiMessage.Set.Overlay(html))
     }
 
@@ -24,7 +25,7 @@ export class OverlayView
         }).join("");
 
         const html = /*html*/ `
-            <span class="empty-message">No code object was selected</span>
+            ${HtmlHelper.getInfoMessage("No code object was selected")}
             <div>Try to place the caret on a method, or select one from following:</div>
             <div class="links-list">${links}</div>`;
         this._channel.publish(new UiMessage.Set.Overlay(html))

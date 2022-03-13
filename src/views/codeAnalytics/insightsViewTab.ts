@@ -63,10 +63,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             }
         }
 
-        if(listItems.length > 0){
-            this.updateListView(listItems.join(""));
+        if(listItems.length == 0){
+            this.updateListView(HtmlHelper.getInfoMessage("No insights about this code object yet."));
         }else{
-            this.updateListView(/*html*/`<span class="empty-message">No insights about this code object yet.</span>`);
+            this.updateListView(listItems.join(""));
         }
     }
     public onReset(): void {
