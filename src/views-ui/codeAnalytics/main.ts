@@ -3,6 +3,14 @@ import { UiMessage } from "./contracts";
 
 window.addEventListener("load", () => 
 {
+    function showTabs(){
+        overlay.hide();
+        tabsContainer.show();
+    }
+    function showOverlay(html: string){
+        overlay.html(html).show();
+        tabsContainer.hide();
+    }
     function showErrorView() {
         $(".errors-view").hide();
         $(".error-view").show();
@@ -12,24 +20,33 @@ window.addEventListener("load", () =>
         $(".errors-view").show();
     }
 
-    let insightsTab = $("#view-insights");
-    let errorsTab = $("#view-errors");
+    const overlay = $("#view-overlay");
+    const tabsContainer = $("#view-tabs");
+    const insightsTab = $("#view-insights");
+    const errorsTab = $("#view-errors");
+
+    consume(UiMessage.Set.Overlay, e => {
+        showOverlay(e.htmlContent);
+    });
 
     consume(UiMessage.Set.ErrorsList, (event) => {
         if (event.htmlContent !== undefined) {
             errorsTab.find("#error-list").html(event.htmlContent);
+            showTabs();
         }
     });
 
     consume(UiMessage.Set.ErrorDetails, (event) => {
         if (event.htmlContent !== undefined) {
             $(".error-view").html(event.htmlContent);
+            showTabs();
         }
     });
     
     consume(UiMessage.Set.InsightsList, (event) => {
         if (event.htmlContent !== undefined) {
             insightsTab.find(".list").html(event.htmlContent);
+            showTabs();
         }
     });
 
@@ -69,6 +86,10 @@ window.addEventListener("load", () =>
         $(".error-raw").show();
     });
 
+    overlay.on("click", ".codeobject-link", function(){
+        const line = $(this).data("line");
+        publish(new UiMessage.Notify.GoToLine(parseInt(line)));
+    });
     //   $(document).on("change", ".workspace-only-checkbox", function () {
 
     //     $("")

@@ -34,29 +34,36 @@ export class HtmlHelper
         }
         return "";
     }
-    public static getCodeObjectPlaceholder(): string {
-        return /*html*/ ` 
-            <div class="codeobject-selection">
-                ${HtmlHelper.getCodeObjectLabel()}
+
+    public static getCodeObjectLabel(funcName: string): string 
+    {
+        if (funcName.includes(".")) {
+            let tokens = funcName.split(".");
+            if(tokens.length > 1){
+                funcName = `${tokens[tokens.length-2]}.${tokens[tokens.length-1]}`;
+            }
+        }
+
+        return /*html*/ `
+            <span class="scope">Scope:</span>
+            <span class="codicon codicon-symbol-method" title="Method"></span>
+            <span class="method-name">${funcName}</span>`;
+    }
+
+    public static getErrorMessage(text: string): string
+    {
+        return /*html*/ `
+            <div class="error-message">
+                <span class="codicon codicon-warning" title="Method"></span>
+                <span class="text">${text.replace("\n", "<br/>")}</span>
             </div>`;
     }
-    public static getCodeObjectLabel(funcName?: string): string {
-        if(!funcName){
-            return /*html*/ `
-                <span class="empty-message">No code object was selected.<br/> Try to place the caret on a method.</span>`;
-        }
-        else{
-            if (funcName.includes(".")) {
-                let tokens = funcName.split(".");
-                if(tokens.length > 1){
-                    funcName = `${tokens[tokens.length-2]}.${tokens[tokens.length-1]}`;
-                }
-            }
-    
-            return /*html*/ `
-                <span class="scope">Scope:</span>
-                <span class="codicon codicon-symbol-method" title="Method"></span>
-                <span class="method-name">${funcName}</span>`;
-        }
+
+    public static getLoadingMessage(text: string): string{
+        return /*html*/ `
+            <div class="loading-message">
+                <vscode-progress-ring></vscode-progress-ring>
+                <div>${text}</div>
+            </div>`;
     }
 }

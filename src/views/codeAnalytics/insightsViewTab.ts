@@ -4,11 +4,13 @@ import {
     CodeObjectInsightErrorsResponse,
     CodeObjectInsightHotSpotResponse,
     CodeObjectInsightResponse,
+    HttpError,
 } from "../../services/analyticsProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { Logger } from "../../services/logger";
 
 export class InsightsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -39,9 +41,12 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             this.updateListView("");
             return;
         }
+        this.updateListView(HtmlHelper.getLoadingMessage("Loading insights..."));
+
         let listItems: string[] = [];
-        let response = await this._analyticsProvider.getCodeObjectInsights(this._codeObject.id);
-        if (response) {
+        try
+        {
+            const response = await this._analyticsProvider.getCodeObjectInsights(this._codeObject.id);
             if (response.spot) {
                 this.addHotspotListItem(response.spot, listItems);
             }
@@ -49,6 +54,15 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 this.addErrorsListItem(response.errors, listItems);
             }
         }
+        catch(e)
+        {
+            if(!(e instanceof HttpError) || e.status != 404){
+                Logger.error(`Failed to get codeObject ${this._codeObject.id} insights`, e);
+                this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
+                return;
+            }
+        }
+
         if(listItems.length > 0){
             this.updateListView(listItems.join(""));
         }else{
@@ -71,7 +85,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private refreshCodeObjectLabel() {
-        let html = HtmlHelper.getCodeObjectLabel(this._codeObject?.methodName);
+        let html = HtmlHelper.getCodeObjectLabel(this._codeObject!.methodName);
         this._channel?.publish(
             new UiMessage.Set.CodeObjectLabel(html)
         );
@@ -133,7 +147,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
     public getHtml(): string {
         return /*html*/`
-            ${HtmlHelper.getCodeObjectPlaceholder()}
+            <div class="codeobject-selection"></div>
             <div class="list"></div>`;
     }
 }

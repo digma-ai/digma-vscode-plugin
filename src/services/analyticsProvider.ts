@@ -236,26 +236,20 @@ export class AnalyticsProvider
         ]
     }
 
-    public async getCodeObjectInsights(codeObjectId: string): Promise<CodeObjectInsightResponse| undefined> 
+    public async getCodeObjectInsights(codeObjectId: string): Promise<CodeObjectInsightResponse> 
     {
-        try
-        {
-            const response = await this.send<CodeObjectInsightResponse>(
-                'GET', 
-                `/CodeAnalytics/codeObjects/insights`, 
-                {
-                    codeObjectId: codeObjectId,
-                    environment: Settings.environment.value
-                }, 
-                undefined);
-
-            return response;
-        }
-        catch(error){
-            Logger.error(`Failed to get codeObject ${codeObjectId} insights`, error);
-        }
-        return;
+        const response = await this.send<CodeObjectInsightResponse>(
+            'GET', 
+            `/CodeAnalytics/codeObjects/insights`, 
+            {
+                codeObjectId: codeObjectId,
+                environment: Settings.environment.value
+            }, 
+            undefined);
+            
+        return response;
     }
+
     public async getSummary(moduleName: string, symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
     {
         try
@@ -345,10 +339,21 @@ export class AnalyticsProvider
         if(!response.ok)
         {
             const txt = await response.text();
-            throw new Error(`Request failed with http code: [${response.status}] ${response.statusText}\nResponse: ${txt}`);
+            throw new HttpError(response.status, response.statusText, txt);
         }
 
         var reponseJson = JSON.parse(await response.text(), momentJsDateParser);
         return <TResponse>reponseJson;
+    }
+}
+
+export class HttpError extends Error {
+    constructor(
+        public readonly status: number,
+        public readonly statusText: string,
+        public readonly reponseText: string) 
+    {
+        super(`Request failed with http code: [${status}] ${statusText}\nResponse: ${reponseText}`);
+        Object.setPrototypeOf(this, HttpError.prototype);
     }
 }

@@ -5,9 +5,12 @@ export namespace UiMessage
     {
         export class TabLoaded {
             constructor(public selectedViewId?: string) {}
-          }
+        }
         export class TabChanged {
             constructor(public viewId?: string) {}
+        }
+        export class GoToLine{
+            constructor(public line?: number){}
         }
     }
 
@@ -30,6 +33,9 @@ export namespace UiMessage
             constructor(public htmlContent?: string) {}
         }
         export class CodeObjectLabel {
+            constructor(public htmlContent?: string) {}
+        }
+        export class Overlay {
             constructor(public htmlContent?: string) {}
         }
     }

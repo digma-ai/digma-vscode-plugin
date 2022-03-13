@@ -1,12 +1,13 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
-import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import { DocumentInfo, DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { SourceControl } from "../../services/sourceControl";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
 import { ErrorsViewTab } from "./errorsViewTab";
 import { InsightsViewTab } from "./insightsViewTab";
+import { OverlayView } from "./overlayView";
 import { UsagesViewTab } from "./usagesViewTab";
 
 export class CodeAnalyticsView implements vscode.Disposable {
@@ -48,19 +49,27 @@ export class CodeAnalyticsView implements vscode.Disposable {
 		document: vscode.TextDocument,
 		position: vscode.Position
 	) {
-        if(this._documentInfoProvider.symbolProvider.supportedLanguages.all(x => vscode.languages.match(x.documentFilter, document) <= 0))
+        if(document.uri.scheme == 'output')
             return;
 
-		const docInfo = await this._documentInfoProvider.getDocumentInfo(document);
-		const methodInfo = docInfo?.methods.firstOrDefault((m) =>
-			m.range.contains(position)
-		);
-		let codeObjectInfo: CodeObjectInfo | undefined;
-		if (methodInfo)
-		{
-			codeObjectInfo = { id: methodInfo?.symbol.id, methodName: methodInfo?.displayName };
-		}
-		this._provider.onCodeObjectSelectionChanged(codeObjectInfo);
+        let docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+            ? await this._documentInfoProvider.getDocumentInfo(document)
+            : undefined;
+        if(!docInfo){
+            this._provider.onUnsupportedDocumentOpened();
+            return;
+        }
+        
+		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
+        if(!methodInfo){
+            this._provider.onCodeSelectionNotFound(docInfo);
+            return;
+        }
+
+		this._provider.onCodeObjectSelectionChanged({ 
+            id: methodInfo?.symbol.id, 
+            methodName: methodInfo?.displayName 
+        });
 	}
 
 	public dispose() 
@@ -83,7 +92,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 	private _channel: WebviewChannel;
     private _tabs : Map<string, ICodeAnalyticsViewTab>;
     private _activeTab?: ICodeAnalyticsViewTab;
-    private _codeObjectId?: CodeObjectInfo;
+    private _overlay: OverlayView;
 
 	constructor(
 		extensionUri: vscode.Uri,
@@ -108,6 +117,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
         for(let tab of tabsList)
             this._tabs.set(tab.tabId, tab);
+
+        this._overlay = new OverlayView(this._channel);
 	}
 
 
@@ -144,12 +155,15 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 		this._view.webview.html = this.getCodeAnalyticsView();
 	}
 
-    public onCodeObjectSelectionChanged(codeObject: CodeObjectInfo|undefined) {
-        if (this._codeObjectId?.id === codeObject?.id) {
-          //no codeobject changes
-          return;
-        }
-        this._codeObjectId = codeObject;
+    public onUnsupportedDocumentOpened(){
+        this._overlay.showUnsupportedDocumentMessage();
+    }
+
+    public onCodeSelectionNotFound(docInfo: DocumentInfo){
+        this._overlay.showCodeSelectionNotFoundMessage(docInfo);
+    }
+
+    public onCodeObjectSelectionChanged(codeObject: CodeObjectInfo) {
         this._tabs.forEach((value: ICodeAnalyticsViewTab, key: string) => {
             value.onCodeObjectSelected(codeObject);
         });
@@ -200,7 +214,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
             </head>
             <body>
                 <script>require(['codeAnalytics/main']);</script>
-                <vscode-panels activeid="tab-insights" class="analytics-nav" aria-label="With Active Tab">
+                <div id="view-overlay">${this._overlay.getInitHtml()}</div>
+                <vscode-panels id="view-tabs" activeid="tab-insights" class="analytics-nav" aria-label="With Active Tab" hidden>
                     ${this.getPanelTabs()}
                     ${this.getPanelViews()}	
                 </vscode-panels>

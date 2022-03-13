@@ -2,6 +2,14 @@ vscode-panel-view {
   flex-direction: column;
   padding-left: 0;
 }
+#view-overlay{
+    display: flex;
+    flex-direction: column;
+
+    .codeobject-link{
+        display: block;
+    }
+}
 
 .list {
   padding: 0px;

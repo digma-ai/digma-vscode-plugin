@@ -44,6 +44,34 @@ ul.tree{
     }
 }
 
+.error-message{
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    padding: 10px;
+    color: #ff8080;
+    background: #ff808012;
+    border-radius: 2px;
+    .codicon{
+        font-size: 20px;
+    }
+    .text{
+        text-align: center;
+    }
+}
+
+.loading-message{
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 2px;
+    align-items: center;
+    vscode-progress-ring{
+        width: 20px;
+        height: 20px;
+    }
+}
 
 .filter-tag {
     border-radius: 23px;

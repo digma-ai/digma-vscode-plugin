@@ -55,12 +55,12 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
              <span class="codicon codicon-arrow-left" title="Back"></span>
             </div>
             <div class="errors-view">
-                ${HtmlHelper.getCodeObjectPlaceholder()}
+                <div class="codeobject-selection"></div>
                 <div id="error-list" class="list"></div>
             </div>`;
     }    
     private refreshCodeObjectLabel() {
-        let html = HtmlHelper.getCodeObjectLabel(this._codeObject?.methodName);
+        let html = HtmlHelper.getCodeObjectLabel(this._codeObject!.methodName);
         this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
     private async refreshList() {
@@ -95,7 +95,7 @@ class HtmlBuilder
 {
     public static buildErrorItems(errors: CodeObjectError[]): string{
         if(!errors.length){
-            return /*html*/`<span class="empty-message">No erros go through this code object.</span>`
+            return /*html*/`<span class="empty-message">No erros go through this code object.</span>`;
         }
         
         let html = '';
