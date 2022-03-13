@@ -46,7 +46,7 @@ export class DocumentInfoProvider implements vscode.Disposable
     private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
         const docRelativePath = doc.uri.toModulePath();
-        if(!docRelativePath)
+        if(!docRelativePath || !this.symbolProvider.supportsDocument(doc))
             return undefined;
 
         let document = this._documents[docRelativePath];

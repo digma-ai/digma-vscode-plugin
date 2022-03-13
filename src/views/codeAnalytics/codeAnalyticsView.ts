@@ -15,19 +15,19 @@ export class CodeAnalyticsView implements vscode.Disposable {
 
 	private _provider: CodeAnalyticsViewProvider;
 	private _disposables: vscode.Disposable[] = [];
-	private _documentInfoProvider: DocumentInfoProvider;
 
 	constructor(
-		private _analyticsProvider: AnalyticsProvider,
+		analyticsProvider: AnalyticsProvider,
 		documentInfoProvider: DocumentInfoProvider,
 		extensionUri: vscode.Uri,
         sourceControl: SourceControl
 	) {
 		this._provider = new CodeAnalyticsViewProvider(
 			extensionUri,
-			this._analyticsProvider, sourceControl
+			analyticsProvider, 
+            documentInfoProvider,
+            sourceControl
 		);
-		this._documentInfoProvider = documentInfoProvider;
 
 		this._disposables = [
 			vscode.window.registerWebviewViewProvider(
@@ -36,40 +36,10 @@ export class CodeAnalyticsView implements vscode.Disposable {
 			),
 			vscode.window.onDidChangeTextEditorSelection(
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
-					await this.onCodeSelectionChanged(
-						e.textEditor.document,
-						e.selections[0].anchor
-					);
+					await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
 				}
-			),
+			)
 		];
-	}
-
-	private async onCodeSelectionChanged(
-		document: vscode.TextDocument,
-		position: vscode.Position
-	) {
-        if(document.uri.scheme == 'output')
-            return;
-
-        let docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
-            ? await this._documentInfoProvider.getDocumentInfo(document)
-            : undefined;
-        if(!docInfo){
-            this._provider.onUnsupportedDocumentOpened();
-            return;
-        }
-        
-		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
-        if(!methodInfo){
-            this._provider.onCodeSelectionNotFound(docInfo);
-            return;
-        }
-
-		this._provider.onCodeObjectSelectionChanged({ 
-            id: methodInfo?.symbol.id, 
-            methodName: methodInfo?.displayName 
-        });
 	}
 
 	public dispose() 
@@ -97,6 +67,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 	constructor(
 		extensionUri: vscode.Uri,
 		private _analyticsProvider: AnalyticsProvider,
+        private _documentInfoProvider: DocumentInfoProvider,
         sourceControl: SourceControl
 	) {
 		this._webViewUris = new WebViewUris(
@@ -121,6 +92,35 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         this._overlay = new OverlayView(this._channel);
 	}
 
+    public async onCodeSelectionChanged(
+		document: vscode.TextDocument,
+		position: vscode.Position
+	) {
+        if(document.uri.scheme == 'output')
+            return;
+
+        let docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+            ? await this._documentInfoProvider.getDocumentInfo(document)
+            : undefined;
+        if(!docInfo){
+            this._overlay.showUnsupportedDocumentMessage();
+            return;
+        }
+        
+		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
+        if(!methodInfo){
+            this._overlay.showCodeSelectionNotFoundMessage(docInfo);
+            return;
+        }
+
+		var codeobjectInfo = <CodeObjectInfo>{ 
+            id: methodInfo?.symbol.id, 
+            methodName: methodInfo?.displayName 
+        };
+        this._tabs.forEach((value: ICodeAnalyticsViewTab, key: string) => {
+            value.onCodeObjectSelected(codeobjectInfo);
+        });
+	}
 
     public async onLoadEvent(event: UiMessage.Notify.TabLoaded)
     {
@@ -128,6 +128,14 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         {
             this._activeTab.onReset();
         }
+
+        const editor = vscode.window.activeTextEditor;
+        if(!editor){
+            this._overlay.showUnsupportedDocumentMessage();
+            return;
+        }
+
+        this.onCodeSelectionChanged(editor.document, editor.selection.anchor);
 
         if(event.selectedViewId){
             this.onViewSelected(event.selectedViewId);
@@ -154,20 +162,6 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 
 		this._view.webview.html = this.getCodeAnalyticsView();
 	}
-
-    public onUnsupportedDocumentOpened(){
-        this._overlay.showUnsupportedDocumentMessage();
-    }
-
-    public onCodeSelectionNotFound(docInfo: DocumentInfo){
-        this._overlay.showCodeSelectionNotFoundMessage(docInfo);
-    }
-
-    public onCodeObjectSelectionChanged(codeObject: CodeObjectInfo) {
-        this._tabs.forEach((value: ICodeAnalyticsViewTab, key: string) => {
-            value.onCodeObjectSelected(codeObject);
-        });
-      }
 
     private onViewSelected(viewId: string): void {
         if(this._activeTab)
