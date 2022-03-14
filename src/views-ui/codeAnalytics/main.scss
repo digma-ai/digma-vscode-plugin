@@ -23,23 +23,26 @@ vscode-panel-view {
   background: var(--vscode-list-hoverBackground);
   margin-top: 3px;
   border-radius: 2px;
+  width: 100%;
 }
 .list-item-content-area {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  overflow: auto;
 }
 .list-item-content-area > div {
   margin: 2px;
-  font-size: 12px;
+  &:not(:first-child){
+    font-size: 12px;
+  }
 }
 .list-item-right-area {
   width: 50px;
   display: flex;
   flex-direction: column;
   margin: 3px;
-  align-items: center;
-  justify-content: center;
+  justify-content: space-between;
 }
 .score-box {
   border-radius: 5px;
@@ -72,6 +75,7 @@ vscode-panel-view {
 .error-from{
     opacity: 0.6;
     margin: 0 3px;
+    white-space: nowrap;
 }
 .codeobject-selection{
     display: flex;

@@ -89,6 +89,20 @@ ul.tree{
     }
 }
 
+.link{
+    color: var(--link-foreground);
+    &:hover{
+        text-decoration: underline;
+        cursor: pointer;
+    }
+}
+
+.ellipsis{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .filter-tag {
     border-radius: 23px;
     display: flex;

@@ -107,13 +107,7 @@ class HtmlBuilder
             <div class="list-item">
                 <div class="list-item-content-area">
                     <div class="list-item-header flex-v-center">
-                        <vscode-link id="show_error_details" 
-                                     data-codeObject-id='${codeObject.id}' 
-                                     data-error-name='${error.name}' 
-                                     data-error-source='${error.sourceCodeObjectId}' 
-                                     href="#">
-                            <span class="error-name">${error.name}</span>
-                        </vscode-link>
+                        <span class="error-name link ellipsis">${error.name}</span>
                         ${HtmlBuilder.getSourceCodeObject(codeObject, error)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
@@ -185,8 +179,7 @@ class HtmlBuilder
         if(codeobject.id == error.sourceCodeObjectId)
             return /*html*/`<span class="error-from">from me</span>`;
 
-        if(codeobject.id == error.sourceCodeObjectId)
-            return /*html*/`<span class="error-from">from</span>
-                            <span class="error-source">${error.sourceCodeObjectId?.split('$_$')[1]}</span>`;
+        return /*html*/`<span class="error-from">from</span>
+                        <span class="error-source ellipsis">${error.sourceCodeObjectId?.split('$_$')[1]}</span>`;
     }
 }
