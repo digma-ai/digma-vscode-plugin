@@ -17,7 +17,7 @@ export namespace UiMessage
     export namespace Get
     {
         export class ErrorDetails{
-            constructor(public errorName?: string, public sourceCodeObjectId?: string) {}
+            constructor(public codeObjectId?: string, public errorName?: string, public sourceCodeObjectId?: string) {}
         }
     }
 

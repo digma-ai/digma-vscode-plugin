@@ -14,6 +14,10 @@ export class OverlayView
         return HtmlHelper.getLoadingMessage("Loading...");
     }
 
+    public hide(){
+        this._channel.publish(new UiMessage.Set.Overlay());
+    }
+
     public showUnsupportedDocumentMessage(){
         const html = HtmlHelper.getInfoMessage("Select a document containing code to see its insights");
         this._channel.publish(new UiMessage.Set.Overlay(html))

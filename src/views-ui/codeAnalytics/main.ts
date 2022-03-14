@@ -26,27 +26,27 @@ window.addEventListener("load", () =>
     const errorsTab = $("#view-errors");
 
     consume(UiMessage.Set.Overlay, e => {
-        showOverlay(e.htmlContent);
+        if(e.htmlContent)
+            showOverlay(e.htmlContent);
+        else
+            showTabs();
     });
 
     consume(UiMessage.Set.ErrorsList, (event) => {
         if (event.htmlContent !== undefined) {
             errorsTab.find("#error-list").html(event.htmlContent);
-            showTabs();
         }
     });
 
     consume(UiMessage.Set.ErrorDetails, (event) => {
         if (event.htmlContent !== undefined) {
             $(".error-view").html(event.htmlContent);
-            showTabs();
         }
     });
     
     consume(UiMessage.Set.InsightsList, (event) => {
         if (event.htmlContent !== undefined) {
             insightsTab.find(".list").html(event.htmlContent);
-            showTabs();
         }
     });
 
@@ -68,12 +68,13 @@ window.addEventListener("load", () =>
     });
 
     $(document).on("click", "#show_error_details", function () {
+        let codeObjectId = $(this).data("codeObject-id");
         let errorName = $(this).data("error-name");
         let sourceCodeObjectId = $(this).data("error-source");
         $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
         $(".error-view").show();
         $(".errors-view").hide();
-        publish(new UiMessage.Get.ErrorDetails(errorName, sourceCodeObjectId));
+        publish(new UiMessage.Get.ErrorDetails(codeObjectId, errorName, sourceCodeObjectId));
     });
 
     $(document).on("click", ".error_frames_btn", function () {

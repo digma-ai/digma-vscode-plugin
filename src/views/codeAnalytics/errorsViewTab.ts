@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { SourceControl } from "../../services/sourceControl";
 import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
@@ -11,14 +10,11 @@ import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
-    private _isActive = false;
-    private _codeObject?: CodeObjectInfo = undefined;
     private _viewedCodeObjectId?: string = undefined;
 
     constructor(
         private _channel: WebviewChannel,
-        private _analyticsProvider: AnalyticsProvider,
-        private _sourceControl: SourceControl) 
+        private _analyticsProvider: AnalyticsProvider) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
     }
@@ -27,29 +23,21 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     get tabId(): string { return "tab-errors"; }
     get viewId(): string { return "view-errors"; }
 
-    public onReset(): void {
-        this._codeObject = undefined;
-        this._viewedCodeObjectId = undefined;
-    }
-    public onActivate(): void {
-        this._isActive = true;
-        this.refreshList();
-        this.refreshCodeObjectLabel();
-        vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, this._codeObject?.id);
+    public onActivate(codeObject: CodeObjectInfo): void {
+        this.refreshList(codeObject);
+        this.refreshCodeObjectLabel(codeObject);
+        vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, codeObject.id);
     }
     public onDectivate(): void {
-        this._isActive = false;
         vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Hide);
     }
-    public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {
-        this._codeObject = codeObject;
-        if(this._isActive){
-            this.refreshList();
-            this.refreshCodeObjectLabel();
-            vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, this._codeObject?.id);
-        }
+    public onUpdated(codeObject: CodeObjectInfo): void {
+        this.refreshList(codeObject);
+        this.refreshCodeObjectLabel(codeObject);
+        vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, codeObject.id);
     }
-    public getHtml(): string {
+    public getHtml(): string 
+    {
         return /*html*/`
             <div class="error-view" style="display: none">
              <span class="codicon codicon-arrow-left" title="Back"></span>
@@ -59,32 +47,29 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                 <div id="error-list" class="list"></div>
             </div>`;
     }    
-    private refreshCodeObjectLabel() {
-        let html = HtmlHelper.getCodeObjectLabel(this._codeObject!.methodName);
+    private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 
+    {
+        let html = HtmlHelper.getCodeObjectLabel(codeObject.methodName);
         this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
-    private async refreshList() {
-        if(!this._codeObject)
+    private async refreshList(codeObject: CodeObjectInfo) 
+    {
+        if(codeObject.id != this._viewedCodeObjectId)
         {
-            this._channel.publish(new UiMessage.Set.ErrorsList(''));
-            this._viewedCodeObjectId = undefined;
-        }
-        else if(this._viewedCodeObjectId != this._codeObject?.id)
-        {
-            const errors = await this._analyticsProvider.getCodeObjectErrors(this._codeObject.id);
-            const html = HtmlBuilder.buildErrorItems(errors);
+            const errors = await this._analyticsProvider.getCodeObjectErrors(codeObject.id);
+            const html = HtmlBuilder.buildErrorItems(codeObject, errors);
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
-            this._viewedCodeObjectId = this._codeObject?.id;
+            this._viewedCodeObjectId = codeObject.id;
         }
     }
     private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
-        if(!this._codeObject || !e.errorName || !e.sourceCodeObjectId)
+        if(!e.codeObjectId || !e.errorName || !e.sourceCodeObjectId)
             return;
 
         let html = HtmlBuilder.buildErrorDetails();
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
-        const errorDetails = await this._analyticsProvider.getCodeObjectError(this._codeObject.id, e.errorName, e.sourceCodeObjectId);
+        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.codeObjectId, e.errorName, e.sourceCodeObjectId);
         
         html = HtmlBuilder.buildErrorDetails(errorDetails);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
@@ -93,7 +78,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
 class HtmlBuilder
 {
-    public static buildErrorItems(errors: CodeObjectError[]): string{
+    public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectError[]): string{
         if(!errors.length){
             return HtmlHelper.getInfoMessage("No erros go through this code object.");
         }
@@ -105,6 +90,7 @@ class HtmlBuilder
                 <div class="list-item-content-area">
                     <div class="list-item-header flex-v-center">
                         <vscode-link id="show_error_details" 
+                                     data-codeObject-id='${codeObject.id}' 
                                      data-error-name='${error.name}' 
                                      data-error-source='${error.sourceCodeObjectId}' 
                                      href="#">

@@ -62,7 +62,9 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 	private _channel: WebviewChannel;
     private _tabs : Map<string, ICodeAnalyticsViewTab>;
     private _activeTab?: ICodeAnalyticsViewTab;
+    private _lastActivedTab: ICodeAnalyticsViewTab;
     private _overlay: OverlayView;
+    private _currentCodeObject?: CodeObjectInfo;
 
 	constructor(
 		extensionUri: vscode.Uri,
@@ -82,20 +84,39 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider),
-            new ErrorsViewTab(this._channel, this._analyticsProvider, sourceControl),
+            new ErrorsViewTab(this._channel, this._analyticsProvider),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
         for(let tab of tabsList)
             this._tabs.set(tab.tabId, tab);
-
+        this._lastActivedTab = tabsList[0];
         this._overlay = new OverlayView(this._channel);
 	}
 
     public async onCodeSelectionChanged(
 		document: vscode.TextDocument,
 		position: vscode.Position
-	) {
+	) {   
+        const codeobject = await this.getCodeObjectOrShowOverlay(document, position);
+        if(!codeobject)
+            return;
+
+        if(!this._activeTab){
+            this._activeTab = this._lastActivedTab;
+            this._activeTab.onActivate(codeobject);
+        }
+        else{
+            this._activeTab.onUpdated(codeobject);
+        }
+        this._overlay.hide();
+        this._currentCodeObject = codeobject;
+    }
+        
+    private async getCodeObjectOrShowOverlay(
+		document: vscode.TextDocument,
+		position: vscode.Position
+	): Promise<CodeObjectInfo | undefined> {
         if(document.uri.scheme == 'output')
             return;
 
@@ -104,48 +125,56 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
             : undefined;
         if(!docInfo){
             this._overlay.showUnsupportedDocumentMessage();
+            this._activeTab?.onDectivate();
+            this._activeTab = undefined;
             return;
         }
         
 		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
         if(!methodInfo){
             this._overlay.showCodeSelectionNotFoundMessage(docInfo);
+            this._activeTab?.onDectivate();
+            this._activeTab = undefined;
             return;
         }
 
-		var codeobjectInfo = <CodeObjectInfo>{ 
+		var codeobject = <CodeObjectInfo>{ 
             id: methodInfo?.symbol.id, 
             methodName: methodInfo?.displayName 
         };
-        this._tabs.forEach((value: ICodeAnalyticsViewTab, key: string) => {
-            value.onCodeObjectSelected(codeobjectInfo);
-        });
+        return codeobject;
 	}
 
     public async onLoadEvent(event: UiMessage.Notify.TabLoaded)
     {
-        if(this._activeTab)
-        {
-            this._activeTab.onReset();
-        }
-
         const editor = vscode.window.activeTextEditor;
         if(!editor){
             this._overlay.showUnsupportedDocumentMessage();
+            this._activeTab?.onDectivate();
+            this._activeTab = undefined;
             return;
         }
 
-        this.onCodeSelectionChanged(editor.document, editor.selection.anchor);
+        const codeobject = await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
+        if(!codeobject)
+            return;
 
-        if(event.selectedViewId){
-            this.onViewSelected(event.selectedViewId);
-        }
+        this._activeTab?.onDectivate();
+        this._activeTab = this._tabs.get(event.selectedViewId!)!;
+        this._activeTab.onActivate(codeobject);
+        this._lastActivedTab = this._activeTab;
+        this._overlay.hide();
+        this._currentCodeObject = codeobject;
     }
 
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)
     {
-        if(event.viewId){
-            this.onViewSelected(event.viewId);
+        if(event.viewId && this._currentCodeObject){
+            this._activeTab?.onDectivate();
+            this._activeTab = this._tabs.get(event.viewId)!;
+            this._activeTab.onActivate(this._currentCodeObject);
+            this._lastActivedTab = this._activeTab;
+            this._overlay.hide();
         }
     }
 
@@ -162,15 +191,6 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 
 		this._view.webview.html = this.getCodeAnalyticsView();
 	}
-
-    private onViewSelected(viewId: string): void {
-        if(this._activeTab)
-        {
-            this._activeTab.onDectivate();
-        }
-        this._activeTab = this._tabs.get(viewId);
-        this._activeTab?.onActivate();
-    }
 
     private getPanelTabs(): string
     {
