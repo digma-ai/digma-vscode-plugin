@@ -38,6 +38,10 @@ export class SymbolProvider
     {
     }
 
+    public supportsDocument(document: vscode.TextDocument): boolean{
+        return this.supportedLanguages.any(x => vscode.languages.match(x.documentFilter, document) > 0);
+    }
+
     private async retryOnStartup<T>(lspCall: () => Promise<T | undefined>, predicate: (result: T | undefined) => boolean): Promise<T | undefined>
     {
         let result = await lspCall();
@@ -178,7 +182,12 @@ export class SymbolProvider
             return false;
         }
         if(!extention.isActive)
+        {
+            Logger.info(`Starting activating "${extention.id}" extension`)
             await extention.activate();
+            Logger.info(`Finished activating "${extention.id}" extension`)
+        }
+            
 
         language.requiredExtentionLoaded = true;
         return true;

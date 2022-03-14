@@ -3,6 +3,14 @@ import { UiMessage } from "./contracts";
 
 window.addEventListener("load", () => 
 {
+    function showTabs(){
+        overlay.hide();
+        tabsContainer.show();
+    }
+    function showOverlay(html: string){
+        overlay.html(html).show();
+        tabsContainer.hide();
+    }
     function showErrorView() {
         $(".errors-view").hide();
         $(".error-view").show();
@@ -12,8 +20,17 @@ window.addEventListener("load", () =>
         $(".errors-view").show();
     }
 
-    let insightsTab = $("#view-insights");
-    let errorsTab = $("#view-errors");
+    const overlay = $("#view-overlay");
+    const tabsContainer = $("#view-tabs");
+    const insightsTab = $("#view-insights");
+    const errorsTab = $("#view-errors");
+
+    consume(UiMessage.Set.Overlay, e => {
+        if(e.htmlContent)
+            showOverlay(e.htmlContent);
+        else
+            showTabs();
+    });
 
     consume(UiMessage.Set.ErrorsList, (event) => {
         if (event.htmlContent !== undefined) {
@@ -51,12 +68,13 @@ window.addEventListener("load", () =>
     });
 
     $(document).on("click", "#show_error_details", function () {
+        let codeObjectId = $(this).data("codeObject-id");
         let errorName = $(this).data("error-name");
         let sourceCodeObjectId = $(this).data("error-source");
         $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
         $(".error-view").show();
         $(".errors-view").hide();
-        publish(new UiMessage.Get.ErrorDetails(errorName, sourceCodeObjectId));
+        publish(new UiMessage.Get.ErrorDetails(codeObjectId, errorName, sourceCodeObjectId));
     });
 
     $(document).on("click", ".error_frames_btn", function () {
@@ -69,6 +87,10 @@ window.addEventListener("load", () =>
         $(".error-raw").show();
     });
 
+    overlay.on("click", ".codeobject-link", function(){
+        const line = $(this).data("line");
+        publish(new UiMessage.Notify.GoToLine(parseInt(line)));
+    });
     //   $(document).on("change", ".workspace-only-checkbox", function () {
 
     //     $("")

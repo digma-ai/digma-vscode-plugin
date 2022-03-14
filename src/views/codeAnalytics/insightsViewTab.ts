@@ -4,17 +4,17 @@ import {
     CodeObjectInsightErrorsResponse,
     CodeObjectInsightHotSpotResponse,
     CodeObjectInsightResponse,
+    HttpError,
 } from "../../services/analyticsProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { Logger } from "../../services/logger";
 
 export class InsightsViewTab implements ICodeAnalyticsViewTab 
 {
-    private _isActive = false;
-    private _listLoaded = false;
-    private _codeObject?: CodeObjectInfo = undefined;
+    private _viewedCodeObjectId?: string = undefined;
 
     constructor(
         private _channel: WebviewChannel,
@@ -24,52 +24,64 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     get tabId(): string { return "tab-insights"; }
     get viewId(): string { return "view-insights"; }
 
-    public onCodeObjectSelected(codeObject: CodeObjectInfo | undefined): void {
-        this._codeObject = codeObject;
-        if (this._isActive) {
-            this.refreshCodeObjectLabel();
-            this.refreshListViewRequested();
-        } else {
+    private async refreshListViewRequested(codeObject: CodeObjectInfo) {
+        if (!codeObject) {
             this.updateListView("");
+            return;
+        }
+        this.updateListView(HtmlHelper.getLoadingMessage("Loading insights..."));
+
+        let listItems: string[] = [];
+        try
+        {
+            const response = await this._analyticsProvider.getCodeObjectInsights(codeObject.id);
+            if (response.spot) {
+                this.addHotspotListItem(response.spot, listItems);
+            }
+            if (response.errors) {
+                this.addErrorsListItem(response.errors, listItems);
+            }
+        }
+        catch(e)
+        {
+            if(!(e instanceof HttpError) || e.status != 404){
+                Logger.error(`Failed to get codeObject ${codeObject.id} insights`, e);
+                this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
+                return;
+            }
+        }
+
+        if(listItems.length == 0){
+            this.updateListView(HtmlHelper.getInfoMessage("No insights about this code object yet."));
+        }else{
+            this.updateListView(listItems.join(""));
+        }
+        this._viewedCodeObjectId = codeObject.id;
+    }
+
+    public onReset(): void{
+        this._viewedCodeObjectId = undefined;
+    }
+
+    public onActivate(codeObject: CodeObjectInfo): void {
+        if (codeObject.id != this._viewedCodeObjectId) {
+            this.refreshCodeObjectLabel(codeObject);
+            this.refreshListViewRequested(codeObject);
         }
     }
 
-    private async refreshListViewRequested() {
-        if (this._codeObject) {
-            let response = await this._analyticsProvider.getCodeObjectInsights(
-                this._codeObject.id
-            );
-            if (response) {
-                let listItems: string[] = [];
-                if (response.spot) {
-                    this.addHotspotListItem(response.spot, listItems);
-                }
-                if (response.errors) {
-                    this.addErrorsListItem(response.errors, listItems);
-                }
-                this.updateListView(listItems.join(""));
-            }
-        } else {
-            this.updateListView("");
-        }
-    }
-    public onReset(): void {
-        this._listLoaded = false;
-    }
-    public onActivate(): void {
-        this._isActive = true;
-        if (!this._listLoaded) {
-            this.refreshCodeObjectLabel(); //init state todo find better way
-            this.refreshListViewRequested();
+    public onUpdated(codeObject: CodeObjectInfo): void {
+        if (codeObject.id != this._viewedCodeObjectId) {
+            this.refreshCodeObjectLabel(codeObject);
+            this.refreshListViewRequested(codeObject);
         }
     }
 
     public onDectivate(): void {
-        this._isActive = false;
     }
 
-    private refreshCodeObjectLabel() {
-        let html = HtmlHelper.getCodeObjectLabel(this._codeObject?.methodName);
+    private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
+        let html = HtmlHelper.getCodeObjectLabel(codeObject.methodName);
         this._channel?.publish(
             new UiMessage.Set.CodeObjectLabel(html)
         );
@@ -77,11 +89,6 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
     private updateListView(html: string): void {
         this._channel?.publish(new UiMessage.Set.InsightsList(html));
-        if (html !== "") {
-            this._listLoaded = true;
-        } else {
-            this._listLoaded = false;
-        }
     }
 
     private addHotspotListItem(
@@ -131,9 +138,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
     public getHtml(): string {
         return /*html*/`
-            <section style="display: flex; flex-direction: column; width: 100%;">
-                ${HtmlHelper.getCodeObjectPlaceholder()}
-                <div class="list">
-            </section>`;
+            <div class="codeobject-selection"></div>
+            <div class="list"></div>`;
     }
 }
