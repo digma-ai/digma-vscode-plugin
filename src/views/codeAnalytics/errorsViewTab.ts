@@ -1,11 +1,12 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials } from "../../services/analyticsProvider";
+import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials, HttpError } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { integer } from "vscode-languageclient";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
+import { Logger } from "../../services/logger";
 
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
@@ -59,7 +60,21 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     {
         if(codeObject.id != this._viewedCodeObjectId)
         {
-            const errors = await this._analyticsProvider.getCodeObjectErrors(codeObject.id);
+            let errors: CodeObjectError[] = [];
+            try
+            {
+                errors = await this._analyticsProvider.getCodeObjectErrors(codeObject.id);
+            }
+            catch(e)
+            {
+                if(!(e instanceof HttpError) || e.status != 404){
+                    Logger.error(`Failed to get codeObject ${codeObject.id} errors`, e);
+                    const html = HtmlHelper.getErrorMessage("Failed to fetch errors from Digma server.\nSee Output window from more info.");
+                    this._channel.publish(new UiMessage.Set.ErrorsList(html));
+                    return;
+                }
+            }
+
             const html = HtmlBuilder.buildErrorItems(codeObject, errors);
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId = codeObject.id;
@@ -99,8 +114,7 @@ class HtmlBuilder
                                      href="#">
                             <span class="error-name">${error.name}</span>
                         </vscode-link>
-                        <span class="error-from">from</span>
-                        <span class="error-source">${error.sourceCodeObjectId.split('$_$')[1]}</span>
+                        ${HtmlBuilder.getSourceCodeObject(codeObject, error)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
                     ${HtmlBuilder.getErrorStartEndTime(error)}
@@ -134,9 +148,11 @@ class HtmlBuilder
 
     private static buildScoreTooltip(error?: CodeObjectError): string{
         let tooltip = '';
-        error?.scoreParams.forEach((value: integer, key: string) => {
-            tooltip += `${key}: +${value}`;
-        });
+        for(let prop in error?.scoreParams || {}){
+            let value = error?.scoreParams[prop] 
+            if(value > 0)
+                tooltip += `${prop}: +${error?.scoreParams[prop]}\n`;
+        }
         return tooltip;
     }
 
@@ -162,5 +178,15 @@ class HtmlBuilder
                 </span>
             </div>`;
     }
+    private static getSourceCodeObject(codeobject: CodeObjectInfo, error: CodeObjectError){
+        if(!error.sourceCodeObjectId)
+            return '';
 
+        if(codeobject.id == error.sourceCodeObjectId)
+            return /*html*/`<span class="error-from">from me</span>`;
+
+        if(codeobject.id == error.sourceCodeObjectId)
+            return /*html*/`<span class="error-from">from</span>
+                            <span class="error-source">${error.sourceCodeObjectId?.split('$_$')[1]}</span>`;
+    }
 }

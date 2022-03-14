@@ -163,7 +163,7 @@ export class CodeObjectInsightResponse
 export interface CodeObjectError{
     name: string;
     score: integer;
-    scoreParams: Map<string, integer>;
+    scoreParams: any;
     sourceCodeObjectId: string;
     characteristic: string;
     startsHere: boolean;
@@ -208,32 +208,18 @@ export class AnalyticsProvider
             lastOccurenceTime: moment().add(-1,'days')
         }
     }
-    public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>{
-        return [
+    public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>
+    {
+        const response = await this.send<CodeObjectError[]>(
+            'GET', 
+            `/CodeAnalytics/codeObjects/errors`, 
             {
-                name: "TimeoutError",
-                score: 82,
-                scoreParams: new Map([["New", 10]]),
-                characteristic: "Started happening yesterday",
-                sourceCodeObjectId: "UsersErvice$_$GetUsers",
-                startsHere: true,
-                endsHere: false,
-                firstOccurenceTime: moment().add(-3,'days'),
-                lastOccurenceTime: moment().add(-1,'days')
-            },
+                codeObjectId: codeObjectId,
+                environment: Settings.environment.value
+            }, 
+            undefined);
             
-            {
-                name: "DeadlockError",
-                score: 65,
-                scoreParams: new Map([["Unhandled", 30]]),
-                characteristic: "This is an unhandled error",
-                sourceCodeObjectId: "UsersErvice$_$GetUsers",
-                startsHere: true,
-                endsHere: true,
-                firstOccurenceTime: moment().add(-3,'days'),
-                lastOccurenceTime: moment().add(-1,'days')
-            }
-        ]
+        return response;
     }
 
     public async getCodeObjectInsights(codeObjectId: string): Promise<CodeObjectInsightResponse> 
