@@ -158,7 +158,7 @@ class HtmlBuilder
                 </span>
                 <span class="flex-stretch">
                     <span class="time-label">Last:</span>
-                    <span>${error.lasttOccurenceTime.fromNow()}</span>
+                    <span>${error.lastOccurenceTime.fromNow()}</span>
                 </span>
             </div>`;
     }

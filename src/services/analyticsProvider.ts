@@ -169,7 +169,7 @@ export interface CodeObjectError{
     startsHere: boolean;
     endsHere: boolean;
     firstOccurenceTime: moment.Moment;
-    lasttOccurenceTime: moment.Moment;
+    lastOccurenceTime: moment.Moment;
 }
 
 export interface CodeObjectErrorDetials extends CodeObjectError{
@@ -205,7 +205,7 @@ export class AnalyticsProvider
             startsHere: true,
             endsHere: false,
             firstOccurenceTime: moment().add(-3,'days'),
-            lasttOccurenceTime: moment().add(-1,'days')
+            lastOccurenceTime: moment().add(-1,'days')
         }
     }
     public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>{
@@ -219,7 +219,7 @@ export class AnalyticsProvider
                 startsHere: true,
                 endsHere: false,
                 firstOccurenceTime: moment().add(-3,'days'),
-                lasttOccurenceTime: moment().add(-1,'days')
+                lastOccurenceTime: moment().add(-1,'days')
             },
             
             {
@@ -231,7 +231,7 @@ export class AnalyticsProvider
                 startsHere: true,
                 endsHere: true,
                 firstOccurenceTime: moment().add(-3,'days'),
-                lasttOccurenceTime: moment().add(-1,'days')
+                lastOccurenceTime: moment().add(-1,'days')
             }
         ]
     }
