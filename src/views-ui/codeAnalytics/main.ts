@@ -91,19 +91,16 @@ window.addEventListener("load", () =>
         const line = $(this).data("line");
         publish(new UiMessage.Notify.GoToLine(parseInt(line)));
     });
-    //   $(document).on("change", ".workspace-only-checkbox", function () {
-
-    //     $("")
-    //     //publish(new ErrorDetailsShowWorkspaceOnly(this.checked));
-
-    //   });
 
     /* end of error-view */
 
     $(document).on("click", ".expand", function () {
         var tabId = $(this).attr("tab-id");
         if (tabId) {
-            $(".analytics-nav").attr("activeid", tabId);
+            let tabsElement: any = $(".analytics-nav")[0];
+            const group = tabsElement.tabs;
+            let tab = group.find(o=>o.id === tabId);
+            tabsElement.moveToTabByIndex(group, group.indexOf(tab));
         }
     });
 
