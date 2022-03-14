@@ -59,6 +59,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this._viewedCodeObjectId = codeObject.id;
     }
 
+    public onReset(): void{
+        this._viewedCodeObjectId = undefined;
+    }
+
     public onActivate(codeObject: CodeObjectInfo): void {
         if (codeObject.id != this._viewedCodeObjectId) {
             this.refreshCodeObjectLabel(codeObject);

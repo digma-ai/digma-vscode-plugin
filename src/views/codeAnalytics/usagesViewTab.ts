@@ -14,7 +14,8 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     get tabTitle(): string { return "Usages"; }
     get tabId(): string { return "tab-usages"; }
     get viewId(): string { return "view-usages"; }
-
+    
+    public onReset(): void{}
     public onActivate(codeObject: CodeObjectInfo): void {}
     public onUpdated(codeObject: CodeObjectInfo): void {}
     public onDectivate(): void {}

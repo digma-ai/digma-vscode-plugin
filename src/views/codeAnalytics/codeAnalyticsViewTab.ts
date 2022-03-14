@@ -8,6 +8,7 @@ export interface ICodeAnalyticsViewTab
     get viewId(): string;
     
     getHtml(): string;
+    onReset(): void;
     onActivate(codeObject: CodeObjectInfo): void ;
     onDectivate(): void ;
     onUpdated(codeObject: CodeObjectInfo): void ;

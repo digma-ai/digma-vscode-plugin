@@ -147,6 +147,8 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 
     public async onLoadEvent(event: UiMessage.Notify.TabLoaded)
     {
+        this._tabs.forEach((v,k)=> v.onReset());
+
         const editor = vscode.window.activeTextEditor;
         if(!editor){
             this._overlay.showUnsupportedDocumentMessage();

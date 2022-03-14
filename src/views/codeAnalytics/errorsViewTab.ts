@@ -22,7 +22,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     get tabTitle(): string { return "Errors"; }
     get tabId(): string { return "tab-errors"; }
     get viewId(): string { return "view-errors"; }
-
+    
+    public onReset(): void{
+        this._viewedCodeObjectId = undefined;
+    }
     public onActivate(codeObject: CodeObjectInfo): void {
         this.refreshList(codeObject);
         this.refreshCodeObjectLabel(codeObject);
