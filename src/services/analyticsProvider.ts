@@ -167,6 +167,7 @@ export class CodeObjectInsightResponse
 }
 
 export interface CodeObjectError{
+    uid: string;
     name: string;
     score: integer;
     scoreParams: any;
@@ -208,6 +209,7 @@ export class AnalyticsProvider
 
     public async getCodeObjectError(codeObjectId: string, errorName: string, sourceCodeObjectId: string): Promise<CodeObjectErrorDetials>{
         return {
+            uid: "32205386-bdbc-4c62-81a6-f24064c7a938",
             name: "TimeoutError",
             score: 82,
             scoreParams: new Map([["New", 10]]),
