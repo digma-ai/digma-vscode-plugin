@@ -144,11 +144,17 @@ export interface CodeObjectsSummaryResponse
 
 export interface CodeObjectInsightErrorsResponse
 {
-    errorFlowsCount: number,
+    errorCount: number,
     unhandledCount: number,
     unexpectedCount: number,
-    topErrorAliases: [string]
+    topErrors: [NamedError]
 }
+export interface NamedError
+{
+    errorType: string,
+    sourceCodeObjectId: string
+}
+
 export interface CodeObjectInsightHotSpotResponse
 {
     score: number,

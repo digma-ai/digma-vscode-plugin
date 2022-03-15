@@ -1,7 +1,7 @@
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
-import { ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { ICodeAnalyticsViewTab } from "./common";
 
 export class UsagesViewTab implements ICodeAnalyticsViewTab 
 {

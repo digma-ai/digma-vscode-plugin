@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { DocumentInfo } from "../../services/documentInfoProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
-import { HtmlHelper } from "./codeAnalyticsViewTab";
+import { HtmlHelper } from "./common";
 
 export class OverlayView
 {

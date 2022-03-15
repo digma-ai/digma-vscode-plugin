@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials, HttpError } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
-import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { integer } from "vscode-languageclient";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
@@ -107,8 +107,7 @@ class HtmlBuilder
             <div class="list-item">
                 <div class="list-item-content-area">
                     <div class="list-item-header flex-v-center">
-                        <span class="error-name link ellipsis">${error.name}</span>
-                        ${HtmlBuilder.getSourceCodeObject(codeObject, error)}
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
                     ${HtmlBuilder.getErrorStartEndTime(error)}
@@ -171,15 +170,5 @@ class HtmlBuilder
                     <span>${error.lastOccurenceTime.fromNow()}</span>
                 </span>
             </div>`;
-    }
-    private static getSourceCodeObject(codeobject: CodeObjectInfo, error: CodeObjectError){
-        if(!error.sourceCodeObjectId)
-            return '';
-
-        if(codeobject.id == error.sourceCodeObjectId)
-            return /*html*/`<span class="error-from">from me</span>`;
-
-        return /*html*/`<span class="error-from">from</span>
-                        <span class="error-source ellipsis">${error.sourceCodeObjectId?.split('$_$')[1]}</span>`;
     }
 }

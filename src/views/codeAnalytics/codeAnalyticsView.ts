@@ -4,7 +4,7 @@ import { DocumentInfo, DocumentInfoProvider } from "../../services/documentInfoP
 import { SourceControl } from "../../services/sourceControl";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
-import { ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { ICodeAnalyticsViewTab } from "./common";
 import { ErrorsViewTab } from "./errorsViewTab";
 import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
