@@ -102,6 +102,10 @@ ul.tree{
     overflow: hidden;
     text-overflow: ellipsis;
 }
+.left-ellipsis{
+    @extend .ellipsis;
+    direction: rtl;
+}
 
 .filter-tag {
     border-radius: 23px;
