@@ -75,4 +75,19 @@ export class HtmlHelper
                 <div>${text}</div>
             </div>`;
     }
+
+    public static getErrorName(selectedCodeobject: CodeObjectInfo, errorType: string, errorSourceCodeObjectId: string)
+    {
+        return /*html*/ `
+        <span class="error-name link ellipsis">${errorType}</span>
+                        ${HtmlHelper.getSourceCodeObject(selectedCodeobject, errorSourceCodeObjectId)}
+        `;
+    }
+    private static getSourceCodeObject(selectedCodeobject: CodeObjectInfo, errorSourceCodeObjectId: string){
+        if(selectedCodeobject.id === errorSourceCodeObjectId)
+            return /*html*/`<span class="error-from">from me</span>`;
+
+        return /*html*/`<span class="error-from">from</span>
+                        <span class="error-source ellipsis">${errorSourceCodeObjectId.split('$_$')[1]}</span>`;
+    }
 }
