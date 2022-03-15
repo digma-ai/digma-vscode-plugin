@@ -9,7 +9,7 @@ import {
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
-import { HtmlHelper, ICodeAnalyticsViewTab } from "./codeAnalyticsViewTab";
+import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
 
 export class InsightsViewTab implements ICodeAnalyticsViewTab 
@@ -39,7 +39,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 this.addHotspotListItem(response.spot, listItems);
             }
             if (response.errors) {
-                this.addErrorsListItem(response.errors, listItems);
+                this.addErrorsListItem(response.errors, listItems, codeObject);
             }
         }
         catch(e)
@@ -98,7 +98,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         listItems.push(`
     <div class="list-item">
     <div class="list-item-content-area">
-        <div class="list-item-header">This is an error spot</div>
+        <div class="list-item-header"><strong>This is an error spot</strong></div>
         <div><vscode-link href="#">See how this was calculated</vscode-link></div>
     </div> 
     <div class="list-item-right-area">
@@ -109,23 +109,22 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
     private addErrorsListItem(
         errors: CodeObjectInsightErrorsResponse,
-        listItems: string[]
+        listItems: string[], 
+        selectedCodeObject: CodeObjectInfo
     ) {
-        let topErrorAliases: string[] = [];
-        errors.topErrorAliases.forEach((alias) => {
-            topErrorAliases.push(`<div>${alias}</div>`);
+        
+        let errorsHtml: string[] = [];
+        errors.topErrors.forEach((err) => {
+            errorsHtml.push(`<div>${HtmlHelper.getErrorName(selectedCodeObject,err.errorType, err.sourceCodeObjectId)}</div>`)
         });
 
         listItems.push(`
     <div class="list-item">
     <div class="list-item-content-area">
-        <div class="list-item-header">Errors</div>
-        <div>${errors.errorFlowsCount} ErrorFlows (${
-            errors.unhandledCount
-        } unhandled ${errors.unexpectedCount} unexpected)
-        </div>
+        <div class="list-item-header"><strong>Errors</strong></div>
+        <div>${errors.errorCount} Errors (${errors.unhandledCount} unhandled ${errors.unexpectedCount} unexpected)</div>
         <div class="spacer"></div>
-        ${topErrorAliases.join("")}
+        ${errorsHtml.join("")}
     </div>
     <div class="list-item-right-area">
       <div class="expand">
