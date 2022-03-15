@@ -10,9 +10,13 @@ import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
 import { UsagesViewTab } from "./usagesViewTab";
 
-export class CodeAnalyticsView implements vscode.Disposable {
+export class CodeAnalyticsView implements vscode.Disposable 
+{
 	public static readonly viewId = "codeAnalytics";
-
+    public static Commands = class {
+        public static readonly Show = `digma.${CodeAnalyticsView.viewId}.show`;
+    };
+    
 	private _provider: CodeAnalyticsViewProvider;
 	private _disposables: vscode.Disposable[] = [];
 
@@ -38,7 +42,10 @@ export class CodeAnalyticsView implements vscode.Disposable {
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
 					await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
 				}
-			)
+			),
+            vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
+                await vscode.commands.executeCommand("workbench.view.extension.digma");
+            })
 		];
 	}
 
@@ -56,7 +63,7 @@ export interface CodeObjectInfo {
 	methodName: string
 }
 class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
-{
+{  
 	private _view?: vscode.WebviewView;
 	private _webViewUris: WebViewUris;
 	private _channel: WebviewChannel;

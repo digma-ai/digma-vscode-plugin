@@ -1,7 +1,7 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
 import { SymbolInfo } from '../languageSupport';
-import { AnalyticsProvider, CodeObjectSummary } from './analyticsProvider';
+import { AnalyticsProvider, CodeObjectScore, CodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
 import { SymbolProvider, Token, TokenType } from './symbolProvider';
 import { Dictionary, Future } from './utils';
@@ -69,11 +69,14 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
                 const lines = this.createLineInfos(doc, codeObjectSummaries, methods);
 
+                const scores = await this.analyticsProvider.getCodeObjectScores(symbolInfos.map(s => s.id));
+
                 latestVersionInfo.value = {
                     codeObjectSummaries,
                     methods,
                     lines,
-                    tokens
+                    tokens,
+                    scores
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
@@ -83,7 +86,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                     codeObjectSummaries: [],
                     methods: [],
                     lines: [],
-                    tokens: []
+                    tokens: [],
+                    scores: []
                 };
                 Logger.error(`Failed to build DocumentInfo for ${doc.uri} v${doc.version}`, e);
             }
@@ -203,6 +207,7 @@ export interface DocumentInfo
     methods: MethodInfo[];
     lines: LineInfo[];
     tokens: Token[];
+    scores: CodeObjectScore[];
 }
 
 export interface LineInfo

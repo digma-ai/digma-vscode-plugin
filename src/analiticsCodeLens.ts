@@ -4,8 +4,9 @@ import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
-import { DocumentInfoProvider } from './services/documentInfoProvider';
+import { DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
 import { sign } from 'crypto';
+import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 
 
 export class AnaliticsCodeLens implements vscode.Disposable
@@ -17,11 +18,11 @@ export class AnaliticsCodeLens implements vscode.Disposable
     {
         this._provider = new CodelensProvider(documentInfoProvider);
 
-        this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (document: vscode.TextDocument, symbolId: string, displayName: string) => {
-            await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, symbolId, displayName);
-            await vscode.commands.executeCommand(ErrorFlowStackView.Commands.ClearErrorFlow);
+        this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (methodInfo: MethodInfo) => {
+            if(vscode.window.activeTextEditor)
+                vscode.window.activeTextEditor.selection = new vscode.Selection(methodInfo.range.start, methodInfo.range.start);
+            await vscode.commands.executeCommand(CodeAnalyticsView.Commands.Show);
         }));
-
         this._disposables.push(vscode.workspace.onDidChangeConfiguration((_) => {
             this._provider.raiseOnDidChangeCodeLenses();
         },this._disposables));
@@ -66,38 +67,17 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
-            const summary = documentInfo.codeObjectSummaries.firstOrDefault(x => x.id == methodInfo.symbol.id);
-            if(!summary || summary.errorFlowCount == 0)
+            const score = documentInfo.scores.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
+            if(score < 50)
                 continue; 
-            
-            var title = "";
-            if (summary.unhandled || summary.unexpected){
-                title = `${summary.errorFlowCount} Errors`;
-            }
-            else{
-                title = `Errors information`;
-            }
-
-            if (summary.unhandled){
-                title+=` $(error) `;
-            }
-
-            if (summary.unexpected){
-                title+=` $(bug) `;
-            }
-            
-            //(${trendToCodIcon(summary.trend)})
 
             codelens.push(new vscode.CodeLens(methodInfo.range, {
-                title:  title,
+                title:  'Error Hotspot',
                 // tooltip: methodInfo.symbol.id,
                 command: CodelensProvider.clickCommand,
-                arguments: [document, methodInfo.symbol.id, methodInfo.displayName]
+                arguments: [methodInfo]
             }));
-            
-
         }
-
         return codelens;
     }
 

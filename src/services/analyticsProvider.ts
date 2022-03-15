@@ -172,6 +172,11 @@ export interface CodeObjectError{
     lastOccurenceTime: moment.Moment;
 }
 
+export interface CodeObjectScore{
+    id: string;
+    score: integer;
+}
+
 export interface CodeObjectErrorDetials extends CodeObjectError{
 
 }
@@ -208,6 +213,21 @@ export class AnalyticsProvider
             lastOccurenceTime: moment().add(-1,'days')
         }
     }
+
+    public async getCodeObjectScores(codeObjectIds: string[]): Promise<CodeObjectScore[]>
+    {
+        const response = await this.send<CodeObjectScore[]>(
+            'POST', 
+            `/CodeAnalytics/codeObjects/scores`, 
+            undefined,
+            { //body
+                codeObjectIds: codeObjectIds,
+                environment: Settings.environment.value
+            });
+            
+        return response;
+    }
+    
     public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>
     {
         const response = await this.send<CodeObjectError[]>(
