@@ -7,7 +7,8 @@ import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { integer } from "vscode-languageclient";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
-
+import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import moment = require('moment');
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -15,7 +16,9 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
     constructor(
         private _channel: WebviewChannel,
-        private _analyticsProvider: AnalyticsProvider) 
+        private _analyticsProvider: AnalyticsProvider,
+		private _documentInfoProvider: DocumentInfoProvider,
+    ) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
     }
@@ -86,13 +89,61 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             return;
         }
 
-        let html = HtmlBuilder.buildErrorDetails();
+        const emptyCodeObject: CodeObjectInfo = {
+            id: '',
+            methodName: ''
+        };
+        const emptyError: CodeObjectErrorDetails = {
+            uid: '',
+            name: '',
+            scoreInfo: {
+                score: 0,
+                scoreParams: undefined,
+            },
+            sourceCodeObjectId: '',
+            characteristic: '',
+            startsHere: false,
+            endsHere: false,
+            firstOccurenceTime: moment(),
+            lastOccurenceTime: moment(),
+            dayAvg: 0
+        };
+        let html = HtmlBuilder.buildErrorDetails(emptyError, emptyCodeObject);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
         const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
+        const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
         
-        html = HtmlBuilder.buildErrorDetails(errorDetails);
+        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
+    }
+
+    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) {
+            return;
+        }
+
+        const document = editor.document;
+        const position = editor.selection.anchor;
+
+        const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+            ? await this._documentInfoProvider.getDocumentInfo(document)
+            : undefined;
+        if(!docInfo){
+            return;
+        }
+        
+        const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
+        if(!methodInfo){
+            return;
+        }
+
+        const codeObject = <CodeObjectInfo>{ 
+            id: methodInfo.symbol.id, 
+            methodName: methodInfo.displayName 
+        };
+        return codeObject;
     }
 }
 
@@ -123,7 +174,7 @@ class HtmlBuilder
         return html;
     }
 
-    public static buildErrorDetails(error?: CodeObjectErrorDetails): string{
+    public static buildErrorDetails(error: CodeObjectErrorDetails, codeObject: CodeObjectInfo): string{
         return /*html*/`
             <div class="flex-row">
                 <vscode-button appearance="icon" class="error-view-close">
@@ -131,9 +182,7 @@ class HtmlBuilder
                 </vscode-button>
                 <span class="flex-stretch flex-v-center error-title">
                     <div>
-                        <span class="error-name">${error?.name ?? ''}</span>
-                        <span class="error-from">from</span>
-                        <span class="error-source">${error?.sourceCodeObjectId ??''}</span>
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
                     </div>
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}

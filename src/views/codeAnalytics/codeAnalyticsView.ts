@@ -91,7 +91,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider),
-            new ErrorsViewTab(this._channel, this._analyticsProvider),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
