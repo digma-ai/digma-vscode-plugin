@@ -195,18 +195,18 @@ export interface OriginService {
 }
 
 export interface Frame {
-    "moduleName": string;
-    "functionName": string;
-    "lineNumber": number;
-    "excutedCode": string;
-    "codeObjectId": string;
-    "parameters": null;
-    "repeat": number;
-    "spanName": string;
-    "spanKind": string;
-    "moduleLogicalPath": string;
-    "modulePhysicalPath": string;
-    "className": string;
+    moduleName: string;
+    functionName: string;
+    lineNumber: number;
+    excutedCode: string;
+    codeObjectId: string;
+    parameters: null;
+    repeat: number;
+    spanName: string;
+    spanKind: string;
+    moduleLogicalPath: string;
+    modulePhysicalPath: string;
+    className: string;
 }
 
 export interface FrameStack {
