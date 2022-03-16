@@ -62,7 +62,7 @@ export interface CodeObjectInfo {
 	id: string,
 	methodName: string
 }
-class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
+class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 {  
 	private _view?: vscode.WebviewView;
 	private _webViewUris: WebViewUris;
@@ -91,7 +91,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider),
-            new ErrorsViewTab(this._channel, this._analyticsProvider),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
@@ -105,19 +105,19 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
 		document: vscode.TextDocument,
 		position: vscode.Position
 	) {   
-        const codeobject = await this.getCodeObjectOrShowOverlay(document, position);
-        if(!codeobject)
+        const codeObject = await this.getCodeObjectOrShowOverlay(document, position);
+        if(!codeObject)
             return;
 
         if(!this._activeTab){
             this._activeTab = this._lastActivedTab;
-            this._activeTab.onActivate(codeobject);
+            this._activeTab.onActivate(codeObject);
         }
         else{
-            this._activeTab.onUpdated(codeobject);
+            this._activeTab.onUpdated(codeObject);
         }
         this._overlay.hide();
-        this._currentCodeObject = codeobject;
+        this._currentCodeObject = codeObject;
     }
         
     private async getCodeObjectOrShowOverlay(
@@ -127,7 +127,7 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
         if(document.uri.scheme == 'output')
             return;
 
-        let docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+        const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
             ? await this._documentInfoProvider.getDocumentInfo(document)
             : undefined;
         if(!docInfo){
@@ -145,11 +145,11 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
             return;
         }
 
-		var codeobject = <CodeObjectInfo>{ 
+		const codeObject = <CodeObjectInfo>{ 
             id: methodInfo?.symbol.id, 
             methodName: methodInfo?.displayName 
         };
-        return codeobject;
+        return codeObject;
 	}
 
     public async onLoadEvent(event: UiMessage.Notify.TabLoaded)
@@ -164,16 +164,17 @@ class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
             return;
         }
 
-        const codeobject = await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
-        if(!codeobject)
+        const codeObject = await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
+        if(!codeObject) {
             return;
+        }
 
         this._activeTab?.onDectivate();
         this._activeTab = this._tabs.get(event.selectedViewId!)!;
-        this._activeTab.onActivate(codeobject);
+        this._activeTab.onActivate(codeObject);
         this._lastActivedTab = this._activeTab;
         this._overlay.hide();
-        this._currentCodeObject = codeobject;
+        this._currentCodeObject = codeObject;
     }
 
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)

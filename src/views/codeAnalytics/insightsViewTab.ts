@@ -292,7 +292,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         
         let errorsHtml: string[] = [];
         errors.topErrors.forEach((err) => {
-            errorsHtml.push(`<div>${HtmlHelper.getErrorName(selectedCodeObject,err.errorType, err.sourceCodeObjectId)}</div>`)
+            errorsHtml.push(`<div>${HtmlHelper.getErrorName(selectedCodeObject,err.errorType, err.sourceCodeObjectId, err.uid)}</div>`)
         });
 
         listItems.push(`

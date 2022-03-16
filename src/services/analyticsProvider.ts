@@ -151,6 +151,7 @@ export interface CodeObjectInsightErrorsResponse
 }
 export interface NamedError
 {
+    uid: string,
     errorType: string,
     sourceCodeObjectId: string
 }
@@ -169,8 +170,7 @@ export class CodeObjectInsightResponse
 export interface CodeObjectError{
     uid: string;
     name: string;
-    score: integer;
-    scoreParams: any;
+    scoreInfo: ScoreInfo;
     sourceCodeObjectId: string;
     characteristic: string;
     startsHere: boolean;
@@ -179,13 +179,52 @@ export interface CodeObjectError{
     lastOccurenceTime: moment.Moment;
 }
 
+export interface ScoreInfo
+{
+    score: integer;
+    scoreParams: any;
+}
+
 export interface CodeObjectScore{
     id: string;
     score: integer;
 }
 
-export interface CodeObjectErrorDetials extends CodeObjectError{
+export interface OriginService {
+    serviceName: string;
+}
 
+export interface Frame {
+    moduleName: string;
+    functionName: string;
+    lineNumber: number;
+    excutedCode: string;
+    codeObjectId: string;
+    parameters: null;
+    repeat: number;
+    spanName: string;
+    spanKind: string;
+    moduleLogicalPath: string;
+    modulePhysicalPath: string;
+    className: string;
+}
+
+export interface FrameStack {
+    exceptionType: string;
+    frames: Frame[];
+    exceptionMessage: string;
+}
+
+export interface DetailedErrorInfo {
+    frameStacks: FrameStack[];
+    stackTrace: string;
+    lastInstanceCommitId: string;
+}
+
+export interface CodeObjectErrorDetails extends CodeObjectError{
+    dayAvg: number;
+    originServices: OriginService[]
+    errors: DetailedErrorInfo[],
 }
 
 export class AnalyticsProvider
@@ -207,19 +246,24 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getCodeObjectError(codeObjectId: string, errorName: string, sourceCodeObjectId: string): Promise<CodeObjectErrorDetials>{
-        return {
-            uid: "32205386-bdbc-4c62-81a6-f24064c7a938",
-            name: "TimeoutError",
-            score: 82,
-            scoreParams: new Map([["New", 10]]),
-            characteristic: "Started happening yesterday",
-            sourceCodeObjectId: "UsersErvice$_$GetUsers",
-            startsHere: true,
-            endsHere: false,
-            firstOccurenceTime: moment().add(-3,'days'),
-            lastOccurenceTime: moment().add(-1,'days')
-        }
+    public async getCodeObjectError(errorSourceUID: string): Promise<CodeObjectErrorDetails>{
+        const response = await this.send<CodeObjectErrorDetails>(
+            'GET', 
+            `/CodeAnalytics/codeObjects/errors/${errorSourceUID}`
+        );
+        return response;
+
+        // return {
+        //     uid: "32205386-bdbc-4c62-81a6-f24064c7a938",
+        //     name: "TimeoutError",
+        //     scoreInfo: { score: 82, scoreParams: new Map([["New", 10]]) },
+        //     characteristic: "Started happening yesterday",
+        //     sourceCodeObjectId: "UsersErvice$_$GetUsers",
+        //     startsHere: true,
+        //     endsHere: false,
+        //     firstOccurenceTime: moment().add(-3,'days'),
+        //     lastOccurenceTime: moment().add(-1,'days')
+        // }
     }
 
     public async getCodeObjectScores(codeObjectIds: string[]): Promise<CodeObjectScore[]>

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials, HttpError } from "../../services/analyticsProvider";
+import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetails, HttpError } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
@@ -7,14 +7,19 @@ import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { integer } from "vscode-languageclient";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
-
+import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import moment = require('moment');
+import { ErrorFlowStackRenderer, ErrorFlowStackViewModel } from './errorFlowStackRenderer';
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     private _viewedCodeObjectId?: string = undefined;
 
     constructor(
         private _channel: WebviewChannel,
-        private _analyticsProvider: AnalyticsProvider) {
+        private _analyticsProvider: AnalyticsProvider,
+		private _documentInfoProvider: DocumentInfoProvider,
+    ) 
+    {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
     }
 
@@ -72,24 +77,77 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
             this._viewedCodeObjectId = codeObject.id;
         }
     }
-    private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails) {
-        if (!e.codeObjectId || !e.errorName || !e.sourceCodeObjectId)
+
+    private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
+        if(!e.errorSourceUID) {
             return;
+        }
 
-        let html = HtmlBuilder.buildErrorDetails();
+        const emptyCodeObject: CodeObjectInfo = {
+            id: '',
+            methodName: ''
+        };
+        const emptyError: CodeObjectErrorDetails = {
+            uid: '',
+            name: '',
+            scoreInfo: {
+                score: 0,
+                scoreParams: undefined,
+            },
+            sourceCodeObjectId: '',
+            characteristic: '',
+            startsHere: false,
+            endsHere: false,
+            firstOccurenceTime: moment(),
+            lastOccurenceTime: moment(),
+            dayAvg: 0,
+            originServices: [],
+            errors: []
+        };
+        let html = HtmlBuilder.buildErrorDetails(emptyError, emptyCodeObject);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
-        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.codeObjectId, e.errorName, e.sourceCodeObjectId);
-
-        html = HtmlBuilder.buildErrorDetails(errorDetails);
+        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
+        const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
+        
+        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
+    }
+
+    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) {
+            return;
+        }
+
+        const document = editor.document;
+        const position = editor.selection.anchor;
+
+        const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+            ? await this._documentInfoProvider.getDocumentInfo(document)
+            : undefined;
+        if(!docInfo){
+            return;
+        }
+        
+        const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
+        if(!methodInfo){
+            return;
+        }
+
+        const codeObject = <CodeObjectInfo>{ 
+            id: methodInfo.symbol.id, 
+            methodName: methodInfo.displayName 
+        };
+        return codeObject;
     }
 }
 
-class HtmlBuilder {
-    public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectError[]): string {
-        if (!errors.length) {
-            return HtmlHelper.getInfoMessage("No erros go through this code object.");
+class HtmlBuilder
+{
+    public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectError[]): string{
+        if(!errors.length){
+            return HtmlHelper.getInfoMessage("No errors flow through this code object.");
         }
 
         let html = '';
@@ -98,13 +156,13 @@ class HtmlBuilder {
             <div class="list-item">
                 <div class="list-item-content-area">
                     <div class="list-item-header flex-v-center">
-                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId)}
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
                     ${HtmlBuilder.getErrorStartEndTime(error)}
                 </div> 
                 <div class="list-item-right-area">
-                    ${HtmlHelper.getScoreBoxHtml(error.score, HtmlBuilder.buildScoreTooltip(error))}
+                    ${HtmlHelper.getScoreBoxHtml(error.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
                     ${HtmlBuilder.getErrorIcons(error)}
                 </div>
             </div>`;
@@ -112,7 +170,12 @@ class HtmlBuilder {
         return html;
     }
 
-    public static buildErrorDetails(error?: CodeObjectErrorDetials): string {
+    public static buildErrorDetails(error: CodeObjectErrorDetails, codeObject: CodeObjectInfo): string{
+        const characteristic = error.characteristic
+            ? /*html*/`
+                <section class="error-characteristic">${error.characteristic}</section>
+            `
+            : '';
         return /*html*/`
             <div class="flex-row">
                 <vscode-button appearance="icon" class="error-view-close">
@@ -120,22 +183,37 @@ class HtmlBuilder {
                 </vscode-button>
                 <span class="flex-stretch flex-v-center error-title">
                     <div>
+<<<<<<< HEAD
                         <span class="error-name">${error?.name ?? ''}</span>
                         <span class="error-from">from</span>
                         <span class="error-source">${error?.sourceCodeObjectId ?? ''}</span>
+=======
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid, false)}
+>>>>>>> eebba674a054a176d9690bc772cc0db484fe62cc
                     </div>
                 </span>
-                ${HtmlHelper.getScoreBoxHtml(error?.score, HtmlBuilder.buildScoreTooltip(error))}
+                ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
-            `;
+            ${characteristic}
+            <section class="flex-column">
+                ${HtmlBuilder.getErrorStartEndTime(error)}
+                <span class="flex-stretch">
+                    <span class="time-label">Frequency:</span>
+                        <span>${error.dayAvg}/day</span>
+                    </span>
+                </span>
+            </div>
+            ${this.getAffectedServices(error)}
+            ${this.getFlowStacksHtml(error)}
+        `;
     }
 
     private static buildScoreTooltip(error?: CodeObjectError): string {
         let tooltip = '';
-        for (let prop in error?.scoreParams || {}) {
-            let value = error?.scoreParams[prop]
-            if (value > 0)
-                tooltip += `${prop}: +${error?.scoreParams[prop]}\n`;
+        for(let prop in error?.scoreInfo.scoreParams || {}){
+            let value = error?.scoreInfo.scoreParams[prop] 
+            if(value > 0)
+                tooltip += `${prop}: +${error?.scoreInfo.scoreParams[prop]}\n`;
         }
         return tooltip;
     }
@@ -161,5 +239,100 @@ class HtmlBuilder {
                     <span>${error.lastOccurenceTime.fromNow()}</span>
                 </span>
             </div>`;
+    }
+
+    private static getAffectedServices(error: CodeObjectErrorDetails) {
+        const affectedServicesHtml = error.originServices.map(service => `
+            <span class="flex-stretch">
+                <span>${service.serviceName}</span>
+            </span>
+        `);
+        const html = /*html*/`
+            <section>
+                <header>Affected Services</header>
+                <span class="flex-row">
+                    ${affectedServicesHtml}
+                </span>
+            </section>
+        `;
+        return html;
+    }
+
+    private static getFlowStacksHtml(error: CodeObjectErrorDetails): string {
+        const htmlParts: string[] = [];
+        const sourceFlows = error.errors;
+        sourceFlows.forEach(sourceFlow => {
+            const viewModel: ErrorFlowStackViewModel = {
+                stacks: sourceFlow.frameStacks.map(sourceStack => {
+                    return {
+                        exceptionType: sourceStack.exceptionType,
+                        exceptionMessage: sourceStack.exceptionMessage,
+                        frames: sourceStack.frames.map(sourceFrame => {
+                            const {
+                                spanName,
+                                spanKind,
+                                modulePhysicalPath,
+                                moduleLogicalPath,
+                                moduleName,
+                                functionName,
+                                lineNumber,
+                                excutedCode,
+                                codeObjectId,
+                                repeat,
+                            } = sourceFrame;
+                            
+                            return {
+                                id: 0,
+                                stackIndex: 0,
+                                selected: false,
+                                workspaceUri: undefined,
+                                parameters: [],
+                                spanName,
+                                spanKind,
+                                modulePhysicalPath,
+                                moduleLogicalPath,
+                                moduleName,
+                                functionName,
+                                lineNumber,
+                                excutedCode,
+                                codeObjectId,
+                                repeat,
+                            };
+                        })
+                    };
+                }),
+                stackTrace: '',
+                lastInstanceCommitId: '',
+                affectedSpanPaths: [],
+                exceptionType: '',
+                summary: undefined
+            };
+            const renderer = new ErrorFlowStackRenderer(viewModel);
+            const flowHtml = renderer.getContentHtml();
+            htmlParts.push(flowHtml);
+        });
+
+        // if(error.errors.length === 0) {
+        //     return 'No information is available.';
+        // }
+        // const html = `
+        //     <section class="flow-stacks">
+        //         <div class="flow-stacks-navigator">
+        //             <div class="navigate-previous">Prev</div>
+        //             <div class="navigate-status">1/${error.errors.length} Flow Stacks</div>
+        //             <div class="navigate-next">Next</div>
+        //         </div>
+        //         <ul>
+        //             ${error.errors[0].frameStacks.map(frameStack => `
+        //                 <li>
+        //                     <header>${frameStack.exceptionType}</header>
+        //                     <div>${frameStack.exceptionMessage}</div>
+        //                 </li>
+        //             `)}
+        //         </ul>
+        //     </section>
+        // `;
+        const html = htmlParts.join('');
+        return html;
     }
 }
