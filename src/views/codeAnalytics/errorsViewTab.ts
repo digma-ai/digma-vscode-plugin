@@ -9,6 +9,7 @@ import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import moment = require('moment');
+import { ErrorFlowStackRenderer, ErrorFlowStackViewModel } from './errorFlowStackRenderer';
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -204,7 +205,7 @@ class HtmlBuilder
                 </span>
             </div>
             ${this.getAffectedServices(error)}
-            ${this.getFlowStacks(error)}
+            ${this.getFlowStacksHtml(error)}
         `;
     }
 
@@ -258,27 +259,81 @@ class HtmlBuilder
         return html;
     }
 
-    private static getFlowStacks(error: CodeObjectErrorDetails): string {
-        if(error.errors.length === 0) {
-            return 'No information is available.';
-        }
-        const html = `
-            <section class="flow-stacks">
-                <div class="flow-stacks-navigator">
-                    <div class="navigate-previous">Prev</div>
-                    <div class="navigate-status">1/${error.errors.length} Flow Stacks</div>
-                    <div class="navigate-next">Next</div>
-                </div>
-                <ul>
-                    ${error.errors[0].frameStacks.map(frameStack => `
-                        <li>
-                            <header>${frameStack.exceptionType}</header>
-                            <div>${frameStack.exceptionMessage}</div>
-                        </li>
-                    `)}
-                </ul>
-            </section>
-        `;
+    private static getFlowStacksHtml(error: CodeObjectErrorDetails): string {
+        const htmlParts: string[] = [];
+        const sourceFlows = error.errors;
+        sourceFlows.forEach(sourceFlow => {
+            const viewModel: ErrorFlowStackViewModel = {
+                stacks: sourceFlow.frameStacks.map(sourceStack => {
+                    return {
+                        exceptionType: sourceStack.exceptionType,
+                        exceptionMessage: sourceStack.exceptionMessage,
+                        frames: sourceStack.frames.map(sourceFrame => {
+                            const {
+                                spanName,
+                                spanKind,
+                                modulePhysicalPath,
+                                moduleLogicalPath,
+                                moduleName,
+                                functionName,
+                                lineNumber,
+                                excutedCode,
+                                codeObjectId,
+                                repeat,
+                            } = sourceFrame;
+                            
+                            return {
+                                id: 0,
+                                stackIndex: 0,
+                                selected: false,
+                                workspaceUri: undefined,
+                                parameters: [],
+                                spanName,
+                                spanKind,
+                                modulePhysicalPath,
+                                moduleLogicalPath,
+                                moduleName,
+                                functionName,
+                                lineNumber,
+                                excutedCode,
+                                codeObjectId,
+                                repeat,
+                            };
+                        })
+                    };
+                }),
+                stackTrace: '',
+                lastInstanceCommitId: '',
+                affectedSpanPaths: [],
+                exceptionType: '',
+                summary: undefined
+            };
+            const renderer = new ErrorFlowStackRenderer(viewModel);
+            const flowHtml = renderer.getContentHtml();
+            htmlParts.push(flowHtml);
+        });
+
+        // if(error.errors.length === 0) {
+        //     return 'No information is available.';
+        // }
+        // const html = `
+        //     <section class="flow-stacks">
+        //         <div class="flow-stacks-navigator">
+        //             <div class="navigate-previous">Prev</div>
+        //             <div class="navigate-status">1/${error.errors.length} Flow Stacks</div>
+        //             <div class="navigate-next">Next</div>
+        //         </div>
+        //         <ul>
+        //             ${error.errors[0].frameStacks.map(frameStack => `
+        //                 <li>
+        //                     <header>${frameStack.exceptionType}</header>
+        //                     <div>${frameStack.exceptionMessage}</div>
+        //                 </li>
+        //             `)}
+        //         </ul>
+        //     </section>
+        // `;
+        const html = htmlParts.join('');
         return html;
     }
 }
