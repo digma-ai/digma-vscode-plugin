@@ -76,11 +76,16 @@ export class HtmlHelper
             </div>`;
     }
 
-    public static getErrorName(selectedCodeobject: CodeObjectInfo, errorType: string, errorSourceCodeObjectId: string)
+    public static getErrorName(selectedCodeObject: CodeObjectInfo, errorType: string, errorSourceCodeObjectId: string)
     {
         return /*html*/ `
-        <span class="error-name link ellipsis">${errorType}</span>
-                        ${HtmlHelper.getSourceCodeObject(selectedCodeobject, errorSourceCodeObjectId)}
+            <span
+                class="error-name link ellipsis"
+                data-code-object-id="${selectedCodeObject.id}"
+                data-error-name="${errorType}"
+                data-error-source="${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}"
+            >${errorType}</span>
+            ${HtmlHelper.getSourceCodeObject(selectedCodeObject, errorSourceCodeObjectId)}
         `;
     }
     private static getSourceCodeObject(selectedCodeobject: CodeObjectInfo, errorSourceCodeObjectId: string){
@@ -88,6 +93,10 @@ export class HtmlHelper
             return /*html*/`<span class="error-from">from me</span>`;
 
         return /*html*/`<span class="error-from">from</span>
-                        <span class="error-source ellipsis">${errorSourceCodeObjectId.split('$_$')[1]}</span>`;
+                        <span class="error-source ellipsis">${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}</span>`;
+    }
+
+    private static extractErrorSourceCodeObjectName(errorSourceCodeObjectId: string) {
+        return errorSourceCodeObjectId.split('$_$')[1];
     }
 }

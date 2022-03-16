@@ -68,7 +68,7 @@ window.addEventListener("load", () =>
     });
 
     $(document).on("click", "#show_error_details", function () {
-        let codeObjectId = $(this).data("codeObject-id");
+        let codeObjectId = $(this).data("code-object-id");
         let errorName = $(this).data("error-name");
         let sourceCodeObjectId = $(this).data("error-source");
         $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
