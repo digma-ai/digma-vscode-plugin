@@ -193,7 +193,10 @@ class HtmlBuilder
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
             ${characteristic}
-            `;
+            <div class="flex-column">
+                ${HtmlBuilder.getErrorStartEndTime(error)}
+            </div>
+        `;
     }
 
     private static buildScoreTooltip(error?: CodeObjectError): string{
