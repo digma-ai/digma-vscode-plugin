@@ -113,7 +113,7 @@ class HtmlBuilder
                     ${HtmlBuilder.getErrorStartEndTime(error)}
                 </div> 
                 <div class="list-item-right-area">
-                    ${HtmlHelper.getScoreBoxHtml(error.score, HtmlBuilder.buildScoreTooltip(error))}
+                    ${HtmlHelper.getScoreBoxHtml(error.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
                     ${HtmlBuilder.getErrorIcons(error)}
                 </div>
             </div>`;
@@ -134,17 +134,17 @@ class HtmlBuilder
                         <span class="error-source">${error?.sourceCodeObjectId ??''}</span>
                     </div>
                 </span>
-                ${HtmlHelper.getScoreBoxHtml(error?.score, HtmlBuilder.buildScoreTooltip(error))}
+                ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
             `;
     }
 
     private static buildScoreTooltip(error?: CodeObjectError): string{
         let tooltip = '';
-        for(let prop in error?.scoreParams || {}){
-            let value = error?.scoreParams[prop] 
+        for(let prop in error?.scoreInfo.scoreParams || {}){
+            let value = error?.scoreInfo.scoreParams[prop] 
             if(value > 0)
-                tooltip += `${prop}: +${error?.scoreParams[prop]}\n`;
+                tooltip += `${prop}: +${error?.scoreInfo.scoreParams[prop]}\n`;
         }
         return tooltip;
     }

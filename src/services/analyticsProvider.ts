@@ -170,14 +170,19 @@ export class CodeObjectInsightResponse
 export interface CodeObjectError{
     uid: string;
     name: string;
-    score: integer;
-    scoreParams: any;
+    scoreInfo: ScoreInfo;
     sourceCodeObjectId: string;
     characteristic: string;
     startsHere: boolean;
     endsHere: boolean;
     firstOccurenceTime: moment.Moment;
     lastOccurenceTime: moment.Moment;
+}
+
+export interface ScoreInfo
+{
+    score: integer;
+    scoreParams: any;
 }
 
 export interface CodeObjectScore{
@@ -218,8 +223,7 @@ export class AnalyticsProvider
         // return {
         //     uid: "32205386-bdbc-4c62-81a6-f24064c7a938",
         //     name: "TimeoutError",
-        //     score: 82,
-        //     scoreParams: new Map([["New", 10]]),
+        //     scoreInfo: { score: 82, scoreParams: new Map([["New", 10]]) },
         //     characteristic: "Started happening yesterday",
         //     sourceCodeObjectId: "UsersErvice$_$GetUsers",
         //     startsHere: true,
