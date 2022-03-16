@@ -226,7 +226,6 @@ export interface CodeObjectErrorDetails extends CodeObjectError{
     originServices: OriginService[]
     errors: DetailedErrorInfo[],
 }
-}
 
 export class AnalyticsProvider
 {
