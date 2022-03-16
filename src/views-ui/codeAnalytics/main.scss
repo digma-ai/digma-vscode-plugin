@@ -109,7 +109,15 @@ vscode-panel-view {
         border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
         padding-left: 5px;
     }
+    section {
+        margin-block-start: 1em;
+
+        > header {
+            font-weight: bold;
+        }
+    }
 }
+
 .errors-view{
     .list-item-icons-row{
         width: 100%;

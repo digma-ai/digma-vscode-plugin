@@ -178,7 +178,7 @@ class HtmlBuilder
     public static buildErrorDetails(error: CodeObjectErrorDetails, codeObject: CodeObjectInfo): string{
         const characteristic = error.characteristic
             ? /*html*/`
-                <div class="error-characteristic">${error.characteristic}</div>
+                <section class="error-characteristic">${error.characteristic}</section>
             `
             : '';
         return /*html*/`
@@ -194,7 +194,7 @@ class HtmlBuilder
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
             ${characteristic}
-            <div class="flex-column">
+            <section class="flex-column">
                 ${HtmlBuilder.getErrorStartEndTime(error)}
                 <span class="flex-stretch">
                     <span class="time-label">Frequency:</span>
