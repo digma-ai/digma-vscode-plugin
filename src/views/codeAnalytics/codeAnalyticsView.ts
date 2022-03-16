@@ -62,7 +62,7 @@ export interface CodeObjectInfo {
 	id: string,
 	methodName: string
 }
-class CodeAnalyticsViewProvider	implements vscode.WebviewViewProvider
+class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 {  
 	private _view?: vscode.WebviewView;
 	private _webViewUris: WebViewUris;
