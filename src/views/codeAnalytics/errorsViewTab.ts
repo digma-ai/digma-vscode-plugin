@@ -9,22 +9,20 @@ import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
 
 
-export class ErrorsViewTab implements ICodeAnalyticsViewTab 
-{
+export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     private _viewedCodeObjectId?: string = undefined;
 
     constructor(
         private _channel: WebviewChannel,
-        private _analyticsProvider: AnalyticsProvider) 
-    {
+        private _analyticsProvider: AnalyticsProvider) {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
     }
 
     get tabTitle(): string { return "Errors"; }
     get tabId(): string { return "tab-errors"; }
     get viewId(): string { return "view-errors"; }
-    
-    public onReset(): void{
+
+    public onReset(): void {
         this._viewedCodeObjectId = undefined;
     }
     public onActivate(codeObject: CodeObjectInfo): void {
@@ -40,8 +38,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this.refreshCodeObjectLabel(codeObject);
         vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, codeObject.id);
     }
-    public getHtml(): string 
-    {
+    public getHtml(): string {
         return /*html*/`
             <div class="error-view" style="display: none">
              <span class="codicon codicon-arrow-left" title="Back"></span>
@@ -50,24 +47,19 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                 <div class="codeobject-selection"></div>
                 <div id="error-list" class="list"></div>
             </div>`;
-    }    
-    private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 
-    {
+    }
+    private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
         let html = HtmlHelper.getCodeObjectLabel(codeObject.methodName);
         this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
-    private async refreshList(codeObject: CodeObjectInfo) 
-    {
-        if(codeObject.id != this._viewedCodeObjectId)
-        {
+    private async refreshList(codeObject: CodeObjectInfo) {
+        if (codeObject.id != this._viewedCodeObjectId) {
             let errors: CodeObjectError[] = [];
-            try
-            {
+            try {
                 errors = await this._analyticsProvider.getCodeObjectErrors(codeObject.id);
             }
-            catch(e)
-            {
-                if(!(e instanceof HttpError) || e.status != 404){
+            catch (e) {
+                if (!(e instanceof HttpError) || e.status != 404) {
                     Logger.error(`Failed to get codeObject ${codeObject.id} errors`, e);
                     const html = HtmlHelper.getErrorMessage("Failed to fetch errors from Digma server.\nSee Output window from more info.");
                     this._channel.publish(new UiMessage.Set.ErrorsList(html));
@@ -80,29 +72,28 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             this._viewedCodeObjectId = codeObject.id;
         }
     }
-    private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
-        if(!e.codeObjectId || !e.errorName || !e.sourceCodeObjectId)
+    private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails) {
+        if (!e.codeObjectId || !e.errorName || !e.sourceCodeObjectId)
             return;
 
         let html = HtmlBuilder.buildErrorDetails();
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
         const errorDetails = await this._analyticsProvider.getCodeObjectError(e.codeObjectId, e.errorName, e.sourceCodeObjectId);
-        
+
         html = HtmlBuilder.buildErrorDetails(errorDetails);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
     }
 }
 
-class HtmlBuilder
-{
-    public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectError[]): string{
-        if(!errors.length){
+class HtmlBuilder {
+    public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectError[]): string {
+        if (!errors.length) {
             return HtmlHelper.getInfoMessage("No erros go through this code object.");
         }
-        
+
         let html = '';
-        for(let error of errors){
+        for (let error of errors) {
             html += /*html*/`
             <div class="list-item">
                 <div class="list-item-content-area">
@@ -121,7 +112,7 @@ class HtmlBuilder
         return html;
     }
 
-    public static buildErrorDetails(error?: CodeObjectErrorDetials): string{
+    public static buildErrorDetails(error?: CodeObjectErrorDetials): string {
         return /*html*/`
             <div class="flex-row">
                 <vscode-button appearance="icon" class="error-view-close">
@@ -131,7 +122,7 @@ class HtmlBuilder
                     <div>
                         <span class="error-name">${error?.name ?? ''}</span>
                         <span class="error-from">from</span>
-                        <span class="error-source">${error?.sourceCodeObjectId ??''}</span>
+                        <span class="error-source">${error?.sourceCodeObjectId ?? ''}</span>
                     </div>
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.score, HtmlBuilder.buildScoreTooltip(error))}
@@ -139,26 +130,26 @@ class HtmlBuilder
             `;
     }
 
-    private static buildScoreTooltip(error?: CodeObjectError): string{
+    private static buildScoreTooltip(error?: CodeObjectError): string {
         let tooltip = '';
-        for(let prop in error?.scoreParams || {}){
-            let value = error?.scoreParams[prop] 
-            if(value > 0)
+        for (let prop in error?.scoreParams || {}) {
+            let value = error?.scoreParams[prop]
+            if (value > 0)
                 tooltip += `${prop}: +${error?.scoreParams[prop]}\n`;
         }
         return tooltip;
     }
 
-    private static getErrorIcons(error: CodeObjectError): string{
+    private static getErrorIcons(error: CodeObjectError): string {
         let html = '';
-        if(error.startsHere)
+        if (error.startsHere)
             html += /*html*/`<span class="codicon codicon-debug-step-out" title="Raised here"></span>`;
-        if(error.endsHere)
+        if (error.endsHere)
             html += /*html*/`<span class="codicon codicon-debug-step-into" title="Handled here"></span>`;
-            
+
         return /*html*/`<div class="list-item-icons-row">${html}</div>`;
     }
-    private static getErrorStartEndTime(error: CodeObjectError): string{
+    private static getErrorStartEndTime(error: CodeObjectError): string {
         return /*html*/`
             <div class="flex-row">
                 <span class="flex-stretch">
