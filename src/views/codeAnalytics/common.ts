@@ -85,8 +85,8 @@ export class HtmlHelper
             ${HtmlHelper.getSourceCodeObject(selectedCodeObject, errorSourceCodeObjectId)}
         `;
     }
-    private static getSourceCodeObject(selectedCodeobject: CodeObjectInfo, errorSourceCodeObjectId: string){
-        if(selectedCodeobject.id === errorSourceCodeObjectId)
+    private static getSourceCodeObject(selectedCodeObject: CodeObjectInfo, errorSourceCodeObjectId: string){
+        if(selectedCodeObject.id === errorSourceCodeObjectId)
             return /*html*/`<span class="error-from">from me</span>`;
 
         return /*html*/`<span class="error-from">from</span>

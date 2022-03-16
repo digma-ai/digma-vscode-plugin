@@ -80,9 +80,11 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             this._viewedCodeObjectId = codeObject.id;
         }
     }
+
     private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
-        if(!e.errorSourceUID)
+        if(!e.errorSourceUID) {
             return;
+        }
 
         let html = HtmlBuilder.buildErrorDetails();
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
