@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials, HttpError } from "../../services/analyticsProvider";
+import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetails, HttpError } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
@@ -121,7 +121,7 @@ class HtmlBuilder
         return html;
     }
 
-    public static buildErrorDetails(error?: CodeObjectErrorDetials): string{
+    public static buildErrorDetails(error?: CodeObjectErrorDetails): string{
         return /*html*/`
             <div class="flex-row">
                 <vscode-button appearance="icon" class="error-view-close">

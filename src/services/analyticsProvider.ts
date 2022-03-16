@@ -184,7 +184,7 @@ export interface CodeObjectScore{
     score: integer;
 }
 
-export interface CodeObjectErrorDetials extends CodeObjectError{
+export interface CodeObjectErrorDetails extends CodeObjectError{
 
 }
 
@@ -207,19 +207,7 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getCodeObjectError(codeObjectId: string, errorName: string, sourceCodeObjectId: string): Promise<CodeObjectErrorDetials>{
-        return {
-            uid: "32205386-bdbc-4c62-81a6-f24064c7a938",
-            name: "TimeoutError",
-            score: 82,
-            scoreParams: new Map([["New", 10]]),
-            characteristic: "Started happening yesterday",
-            sourceCodeObjectId: "UsersErvice$_$GetUsers",
-            startsHere: true,
-            endsHere: false,
-            firstOccurenceTime: moment().add(-3,'days'),
-            lastOccurenceTime: moment().add(-1,'days')
-        }
+    public async getCodeObjectError(codeObjectId: string, errorName: string, sourceCodeObjectId: string): Promise<CodeObjectErrorDetails>{
     }
 
     public async getCodeObjectScores(codeObjectIds: string[]): Promise<CodeObjectScore[]>
