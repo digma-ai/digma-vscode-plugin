@@ -195,6 +195,11 @@ class HtmlBuilder
             ${characteristic}
             <div class="flex-column">
                 ${HtmlBuilder.getErrorStartEndTime(error)}
+                <span class="flex-stretch">
+                    <span class="time-label">Frequency:</span>
+                        <span>${error.dayAvg}/day</span>
+                    </span>
+                </span>
             </div>
         `;
     }

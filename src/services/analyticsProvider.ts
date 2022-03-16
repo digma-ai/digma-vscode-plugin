@@ -191,7 +191,7 @@ export interface CodeObjectScore{
 }
 
 export interface CodeObjectErrorDetails extends CodeObjectError{
-
+    dayAvg: number;
 }
 
 export class AnalyticsProvider
