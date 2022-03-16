@@ -190,8 +190,13 @@ export interface CodeObjectScore{
     score: integer;
 }
 
+export interface OriginService {
+    serviceName: string;
+}
+
 export interface CodeObjectErrorDetails extends CodeObjectError{
     dayAvg: number;
+    originServices: OriginService[]
 }
 
 export class AnalyticsProvider

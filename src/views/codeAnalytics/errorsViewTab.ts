@@ -106,7 +106,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             endsHere: false,
             firstOccurenceTime: moment(),
             lastOccurenceTime: moment(),
-            dayAvg: 0
+            dayAvg: 0,
+            originServices: [],
         };
         let html = HtmlBuilder.buildErrorDetails(emptyError, emptyCodeObject);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
@@ -201,6 +202,7 @@ class HtmlBuilder
                     </span>
                 </span>
             </div>
+            ${this.getAffectedServices(error)}
         `;
     }
 
@@ -235,5 +237,22 @@ class HtmlBuilder
                     <span>${error.lastOccurenceTime.fromNow()}</span>
                 </span>
             </div>`;
+    }
+
+    private static getAffectedServices(error: CodeObjectErrorDetails) {
+        const affectedServicesHtml = error.originServices.map(service => `
+            <span class="flex-stretch">
+                <span>${service.serviceName}</span>
+            </span>
+        `);
+        const html = /*html*/`
+            <section>
+                <header>Affected Services</header>
+                <span class="flex-row">
+                    ${affectedServicesHtml}
+                </span>
+            </section>
+        `;
+        return html;
     }
 }
