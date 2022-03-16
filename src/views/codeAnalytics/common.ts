@@ -76,15 +76,12 @@ export class HtmlHelper
             </div>`;
     }
 
-    public static getErrorName(selectedCodeObject: CodeObjectInfo, errorType: string, errorSourceCodeObjectId: string)
+    public static getErrorName(selectedCodeObject: CodeObjectInfo, errorType: string, errorSourceCodeObjectId: string, errorSourceUID: string)
     {
         return /*html*/ `
             <span
                 class="error-name link ellipsis"
-                data-code-object-id="${selectedCodeObject.id}"
-                data-error-name="${errorType}"
-                data-error-source="${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}"
-            >${errorType}</span>
+                data-error-source-uid="${errorSourceUID}">${errorType}</span>
             ${HtmlHelper.getSourceCodeObject(selectedCodeObject, errorSourceCodeObjectId)}
         `;
     }

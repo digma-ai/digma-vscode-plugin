@@ -151,6 +151,7 @@ export interface CodeObjectInsightErrorsResponse
 }
 export interface NamedError
 {
+    uid: string,
     errorType: string,
     sourceCodeObjectId: string
 }
@@ -207,10 +208,10 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getCodeObjectError(codeObjectId: string, errorName: string, sourceCodeObjectId: string): Promise<CodeObjectErrorDetails>{
+    public async getCodeObjectError(errorSourceUID: string): Promise<CodeObjectErrorDetails>{
         const response = await this.send<CodeObjectErrorDetails>(
             'GET', 
-            `/CodeAnalytics/codeObjects/errors/${codeObjectId}`
+            `/CodeAnalytics/codeObjects/errors/${errorSourceUID}`
         );
         return response;
 

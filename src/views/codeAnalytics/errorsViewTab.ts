@@ -81,13 +81,13 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         }
     }
     private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
-        if(!e.codeObjectId || !e.errorName || !e.sourceCodeObjectId)
+        if(!e.errorSourceUID)
             return;
 
         let html = HtmlBuilder.buildErrorDetails();
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
-        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.codeObjectId, e.errorName, e.sourceCodeObjectId);
+        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
         
         html = HtmlBuilder.buildErrorDetails(errorDetails);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
@@ -107,7 +107,7 @@ class HtmlBuilder
             <div class="list-item">
                 <div class="list-item-content-area">
                     <div class="list-item-header flex-v-center">
-                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId)}
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
                     ${HtmlBuilder.getErrorStartEndTime(error)}
