@@ -23,6 +23,10 @@ declare global {
         all(predicate: (item: T) => boolean) : boolean;
         any(predicate: (item: T) => boolean) : boolean;
         groupBy<TKey extends string | number>(predicate: (item: T) => TKey) : Dictionary<TKey, T[]>;
+        toDictionary<TKey extends string | number, TValue>(keySelector: (item: T) => TKey, valueSelector: (item: T) => TValue) : Dictionary<TKey, TValue>;
+    }
+    interface ArrayConstructor {
+        range(n: number): number[];
     }
 }
 Set.prototype.toArray = function(){
@@ -65,6 +69,18 @@ Array.prototype.groupBy = function (predicate: (item: any) => any) {
     }, Object.create(null));
     return result;
 }
+Array.prototype.toDictionary = function(keySelector: (item: any) => any, valueSelector: (item: any) => any){
+    const dict: Dictionary<any, any> = {};
+    
+    for(let item of this){
+        const key = keySelector(item);
+        const value = valueSelector(item);
+        dict[key] = value;
+    }
+
+    return dict;
+}
+Array.range = n => Array.from({length: n}, (value, key) => key);
 
 declare module "vscode" {
     interface Uri {

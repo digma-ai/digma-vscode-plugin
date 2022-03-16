@@ -14,6 +14,7 @@ import { MethodCallErrorTooltip } from './services/methodCallErrorTooltip';
 import { ErrorFlowRawStackEditor } from './views/errorFlow/errorFlowRawStackEditor';
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { ErrorsLineDecorator } from './decorators/errorsLineDecorator';
+import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
 
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -45,6 +46,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, context.extensionUri, sourceControl));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
+    context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
 
 }
 
