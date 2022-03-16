@@ -67,7 +67,7 @@ window.addEventListener("load", () =>
         }
     });
 
-    $(document).on("click", "#show_error_details", function () {
+    $(document).on("click", ".error-name.link", function () {
         let codeObjectId = $(this).data("code-object-id");
         let errorName = $(this).data("error-name");
         let sourceCodeObjectId = $(this).data("error-source");
