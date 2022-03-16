@@ -116,6 +116,11 @@ vscode-panel-view {
             font-weight: bold;
         }
     }
+    .flow-stacks {
+        .flow-stacks-navigator {
+            display: flex;
+        }
+    }
 }
 
 .errors-view{

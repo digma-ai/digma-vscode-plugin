@@ -108,6 +108,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             lastOccurenceTime: moment(),
             dayAvg: 0,
             originServices: [],
+            errors: []
         };
         let html = HtmlBuilder.buildErrorDetails(emptyError, emptyCodeObject);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
@@ -203,6 +204,7 @@ class HtmlBuilder
                 </span>
             </div>
             ${this.getAffectedServices(error)}
+            ${this.getFlowStacks(error)}
         `;
     }
 
@@ -251,6 +253,30 @@ class HtmlBuilder
                 <span class="flex-row">
                     ${affectedServicesHtml}
                 </span>
+            </section>
+        `;
+        return html;
+    }
+
+    private static getFlowStacks(error: CodeObjectErrorDetails): string {
+        if(error.errors.length === 0) {
+            return 'No information is available.';
+        }
+        const html = `
+            <section class="flow-stacks">
+                <div class="flow-stacks-navigator">
+                    <div class="navigate-previous">Prev</div>
+                    <div class="navigate-status">1/${error.errors.length} Flow Stacks</div>
+                    <div class="navigate-next">Next</div>
+                </div>
+                <ul>
+                    ${error.errors[0].frameStacks.map(frameStack => `
+                        <li>
+                            <header>${frameStack.exceptionType}</header>
+                            <div>${frameStack.exceptionMessage}</div>
+                        </li>
+                    `)}
+                </ul>
             </section>
         `;
         return html;

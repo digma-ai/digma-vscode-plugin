@@ -194,9 +194,38 @@ export interface OriginService {
     serviceName: string;
 }
 
+export interface Frame {
+    "moduleName": string;
+    "functionName": string;
+    "lineNumber": number;
+    "excutedCode": string;
+    "codeObjectId": string;
+    "parameters": null;
+    "repeat": number;
+    "spanName": string;
+    "spanKind": string;
+    "moduleLogicalPath": string;
+    "modulePhysicalPath": string;
+    "className": string;
+}
+
+export interface FrameStack {
+    exceptionType: string;
+    frames: Frame[];
+    exceptionMessage: string;
+}
+
+export interface DetailedErrorInfo {
+    frameStacks: FrameStack[];
+    stackTrace: string;
+    lastInstanceCommitId: string;
+}
+
 export interface CodeObjectErrorDetails extends CodeObjectError{
     dayAvg: number;
     originServices: OriginService[]
+    errors: DetailedErrorInfo[],
+}
 }
 
 export class AnalyticsProvider
