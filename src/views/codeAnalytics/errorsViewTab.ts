@@ -182,7 +182,7 @@ class HtmlBuilder
                 </vscode-button>
                 <span class="flex-stretch flex-v-center error-title">
                     <div>
-                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid, false)}
                     </div>
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
