@@ -175,6 +175,11 @@ class HtmlBuilder
     }
 
     public static buildErrorDetails(error: CodeObjectErrorDetails, codeObject: CodeObjectInfo): string{
+        const characteristic = error.characteristic
+            ? /*html*/`
+                <div class="error-characteristic">${error.characteristic}</div>
+            `
+            : '';
         return /*html*/`
             <div class="flex-row">
                 <vscode-button appearance="icon" class="error-view-close">
@@ -187,6 +192,7 @@ class HtmlBuilder
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
+            ${characteristic}
             `;
     }
 
