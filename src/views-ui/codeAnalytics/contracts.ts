@@ -12,6 +12,9 @@ export namespace UiMessage
         export class GoToLine{
             constructor(public line?: number){}
         }
+        export class GoToLineByFrameId {
+            constructor(public frameId?: number){}
+        }
     }
 
     export namespace Get

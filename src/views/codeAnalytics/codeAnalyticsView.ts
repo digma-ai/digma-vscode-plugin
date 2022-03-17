@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
-import { DocumentInfo, DocumentInfoProvider } from "../../services/documentInfoProvider";
-import { SourceControl } from "../../services/sourceControl";
+import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import { EditorHelper } from './../../services/EditorHelper';
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { ICodeAnalyticsViewTab } from "./common";
@@ -24,13 +24,13 @@ export class CodeAnalyticsView implements vscode.Disposable
 		analyticsProvider: AnalyticsProvider,
 		documentInfoProvider: DocumentInfoProvider,
 		extensionUri: vscode.Uri,
-        sourceControl: SourceControl
+        editorHelper: EditorHelper,
 	) {
 		this._provider = new CodeAnalyticsViewProvider(
 			extensionUri,
 			analyticsProvider, 
             documentInfoProvider,
-            sourceControl
+            editorHelper,
 		);
 
 		this._disposables = [
@@ -45,8 +45,8 @@ export class CodeAnalyticsView implements vscode.Disposable
 			),
             vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
                 await vscode.commands.executeCommand("workbench.view.extension.digma");
-            })
-		];
+            }),
+        ];
 	}
 
 	public dispose() 
@@ -77,7 +77,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 		extensionUri: vscode.Uri,
 		private _analyticsProvider: AnalyticsProvider,
         private _documentInfoProvider: DocumentInfoProvider,
-        sourceControl: SourceControl
+        editorHelper: EditorHelper,
 	) {
 		this._webViewUris = new WebViewUris(
 			extensionUri,
@@ -91,7 +91,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider),
-            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();

@@ -4,23 +4,26 @@ import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { integer } from "vscode-languageclient";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import moment = require('moment');
-import { ErrorFlowStackRenderer, ErrorFlowStackViewModel } from './errorFlowStackRenderer';
+import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
+import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     private _viewedCodeObjectId?: string = undefined;
+    private _stackViewModel?: ErrorFlowStackViewModel = undefined;
 
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
 		private _documentInfoProvider: DocumentInfoProvider,
+        private _editorHelper: EditorHelper,
     ) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
+        this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -109,9 +112,83 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
 
         const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
         const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
-        
-        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject);
+
+        const viewModels = await this.createViewModels(errorDetails);
+        this._stackViewModel = viewModels.firstOrDefault();
+
+        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [this._stackViewModel]);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
+    }
+
+    private async createViewModels(errorDetails: CodeObjectErrorDetails): Promise<ErrorFlowStackViewModel[]> {
+        const sourceFlows = errorDetails.errors;
+        const viewModels: ErrorFlowStackViewModel[] = [];
+        let id = 0;
+        for await (const sourceFlow of sourceFlows) {
+            const stacks: StackViewModel[] = [];
+
+            for await (const sourceStack of sourceFlow.frameStacks) {
+                const frames: FrameViewModel[] = [];
+
+                for await (const sourceFrame of sourceStack.frames) {
+                    const {
+                        spanName,
+                        spanKind,
+                        modulePhysicalPath,
+                        moduleLogicalPath,
+                        moduleName,
+                        functionName,
+                        lineNumber,
+                        excutedCode,
+                        codeObjectId,
+                        repeat,
+                    } = sourceFrame;
+
+                    const workspaceUri = await this._editorHelper.getWorkspaceFileUri({
+                        moduleLogicalPath,
+                        modulePhysicalPath,
+                    });
+                                    
+                    const frame: FrameViewModel = {
+                        id: id++,
+                        stackIndex: 0,
+                        selected: false,
+                        parameters: [],
+                        spanName,
+                        spanKind,
+                        modulePhysicalPath,
+                        moduleLogicalPath,
+                        moduleName,
+                        functionName,
+                        lineNumber,
+                        excutedCode,
+                        codeObjectId,
+                        repeat,
+                        workspaceUri,
+                    };
+
+                    frames.push(frame);
+                }
+                
+                const frameStack: StackViewModel = {
+                    frames,
+                    exceptionType: sourceStack.exceptionType,
+                    exceptionMessage: sourceStack.exceptionMessage,
+                };
+                stacks.push(frameStack);
+            }
+
+            const viewModel: ErrorFlowStackViewModel = {
+                stacks: stacks,
+                stackTrace: '',
+                lastInstanceCommitId: '',
+                affectedSpanPaths: [],
+                exceptionType: '',
+                summary: undefined
+            };
+            viewModels.push(viewModel);
+        }
+        return viewModels;
     }
 
     private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
@@ -140,6 +217,26 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
             methodName: methodInfo.displayName 
         };
         return codeObject;
+    }
+
+    private async goToFileAndLineById(frameId?: number) {
+        const frame = this._stackViewModel?.stacks
+            .flatMap(s => s.frames)
+            .firstOrDefault(f => f.id == frameId);
+        if(!frame) {
+            return;
+        }
+
+        const editorInfo: EditorInfo = {
+            workspaceUri: frame.workspaceUri,
+            lineNumber: frame.lineNumber,
+            excutedCode: frame.excutedCode,
+            functionName: frame.functionName,
+            modulePhysicalPath: frame.modulePhysicalPath,
+            moduleLogicalPath: frame.moduleLogicalPath,
+            lastInstanceCommitId: this._stackViewModel?.lastInstanceCommitId,
+        };
+        await this._editorHelper.goToFileAndLine(editorInfo);
     }
 }
 
@@ -170,7 +267,11 @@ class HtmlBuilder
         return html;
     }
 
-    public static buildErrorDetails(error: CodeObjectErrorDetails, codeObject: CodeObjectInfo): string{
+    public static buildErrorDetails(
+        error: CodeObjectErrorDetails,
+        codeObject: CodeObjectInfo,
+        viewModels?: ErrorFlowStackViewModel[],
+    ): string{
         const characteristic = error.characteristic
             ? /*html*/`
                 <section class="error-characteristic">${error.characteristic}</section>
@@ -198,14 +299,14 @@ class HtmlBuilder
                 </span>
             </div>
             ${this.getAffectedServices(error)}
-            ${this.getFlowStacksHtml(error)}
+            ${this.getFlowStacksHtml(error, viewModels)}
         `;
     }
 
     private static buildScoreTooltip(error?: CodeObjectError): string {
         let tooltip = '';
         for(let prop in error?.scoreInfo.scoreParams || {}){
-            let value = error?.scoreInfo.scoreParams[prop] 
+            let value = error?.scoreInfo.scoreParams[prop]; 
             if(value > 0)
                 tooltip += `${prop}: +${error?.scoreInfo.scoreParams[prop]}\n`;
         }
@@ -252,58 +353,15 @@ class HtmlBuilder
         return html;
     }
 
-    private static getFlowStacksHtml(error: CodeObjectErrorDetails): string {
-        const htmlParts: string[] = [];
-        const sourceFlows = error.errors;
-        sourceFlows.forEach(sourceFlow => {
-            const viewModel: ErrorFlowStackViewModel = {
-                stacks: sourceFlow.frameStacks.map(sourceStack => {
-                    return {
-                        exceptionType: sourceStack.exceptionType,
-                        exceptionMessage: sourceStack.exceptionMessage,
-                        frames: sourceStack.frames.map(sourceFrame => {
-                            const {
-                                spanName,
-                                spanKind,
-                                modulePhysicalPath,
-                                moduleLogicalPath,
-                                moduleName,
-                                functionName,
-                                lineNumber,
-                                excutedCode,
-                                codeObjectId,
-                                repeat,
-                            } = sourceFrame;
-                            
-                            return {
-                                id: 0,
-                                stackIndex: 0,
-                                selected: false,
-                                workspaceUri: undefined,
-                                parameters: [],
-                                spanName,
-                                spanKind,
-                                modulePhysicalPath,
-                                moduleLogicalPath,
-                                moduleName,
-                                functionName,
-                                lineNumber,
-                                excutedCode,
-                                codeObjectId,
-                                repeat,
-                            };
-                        })
-                    };
-                }),
-                stackTrace: '',
-                lastInstanceCommitId: '',
-                affectedSpanPaths: [],
-                exceptionType: '',
-                summary: undefined
-            };
+    private static getFlowStacksHtml(error: CodeObjectErrorDetails, viewModels?: ErrorFlowStackViewModel[]): string {
+        if(!viewModels || viewModels.length === 0) {
+            return '';
+        }
+
+        const htmlParts = viewModels.map(viewModel => {
             const renderer = new ErrorFlowStackRenderer(viewModel);
             const flowHtml = renderer.getContentHtml();
-            htmlParts.push(flowHtml);
+            return flowHtml;
         });
 
         // if(error.errors.length === 0) {

@@ -45,7 +45,7 @@ export class ErrorFlowStackRenderer {
             return `
                 <br></br>
                 <p>No error flow selected.</p>
-                <span> Please selet an error flow from the </span> <span style="font-weight: bold;"> Error Flow List </span> <span>panel to see its details here.</span>`;
+                <span> Please select an error flow from the </span> <span style="font-weight: bold;"> Error Flow List </span> <span>panel to see its details here.</span>`;
         }
         
         let summaryHtml = '';
@@ -265,8 +265,7 @@ export class ErrorFlowStackRenderer {
         
         let exception_html = '<span style="color:#f14c4c;line-height:25px;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
 
-
-        var linkTag = frame.workspaceUri
+        let linkTag = frame.workspaceUri
             ? /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>`
             : /*html*/`<span class="link-cell look-like-link" title="${frame.excutedCode}">${frame.excutedCode}</span>`;
         
