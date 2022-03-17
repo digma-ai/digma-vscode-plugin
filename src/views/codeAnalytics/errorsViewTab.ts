@@ -26,6 +26,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
+        this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -225,6 +226,11 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             methodName: methodInfo.displayName 
         };
         return codeObject;
+    }
+
+    private async onWorkspaceOnlyChanged(value?: boolean){
+        if(value != undefined)
+            await Settings.hideFramesOutsideWorkspace.set(value);
     }
 
     private async goToFileAndLineById(frameId?: number) {

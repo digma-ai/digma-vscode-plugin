@@ -227,12 +227,12 @@ export class ErrorFlowStackRenderer {
         if(!stack)
             return '';
 
-        if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
-            return '';
+        // if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
+        //     return '';
 
         let html : string='';
-        const frames = stack.frames
-            .filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
+        const frames = stack.frames;
+            //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
         var lastSpan='';
         for (var frame of frames ){
             if (frame.spanName!==lastSpan){
@@ -262,7 +262,8 @@ export class ErrorFlowStackRenderer {
         const path = `${frame.modulePhysicalPath} in ${frame.functionName}`;
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
-        
+        const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
+
         let exception_html = '<span style="color:#f14c4c;line-height:25px;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
 
         let linkTag = frame.workspaceUri
@@ -273,7 +274,7 @@ export class ErrorFlowStackRenderer {
             linkTag=exception_html+linkTag;
         }
         return /*html*/`
-            <li>
+            <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
                 <div class="line ellipsis ${selectedClass} ${disabledClass}">
                     <div title="${path}">${path}</div>
                     <div class="bottom-line">

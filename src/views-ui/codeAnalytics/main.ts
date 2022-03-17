@@ -104,9 +104,15 @@ window.addEventListener("load", () =>
 
     publish(new UiMessage.Notify.TabLoaded($(".analytics-nav").attr("activeid")));
 
-    $(document).on("click", "vscode-link", function() {
+    $(document).on("click", "vscode-link[data-frame-id]", function() {
         const frameId = $(this).data('frame-id');
         publish(new UiMessage.Notify.GoToLineByFrameId(frameId));
     });
-
+    $(document).on("change", ".workspace-only-checkbox", function(){
+        publish(new UiMessage.Notify.WorkspaceOnlyChanged(this.checked));
+        if(this.checked)
+            $('.outside-workspace').hide();
+        else
+            $('.outside-workspace').show();
+    });
 });
