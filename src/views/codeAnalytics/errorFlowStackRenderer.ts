@@ -45,7 +45,7 @@ export class ErrorFlowStackRenderer {
             return `
                 <br></br>
                 <p>No error flow selected.</p>
-                <span> Please selet an error flow from the </span> <span style="font-weight: bold;"> Error Flow List </span> <span>panel to see its details here.</span>`;
+                <span> Please select an error flow from the </span> <span style="font-weight: bold;"> Error Flow List </span> <span>panel to see its details here.</span>`;
         }
         
         let summaryHtml = '';
