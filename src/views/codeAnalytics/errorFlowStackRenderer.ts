@@ -231,6 +231,8 @@ export class ErrorFlowStackRenderer {
         //     return '';
 
         let html : string='';
+        const allOutsideWorkspaceClass = stack.frames.all(f => !f.workspaceUri) ? "all-outside-workspace" : "";
+        const hidden = Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri) ? "hidden" : "";
         const frames = stack.frames;
             //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
         var lastSpan='';
@@ -251,9 +253,11 @@ export class ErrorFlowStackRenderer {
         }
 
         return /*html*/`
-            <div class="flow-stack-title">${stack.exceptionType}</div>
-            <div class="flow-stack-message">${stack.exceptionMessage}</div>
-            <div class="flow-stack-frames"><ul class="tree frames">${html}</ul></div>
+            <div class="${allOutsideWorkspaceClass}" ${hidden}>
+                <div class="flow-stack-title">${stack.exceptionType}</div>
+                <div class="flow-stack-message">${stack.exceptionMessage}</div>
+                <div class="flow-stack-frames"><ul class="tree frames">${html}</ul></div>
+            </div>
         `;
     }
 
@@ -275,8 +279,8 @@ export class ErrorFlowStackRenderer {
         }
         return /*html*/`
             <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
-                <div class="line ellipsis ${selectedClass} ${disabledClass}">
-                    <div title="${path}">${path}</div>
+                <div class="line ${selectedClass} ${disabledClass}">
+                    <div class="left-ellipsis" title="${path}">${path}</div>
                     <div class="bottom-line">
                         ${linkTag}
                         <div class="number-cell">line ${frame.lineNumber}</div>

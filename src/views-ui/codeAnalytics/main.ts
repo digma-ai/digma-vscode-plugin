@@ -12,12 +12,18 @@ window.addEventListener("load", () =>
         tabsContainer.hide();
     }
     function showErrorView() {
+        $(".error-view").html("").show();
         $(".errors-view").hide();
-        $(".error-view").show();
     }
-    function showErrorsView() {
-        $(".error-view").hide();
+    function hideErrorView() {
         $(".errors-view").show();
+        $(".error-view").hide();
+    }
+    function moveToTab(tabId: string){
+        let tabsElement: any = $(".analytics-nav")[0];
+        const group = tabsElement.tabs;
+        let tab = group.find(o=>o.id === tabId);
+        tabsElement.moveToTabByIndex(group, group.indexOf(tab));
     }
 
     const overlay = $("#view-overlay");
@@ -58,20 +64,24 @@ window.addEventListener("load", () =>
 
     /*error-view*/
     $(document).on("click", ".error-view-close", function () {
-        showErrorsView();
+        hideErrorView();
     });
 
     $(".analytics-nav").on("change", (e) => {
         if (e.target === $(".analytics-nav")[0]) {
             publish(new UiMessage.Notify.TabChanged((<any>e.originalEvent).detail.id));
+
+            let previousTabId = $(".analytics-nav").attr("activeid");
+            if(previousTabId == "tab-errors")
+                hideErrorView();
         }
     });
 
     $(document).on("click", ".error-name.link", function () {
         let errorSourceUID = $(this).data("error-source-uid");
-        $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
-        $(".error-view").show();
-        $(".errors-view").hide();
+        // $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
+        showErrorView();
+        moveToTab("tab-errors");
         publish(new UiMessage.Get.ErrorDetails(errorSourceUID));
     });
 
@@ -93,13 +103,7 @@ window.addEventListener("load", () =>
     /* end of error-view */
 
     $(document).on("click", ".expand", function () {
-        var tabId = $(this).attr("tab-id");
-        if (tabId) {
-            let tabsElement: any = $(".analytics-nav")[0];
-            const group = tabsElement.tabs;
-            let tab = group.find(o=>o.id === tabId);
-            tabsElement.moveToTabByIndex(group, group.indexOf(tab));
-        }
+        moveToTab("tab-errors");
     });
 
     publish(new UiMessage.Notify.TabLoaded($(".analytics-nav").attr("activeid")));
@@ -110,9 +114,13 @@ window.addEventListener("load", () =>
     });
     $(document).on("change", ".workspace-only-checkbox", function(){
         publish(new UiMessage.Notify.WorkspaceOnlyChanged(this.checked));
-        if(this.checked)
-            $('.outside-workspace').hide();
-        else
-            $('.outside-workspace').show();
+        if(this.checked){
+            $(".outside-workspace").hide();
+            $(".all-outside-workspace").hide();
+        }
+        else{
+            $(".outside-workspace").show();
+            $(".all-outside-workspace").show();
+        }
     });
 });

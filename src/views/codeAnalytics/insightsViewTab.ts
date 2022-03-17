@@ -128,7 +128,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     </div>
     <div class="list-item-right-area">
       <div class="expand">
-        <vscode-link class="expand" tab-id="tab-errors" href="#">Expand</vscode-link>
+        <vscode-link class="expand" href="#">Expand</vscode-link>
       <div>
     </div>
   </div>
