@@ -32,8 +32,9 @@ export async function activate(context: vscode.ExtensionContext)
 
     if(!Settings.environment.value){
         const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();
-        if(firstEnv)
+        if(firstEnv) {
             await Settings.environment.set(firstEnv);
+        }
     }
 
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));

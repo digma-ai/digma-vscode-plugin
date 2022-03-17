@@ -31,9 +31,8 @@ export class ErrorFlowStackView implements vscode.Disposable
 
     constructor(
         private _documentInfoProvider: DocumentInfoProvider,
-        sourceControl: SourceControl, 
-        extensionUri: vscode.Uri) 
-    {
+        extensionUri: vscode.Uri,
+    ) {
 
         this._provider = new ErrorFlowDetailsViewProvider(_documentInfoProvider, sourceControl, extensionUri);
         this._paramDecorator = new ErrorFlowParameterDecorator(_documentInfoProvider);
@@ -125,8 +124,8 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
     constructor(
         private _documentInfoProvider: DocumentInfoProvider,
         private _sourceControl: SourceControl,
-        extensionUri: vscode.Uri) 
-    {
+        extensionUri: vscode.Uri
+    ) {
         this._webViewUris = new WebViewUris(extensionUri, "errorFlowStack", ()=>this._view!.webview);
     }
 

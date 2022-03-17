@@ -45,8 +45,8 @@ export class CodeAnalyticsView implements vscode.Disposable
 			),
             vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
                 await vscode.commands.executeCommand("workbench.view.extension.digma");
-            })
-		];
+            }),
+        ];
 	}
 
 	public dispose() 
