@@ -183,13 +183,7 @@ class HtmlBuilder
                 </vscode-button>
                 <span class="flex-stretch flex-v-center error-title">
                     <div>
-<<<<<<< HEAD
-                        <span class="error-name">${error?.name ?? ''}</span>
-                        <span class="error-from">from</span>
-                        <span class="error-source">${error?.sourceCodeObjectId ?? ''}</span>
-=======
                         ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid, false)}
->>>>>>> eebba674a054a176d9690bc772cc0db484fe62cc
                     </div>
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}

@@ -155,7 +155,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     continue;
                 
                 const textLine = document.lineAt(matchingLines[0]);
-                let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == textLine.lineNumber+1);
+                let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == textLine.lineNumber);
                 if(!lineInfo)
                 {
                     lineInfo = {lineNumber: textLine.lineNumber, range: textLine.range, exceptions: [] };
