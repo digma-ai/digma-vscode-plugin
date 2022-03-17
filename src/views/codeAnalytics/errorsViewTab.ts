@@ -4,7 +4,6 @@ import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { integer } from "vscode-languageclient";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
@@ -314,7 +313,7 @@ class HtmlBuilder
     private static buildScoreTooltip(error?: CodeObjectError): string{
         let tooltip = '';
         for(let prop in error?.scoreInfo.scoreParams || {}){
-            let value = error?.scoreInfo.scoreParams[prop] 
+            let value = error?.scoreInfo.scoreParams[prop]; 
             if(value > 0)
                 tooltip += `${prop}: +${error?.scoreInfo.scoreParams[prop]}\n`;
         }
