@@ -25,6 +25,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     ) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
+        this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -224,6 +225,26 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             methodName: methodInfo.displayName 
         };
         return codeObject;
+    }
+
+    private async goToFileAndLineById(frameId?: number) {
+        const frame = this._stackViewModel?.stacks
+            .flatMap(s => s.frames)
+            .firstOrDefault(f => f.id == frameId);
+        if(!frame) {
+            return;
+        }
+
+        const editorInfo: EditorInfo = {
+            workspaceUri: frame.workspaceUri,
+            lineNumber: frame.lineNumber,
+            excutedCode: frame.excutedCode,
+            functionName: frame.functionName,
+            modulePhysicalPath: frame.modulePhysicalPath,
+            moduleLogicalPath: frame.moduleLogicalPath,
+            lastInstanceCommitId: this._stackViewModel?.lastInstanceCommitId,
+        };
+        await this._editorHelper.goToFileAndLine(editorInfo);
     }
 }
 

@@ -103,4 +103,10 @@ window.addEventListener("load", () =>
     });
 
     publish(new UiMessage.Notify.TabLoaded($(".analytics-nav").attr("activeid")));
+
+    $(document).on("click", "vscode-link", function() {
+        const frameId = $(this).data('frame-id');
+        publish(new UiMessage.Notify.GoToLineByFrameId(frameId));
+    });
+
 });
