@@ -1,23 +1,31 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetials, HttpError } from "../../services/analyticsProvider";
+import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetails, HttpError } from "../../services/analyticsProvider";
 import { WebviewChannel } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { integer } from "vscode-languageclient";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
-
+import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import moment = require('moment');
+import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
+import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
+import { Settings } from "../../settings";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
     private _viewedCodeObjectId?: string = undefined;
+    private _stackViewModel?: ErrorFlowStackViewModel = undefined;
 
     constructor(
         private _channel: WebviewChannel,
-        private _analyticsProvider: AnalyticsProvider) 
+        private _analyticsProvider: AnalyticsProvider,
+		private _documentInfoProvider: DocumentInfoProvider,
+        private _editorHelper: EditorHelper,
+    ) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
+        this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -80,17 +88,163 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             this._viewedCodeObjectId = codeObject.id;
         }
     }
+
     private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
-        if(!e.codeObjectId || !e.errorName || !e.sourceCodeObjectId)
+        if(!e.errorSourceUID) {
             return;
+        }
 
-        let html = HtmlBuilder.buildErrorDetails();
+        const emptyCodeObject: CodeObjectInfo = {
+            id: '',
+            methodName: ''
+        };
+        const emptyError: CodeObjectErrorDetails = {
+            uid: '',
+            name: '',
+            scoreInfo: {
+                score: 0,
+                scoreParams: undefined,
+            },
+            sourceCodeObjectId: '',
+            characteristic: '',
+            startsHere: false,
+            endsHere: false,
+            firstOccurenceTime: moment(),
+            lastOccurenceTime: moment(),
+            dayAvg: 0,
+            originServices: [],
+            errors: []
+        };
+        let html = HtmlBuilder.buildErrorDetails(emptyError, emptyCodeObject);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
-        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.codeObjectId, e.errorName, e.sourceCodeObjectId);
+        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
+        const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
+
+        const viewModels = await this.createViewModels(errorDetails);
+        this._stackViewModel = viewModels.firstOrDefault();
+
+        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [this._stackViewModel]);
+        this._channel.publish(new UiMessage.Set.ErrorDetails(html));
+    }
+
+    private async createViewModels(errorDetails: CodeObjectErrorDetails): Promise<ErrorFlowStackViewModel[]> {
+        const sourceFlows = errorDetails.errors;
+        const viewModels: ErrorFlowStackViewModel[] = [];
+        let id = 0;
+        for await (const sourceFlow of sourceFlows) {
+            const stacks: StackViewModel[] = [];
+
+            for await (const sourceStack of sourceFlow.frameStacks) {
+                const frames: FrameViewModel[] = [];
+
+                for await (const sourceFrame of sourceStack.frames) {
+                    const {
+                        spanName,
+                        spanKind,
+                        modulePhysicalPath,
+                        moduleLogicalPath,
+                        moduleName,
+                        functionName,
+                        lineNumber,
+                        excutedCode,
+                        codeObjectId,
+                        repeat,
+                    } = sourceFrame;
+
+                    const workspaceUri = await this._editorHelper.getWorkspaceFileUri({
+                        moduleLogicalPath,
+                        modulePhysicalPath,
+                    });
+                                    
+                    const frame: FrameViewModel = {
+                        id: id++,
+                        stackIndex: 0,
+                        selected: false,
+                        parameters: [],
+                        spanName,
+                        spanKind,
+                        modulePhysicalPath,
+                        moduleLogicalPath,
+                        moduleName,
+                        functionName,
+                        lineNumber,
+                        excutedCode,
+                        codeObjectId,
+                        repeat,
+                        workspaceUri,
+                    };
+
+                    frames.push(frame);
+                }
+                
+                const frameStack: StackViewModel = {
+                    frames,
+                    exceptionType: sourceStack.exceptionType,
+                    exceptionMessage: sourceStack.exceptionMessage,
+                };
+                stacks.push(frameStack);
+            }
+
+            const viewModel: ErrorFlowStackViewModel = {
+                stacks: stacks,
+                stackTrace: '',
+                lastInstanceCommitId: '',
+                affectedSpanPaths: [],
+                exceptionType: '',
+                summary: undefined
+            };
+            viewModels.push(viewModel);
+        }
+        return viewModels;
+    }
+
+    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) {
+            return;
+        }
+
+        const document = editor.document;
+        const position = editor.selection.anchor;
+
+        const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+            ? await this._documentInfoProvider.getDocumentInfo(document)
+            : undefined;
+        if(!docInfo){
+            return;
+        }
         
-        html = HtmlBuilder.buildErrorDetails(errorDetails);
-        this._channel.publish(new UiMessage.Set.ErrorDetails(html));
+        const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
+        if(!methodInfo){
+            return;
+        }
+
+        const codeObject = <CodeObjectInfo>{ 
+            id: methodInfo.symbol.id, 
+            methodName: methodInfo.displayName 
+        };
+        return codeObject;
+    }
+
+    private async goToFileAndLineById(frameId?: number) {
+        const frame = this._stackViewModel?.stacks
+            .flatMap(s => s.frames)
+            .firstOrDefault(f => f.id == frameId);
+        if(!frame) {
+            return;
+        }
+
+        const editorInfo: EditorInfo = {
+            workspaceUri: frame.workspaceUri,
+            lineNumber: frame.lineNumber,
+            excutedCode: frame.excutedCode,
+            functionName: frame.functionName,
+            modulePhysicalPath: frame.modulePhysicalPath,
+            moduleLogicalPath: frame.moduleLogicalPath,
+            lastInstanceCommitId: this._stackViewModel?.lastInstanceCommitId,
+        };
+        await this._editorHelper.goToFileAndLine(editorInfo);
     }
 }
 
@@ -98,7 +252,7 @@ class HtmlBuilder
 {
     public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectError[]): string{
         if(!errors.length){
-            return HtmlHelper.getInfoMessage("No erros go through this code object.");
+            return HtmlHelper.getInfoMessage("No errors flow through this code object.");
         }
         
         let html = '';
@@ -107,10 +261,12 @@ class HtmlBuilder
             <div class="list-item">
                 <div class="list-item-content-area">
                     <div class="list-item-header flex-v-center">
-                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId)}
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
-                    ${HtmlBuilder.getErrorStartEndTime(error)}
+                    <div class="flex-row">
+                        ${HtmlBuilder.getErrorStartEndTime(error)}
+                    </div>
                 </div> 
                 <div class="list-item-right-area">
                     ${HtmlHelper.getScoreBoxHtml(error.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
@@ -121,7 +277,16 @@ class HtmlBuilder
         return html;
     }
 
-    public static buildErrorDetails(error?: CodeObjectErrorDetials): string{
+    public static buildErrorDetails(
+        error: CodeObjectErrorDetails,
+        codeObject: CodeObjectInfo,
+        viewModels?: ErrorFlowStackViewModel[],
+    ): string{
+        const characteristic = error.characteristic
+            ? /*html*/`
+                <section class="error-characteristic">${error.characteristic}</section>
+            `
+            : '';
         return /*html*/`
             <div class="flex-row">
                 <vscode-button appearance="icon" class="error-view-close">
@@ -129,20 +294,30 @@ class HtmlBuilder
                 </vscode-button>
                 <span class="flex-stretch flex-v-center error-title">
                     <div>
-                        <span class="error-name">${error?.name ?? ''}</span>
-                        <span class="error-from">from</span>
-                        <span class="error-source">${error?.sourceCodeObjectId ??''}</span>
+                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid, false)}
                     </div>
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
-            `;
+            ${characteristic}
+            <section class="flex-row">
+                ${HtmlBuilder.getErrorStartEndTime(error)}
+                <span class="error-property flex-stretch">
+                    <span class="label">Frequency:</span>
+                    <span>${error.dayAvg}/day</span>
+                </span>
+            </section>
+            <vscode-divider></vscode-divider>
+            ${this.getAffectedServices(error)}
+            <vscode-divider></vscode-divider>
+            ${this.getFlowStacksHtml(error, viewModels)}
+        `;
     }
 
     private static buildScoreTooltip(error?: CodeObjectError): string{
         let tooltip = '';
         for(let prop in error?.scoreInfo.scoreParams || {}){
-            let value = error?.scoreInfo.scoreParams[prop] 
+            let value = error?.scoreInfo.scoreParams[prop]; 
             if(value > 0)
                 tooltip += `${prop}: +${error?.scoreInfo.scoreParams[prop]}\n`;
         }
@@ -160,15 +335,50 @@ class HtmlBuilder
     }
     private static getErrorStartEndTime(error: CodeObjectError): string{
         return /*html*/`
-            <div class="flex-row">
-                <span class="flex-stretch">
-                    <span class="time-label">Started:</span>
-                    <span>${error.firstOccurenceTime.fromNow()}</span>
+            <span class="error-property flex-stretch">
+                <span class="label">Started:</span>
+                <span>${error.firstOccurenceTime.fromNow()}</span>
+            </span>
+            <span class="error-property flex-stretch">
+                <span class="label">Last:</span>
+                <span>${error.lastOccurenceTime.fromNow()}</span>
+            </span>`;
+    }
+
+    private static getAffectedServices(error: CodeObjectErrorDetails) {
+        const affectedServicesHtml = error.originServices.map(service => `
+            <span class="flex-stretch">
+                <vscode-tag>${service.serviceName}</vscode-tag>
+            </span>
+        `).join("");
+        const html = /*html*/`
+            <section>
+                <header>Affected Services</header>
+                <span class="flex-row">
+                    ${affectedServicesHtml}
                 </span>
-                <span class="flex-stretch">
-                    <span class="time-label">Last:</span>
-                    <span>${error.lastOccurenceTime.fromNow()}</span>
-                </span>
-            </div>`;
+            </section>
+        `;
+        return html;
+    }
+
+    private static getFlowStacksHtml(error: CodeObjectErrorDetails, viewModels?: ErrorFlowStackViewModel[]): string {
+        if(!viewModels || viewModels.length === 0) {
+            return '';
+        }
+
+        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
+        const stacksHtml = viewModels[0].stacks
+            .map(s => ErrorFlowStackRenderer.getFlowStackHtml(s))
+            .join('') ?? '';
+        return  /*html*/ `
+            <section>
+                <div class="flex-row flex-max-space-between">
+                    <header>Stack</header>
+                    <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
+                </div>
+                ${stacksHtml}
+            </section>    
+        `;
     }
 }

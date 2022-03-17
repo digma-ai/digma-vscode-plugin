@@ -67,14 +67,12 @@ window.addEventListener("load", () =>
         }
     });
 
-    $(document).on("click", "#show_error_details", function () {
-        let codeObjectId = $(this).data("codeObject-id");
-        let errorName = $(this).data("error-name");
-        let sourceCodeObjectId = $(this).data("error-source");
+    $(document).on("click", ".error-name.link", function () {
+        let errorSourceUID = $(this).data("error-source-uid");
         $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
         $(".error-view").show();
         $(".errors-view").hide();
-        publish(new UiMessage.Get.ErrorDetails(codeObjectId, errorName, sourceCodeObjectId));
+        publish(new UiMessage.Get.ErrorDetails(errorSourceUID));
     });
 
     $(document).on("click", ".error_frames_btn", function () {
@@ -105,4 +103,10 @@ window.addEventListener("load", () =>
     });
 
     publish(new UiMessage.Notify.TabLoaded($(".analytics-nav").attr("activeid")));
+
+    $(document).on("click", "vscode-link", function() {
+        const frameId = $(this).data('frame-id');
+        publish(new UiMessage.Notify.GoToLineByFrameId(frameId));
+    });
+
 });

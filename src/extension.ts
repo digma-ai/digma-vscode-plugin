@@ -15,7 +15,7 @@ import { ErrorFlowRawStackEditor } from './views/errorFlow/errorFlowRawStackEdit
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { ErrorsLineDecorator } from './decorators/errorsLineDecorator';
 import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
-
+import { EditorHelper } from './services/EditorHelper';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -29,22 +29,24 @@ export async function activate(context: vscode.ExtensionContext)
     const symbolProvider = new SymbolProvider(supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
+    const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
 
     if(!Settings.environment.value){
         const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();
-        if(firstEnv)
+        if(firstEnv) {
             await Settings.environment.set(firstEnv);
+        }
     }
 
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
-    context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, sourceControl, context.extensionUri));
+    context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, editorHelper, context.extensionUri));
     context.subscriptions.push(new ErrorFlowRawStackEditor());
     context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
-    context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, context.extensionUri, sourceControl));
+    context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, context.extensionUri, editorHelper));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
 

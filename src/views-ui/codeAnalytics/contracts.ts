@@ -12,12 +12,15 @@ export namespace UiMessage
         export class GoToLine{
             constructor(public line?: number){}
         }
+        export class GoToLineByFrameId {
+            constructor(public frameId?: number){}
+        }
     }
 
     export namespace Get
     {
         export class ErrorDetails{
-            constructor(public codeObjectId?: string, public errorName?: string, public sourceCodeObjectId?: string) {}
+            constructor(public errorSourceUID?: string) {}
         }
     }
 

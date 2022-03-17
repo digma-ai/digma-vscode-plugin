@@ -79,15 +79,15 @@ export class WebviewChannel implements vscode.Disposable
 
     public subscrib(value: vscode.Webview) 
     {
-        if(this._webview === value)
+        if(this._webview === value) {
             return;
+        }
 
         this._webview = value;
-        this._webview.onDidReceiveMessage(async (message: any) => 
-            {
-                for(let consumer of this._consumers)
-                {
-                    if(message.type == consumer.messageType){
+        this._webview.onDidReceiveMessage(
+            async (message: any) => {
+                for(let consumer of this._consumers) {
+                    if(message.type === consumer.messageType) {
                         consumer.handler(message.data);
                     }
                 }
