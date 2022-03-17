@@ -9,7 +9,7 @@ import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import moment = require('moment');
-import { ErrorFlowStackRenderer, ErrorFlowStackViewModel } from './errorFlowStackRenderer';
+import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -19,6 +19,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
 		private _documentInfoProvider: DocumentInfoProvider,
+        private _editorHelper: EditorHelper,
     ) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));

@@ -1,18 +1,12 @@
 import * as vscode from 'vscode';
-import * as utils from '../../services/utils';
-import { AnalyticsProvider, ErrorFlowFrame, ErrorFlowResponse, ErrorFlowStack } from "../../services/analyticsProvider";
-import { SourceControl } from '../../services/sourceControl';
-import { SymbolProvider } from '../../services/symbolProvider';
+import { ErrorFlowResponse } from "../../services/analyticsProvider";
 import { Settings } from '../../settings';
 import { WebViewUris } from "../webViewUtils";
-import { Logger } from '../../services/logger';
 import { DocumentInfoProvider } from '../../services/documentInfoProvider';
 import { ErrorFlowParameterDecorator } from './errorFlowParameterDecorator';
-import { privateEncrypt } from 'crypto';
 import moment = require('moment');
 import { ErrorFlowRawStackEditor } from './errorFlowRawStackEditor';
-import { Console } from 'console';
-import { integer, WorkspaceFolder } from 'vscode-languageclient';
+import { EditorHelper, EditorInfo } from './../../services/EditorHelper';
 import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './../codeAnalytics/errorFlowStackRenderer';
 
 export class ErrorFlowStackView implements vscode.Disposable
@@ -31,10 +25,11 @@ export class ErrorFlowStackView implements vscode.Disposable
 
     constructor(
         private _documentInfoProvider: DocumentInfoProvider,
+        editorHelper: EditorHelper,
         extensionUri: vscode.Uri,
     ) {
 
-        this._provider = new ErrorFlowDetailsViewProvider(_documentInfoProvider, sourceControl, extensionUri);
+        this._provider = new ErrorFlowDetailsViewProvider(editorHelper, extensionUri);
         this._paramDecorator = new ErrorFlowParameterDecorator(_documentInfoProvider);
 
         this._disposables = [
@@ -122,8 +117,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
     private _viewModel?: ViewModel;
 
     constructor(
-        private _documentInfoProvider: DocumentInfoProvider,
-        private _sourceControl: SourceControl,
+        private _editorHelper: EditorHelper,
         extensionUri: vscode.Uri
     ) {
         this._webViewUris = new WebViewUris(extensionUri, "errorFlowStack", ()=>this._view!.webview);
@@ -180,8 +174,19 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
 
     public async goToSelectedFrameFileAndLine()
     {
-        if(this.selectedFrame)
-            await this.goToFileAndLine(this.selectedFrame);
+        const frame = this.selectedFrame;
+        if(frame) {
+            const editorInfo: EditorInfo = {
+                workspaceUri: frame.workspaceUri,
+                lineNumber: frame.lineNumber,
+                excutedCode: frame.excutedCode,
+                functionName: frame.functionName,
+                modulePhysicalPath: frame.modulePhysicalPath,
+                moduleLogicalPath: frame.moduleLogicalPath,
+                lastInstanceCommitId: this._viewModel?.lastInstanceCommitId,
+            };
+            await this._editorHelper.goToFileAndLine(editorInfo);
+        }
     }
 
     public async setErrorFlow(response?: ErrorFlowResponse)
@@ -193,14 +198,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         this._view.webview.html = this.getHtml();
     }
 
-    private async GetExecutedCodeFromScm(uri: vscode.Uri, commit: string, line:integer) : Promise<string |undefined>{
-
-        var doc = await this.GetFromSourceControl(uri,commit);
-        if (doc){
-            return doc.lineAt(line-1).text.trim();
-        }
-
-    }
     private async createViewModel(response: ErrorFlowResponse) :  Promise<ViewModel | undefined>
     {
         const stackVms: StackViewModel[] = [];
@@ -213,10 +210,10 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             {
                 //workspace = this.findWorkSpace(frame)
                 //var uri = await this.fileFile(frame.moduleName);
-                var uri = await this.getWorkspaceFileUri(frame);
+                const uri = await this._editorHelper.getWorkspaceFileUri(frame);
                 if (!frame.excutedCode && uri && response.lastInstanceCommitId && frame.lineNumber>0)
                 {
-                    var scmExecutedCode = await this.GetExecutedCodeFromScm(uri,response.lastInstanceCommitId,frame.lineNumber);
+                    var scmExecutedCode = await this._editorHelper.getExecutedCodeFromScm(uri, response.lastInstanceCommitId, frame.lineNumber);
                     if (scmExecutedCode){
                         frame.excutedCode=scmExecutedCode;
                     } 
@@ -262,116 +259,21 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         const frame = this._viewModel?.stacks
             .flatMap(s => s.frames)
             .firstOrDefault(f => f.id == frameId);
-        await this.goToFileAndLine(frame);
-    }
-
-
-
-    private async goToFileAndLine(frame?: FrameViewModel)
-    {
-        if(!frame?.workspaceUri)
+        if(!frame) {
             return;
-
-        try
-        {
-            let doc: vscode.TextDocument | undefined = undefined;
- 
-            if(!await utils.fileExits(frame.workspaceUri))
-            {
-                doc = await this.askAndOpenFromSourceControl(frame);
-            }
-            else
-            {
-                doc = await vscode.workspace.openTextDocument(frame.workspaceUri);
-
-                const txtLine = doc.lineAt(frame.lineNumber-1);
-                var fileChanged:boolean = false;
-                if (frame.excutedCode){
-                    fileChanged = (txtLine.text.trim() !== frame.excutedCode);
-                }
-                else {
-                    try {
-                        var sourceDoc = await this.GetFromSourceControl(frame.workspaceUri,
-                            this._viewModel?.lastInstanceCommitId!);
-                        if (sourceDoc){
-                            fileChanged = (txtLine.text.trim() !== sourceDoc.lineAt(frame.lineNumber-1).text.trim());
-                        }
-                    }
-                    catch (exeption){
-                        await vscode.window.showWarningMessage(
-                            'Cannot locate file in source control. Please make sure its checked in');
-                    }
-                
-
-                }
-                if(fileChanged)
-                {
-                    doc = await this.askAndOpenFromSourceControl(frame);;
-                }
-                else
-                {
-                    const docInfo = await this._documentInfoProvider.getDocumentInfo(doc);
-                    const methodInfos = docInfo?.methods || [];
-                    if(methodInfos.all(m => m.symbol.name != frame.functionName))
-                    {
-                        doc = await this.askAndOpenFromSourceControl(frame);
-                    }
-                }
-            }
-            
-            if(doc)
-            {
-                await vscode.window.showTextDocument(doc, { preview: true });
-                const line = doc.lineAt(frame.lineNumber-1);
-                vscode.window.activeTextEditor!.selection = new vscode.Selection(line.range.start, line.range.start);
-                vscode.window.activeTextEditor!.revealRange(line.range, vscode.TextEditorRevealType.InCenter); 
-            }
         }
-        catch(error)
-        {
-            Logger.error(`Failed to open file: ${frame.modulePhysicalPath}`, error);
-            vscode.window.showErrorMessage(`Failed to open file: ${frame.modulePhysicalPath}`)
-        }
+
+        const editorInfo: EditorInfo = {
+            workspaceUri: frame.workspaceUri,
+            lineNumber: frame.lineNumber,
+            excutedCode: frame.excutedCode,
+            functionName: frame.functionName,
+            modulePhysicalPath: frame.modulePhysicalPath,
+            moduleLogicalPath: frame.moduleLogicalPath,
+            lastInstanceCommitId: this._viewModel?.lastInstanceCommitId,
+        };
+        await this._editorHelper.goToFileAndLine(editorInfo);
     }
-
-    private async askAndOpenFromSourceControl(frame: FrameViewModel) : Promise<vscode.TextDocument | undefined>
-    {
-        if(!this._sourceControl.current)
-        {
-            const sel = await vscode.window.showWarningMessage(
-                'File version is different from the version recorded in this flow.\nPlease configure source control.',
-                'configure');
-            if(sel == 'configure')
-                await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings", {query: Settings.sourceControl.key});
-        }
-        else
-        {
-            let sel = await vscode.window.showWarningMessage(
-                `File version is different from the version recorded in this flow, would you like to open the remote version of the file' installed.`,
-                'yes')
-            if(sel == 'yes')
-                return await this._sourceControl.current?.getFile(frame.workspaceUri!, this._viewModel!.lastInstanceCommitId);
-        }
-       
-        return undefined;
-    }
-
-    private async GetFromSourceControl(uri: vscode.Uri, commit:string) : Promise<vscode.TextDocument | undefined>{
-        if(!this._sourceControl.current)
-        {
-            const sel = await vscode.window.showWarningMessage(
-                'File version is different from the version recorded in this flow.\nPlease configure source control.',
-                'configure');
-
-            if(sel === 'configure'){
-
-                await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings", {query: Settings.sourceControl.key});
-            }
-        }
-        
-        return await this._sourceControl.current?.getFile(uri, commit);
-    }
-
 
     private getHtml() : string 
     {
@@ -395,38 +297,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                  ${renderer.getContentHtml()}
             </body>
             </html>`;
-    }
-
-    private async lookupCodeObjectByFullName(name:string) : Promise<vscode.SymbolInformation[]>{
-
-       return await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", name);
-
-    }
-    private async getWorkspaceFileUri(frame: ErrorFlowFrame) : Promise<vscode.Uri | undefined>    {
-        
-        //Try first using the logical name of the function if we have it
-        if (frame.moduleLogicalPath){
-
-            var symbols = await this.lookupCodeObjectByFullName(frame.moduleLogicalPath);
-            //We have a match
-            if (symbols.length===1){
-                return symbols[0].location.uri;
-            }
-        }
-
-        if (frame.modulePhysicalPath){
-
-            const moduleRootFolder = frame.modulePhysicalPath.split('/').firstOrDefault();
-            const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name === moduleRootFolder);
-            if (moduleWorkspace){
-        
-                const workspaceUri = moduleWorkspace
-                    ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', frame.modulePhysicalPath)
-                    : undefined;
-                
-                return workspaceUri;
-            }
-        }
     }
 
     public dispose() 
