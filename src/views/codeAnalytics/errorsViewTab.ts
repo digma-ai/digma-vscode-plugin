@@ -10,6 +10,7 @@ import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import moment = require('moment');
 import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
+import { Settings } from "../../settings";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -263,7 +264,9 @@ class HtmlBuilder
                         ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
-                    ${HtmlBuilder.getErrorStartEndTime(error)}
+                    <div class="flex-row">
+                        ${HtmlBuilder.getErrorStartEndTime(error)}
+                    </div>
                 </div> 
                 <div class="list-item-right-area">
                     ${HtmlHelper.getScoreBoxHtml(error.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
@@ -297,15 +300,16 @@ class HtmlBuilder
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
             ${characteristic}
-            <section class="flex-column">
+            <section class="flex-row">
                 ${HtmlBuilder.getErrorStartEndTime(error)}
-                <span class="flex-stretch">
-                    <span class="time-label">Frequency:</span>
-                        <span>${error.dayAvg}/day</span>
-                    </span>
+                <span class="error-property flex-stretch">
+                    <span class="label">Frequency:</span>
+                    <span>${error.dayAvg}/day</span>
                 </span>
-            </div>
+            </section>
+            <vscode-divider></vscode-divider>
             ${this.getAffectedServices(error)}
+            <vscode-divider></vscode-divider>
             ${this.getFlowStacksHtml(error, viewModels)}
         `;
     }
@@ -331,24 +335,22 @@ class HtmlBuilder
     }
     private static getErrorStartEndTime(error: CodeObjectError): string{
         return /*html*/`
-            <div class="flex-row">
-                <span class="flex-stretch">
-                    <span class="time-label">Started:</span>
-                    <span>${error.firstOccurenceTime.fromNow()}</span>
-                </span>
-                <span class="flex-stretch">
-                    <span class="time-label">Last:</span>
-                    <span>${error.lastOccurenceTime.fromNow()}</span>
-                </span>
-            </div>`;
+            <span class="error-property flex-stretch">
+                <span class="label">Started:</span>
+                <span>${error.firstOccurenceTime.fromNow()}</span>
+            </span>
+            <span class="error-property flex-stretch">
+                <span class="label">Last:</span>
+                <span>${error.lastOccurenceTime.fromNow()}</span>
+            </span>`;
     }
 
     private static getAffectedServices(error: CodeObjectErrorDetails) {
         const affectedServicesHtml = error.originServices.map(service => `
             <span class="flex-stretch">
-                <span>${service.serviceName}</span>
+                <vscode-tag>${service.serviceName}</vscode-tag>
             </span>
-        `);
+        `).join("");
         const html = /*html*/`
             <section>
                 <header>Affected Services</header>
@@ -365,33 +367,18 @@ class HtmlBuilder
             return '';
         }
 
-        const htmlParts = viewModels.map(viewModel => {
-            const renderer = new ErrorFlowStackRenderer(viewModel);
-            const flowHtml = renderer.getContentHtml();
-            return flowHtml;
-        });
-
-        // if(error.errors.length === 0) {
-        //     return 'No information is available.';
-        // }
-        // const html = `
-        //     <section class="flow-stacks">
-        //         <div class="flow-stacks-navigator">
-        //             <div class="navigate-previous">Prev</div>
-        //             <div class="navigate-status">1/${error.errors.length} Flow Stacks</div>
-        //             <div class="navigate-next">Next</div>
-        //         </div>
-        //         <ul>
-        //             ${error.errors[0].frameStacks.map(frameStack => `
-        //                 <li>
-        //                     <header>${frameStack.exceptionType}</header>
-        //                     <div>${frameStack.exceptionMessage}</div>
-        //                 </li>
-        //             `)}
-        //         </ul>
-        //     </section>
-        // `;
-        const html = htmlParts.join('');
-        return html;
+        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
+        const stacksHtml = viewModels[0].stacks
+            .map(s => ErrorFlowStackRenderer.getFlowStackHtml(s))
+            .join('') ?? '';
+        return  /*html*/ `
+            <section>
+                <div class="flex-row flex-max-space-between">
+                    <header>Stack</header>
+                    <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
+                </div>
+                ${stacksHtml}
+            </section>    
+        `;
     }
 }

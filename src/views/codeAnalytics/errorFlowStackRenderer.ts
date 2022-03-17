@@ -193,14 +193,14 @@ export class ErrorFlowStackRenderer {
             </div>`;
     }
     
-    private getFramesListSectionHtml()
+    public getFramesListSectionHtml()
     {
         const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
         let content = undefined;
         if(this._viewModel)
         {
             const stacksHtml = this._viewModel?.stacks
-                .map(s => this.getFlowStackHtml(s))
+                .map(s => ErrorFlowStackRenderer.getFlowStackHtml(s))
                 .join('') ?? '';
             
             content = stacksHtml 
@@ -222,7 +222,7 @@ export class ErrorFlowStackRenderer {
             </div>`;
     }
 
-    private getFlowStackHtml(stack: StackViewModel)
+    public static getFlowStackHtml(stack: StackViewModel)
     {
         if(!stack)
             return '';
@@ -247,7 +247,7 @@ export class ErrorFlowStackRenderer {
 
                 lastSpan=frame.spanName;
             }
-            html+=this.getFrameItemHtml(frame);
+            html+=ErrorFlowStackRenderer.getFrameItemHtml(frame);
         }
 
         return /*html*/`
@@ -257,7 +257,7 @@ export class ErrorFlowStackRenderer {
         `;
     }
 
-    private getFrameItemHtml(frame: FrameViewModel)
+    private static getFrameItemHtml(frame: FrameViewModel)
     {
         const path = `${frame.modulePhysicalPath} in ${frame.functionName}`;
         const selectedClass = frame.selected ? "selected" : "";
