@@ -68,9 +68,9 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
                 const lines = this.createLineInfos(doc, codeObjectSummaries, methods);
-
-                const scores = await this.analyticsProvider.getCodeObjectScores(symbolInfos.map(s => s.id));
-
+                const scores:CodeObjectScore[] = codeObjectSummaries.map(o=>{
+                    return {id:o.id, score:o.score};
+                });
                 latestVersionInfo.value = {
                     codeObjectSummaries,
                     methods,
@@ -143,18 +143,19 @@ export class DocumentInfoProvider implements vscode.Disposable
         {
             const method = methods.single(m => m.symbol.id == codeObjectSummary.id);
 
-            for(let excutedCodeSummary of codeObjectSummary.excutedCodes)
+            for(let executedCodeSummary of codeObjectSummary.executedCodes)
             {
-                const matchingLines = excutedCodeSummary.possibleLineNumbers
-                    .map(x => x-1)
-                    .filter(x => method.range.start.line <= x &&
-                                method.range.end.line >= x &&
-                                document.lineAt(x).text.trim() == excutedCodeSummary.code);
-
-                if(matchingLines.length != 1)
+                if(executedCodeSummary.codeLineNumber === -1){
                     continue;
-                
-                const textLine = document.lineAt(matchingLines[0]);
+                }
+                let lineIndex = executedCodeSummary.codeLineNumber-1;
+                if(method.range.start.line <= lineIndex &&
+                            method.range.end.line >= lineIndex &&
+                            document.lineAt(lineIndex).text.trim() !== executedCodeSummary.code){
+                            continue;
+                }
+            
+                const textLine = document.lineAt(lineIndex);
                 let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == textLine.lineNumber+1);
                 if(!lineInfo)
                 {
@@ -163,10 +164,10 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
 
                 lineInfo.exceptions.push({
-                    type: excutedCodeSummary.exceptionType,
-                    message: excutedCodeSummary.exceptionMessage,
-                    handled: excutedCodeSummary.handled,
-                    unexpected: excutedCodeSummary.unexpected
+                    type: executedCodeSummary.exceptionType,
+                    message: executedCodeSummary.exceptionMessage,
+                    handled: executedCodeSummary.handled,
+                    unexpected: executedCodeSummary.unexpected
                 });
             }
         }

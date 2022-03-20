@@ -148,7 +148,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                         moduleName,
                         functionName,
                         lineNumber,
-                        excutedCode,
+                        executedCode: executedCode,
                         codeObjectId,
                         repeat,
                     } = sourceFrame;
@@ -170,7 +170,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                         moduleName,
                         functionName,
                         lineNumber,
-                        excutedCode,
+                        executedCode: executedCode,
                         codeObjectId,
                         repeat,
                         workspaceUri,
@@ -244,7 +244,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         const editorInfo: EditorInfo = {
             workspaceUri: frame.workspaceUri,
             lineNumber: frame.lineNumber,
-            excutedCode: frame.excutedCode,
+            executedCode: frame.executedCode,
             functionName: frame.functionName,
             modulePhysicalPath: frame.modulePhysicalPath,
             moduleLogicalPath: frame.moduleLogicalPath,

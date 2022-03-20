@@ -34,7 +34,7 @@ export interface ErrorFlowFrame{
     moduleName: string;
     functionName: string;
     lineNumber: number;
-    excutedCode: string;
+    executedCode: string;
     codeObjectId: string;
     repeat: number;
     parameters: ParamStats[];
@@ -115,26 +115,18 @@ export interface CodeObjectErrorFlowsResponse
 export interface CodeObjectSummary
 {
     id: string;
-    errorFlowCount: number;
-    exceptionTypes: string[];
-    trend: number;
-    impact: Impact;
-    unhandled: boolean;
-    unexpected: boolean;
-    unhandledErrorFlowCount:number;
-    unexpectedErrorFlowCount:number;
-    excutedCodes: ExcutedCodeSummary[];
+    score: integer;
+    executedCodes: ExecutedCodeSummary[];
 }
 
-export interface ExcutedCodeSummary{
+export interface ExecutedCodeSummary{
     code: string;
-    codeObjectId: string;
-    errorFlowId: string;
     exceptionType: string;
     exceptionMessage: string;
     handled: boolean;
     unexpected: boolean;
     possibleLineNumbers: number[];
+    codeLineNumber: number;
 }
 
 export interface CodeObjectsSummaryResponse
@@ -198,7 +190,7 @@ export interface Frame {
     moduleName: string;
     functionName: string;
     lineNumber: number;
-    excutedCode: string;
+    executedCode: string;
     codeObjectId: string;
     parameters: null;
     repeat: number;
@@ -254,20 +246,6 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getCodeObjectScores(codeObjectIds: string[]): Promise<CodeObjectScore[]>
-    {
-        const response = await this.send<CodeObjectScore[]>(
-            'POST', 
-            `/CodeAnalytics/codeObjects/scores`, 
-            undefined,
-            { //body
-                codeObjectIds: codeObjectIds,
-                environment: Settings.environment.value
-            });
-            
-        return response;
-    }
-    
     public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>
     {
         const response = await this.send<CodeObjectError[]>(
