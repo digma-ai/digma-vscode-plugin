@@ -143,15 +143,15 @@ export class DocumentInfoProvider implements vscode.Disposable
         {
             const method = methods.single(m => m.symbol.id == codeObjectSummary.id);
 
-            for(let excutedCodeSummary of codeObjectSummary.excutedCodes)
+            for(let executedCodeSummary of codeObjectSummary.executedCodes)
             {
-                if(excutedCodeSummary.codeLineNumber === -1){
+                if(executedCodeSummary.codeLineNumber === -1){
                     continue;
                 }
-                let lineIndex = excutedCodeSummary.codeLineNumber-1;
+                let lineIndex = executedCodeSummary.codeLineNumber-1;
                 if(method.range.start.line <= lineIndex &&
                             method.range.end.line >= lineIndex &&
-                            document.lineAt(lineIndex).text.trim() !== excutedCodeSummary.code){
+                            document.lineAt(lineIndex).text.trim() !== executedCodeSummary.code){
                             continue;
                 }
             
@@ -164,10 +164,10 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
 
                 lineInfo.exceptions.push({
-                    type: excutedCodeSummary.exceptionType,
-                    message: excutedCodeSummary.exceptionMessage,
-                    handled: excutedCodeSummary.handled,
-                    unexpected: excutedCodeSummary.unexpected
+                    type: executedCodeSummary.exceptionType,
+                    message: executedCodeSummary.exceptionMessage,
+                    handled: executedCodeSummary.handled,
+                    unexpected: executedCodeSummary.unexpected
                 });
             }
         }

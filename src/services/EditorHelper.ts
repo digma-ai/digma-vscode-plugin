@@ -9,7 +9,7 @@ import { Settings } from './../settings';
 export interface EditorInfo {
     workspaceUri?: vscode.Uri;
     lineNumber?: number;
-    excutedCode?: string;
+    executedCode?: string;
     functionName?: string;
     modulePhysicalPath?: string;
     moduleLogicalPath?: string;
@@ -46,8 +46,8 @@ export class EditorHelper {
 
                 const txtLine = doc.lineAt(lineNumber-1);
                 var fileChanged:boolean = false;
-                if (editorInfo.excutedCode){
-                    fileChanged = (txtLine.text.trim() !== editorInfo.excutedCode);
+                if (editorInfo.executedCode){
+                    fileChanged = (txtLine.text.trim() !== editorInfo.executedCode);
                 }
                 else {
                     try {

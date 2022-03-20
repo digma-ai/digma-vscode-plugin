@@ -34,7 +34,7 @@ export interface ErrorFlowFrame{
     moduleName: string;
     functionName: string;
     lineNumber: number;
-    excutedCode: string;
+    executedCode: string;
     codeObjectId: string;
     repeat: number;
     parameters: ParamStats[];
@@ -116,10 +116,10 @@ export interface CodeObjectSummary
 {
     id: string;
     score: integer;
-    excutedCodes: ExcutedCodeSummary[];
+    executedCodes: ExecutedCodeSummary[];
 }
 
-export interface ExcutedCodeSummary{
+export interface ExecutedCodeSummary{
     code: string;
     exceptionType: string;
     exceptionMessage: string;
@@ -190,7 +190,7 @@ export interface Frame {
     moduleName: string;
     functionName: string;
     lineNumber: number;
-    excutedCode: string;
+    executedCode: string;
     codeObjectId: string;
     parameters: null;
     repeat: number;
