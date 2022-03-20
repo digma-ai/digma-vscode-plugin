@@ -64,7 +64,7 @@ export class DocumentInfoProvider implements vscode.Disposable
             {
                 Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
                 const symbolInfos = await this.symbolProvider.getSymbols(doc);
-                const codeObjectSummaries = await this.analyticsProvider.getSummary(docRelativePath, symbolInfos.map(s => s.id));
+                const codeObjectSummaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id));
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
                 const lines = this.createLineInfos(doc, codeObjectSummaries, methods);
@@ -224,6 +224,7 @@ export interface LineInfo
 
 export interface MethodInfo
 {
+    id: string,
     name: string;
     NameRange?: vscode.Range;
     displayName: string;
