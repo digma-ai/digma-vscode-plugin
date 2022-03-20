@@ -7,10 +7,11 @@ import {
     HttpError,
 } from "../../services/analyticsProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { WebviewChannel } from "../webViewUtils";
+import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
+import { Uri } from "vscode";
 
 export class InsightsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -18,7 +19,12 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
     constructor(
         private _channel: WebviewChannel,
-        private _analyticsProvider: AnalyticsProvider) { }
+        private _analyticsProvider: AnalyticsProvider,
+        private context: vscode.ExtensionContext,
+        private viewUris: WebViewUris
+        ) {
+
+         }
 
     get tabTitle(): string { return "Insights"; }
     get tabId(): string { return "tab-insights"; }
@@ -192,7 +198,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private addSpanListItemsEndpoint(listItems: string[],selectedCodeObject: CodeObjectInfo){
-        
+            
             listItems.push(`
             <div class="list-item">
                 <div class="list-item-content-area">    
@@ -200,7 +206,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                     <div>This endpoint is busy with high volume of traffic</div>        
                 </div> 
                 <div class="list-item-right-area">
-                    <img style="align-self:center;" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9Z_i2aiM2XQAEpEs-DtjvlpYXrMTTvcGsew&usqp=CAU" width="30" height="30">
+                    <img style="align-self:center;" src="${this.viewUris.image("increase.png")}" width="30" height="30">
                     <p style="text-align:center;">1k/m</p>
                 </div>
             </div>
@@ -217,7 +223,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 <div>This endpoint has low traffic volume.</div>        
             </div> 
             <div class="list-item-right-area">
-                <img style="align-self:center;" src="https://lawyerbusinessconsulting.com/wp-content/uploads/2020/07/decreasing-chart-300x300.png" width="30" height="30">
+                <img style="align-self:center;" src="${this.viewUris.image("decrease.png")}" width="30" height="30">
                 <p style="text-align:center;">5/h</p>
             </div>
         </div>
@@ -226,7 +232,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private addSpanListItemsEndpointRabbit(listItems: string[],selectedCodeObject: CodeObjectInfo){
-        
+        //.instance.context.asAbsolutePath(`images/dark/${icon}.svg`))
         listItems.push(`
         <div class="list-item">
             <div class="list-item-content-area">    
@@ -312,7 +318,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     
     </div>
     </div>
-    </div>
+    
 
 
     

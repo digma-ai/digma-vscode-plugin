@@ -94,6 +94,13 @@ vscode-panel-view {
         font-family: var(--vscode-editor-font-family);
     }
 }
+.error-property{
+    .label {
+        opacity: 0.3;
+        margin-right: 4px;
+        font-size: calc(var(--vscode-font-size) - 2px);
+    }
+}
 
 .error-view{
     .score-box {
@@ -109,17 +116,78 @@ vscode-panel-view {
         border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
         padding-left: 5px;
     }
+    .error-property .label {
+        display: block;
+    }
     section {
         margin-block-start: 1em;
+        margin-block-end: 1em;
 
-        > header {
+        header {
             font-weight: bold;
+            margin-block-end: 0.5em;
         }
     }
     .flow-stacks {
         .flow-stacks-navigator {
             display: flex;
         }
+    }
+    ul.tree.frames{
+        .line {
+            padding-left: 0.5em;
+            padding-right: 0.3em;
+            &.disabled {
+                opacity: 0.4;
+            }
+        }
+        li:not(:first-of-type) .line{
+            border-top-width: 1px;
+            border-top-color: var(--vscode-tree-tableColumnsBorder);
+            border-top-style: dashed;
+        }
+    }
+    .no-frames-msg {
+        padding: 1em;
+        font-style: italic;
+        opacity: 0.5;
+    }
+    span.span-name {
+        opacity: 0.5;
+        margin-left: 5px;
+    }
+    .flow-stack-title{
+        font-weight: 500;
+    }
+    .flow-stack-message {
+        opacity: 0.3;
+        font-style: italic;
+    }
+    .flow-stack-frames{
+        border-left: 1px solid var(--vscode-tree-indentGuidesStroke);
+        padding-left: 5px;
+        margin: 4px 0px 10px 3px;
+    }
+    .look-like-link{
+        color: var(--vscode-textLink-foreground);
+        padding-top: 5px;
+    }
+    .bottom-line {
+        display: flex;
+        width: 100%;
+    }
+    .bottom-line .link-cell{
+        display: block;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+        flex: 1;
+    }
+    .bottom-line .number-cell{
+        display: inline-flex;
+        align-items: flex-end;
+        opacity: 0.4;
+        margin-left: 10px;
     }
 }
 
@@ -131,9 +199,6 @@ vscode-panel-view {
     .list-item-icons-row .codicon{
         float: right;
         transform: rotate(45deg);
-    }
-    .time-label{
-        opacity: 0.6;
     }
 }
 

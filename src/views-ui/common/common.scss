@@ -136,6 +136,9 @@ ul.tree{
     display: flex;
     flex-direction: row;
 }
+.flex-max-space-between{
+    justify-content: space-between;
+}
 .flex-stretch{
     flex: 1;
 }

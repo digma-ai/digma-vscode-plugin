@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { DecorationRangeBehavior } from 'vscode';
 import { DocumentInfoProvider, LineInfo } from '../services/documentInfoProvider';
 import { Dictionary } from '../services/utils';
 
@@ -20,7 +21,7 @@ export class HotspotMarkerDecorator implements vscode.Disposable
                 borderWidth: '0 0 0 1px',
                 overviewRulerColor: color,
                 overviewRulerLane: vscode.OverviewRulerLane.Left,
-                isWholeLine: true,
+                isWholeLine: false
             }));
  
         this._disposables = [
@@ -48,17 +49,45 @@ export class HotspotMarkerDecorator implements vscode.Disposable
                 continue;
             
             const level = Math.floor((score/101)*this.LEVELS); // [0-100] => [0-9]
+            const decorationType = this._decorationTypes[level];
+            var s =new vscode.Position(methodInfo.NameRange!.end.line+1,
+                0);
+            var e = new vscode.Position(methodInfo.range.end.line,
+                0);
 
-            rangesByLevel[level] = rangesByLevel[level] || [];
-            rangesByLevel[level].push(methodInfo.range);
+            var decoration = 
+            {   range: new vscode.Range(s,e), 
+                hoverMessage: 'Error Hotspot', 
+                renderOptions: { 
+                    margin :'20ch',
+                    before: {
+                        textDecoration :'; margin-left : 20ch'
+                    },
+                    after:{
+                        margin :'20ch'
+
+                    }
+                }  
+            };
+            editor.setDecorations(decorationType, [decoration] );
+
+            // for (var i =methodInfo.NameRange!.end.line+1; i<=methodInfo.range.end.line; i++){
+            //     var s =new vscode.Position(i,
+            //         methodInfo.range.start.character);
+            //     var e = new vscode.Position(i,
+            //         methodInfo.range.start.character); 
+            //     var range = new vscode.Range(s,e);
+            //     rangesByLevel[level].push(range);
+            // }
+
         }
 
-        for(let level in rangesByLevel)
-        {
-            const decorationType = this._decorationTypes[level];
-            const ranges = rangesByLevel[level];
-            editor.setDecorations(decorationType, ranges);
-        } 
+        // for(let level in rangesByLevel)
+        // {
+        //     const decorationType = this._decorationTypes[level];
+        //     const ranges = rangesByLevel[level];
+        //     editor.setDecorations(decorationType, ranges, );
+        // } 
     }
     
     public dispose() {

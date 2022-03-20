@@ -193,14 +193,14 @@ export class ErrorFlowStackRenderer {
             </div>`;
     }
     
-    private getFramesListSectionHtml()
+    public getFramesListSectionHtml()
     {
         const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
         let content = undefined;
         if(this._viewModel)
         {
             const stacksHtml = this._viewModel?.stacks
-                .map(s => this.getFlowStackHtml(s))
+                .map(s => ErrorFlowStackRenderer.getFlowStackHtml(s))
                 .join('') ?? '';
             
             content = stacksHtml 
@@ -222,17 +222,19 @@ export class ErrorFlowStackRenderer {
             </div>`;
     }
 
-    private getFlowStackHtml(stack: StackViewModel)
+    public static getFlowStackHtml(stack: StackViewModel)
     {
         if(!stack)
             return '';
 
-        if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
-            return '';
+        // if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
+        //     return '';
 
         let html : string='';
-        const frames = stack.frames
-            .filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
+        const allOutsideWorkspaceClass = stack.frames.all(f => !f.workspaceUri) ? "all-outside-workspace" : "";
+        const hidden = Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri) ? "hidden" : "";
+        const frames = stack.frames;
+            //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
         var lastSpan='';
         for (var frame of frames ){
             if (frame.spanName!==lastSpan){
@@ -247,22 +249,25 @@ export class ErrorFlowStackRenderer {
 
                 lastSpan=frame.spanName;
             }
-            html+=this.getFrameItemHtml(frame);
+            html+=ErrorFlowStackRenderer.getFrameItemHtml(frame);
         }
 
         return /*html*/`
-            <div class="flow-stack-title">${stack.exceptionType}</div>
-            <div class="flow-stack-message">${stack.exceptionMessage}</div>
-            <div class="flow-stack-frames"><ul class="tree frames">${html}</ul></div>
+            <div class="${allOutsideWorkspaceClass}" ${hidden}>
+                <div class="flow-stack-title">${stack.exceptionType}</div>
+                <div class="flow-stack-message">${stack.exceptionMessage}</div>
+                <div class="flow-stack-frames"><ul class="tree frames">${html}</ul></div>
+            </div>
         `;
     }
 
-    private getFrameItemHtml(frame: FrameViewModel)
+    private static getFrameItemHtml(frame: FrameViewModel)
     {
         const path = `${frame.modulePhysicalPath} in ${frame.functionName}`;
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
-        
+        const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
+
         let exception_html = '<span style="color:#f14c4c;line-height:25px;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
 
         let linkTag = frame.workspaceUri
@@ -270,12 +275,12 @@ export class ErrorFlowStackRenderer {
             : /*html*/`<span class="link-cell look-like-link" title="${frame.excutedCode}">${frame.excutedCode}</span>`;
         
         if (frame.stackIndex===0){
-            linkTag=exception_html+linkTag;
+            linkTag=    exception_html+linkTag;
         }
         return /*html*/`
-            <li>
-                <div class="line ellipsis ${selectedClass} ${disabledClass}">
-                    <div title="${path}">${path}</div>
+            <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
+                <div class="line ${selectedClass} ${disabledClass}">
+                    <div class="left-ellipsis" title="${path}">${path}</div>
                     <div class="bottom-line">
                         ${linkTag}
                         <div class="number-cell">line ${frame.lineNumber}</div>

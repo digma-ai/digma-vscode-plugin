@@ -10,8 +10,10 @@ import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import moment = require('moment');
 import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
+import { Settings } from "../../settings";
 
-export class ErrorsViewTab implements ICodeAnalyticsViewTab {
+export class ErrorsViewTab implements ICodeAnalyticsViewTab 
+{
     private _viewedCodeObjectId?: string = undefined;
     private _stackViewModel?: ErrorFlowStackViewModel = undefined;
 
@@ -24,13 +26,14 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
+        this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
     }
 
     get tabTitle(): string { return "Errors"; }
     get tabId(): string { return "tab-errors"; }
     get viewId(): string { return "view-errors"; }
-
-    public onReset(): void {
+    
+    public onReset(): void{
         this._viewedCodeObjectId = undefined;
     }
     public onActivate(codeObject: CodeObjectInfo): void {
@@ -46,7 +49,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         this.refreshCodeObjectLabel(codeObject);
         vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, codeObject.id);
     }
-    public getHtml(): string {
+    public getHtml(): string 
+    {
         return /*html*/`
             <div class="error-view" style="display: none">
              <span class="codicon codicon-arrow-left" title="Back"></span>
@@ -55,19 +59,24 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
                 <div class="codeobject-selection"></div>
                 <div id="error-list" class="list"></div>
             </div>`;
-    }
-    private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
+    }    
+    private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 
+    {
         let html = HtmlHelper.getCodeObjectLabel(codeObject.methodName);
         this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
-    private async refreshList(codeObject: CodeObjectInfo) {
-        if (codeObject.id != this._viewedCodeObjectId) {
+    private async refreshList(codeObject: CodeObjectInfo) 
+    {
+        if(codeObject.id != this._viewedCodeObjectId)
+        {
             let errors: CodeObjectError[] = [];
-            try {
+            try
+            {
                 errors = await this._analyticsProvider.getCodeObjectErrors(codeObject.id);
             }
-            catch (e) {
-                if (!(e instanceof HttpError) || e.status != 404) {
+            catch(e)
+            {
+                if(!(e instanceof HttpError) || e.status != 404){
                     Logger.error(`Failed to get codeObject ${codeObject.id} errors`, e);
                     const html = HtmlHelper.getErrorMessage("Failed to fetch errors from Digma server.\nSee Output window from more info.");
                     this._channel.publish(new UiMessage.Set.ErrorsList(html));
@@ -219,6 +228,11 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         return codeObject;
     }
 
+    private async onWorkspaceOnlyChanged(value?: boolean){
+        if(value != undefined)
+            await Settings.hideFramesOutsideWorkspace.set(value);
+    }
+
     private async goToFileAndLineById(frameId?: number) {
         const frame = this._stackViewModel?.stacks
             .flatMap(s => s.frames)
@@ -246,9 +260,9 @@ class HtmlBuilder
         if(!errors.length){
             return HtmlHelper.getInfoMessage("No errors flow through this code object.");
         }
-
+        
         let html = '';
-        for (let error of errors) {
+        for(let error of errors){
             html += /*html*/`
             <div class="list-item">
                 <div class="list-item-content-area">
@@ -256,7 +270,9 @@ class HtmlBuilder
                         ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
-                    ${HtmlBuilder.getErrorStartEndTime(error)}
+                    <div class="flex-row">
+                        ${HtmlBuilder.getErrorStartEndTime(error)}
+                    </div>
                 </div> 
                 <div class="list-item-right-area">
                     ${HtmlHelper.getScoreBoxHtml(error.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
@@ -289,21 +305,20 @@ class HtmlBuilder
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
-            ${characteristic}
-            <section class="flex-column">
-                ${HtmlBuilder.getErrorStartEndTime(error)}
-                <span class="flex-stretch">
-                    <span class="time-label">Frequency:</span>
-                        <span>${error.dayAvg}/day</span>
-                    </span>
-                </span>
-            </div>
             ${this.getAffectedServices(error)}
+            <section class="flex-row">
+                ${HtmlBuilder.getErrorStartEndTime(error)}
+                <span class="error-property flex-stretch">
+                    <span class="label">Frequency:</span>
+                    <span>${error.dayAvg}/day</span>
+                </span>
+            </section>
+            <vscode-divider></vscode-divider>
             ${this.getFlowStacksHtml(error, viewModels)}
         `;
     }
 
-    private static buildScoreTooltip(error?: CodeObjectError): string {
+    private static buildScoreTooltip(error?: CodeObjectError): string{
         let tooltip = '';
         for(let prop in error?.scoreInfo.scoreParams || {}){
             let value = error?.scoreInfo.scoreParams[prop]; 
@@ -313,35 +328,34 @@ class HtmlBuilder
         return tooltip;
     }
 
-    private static getErrorIcons(error: CodeObjectError): string {
+    private static getErrorIcons(error: CodeObjectError): string{
         let html = '';
-        if (error.startsHere)
+        if(error.startsHere)
             html += /*html*/`<span class="codicon codicon-debug-step-out" title="Raised here"></span>`;
-        if (error.endsHere)
+        if(error.endsHere)
             html += /*html*/`<span class="codicon codicon-debug-step-into" title="Handled here"></span>`;
-
+            
         return /*html*/`<div class="list-item-icons-row">${html}</div>`;
     }
-    private static getErrorStartEndTime(error: CodeObjectError): string {
+
+    private static getErrorStartEndTime(error: CodeObjectError): string{
         return /*html*/`
-            <div class="flex-row">
-                <span class="flex-stretch">
-                    <span class="time-label">Started:</span>
-                    <span>${error.firstOccurenceTime.fromNow()}</span>
-                </span>
-                <span class="flex-stretch">
-                    <span class="time-label">Last:</span>
-                    <span>${error.lastOccurenceTime.fromNow()}</span>
-                </span>
-            </div>`;
+            <span class="error-property flex-stretch">
+                <span class="label">Started:</span>
+                <span>${error.firstOccurenceTime.fromNow()}</span>
+            </span>
+            <span class="error-property flex-stretch">
+                <span class="label">Last:</span>
+                <span>${error.lastOccurenceTime.fromNow()}</span>
+            </span>`;
     }
 
     private static getAffectedServices(error: CodeObjectErrorDetails) {
         const affectedServicesHtml = error.originServices.map(service => `
             <span class="flex-stretch">
-                <span>${service.serviceName}</span>
+                <vscode-tag>${service.serviceName}</vscode-tag>
             </span>
-        `);
+        `).join("");
         const html = /*html*/`
             <section>
                 <header>Affected Services</header>
@@ -358,33 +372,18 @@ class HtmlBuilder
             return '';
         }
 
-        const htmlParts = viewModels.map(viewModel => {
-            const renderer = new ErrorFlowStackRenderer(viewModel);
-            const flowHtml = renderer.getContentHtml();
-            return flowHtml;
-        });
-
-        // if(error.errors.length === 0) {
-        //     return 'No information is available.';
-        // }
-        // const html = `
-        //     <section class="flow-stacks">
-        //         <div class="flow-stacks-navigator">
-        //             <div class="navigate-previous">Prev</div>
-        //             <div class="navigate-status">1/${error.errors.length} Flow Stacks</div>
-        //             <div class="navigate-next">Next</div>
-        //         </div>
-        //         <ul>
-        //             ${error.errors[0].frameStacks.map(frameStack => `
-        //                 <li>
-        //                     <header>${frameStack.exceptionType}</header>
-        //                     <div>${frameStack.exceptionMessage}</div>
-        //                 </li>
-        //             `)}
-        //         </ul>
-        //     </section>
-        // `;
-        const html = htmlParts.join('');
-        return html;
+        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
+        const stacksHtml = viewModels[0].stacks
+            .map(s => ErrorFlowStackRenderer.getFlowStackHtml(s))
+            .join('') ?? '';
+        return  /*html*/ `
+            <section>
+                <div class="flex-row flex-max-space-between">
+                    <header>Stack</header>
+                    <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
+                </div>
+                ${stacksHtml}
+            </section>    
+        `;
     }
 }

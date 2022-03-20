@@ -19,20 +19,23 @@ export class CodeAnalyticsView implements vscode.Disposable
     
 	private _provider: CodeAnalyticsViewProvider;
 	private _disposables: vscode.Disposable[] = [];
+    extensionUrl: vscode.Uri;
 
 	constructor(
 		analyticsProvider: AnalyticsProvider,
 		documentInfoProvider: DocumentInfoProvider,
 		extensionUri: vscode.Uri,
         editorHelper: EditorHelper,
+        context: vscode.ExtensionContext
 	) {
 		this._provider = new CodeAnalyticsViewProvider(
 			extensionUri,
 			analyticsProvider, 
             documentInfoProvider,
             editorHelper,
+            context
 		);
-
+        this.extensionUrl = extensionUri;
 		this._disposables = [
 			vscode.window.registerWebviewViewProvider(
 				CodeAnalyticsView.viewId,
@@ -78,6 +81,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 		private _analyticsProvider: AnalyticsProvider,
         private _documentInfoProvider: DocumentInfoProvider,
         editorHelper: EditorHelper,
+        private _context: vscode.ExtensionContext
 	) {
 		this._webViewUris = new WebViewUris(
 			extensionUri,
@@ -90,7 +94,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
         this._channel.consume(UiMessage.Notify.TabLoaded, this.onLoadEvent.bind(this));
 
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider),
+            new InsightsViewTab(this._channel, this._analyticsProvider, _context,this._webViewUris),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
