@@ -34,7 +34,7 @@ export interface ErrorFlowFrame{
     moduleName: string;
     functionName: string;
     lineNumber: number;
-    excutedCode: string;
+    executedCode: string;
     codeObjectId: string;
     repeat: number;
     parameters: ParamStats[];
@@ -115,26 +115,18 @@ export interface CodeObjectErrorFlowsResponse
 export interface CodeObjectSummary
 {
     id: string;
-    errorFlowCount: number;
-    exceptionTypes: string[];
-    trend: number;
-    impact: Impact;
-    unhandled: boolean;
-    unexpected: boolean;
-    unhandledErrorFlowCount:number;
-    unexpectedErrorFlowCount:number;
-    excutedCodes: ExcutedCodeSummary[];
+    score: integer;
+    executedCodes: ExecutedCodeSummary[];
 }
 
-export interface ExcutedCodeSummary{
+export interface ExecutedCodeSummary{
     code: string;
-    codeObjectId: string;
-    errorFlowId: string;
     exceptionType: string;
     exceptionMessage: string;
     handled: boolean;
     unexpected: boolean;
     possibleLineNumbers: number[];
+    codeLineNumber: number;
 }
 
 export interface CodeObjectsSummaryResponse
@@ -198,7 +190,7 @@ export interface Frame {
     moduleName: string;
     functionName: string;
     lineNumber: number;
-    excutedCode: string;
+    executedCode: string;
     codeObjectId: string;
     parameters: null;
     repeat: number;
@@ -252,34 +244,8 @@ export class AnalyticsProvider
             `/CodeAnalytics/codeObjects/errors/${errorSourceUID}`
         );
         return response;
-
-        // return {
-        //     uid: "32205386-bdbc-4c62-81a6-f24064c7a938",
-        //     name: "TimeoutError",
-        //     scoreInfo: { score: 82, scoreParams: new Map([["New", 10]]) },
-        //     characteristic: "Started happening yesterday",
-        //     sourceCodeObjectId: "UsersErvice$_$GetUsers",
-        //     startsHere: true,
-        //     endsHere: false,
-        //     firstOccurenceTime: moment().add(-3,'days'),
-        //     lastOccurenceTime: moment().add(-1,'days')
-        // }
     }
 
-    public async getCodeObjectScores(codeObjectIds: string[]): Promise<CodeObjectScore[]>
-    {
-        const response = await this.send<CodeObjectScore[]>(
-            'POST', 
-            `/CodeAnalytics/codeObjects/scores`, 
-            undefined,
-            { //body
-                codeObjectIds: codeObjectIds,
-                environment: Settings.environment.value
-            });
-            
-        return response;
-    }
-    
     public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>
     {
         const response = await this.send<CodeObjectError[]>(
@@ -308,7 +274,7 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getSummary(moduleName: string, symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
+    public async getSummary(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
     {
         try
         {
@@ -316,7 +282,7 @@ export class AnalyticsProvider
                 'POST', 
                 `/CodeAnalytics/summary`, 
                 undefined, 
-                {moduleName: moduleName, codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
+                {codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
 
             return response.codeObjects;
         }

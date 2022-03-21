@@ -24,7 +24,10 @@ export class OverlayView
     }
 
     public showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
-        const links = docInfo.methods.map(m => {
+        let codeObjectIdsWithData = new Set<string>(docInfo.codeObjectSummaries.map(o=>o.id));
+        const links = docInfo.methods
+        .filter(o=>codeObjectIdsWithData.has(o.id))
+        .map(m => {
             return /*html*/`<vscode-link class="codeobject-link" data-line="${m.range.start.line}">${m.displayName}</vscode-link>`;
         }).join("");
 

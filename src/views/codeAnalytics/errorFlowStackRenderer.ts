@@ -271,8 +271,8 @@ export class ErrorFlowStackRenderer {
         let exception_html = '<span style="color:#f14c4c;line-height:25px;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
 
         let linkTag = frame.workspaceUri
-            ? /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.excutedCode}">${frame.excutedCode}</vscode-link>`
-            : /*html*/`<span class="link-cell look-like-link" title="${frame.excutedCode}">${frame.excutedCode}</span>`;
+            ? /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.executedCode}">${frame.executedCode}</vscode-link>`
+            : /*html*/`<span class="link-cell look-like-link" title="${frame.executedCode}">${frame.executedCode}</span>`;
         
         if (frame.stackIndex===0){
             linkTag=    exception_html+linkTag;

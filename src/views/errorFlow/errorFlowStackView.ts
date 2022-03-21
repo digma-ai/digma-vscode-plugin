@@ -179,7 +179,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             const editorInfo: EditorInfo = {
                 workspaceUri: frame.workspaceUri,
                 lineNumber: frame.lineNumber,
-                excutedCode: frame.excutedCode,
+                executedCode: frame.executedCode,
                 functionName: frame.functionName,
                 modulePhysicalPath: frame.modulePhysicalPath,
                 moduleLogicalPath: frame.moduleLogicalPath,
@@ -211,11 +211,11 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
                 //workspace = this.findWorkSpace(frame)
                 //var uri = await this.fileFile(frame.moduleName);
                 const uri = await this._editorHelper.getWorkspaceFileUri(frame);
-                if (!frame.excutedCode && uri && response.lastInstanceCommitId && frame.lineNumber>0)
+                if (!frame.executedCode && uri && response.lastInstanceCommitId && frame.lineNumber>0)
                 {
                     var scmExecutedCode = await this._editorHelper.getExecutedCodeFromScm(uri, response.lastInstanceCommitId, frame.lineNumber);
                     if (scmExecutedCode){
-                        frame.excutedCode=scmExecutedCode;
+                        frame.executedCode=scmExecutedCode;
                     } 
                 }
                 frameVms.push({
@@ -266,7 +266,7 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
         const editorInfo: EditorInfo = {
             workspaceUri: frame.workspaceUri,
             lineNumber: frame.lineNumber,
-            excutedCode: frame.excutedCode,
+            executedCode: frame.executedCode,
             functionName: frame.functionName,
             modulePhysicalPath: frame.modulePhysicalPath,
             moduleLogicalPath: frame.moduleLogicalPath,
