@@ -61,7 +61,9 @@ export class HotspotMarkerDecorator implements vscode.Disposable
                 renderOptions: { 
                     margin :'20ch',
                     before: {
-                        textDecoration :'; margin-left : 20ch'
+                        textDecoration :'; margin-left : 20ch',
+                        margin :'20ch'
+
                     },
                     after:{
                         margin :'20ch'
