@@ -46,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, 
-        context.extensionUri, editorHelper,context));
+        context.extensionUri, editorHelper));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
 

@@ -20,7 +20,6 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
-        private context: vscode.ExtensionContext,
         private viewUris: WebViewUris
         ) {
 
