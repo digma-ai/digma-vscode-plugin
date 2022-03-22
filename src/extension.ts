@@ -16,6 +16,7 @@ import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { ErrorsLineDecorator } from './decorators/errorsLineDecorator';
 import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
 import { EditorHelper } from './services/EditorHelper';
+import { CodeObjectInspector } from './services/codeObjects/codeObjectInspector';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -28,7 +29,8 @@ export async function activate(context: vscode.ExtensionContext)
     const sourceControl = new SourceControl(supportedSourceControls);
     const symbolProvider = new SymbolProvider(supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
-    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
+    const codeObjectInspector = new CodeObjectInspector();
+    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, codeObjectInspector);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
 
     if(!Settings.environment.value){

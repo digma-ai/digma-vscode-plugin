@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as python from "./extractorsForPython";
 import { Token } from '../languages/symbolProvider';
 import { EndpointInfo, IEndpointExtractor, IExtractor, ISpanExtractor } from "./extractors";
+import { SymbolInfo } from '../languages/languageSupport';
 
 
 export class CodeObjectInspector
@@ -18,11 +19,11 @@ export class CodeObjectInspector
         ]
     }
 
-    public getEndpoints(document: vscode.TextDocument, tokens: Token[]): EndpointInfo[]
+    public getEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]): EndpointInfo[]
     {
         const extractors = this.getRelevatExtractors(this._endpointExtractors, document);
         return extractors
-            .map(x => x.extractEndpoints(document, tokens))
+            .map(x => x.extractEndpoints(document, symbolInfo, tokens))
             .flat();
     }
 

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { SymbolInfo } from '../languages/languageSupport';
 import { Token, TokenType } from "../languages/symbolProvider";
 import { EndpointInfo, IEndpointExtractor } from "./extractors";
 
@@ -7,7 +8,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
 {
     public language = 'python';
 
-    extractEndpoints(document: vscode.TextDocument, tokens: Token[]): EndpointInfo[] 
+    extractEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]): EndpointInfo[] 
     {
         // Ensure fastapi module was imported
         if(!tokens.any(t => t.text == 'fastapi' && t.type == TokenType.module))
@@ -23,7 +24,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
                 continue;
 
             const method = methodToken.text;
-            if(!['post', 'get', 'put', 'delete', 'options', 'head', 'patch', 'trace'].includes(method))
+            if (!['post', 'get', 'put', 'delete', 'options', 'head', 'patch', 'trace'].includes(method))
                 continue;
             
             const lineText = document.getText(new vscode.Range(
@@ -33,12 +34,16 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             if (!match)
                 continue;
             
+            const relevantFunc = symbolInfo.firstOrDefault(s => s.range.contains(methodToken.range))
+            if (!relevantFunc)
+                continue;
+
             results.push({
-                line: methodToken.range.end.line,
                 method: method, 
-                path: match[0]
+                path: match[1],
+                range: relevantFunc.range
             });
         }
-        return []
+        return results;
     }
 }
