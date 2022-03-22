@@ -44,7 +44,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         try
         {
             const response = await this._analyticsProvider.getCodeObjectInsights(codeObject.id);
-            if (response.spot) {
+            if (response.spot && response.spot.score>=70) {
                 this.addHotspotListItem(response.spot, listItems);
             }
             if (response.errors) {
