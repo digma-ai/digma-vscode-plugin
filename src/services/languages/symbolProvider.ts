@@ -2,9 +2,9 @@
 import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
-import { delay } from './utils';
-import { ISupportedLanguage, SymbolInfo } from '../languageSupport';
-import { Logger } from './logger';
+import { delay } from '../utils';
+import { ISupportedLanguage, SymbolInfo } from './languageSupport';
+import { Logger } from '../logger';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -28,6 +28,7 @@ export function trendToAsciiIcon(trend: number): string
 export interface Token {
     range: vscode.Range;
     type: TokenType;
+    text: string,
     modifiers: string[];
 }
 export class SymbolProvider 
@@ -150,6 +151,7 @@ export class SymbolProvider
 
                 tokes.push({
                     range: range,
+                    text: document.getText(range),
                     type: <TokenType>(legends.tokenTypes[tokenType]),
                     modifiers: legends.tokenModifiers.filter((m, i) => i & tokenModifiers).map(m => m)
                 });

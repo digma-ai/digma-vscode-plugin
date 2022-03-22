@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SymbolProvider, trendToCodIcon } from './services/symbolProvider';
+import { SymbolProvider, trendToCodIcon } from './services/languages/symbolProvider';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';

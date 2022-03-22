@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { AnaliticsCodeLens } from './analiticsCodeLens';
 import { AnalyticsProvider} from './services/analyticsProvider';
-import { SymbolProvider } from './services/symbolProvider';
-import { PythonSupport } from './languageSupport';
-import { CSharpSupport } from './languageSupport';
+import { SymbolProvider } from './services/languages/symbolProvider';
+import { PythonSupport } from "./services/languages/PythonSupport";
+import { CSharpSupport } from "./services/languages/CSharpSupport";
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { ContextView } from './views/contextView';

@@ -1,10 +1,11 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { SymbolInfo } from '../languageSupport';
+import { SymbolInfo } from './languages/languageSupport';
 import { AnalyticsProvider, CodeObjectScore, CodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
-import { SymbolProvider, Token, TokenType } from './symbolProvider';
+import { SymbolProvider, Token, TokenType } from './languages/symbolProvider';
 import { Dictionary, Future } from './utils';
+import { CodeObjectInspector } from './codeObjects/codeObjectInspector';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -78,6 +79,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     tokens,
                     scores
                 };
+                new CodeObjectInspector().getEndpoints(doc, tokens);
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
             catch(e)

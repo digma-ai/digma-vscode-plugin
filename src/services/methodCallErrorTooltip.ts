@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ErrorFlowListView } from '../views/errorFlow/errorFlowListView';
 import { ErrorFlowsSortBy, Impact } from './analyticsProvider';
 import { DocumentInfoProvider } from './documentInfoProvider';
-import { TokenType } from './symbolProvider';
+import { TokenType } from './languages/symbolProvider';
 
 export class MethodCallErrorTooltip implements vscode.Disposable
 {
