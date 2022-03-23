@@ -1,13 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="2e84cc5e-5a18-4a95-9817-c3969569b90d" name="Changes" comment="" />
+    <list default="true" id="2e84cc5e-5a18-4a95-9817-c3969569b90d" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/digma.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/decrease.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/increase.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/images/thin-target.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/languages/csharp/languageExtractor.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/languages/csharp/methodExtractor.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/languages/extractors.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/languages/python/fastapiEndpointExtractor.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/languages/python/languageExtractor.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/services/languages/python/methodExtractor.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/icon.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/analiticsCodeLens.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/analiticsCodeLens.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/decorators/errorsLineDecorator.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/decorators/errorsLineDecorator.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/decorators/hotspotMarkerDecorator.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/decorators/hotspotMarkerDecorator.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/extension.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/extension.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/languageSupport.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/documentInfoProvider.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/documentInfoProvider.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/methodCallErrorTooltip.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/methodCallErrorTooltip.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/parameterDecorator.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/parameterDecorator.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/services/symbolProvider.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/services/languages/symbolProvider.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views-ui/codeAnalytics/contracts.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views-ui/codeAnalytics/contracts.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views-ui/codeAnalytics/main.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views-ui/codeAnalytics/main.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/codeAnalytics/codeAnalyticsView.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/codeAnalytics/codeAnalyticsView.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/codeAnalytics/errorFlowStackRenderer.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/codeAnalytics/errorFlowStackRenderer.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/codeAnalytics/errorsViewTab.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/codeAnalytics/errorsViewTab.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/codeAnalytics/insightsViewTab.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/codeAnalytics/insightsViewTab.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/errorFlow/errorFlowParameterDecorator.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/errorFlow/errorFlowParameterDecorator.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/views/webViewUtils.ts" beforeDir="false" afterPath="$PROJECT_DIR$/src/views/webViewUtils.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="26miWgh89I2WqIQCwRndjYcirnr" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+  </component>
+  <component name="RunManager">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2e84cc5e-5a18-4a95-9817-c3969569b90d" name="Changes" comment="" />
+      <created>1648035195671</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1648035195671</updated>
+    </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/main.py</url>
+          <line>8</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
