@@ -23,4 +23,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     public getHtml(): string {
         return "<section></section>";
     }
+    canDeactivate(): boolean {
+        return true;
+    }
 }

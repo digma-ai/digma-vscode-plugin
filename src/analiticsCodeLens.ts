@@ -1,11 +1,9 @@
 import * as vscode from 'vscode';
-import { SymbolProvider, trendToCodIcon } from './services/symbolProvider';
+import { SymbolProvider, trendToCodIcon } from './services/languages/symbolProvider';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
-import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
-import { sign } from 'crypto';
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 
 
@@ -30,7 +28,7 @@ export class AnaliticsCodeLens implements vscode.Disposable
         this._provider.raiseOnDidChangeCodeLenses();
 
         this._disposables.push(vscode.languages.registerCodeLensProvider(
-            documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter), 
+            documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter),
             this._provider)
         );
     }
@@ -68,7 +66,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         for(let methodInfo of documentInfo.methods)
         {
             const score = documentInfo.scores.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
-            if(score < 50)
+            if(score < 70)
                 continue; 
 
             codelens.push(new vscode.CodeLens(methodInfo.range, {
