@@ -192,7 +192,7 @@ export interface Frame {
     lineNumber: number;
     executedCode: string;
     codeObjectId: string;
-    parameters: null;
+    parameters: ParamStats [];
     repeat: number;
     spanName: string;
     spanKind: string;

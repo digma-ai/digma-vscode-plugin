@@ -2,33 +2,45 @@ import * as vscode from 'vscode';
 import { ErrorFlowResponse, ParamStats } from '../../services/analyticsProvider';
 import { IParameter, ParameterDecorator } from "../../services/parameterDecorator";
 import { DocumentInfoProvider, ParameterInfo } from '../../services/documentInfoProvider';
+import { ErrorFlowStackViewModel } from '../codeAnalytics/errorFlowStackRenderer';
 
 export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
 {
-    public _errorFlowResponse?: ErrorFlowResponse;
-
+    public _errorFlow?: ErrorFlowStackViewModel;
+    private _enabled: boolean = false;
     constructor(private _documentInfoProvider: DocumentInfoProvider)
     {
         //"\uebe2".replace('uebe2','eabd')
         super("\ueabd", _documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter));
     }
 
-    public get errorFlowResponse(): ErrorFlowResponse | undefined
+    public get errorFlow(): ErrorFlowStackViewModel | undefined
     {
-        return this._errorFlowResponse;
+        return this._errorFlow;
     }
 
-    public set errorFlowResponse(value: ErrorFlowResponse | undefined)
+    public set errorFlow(value: ErrorFlowStackViewModel | undefined)
     {
-        this._errorFlowResponse = value;
+        this._errorFlow = value;
         this.refreshAll();
+    }
+
+    public set enabled(value: boolean)
+    {
+        this._enabled = value;
+        this.refreshAll();
+    }
+
+
+    protected isEnabled(): boolean {
+        return this._enabled;
     }
 
     protected async getParameters(document: vscode.TextDocument): Promise<IParameter[]> 
     {
         let parameters: IParameter[] = [];
 
-        const frames = this.errorFlowResponse?.frameStacks?.flatMap(s => s.frames) || [];
+        const frames = this.errorFlow?.stacks?.flatMap(s => s.frames) || [];
         if(!frames)
             return [];
 
