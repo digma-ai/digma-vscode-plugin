@@ -66,6 +66,11 @@ export class WebViewUris
         return this.getUri("out", "views-ui", this._assetSubFolderName, "build.js");
     }
 
+    public image(name: string) : vscode.Uri
+    {
+        return this.getUri("images", name);
+    }
+
     private getUri(...pathList: string[]) : vscode.Uri {
         return this._webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, ...pathList));
     }

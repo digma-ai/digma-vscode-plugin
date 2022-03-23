@@ -38,7 +38,6 @@ export async function activate(context: vscode.ExtensionContext)
             await Settings.environment.set(firstEnv);
         }
     }
-
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
@@ -47,7 +46,8 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
-    context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, context.extensionUri, editorHelper));
+    context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider, 
+        context.extensionUri, editorHelper));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
 

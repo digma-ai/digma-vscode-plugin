@@ -61,7 +61,7 @@ export class ErrorsLineDecorator implements vscode.Disposable
                     range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
                     renderOptions: {
                         after:{
-                            contentText: lineInfo.exceptions.map(e => e.type).join('\xB7')
+                            contentText: [...new Set( lineInfo.exceptions.map(e => e.type))].join('\xB7')
                         }
                     }
                 }
@@ -91,8 +91,14 @@ export class ErrorsLineDecorator implements vscode.Disposable
     {
         let markdown = new vscode.MarkdownString('', true);
         markdown.appendText('Throws:\n');
+        let typesShown : string[] = []; 
         for(let exception of lineInfo.exceptions)
         {
+            if (typesShown.includes(exception.type)){
+                continue;
+            }
+            typesShown.push(exception.type);
+
             markdown.appendMarkdown(`- \`${exception.type}\``);
             
             if (!exception.handled){
