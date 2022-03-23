@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SymbolProvider, trendToCodIcon } from './services/symbolProvider';
+import { SymbolProvider, trendToCodIcon } from './services/languages/symbolProvider';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
@@ -30,7 +30,7 @@ export class AnaliticsCodeLens implements vscode.Disposable
         this._provider.raiseOnDidChangeCodeLenses();
 
         this._disposables.push(vscode.languages.registerCodeLensProvider(
-            documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter), 
+            documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter), 
             this._provider)
         );
     }

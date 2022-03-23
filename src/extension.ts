@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { AnaliticsCodeLens } from './analiticsCodeLens';
 import { AnalyticsProvider} from './services/analyticsProvider';
-import { SymbolProvider } from './services/symbolProvider';
-import { PythonSupport } from './languageSupport';
-import { CSharpSupport } from './languageSupport';
+import { SymbolProvider } from './services/languages/symbolProvider';
+import { PythonLanguageExtractor } from "./services/languages/python/languageExtractor";
+import { CSharpLanguageExtractor } from './services/languages/csharp/languageExtractor';
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { ContextView } from './views/contextView';
@@ -20,7 +20,8 @@ import { EditorHelper } from './services/EditorHelper';
 export async function activate(context: vscode.ExtensionContext) 
 {
     const supportedLanguages = [
-        new PythonSupport(), new CSharpSupport()
+        new PythonLanguageExtractor(), 
+        new CSharpLanguageExtractor()
     ];
     const supportedSourceControls = [
         new Git()
