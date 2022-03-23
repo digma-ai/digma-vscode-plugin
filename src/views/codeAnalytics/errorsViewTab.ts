@@ -33,7 +33,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         
     }
     canDeactivate(): boolean {
-        return !this.isVisible;
+        return !this.isErrorViewVisible;
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -42,6 +42,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     
     public onReset(): void{
         this._viewedCodeObjectId = undefined;
+        this.isErrorViewVisible = false;
     }
     public onActivate(codeObject: CodeObjectInfo): void {
         this.refreshList(codeObject);
@@ -241,10 +242,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         if(value != undefined)
             await Settings.hideFramesOutsideWorkspace.set(value);
     }
-    private isVisible: boolean = false;
+    private isErrorViewVisible: boolean = false;
     private async onErrorViewVisibilityChanged(visible?: boolean){
         if(visible === undefined) return;
-        this.isVisible = visible;
+        this.isErrorViewVisible = visible;
         this._errorFlowParamDecorator.enabled = visible;
     }
     private async goToFileAndLineById(frameId?: number) {

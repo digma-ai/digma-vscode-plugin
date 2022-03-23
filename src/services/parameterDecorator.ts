@@ -1,8 +1,6 @@
 import moment = require('moment');
 import * as vscode from 'vscode';
 import { SymbolInfo } from './languages/extractors';
-import { SymbolProvider } from './languages/symbolProvider';
-import { Dictionary } from './utils';
 
 export interface IParameter
 {
@@ -15,7 +13,6 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
 {
     private _disposables: vscode.Disposable[] = [];
     private _decorationType: vscode.TextEditorDecorationType;
-    private _cache: Dictionary<string, TParameter[]> = {};
 
     constructor(
         codicon: string, 
@@ -72,7 +69,6 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
         
         if(this.isEnabled()) {
             let parameters = await this.getParameters(document);
-            this._cache[document.uri.fsPath] = parameters;
             const decorationOptions: vscode.DecorationOptions[] = parameters
                 .map(p => {return {
                     hoverMessage: p.hover, 
