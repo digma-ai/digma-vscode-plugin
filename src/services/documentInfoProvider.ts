@@ -116,14 +116,17 @@ export class DocumentInfoProvider implements vscode.Disposable
             const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
             for(let token of methodTokens)
             {
-                if(token.type == TokenType.method && !method.NameRange)
+                const name =  document.getText(token.range);
+
+                if((token.type === TokenType.method || token.type==TokenType.function)
+                 && !method.NameRange
+                    && name ===symbol.name)
                 {
-                    method.NameRange = token.range
+                    method.NameRange = token.range;
                 }
 
                 if(token.type == TokenType.parameter)
                 {
-                    const name =  document.getText(token.range);
 
                     if(method.parameters.any(p => p.name == name))
                         continue;
