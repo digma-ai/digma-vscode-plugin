@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 //import { ErrorFlowListView } from '../views/errorFlow/errorFlowListView';
 import { ErrorFlowsSortBy, Impact } from './analyticsProvider';
 import { DocumentInfoProvider } from './documentInfoProvider';
-import { TokenType } from './symbolProvider';
+import { TokenType } from './languages/symbolProvider';
 
 export class MethodCallErrorTooltip implements vscode.Disposable
 {
@@ -14,7 +14,7 @@ export class MethodCallErrorTooltip implements vscode.Disposable
     constructor(documentInfoProvider: DocumentInfoProvider)
     {
         this._disposables.push(vscode.languages.registerHoverProvider(
-            documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter),
+            documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter),
             new MethodCallErrorHoverProvider(documentInfoProvider))
         );
         // this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ViewErrorFlow, async (args) => {

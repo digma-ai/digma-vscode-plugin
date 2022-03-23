@@ -1,10 +1,10 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { SymbolInfo } from '../languageSupport';
 import { AnalyticsProvider, CodeObjectScore, CodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
-import { SymbolProvider, Token, TokenType } from './symbolProvider';
+import { SymbolProvider, Token, TokenType } from './languages/symbolProvider';
 import { Dictionary, Future } from './utils';
+import { EndpointInfo, SymbolInfo } from './languages/extractors';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -14,7 +14,7 @@ export class DocumentInfoProvider implements vscode.Disposable
 
     constructor( 
         public analyticsProvider: AnalyticsProvider,
-        public symbolProvider: SymbolProvider,) 
+        public symbolProvider: SymbolProvider) 
     {
         this._disposables.push(vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
 
@@ -63,9 +63,10 @@ export class DocumentInfoProvider implements vscode.Disposable
             try
             {
                 Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
-                const symbolInfos = await this.symbolProvider.getSymbols(doc);
-                const codeObjectSummaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id));
+                const symbolInfos = await this.symbolProvider.getMethods(doc);
                 const tokens = await this.symbolProvider.getTokens(doc);
+                const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
+                const codeObjectSummaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id));
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
                 const lines = this.createLineInfos(doc, codeObjectSummaries, methods);
                 const scores:CodeObjectScore[] = codeObjectSummaries.map(o=>{
@@ -76,6 +77,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     methods,
                     lines,
                     tokens,
+                    endpoints,
                     scores
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
@@ -87,6 +89,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     methods: [],
                     lines: [],
                     tokens: [],
+                    endpoints: [],
                     scores: []
                 };
                 Logger.error(`Failed to build DocumentInfo for ${doc.uri} v${doc.version}`, e);
@@ -116,15 +119,17 @@ export class DocumentInfoProvider implements vscode.Disposable
             const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
             for(let token of methodTokens)
             {
-                if(token.type == TokenType.method && !method.NameRange)
+                const name = token.text;// document.getText(token.range);
+
+                if((token.type === TokenType.method || token.type==TokenType.function)
+                 && !method.NameRange
+                    && name ===symbol.name)
                 {
-                    method.NameRange = token.range
+                    method.NameRange = token.range;
                 }
 
                 if(token.type == TokenType.parameter)
                 {
-                    const name =  document.getText(token.range);
-
                     if(method.parameters.any(p => p.name == name))
                         continue;
                     
@@ -208,6 +213,7 @@ export interface DocumentInfo
     methods: MethodInfo[];
     lines: LineInfo[];
     tokens: Token[];
+    endpoints: EndpointInfo[];
     scores: CodeObjectScore[];
 }
 

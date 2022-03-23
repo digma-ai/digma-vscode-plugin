@@ -1,10 +1,10 @@
 {
   	"name": "digma",
-  	"displayName": "Digma Plugin for VSCode",
+  	"displayName": "Digma for VSCode",
   	"description": "",
-  	"version": "0.0.1",
+  	"version": "0.0.3",
   	"publisher": "Digma",
-  	"icon": "icon.png",
+  	"icon": "digma.png",
   	"engines": {
   	  	"vscode": "^1.63.0"
   	},

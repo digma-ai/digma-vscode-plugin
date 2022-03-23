@@ -275,7 +275,7 @@ export class ErrorFlowStackRenderer {
             : /*html*/`<span class="link-cell look-like-link" title="${frame.executedCode}">${frame.executedCode}</span>`;
         
         if (frame.stackIndex===0){
-            linkTag=exception_html+linkTag;
+            linkTag=    exception_html+linkTag;
         }
         return /*html*/`
             <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>

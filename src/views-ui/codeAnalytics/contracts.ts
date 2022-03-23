@@ -35,6 +35,10 @@ export namespace UiMessage
         export class InsightsList {
             constructor(public htmlContent?: string) {}
         }
+
+        export class SpanList {
+            constructor(public htmlContent?: string) {}
+        }
         export class ErrorsList {
             constructor(public htmlContent?: string) {}
         }
@@ -42,6 +46,9 @@ export namespace UiMessage
             constructor(public htmlContent?: string) {}
         }
         export class CodeObjectLabel {
+            constructor(public htmlContent?: string) {}
+        }
+        export class SpanObjectLabel {
             constructor(public htmlContent?: string) {}
         }
         export class Overlay {

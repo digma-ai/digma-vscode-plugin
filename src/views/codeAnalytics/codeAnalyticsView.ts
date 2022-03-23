@@ -20,6 +20,7 @@ export class CodeAnalyticsView implements vscode.Disposable
     
 	private _provider: CodeAnalyticsViewProvider;
 	private _disposables: vscode.Disposable[] = [];
+    extensionUrl: vscode.Uri;
 
 	constructor(
 		analyticsProvider: AnalyticsProvider,
@@ -37,7 +38,7 @@ export class CodeAnalyticsView implements vscode.Disposable
             editorHelper,
             errorFlowParamDecorator
 		);
-
+        this.extensionUrl = extensionUri;
 		this._disposables = [
 			vscode.window.registerWebviewViewProvider(
 				CodeAnalyticsView.viewId,
@@ -67,7 +68,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 
 export interface CodeObjectInfo {
 	id: string,
-	methodName: string,
+	methodName: string
 }
 class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 {  
@@ -97,8 +98,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
         this._channel.consume(UiMessage.Notify.TabChanged, this.onTabChangedEvent.bind(this));
         this._channel.consume(UiMessage.Notify.TabLoaded, this.onLoadEvent.bind(this));
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider),
-            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator),
+            new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
@@ -111,7 +112,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
     public async onCodeSelectionChanged(
 		document: vscode.TextDocument,
 		position: vscode.Position
-	) {
+	) {   
         const codeObject = await this.getCodeObjectOrShowOverlay(document, position);
         if(!codeObject)
             return;
@@ -139,7 +140,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
             : undefined;
 
         let deactivateEnabled = this._activeTab === undefined || this._activeTab.canDeactivate();
-        
+
         if(!docInfo){
             if(deactivateEnabled) {
                 this._overlay.showUnsupportedDocumentMessage();

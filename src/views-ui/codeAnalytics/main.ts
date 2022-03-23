@@ -55,13 +55,25 @@ window.addEventListener("load", () =>
     
     consume(UiMessage.Set.InsightsList, (event) => {
         if (event.htmlContent !== undefined) {
-            insightsTab.find(".list").html(event.htmlContent);
+            insightsTab.find("#insightList").html(event.htmlContent);
+        }
+    });
+
+    consume(UiMessage.Set.SpanList, (event) => {
+        if (event.htmlContent !== undefined) {
+            insightsTab.find("#spanList").html(event.htmlContent);
         }
     });
 
     consume(UiMessage.Set.CodeObjectLabel, (event) => {
         if (event.htmlContent !== undefined) {
             $(".codeobject-selection").html(event.htmlContent);
+        }
+    });
+
+    consume(UiMessage.Set.SpanObjectLabel, (event) => {
+        if (event.htmlContent !== undefined) {
+            $("#spanScope").html(event.htmlContent);
         }
     });
 

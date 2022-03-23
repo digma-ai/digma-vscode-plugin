@@ -324,7 +324,7 @@ class HtmlBuilder
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
             </div>                
-            ${characteristic}
+            ${this.getAffectedServices(error)}
             <section class="flex-row">
                 ${HtmlBuilder.getErrorStartEndTime(error)}
                 <span class="error-property flex-stretch">
@@ -332,8 +332,6 @@ class HtmlBuilder
                     <span>${error.dayAvg}/day</span>
                 </span>
             </section>
-            <vscode-divider></vscode-divider>
-            ${this.getAffectedServices(error)}
             <vscode-divider></vscode-divider>
             ${this.getFlowStacksHtml(error, viewModels)}
         `;
@@ -358,6 +356,7 @@ class HtmlBuilder
             
         return /*html*/`<div class="list-item-icons-row">${html}</div>`;
     }
+
     private static getErrorStartEndTime(error: CodeObjectError): string{
         return /*html*/`
             <span class="error-property flex-stretch">
