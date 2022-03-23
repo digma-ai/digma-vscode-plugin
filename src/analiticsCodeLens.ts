@@ -1,11 +1,6 @@
 import * as vscode from 'vscode';
-import { SymbolProvider, trendToCodIcon } from './services/symbolProvider';
-import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
-import { AnalyticsProvider } from './services/analyticsProvider';
 import { Settings } from './settings';
-import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
-import { sign } from 'crypto';
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 
 

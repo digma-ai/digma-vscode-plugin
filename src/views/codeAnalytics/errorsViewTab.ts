@@ -11,6 +11,7 @@ import moment = require('moment');
 import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 import { Settings } from "../../settings";
+import { ErrorFlowParameterDecorator } from "../errorFlow/errorFlowParameterDecorator";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -22,11 +23,17 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _analyticsProvider: AnalyticsProvider,
 		private _documentInfoProvider: DocumentInfoProvider,
         private _editorHelper: EditorHelper,
-    ) 
+        private _errorFlowParamDecorator: ErrorFlowParameterDecorator) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
         this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
+        this._channel.consume(UiMessage.Notify.ErrorViewVisibilityChanged, e => this.onErrorViewVisibilityChanged(e.visible));
+
+        
+    }
+    canDeactivate(): boolean {
+        return !this.isVisible;
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -124,9 +131,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
         const viewModels = await this.createViewModels(errorDetails);
         this._stackViewModel = viewModels.firstOrDefault();
-
         html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [this._stackViewModel]);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
+
+        this.updateEditorDecorations(this._stackViewModel);
     }
 
     private async createViewModels(errorDetails: CodeObjectErrorDetails): Promise<ErrorFlowStackViewModel[]> {
@@ -150,6 +158,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                         lineNumber,
                         executedCode: executedCode,
                         codeObjectId,
+                        parameters,
                         repeat,
                     } = sourceFrame;
 
@@ -162,7 +171,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                         id: id++,
                         stackIndex: 0,
                         selected: false,
-                        parameters: [],
+                        parameters,
                         spanName,
                         spanKind,
                         modulePhysicalPath,
@@ -232,7 +241,12 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         if(value != undefined)
             await Settings.hideFramesOutsideWorkspace.set(value);
     }
-
+    private isVisible: boolean = false;
+    private async onErrorViewVisibilityChanged(visible?: boolean){
+        if(visible === undefined) return;
+        this.isVisible = visible;
+        this._errorFlowParamDecorator.enabled = visible;
+    }
     private async goToFileAndLineById(frameId?: number) {
         const frame = this._stackViewModel?.stacks
             .flatMap(s => s.frames)
@@ -251,6 +265,11 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             lastInstanceCommitId: this._stackViewModel?.lastInstanceCommitId,
         };
         await this._editorHelper.goToFileAndLine(editorInfo);
+    }
+
+    private updateEditorDecorations(errorFlow: ErrorFlowStackViewModel)
+    {
+        this._errorFlowParamDecorator.errorFlow = errorFlow;
     }
 }
 

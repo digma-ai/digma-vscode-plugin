@@ -19,6 +19,9 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider) { }
+    canDeactivate(): boolean {
+        return true;
+    }
 
     get tabTitle(): string { return "Insights"; }
     get tabId(): string { return "tab-insights"; }

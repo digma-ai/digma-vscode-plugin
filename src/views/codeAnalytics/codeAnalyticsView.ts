@@ -9,6 +9,7 @@ import { ErrorsViewTab } from "./errorsViewTab";
 import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
 import { UsagesViewTab } from "./usagesViewTab";
+import { ErrorFlowParameterDecorator } from "../errorFlow/errorFlowParameterDecorator";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -26,11 +27,15 @@ export class CodeAnalyticsView implements vscode.Disposable
 		extensionUri: vscode.Uri,
         editorHelper: EditorHelper,
 	) {
+
+        let errorFlowParamDecorator = new ErrorFlowParameterDecorator(documentInfoProvider);
+
 		this._provider = new CodeAnalyticsViewProvider(
 			extensionUri,
 			analyticsProvider, 
             documentInfoProvider,
             editorHelper,
+            errorFlowParamDecorator
 		);
 
 		this._disposables = [
@@ -46,7 +51,9 @@ export class CodeAnalyticsView implements vscode.Disposable
             vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
                 await vscode.commands.executeCommand("workbench.view.extension.digma");
             }),
+            errorFlowParamDecorator
         ];
+
 	}
 
 	public dispose() 
@@ -60,7 +67,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 
 export interface CodeObjectInfo {
 	id: string,
-	methodName: string
+	methodName: string,
 }
 class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 {  
@@ -78,6 +85,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
 		private _analyticsProvider: AnalyticsProvider,
         private _documentInfoProvider: DocumentInfoProvider,
         editorHelper: EditorHelper,
+        errorFlowParamDecorator: ErrorFlowParameterDecorator
 	) {
 		this._webViewUris = new WebViewUris(
 			extensionUri,
@@ -88,10 +96,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
         this._channel = new WebviewChannel();
         this._channel.consume(UiMessage.Notify.TabChanged, this.onTabChangedEvent.bind(this));
         this._channel.consume(UiMessage.Notify.TabLoaded, this.onLoadEvent.bind(this));
-
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider),
-            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
@@ -104,7 +111,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
     public async onCodeSelectionChanged(
 		document: vscode.TextDocument,
 		position: vscode.Position
-	) {   
+	) {
         const codeObject = await this.getCodeObjectOrShowOverlay(document, position);
         if(!codeObject)
             return;
@@ -130,24 +137,31 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider
         const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
             ? await this._documentInfoProvider.getDocumentInfo(document)
             : undefined;
+
+        let deactivateEnabled = this._activeTab === undefined || this._activeTab.canDeactivate();
+        
         if(!docInfo){
-            this._overlay.showUnsupportedDocumentMessage();
-            this._activeTab?.onDectivate();
-            this._activeTab = undefined;
+            if(deactivateEnabled) {
+                this._overlay.showUnsupportedDocumentMessage();
+                this._activeTab?.onDectivate();
+                this._activeTab = undefined;
+            }
             return;
         }
         
 		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
         if(!methodInfo){
-            this._overlay.showCodeSelectionNotFoundMessage(docInfo);
-            this._activeTab?.onDectivate();
-            this._activeTab = undefined;
+            if(deactivateEnabled) {
+                this._overlay.showCodeSelectionNotFoundMessage(docInfo);
+                this._activeTab?.onDectivate();
+                this._activeTab = undefined;
+            }
             return;
         }
 
 		const codeObject = <CodeObjectInfo>{ 
             id: methodInfo?.symbol.id, 
-            methodName: methodInfo?.displayName 
+            methodName: methodInfo?.displayName
         };
         return codeObject;
 	}

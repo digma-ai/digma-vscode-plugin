@@ -14,10 +14,13 @@ window.addEventListener("load", () =>
     function showErrorView() {
         $(".error-view").html("").show();
         $(".errors-view").hide();
+        publish(new UiMessage.Notify.ErrorViewVisibilityChanged(true));
+
     }
     function hideErrorView() {
         $(".errors-view").show();
         $(".error-view").hide();
+        publish(new UiMessage.Notify.ErrorViewVisibilityChanged(false));
     }
     function moveToTab(tabId: string){
         let tabsElement: any = $(".analytics-nav")[0];

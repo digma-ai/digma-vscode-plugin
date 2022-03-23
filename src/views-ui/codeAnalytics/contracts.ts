@@ -18,6 +18,9 @@ export namespace UiMessage
         export class WorkspaceOnlyChanged {
             constructor(public value?: boolean){}
         }
+        export class ErrorViewVisibilityChanged {
+            constructor(public visible?: boolean){}
+        }
     }
 
     export namespace Get

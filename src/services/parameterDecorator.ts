@@ -36,7 +36,12 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
         this._disposables.push(
             vscode.workspace.onDidCloseTextDocument(async (d:vscode.TextDocument) => delete this._cache[d.uri.fsPath])
         );
+        this._disposables.push(
+            vscode.window.onDidChangeActiveTextEditor(this.activeTextEditorChanged.bind(this))
+        );
     }
+
+    protected abstract isEnabled(): boolean;
 
     protected abstract getParameters(document: vscode.TextDocument): Promise<TParameter[]>;
 
@@ -48,24 +53,39 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
         }
     }
 
+    private async activeTextEditorChanged(editor?: vscode.TextEditor)
+    {
+        if(editor)
+        {
+            await this.refreshParametersCache(editor.document);
+        }
+    }
+
     private async refreshParametersCache(document: vscode.TextDocument)
     {   
         if(vscode.languages.match(this._documentSelector, document) <= 0)
             return;
 
-        let parameters = await this.getParameters(document);
-        this._cache[document.uri.fsPath] = parameters;
-
         const editor = vscode.window.visibleTextEditors.find(e => e.document == document); 
         if(!editor)
             return;
         
-        const decorationOptions: vscode.DecorationOptions[] = parameters
-            .map(p => {return {
-                hoverMessage: p.hover, 
-                range: p.range
-            }});
-        editor.setDecorations(this._decorationType, decorationOptions);
+        if(this.isEnabled()) {
+            let parameters = await this.getParameters(document);
+            this._cache[document.uri.fsPath] = parameters;
+            const decorationOptions: vscode.DecorationOptions[] = parameters
+                .map(p => {return {
+                    hoverMessage: p.hover, 
+                    range: p.range
+                }});
+            editor.setDecorations(this._decorationType, decorationOptions);
+        }
+        else{
+            editor.setDecorations(this._decorationType, []);
+        }
+        
+      
+        
     }
 
     // const graphBuilder = new TimeSeriesGraphBuilder();

@@ -12,6 +12,7 @@ export interface ICodeAnalyticsViewTab
     onActivate(codeObject: CodeObjectInfo): void ;
     onDectivate(): void ;
     onUpdated(codeObject: CodeObjectInfo): void ;
+    canDeactivate(): boolean; // return false if tab should no be effeced by any editor selection changes
 }
 
 
