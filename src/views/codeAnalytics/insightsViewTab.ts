@@ -21,10 +21,9 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
         private viewUris: WebViewUris
-        ) {
+        ) { }
 
-         }
-
+    canDeactivate(): boolean { return true; }
     get tabTitle(): string { return "Insights"; }
     get tabId(): string { return "tab-insights"; }
     get viewId(): string { return "view-insights"; }
@@ -81,7 +80,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 this.refreshSpanLabelRabbit(codeObject, 'TransationProcessing');
             }
 
-            
+
         }
         catch(e)
         {
@@ -135,7 +134,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         );
     }
     private refreshSpanLabel(codeObject: CodeObjectInfo, span:string) {
-        let html = 
+        let html =
          /*html*/ `
             <span class="scope">Span:</span>
             <span class="codicon codicon-telescope" title="Span"></span>
@@ -147,7 +146,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private refreshSpanLabelRabbit(codeObject: CodeObjectInfo, span:string) {
-        let html = 
+        let html =
          /*html*/ `
             <span class="scope">Queue:</span>
             <span class="codicon codicon-archive" title="Queue"></span>
@@ -159,7 +158,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private refreshSpanLabelEndpoint(codeObject: CodeObjectInfo, span:string) {
-        let html = 
+        let html =
          /*html*/ `
             <span class="scope">REST Endpoint </span>
             <span class="codicon codicon-symbol-interface" title="Queue"></span>
@@ -184,11 +183,11 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     ): void {
         listItems.push(`
     <div class="list-item">
-        <div class="list-item-content-area">    
+        <div class="list-item-content-area">
             <div class="list-item-header"><strong>This is an error hotspot</strong></div>
             <div>Many major errors occur or propogate through this function.</div>
             <div><vscode-link href="#">See how this was calculated</vscode-link></div>
-        </div> 
+        </div>
     <div class="list-item-right-area">
          <img style="align-self:center;" src="https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png" width="30" height="30">
     </div>
@@ -197,30 +196,30 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private addSpanListItemsEndpoint(listItems: string[],selectedCodeObject: CodeObjectInfo){
-            
+
             listItems.push(`
             <div class="list-item">
-                <div class="list-item-content-area">    
+                <div class="list-item-content-area">
                     <div class="list-item-header"><strong>High Traffic Increasing</strong></div>
-                    <div>This endpoint is busy with high volume of traffic</div>        
-                </div> 
+                    <div>This endpoint is busy with high volume of traffic</div>
+                </div>
                 <div class="list-item-right-area">
                     <img style="align-self:center;" src="${this.viewUris.image("increase.png")}" width="30" height="30">
                     <p style="text-align:center;">1k/m</p>
                 </div>
             </div>
-    
+
             `);
     }
 
     private addSpanListItemsEndpointSlow(listItems: string[],selectedCodeObject: CodeObjectInfo){
-        
+
         listItems.push(`
         <div class="list-item">
-            <div class="list-item-content-area">    
+            <div class="list-item-content-area">
                 <div class="list-item-header"><strong>Low Traffic</strong></div>
-                <div>This endpoint has low traffic volume.</div>        
-            </div> 
+                <div>This endpoint has low traffic volume.</div>
+            </div>
             <div class="list-item-right-area">
                 <img style="align-self:center;" src="${this.viewUris.image("decrease.png")}" width="30" height="30">
                 <p style="text-align:center;">5/h</p>
@@ -234,10 +233,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         //.instance.context.asAbsolutePath(`images/dark/${icon}.svg`))
         listItems.push(`
         <div class="list-item">
-            <div class="list-item-content-area">    
+            <div class="list-item-content-area">
                 <div class="list-item-header"><strong>High Latency</strong></div>
-                <div>Messages receives are handled after a substantial delay.</div>        
-            </div> 
+                <div>Messages receives are handled after a substantial delay.</div>
+            </div>
             <div class="list-item-right-area">
                 <img style="align-self:center;" src="https://icon-library.com/images/icon-for-time/icon-for-time-19.jpg" width="30" height="30">
                 <p style="text-align:center;">10m</p>
@@ -251,14 +250,14 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         ) {
         listItems.push(`
         <div class="list-item">
-            <div class="list-item-content-area">    
+            <div class="list-item-content-area">
                 <div class="list-item-header"><strong>Slow</strong></div>
                 <div>The following usage is significantly slower.</div>
-                <div>user_ms 
+                <div>user_ms
                 <span style="color:#4F62AD;vertical-align: middle;" class="codicon codicon-arrow-small-right"> </span>
                 /validate (200% slower)
-                </div>             
-            </div> 
+                </div>
+            </div>
             <div class="list-item-right-area">
                 <img style="align-self:center;" src="http://conversationagent.typepad.com/.a/6a00d8341c03bb53ef01b7c7d93611970b-pi" width="30" height="30">
                 <p style="text-align:center;">200ms </p>
@@ -274,10 +273,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                     <span style="color:#4F62AD;vertical-align: middle;" class="codicon codicon-arrow-small-right"> </span>
                     /user_auth
                  </div>
-                <div>(16%) user_ms 
+                <div>(16%) user_ms
                      <span style="color:#4F62AD;vertical-align: middle;" class="codicon codicon-arrow-small-right"> </span>
                       /validate
-                </div> 
+                </div>
             </div>
             <div class="list-item-right-area">
                 <div class="expand">
@@ -308,20 +307,20 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             <div class="spacer"></div>
             ${errorsHtml.join("")}
         </div>
-    
+
         <div class="list-item-right-area">
             <div class="expand">
                 <vscode-link class="expand" tab-id="tab-errors" href="#">Expand</vscode-link>
             <div>
         </div>
-    
+
     </div>
     </div>
-    
 
 
-    
- 
+
+
+
     `);
     }
 

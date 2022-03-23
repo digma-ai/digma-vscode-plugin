@@ -65,7 +65,7 @@ export class ErrorFlowStackView implements vscode.Disposable
     private async setErrorFlow(errorFlowId: string)
     {
         const response = await this._documentInfoProvider.analyticsProvider.getErrorFlow(errorFlowId);
-        this._paramDecorator.errorFlowResponse = response;
+       // this._paramDecorator.errorFlowResponse = response;
         await this._provider.setErrorFlow(response);
     }
 
