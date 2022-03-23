@@ -50,6 +50,12 @@ window.addEventListener("load", () =>
         }
     });
     
+    consume(UiMessage.Set.StackDetails, (event) => {
+        if (event.htmlContent !== undefined) {
+            $(".stack-details").html(event.htmlContent);
+        }
+    });
+    
     consume(UiMessage.Set.InsightsList, (event) => {
         if (event.htmlContent !== undefined) {
             insightsTab.find(".list").html(event.htmlContent);

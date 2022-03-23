@@ -304,7 +304,7 @@ class HtmlBuilder
                     </div>
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}
-            </div>                
+            </div>
             ${characteristic}
             <section class="flex-row">
                 ${HtmlBuilder.getErrorStartEndTime(error)}
@@ -383,7 +383,9 @@ class HtmlBuilder
                     <header>Stack</header>
                     <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
                 </div>
-                ${stacksHtml}
+                <div class="stack-details">
+                    ${stacksHtml}
+                </div>
             </section>    
         `;
     }

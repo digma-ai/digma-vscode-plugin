@@ -38,6 +38,9 @@ export namespace UiMessage
         export class ErrorDetails {
             constructor(public htmlContent?: string) {}
         }
+        export class StackDetails {
+            constructor(public htmlContent?: string) {}
+        }
         export class CodeObjectLabel {
             constructor(public htmlContent?: string) {}
         }
