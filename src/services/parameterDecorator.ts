@@ -30,9 +30,7 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
         this._disposables.push(
             vscode.workspace.onDidOpenTextDocument(async (d:vscode.TextDocument) => await this.refreshParametersCache(d))
         );
-        this._disposables.push(
-            vscode.workspace.onDidCloseTextDocument(async (d:vscode.TextDocument) => delete this._cache[d.uri.fsPath])
-        );
+        
         this._disposables.push(
             vscode.window.onDidChangeActiveTextEditor(this.activeTextEditorChanged.bind(this))
         );
