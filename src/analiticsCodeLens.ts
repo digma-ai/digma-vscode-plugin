@@ -30,7 +30,7 @@ export class AnaliticsCodeLens implements vscode.Disposable
         this._provider.raiseOnDidChangeCodeLenses();
 
         this._disposables.push(vscode.languages.registerCodeLensProvider(
-            documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter), 
+            documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter), 
             this._provider)
         );
     }

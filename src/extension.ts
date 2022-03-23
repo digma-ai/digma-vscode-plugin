@@ -2,8 +2,8 @@ import * as vscode from 'vscode';
 import { AnaliticsCodeLens } from './analiticsCodeLens';
 import { AnalyticsProvider} from './services/analyticsProvider';
 import { SymbolProvider } from './services/languages/symbolProvider';
-import { PythonSupport } from "./services/languages/PythonSupport";
-import { CSharpSupport } from "./services/languages/CSharpSupport";
+import { PythonLanguageExtractor } from "./services/languages/python/languageExtractor";
+import { CSharpLanguageExtractor } from './services/languages/csharp/languageExtractor';
 import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
 import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { ContextView } from './views/contextView';
@@ -16,12 +16,12 @@ import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { ErrorsLineDecorator } from './decorators/errorsLineDecorator';
 import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
 import { EditorHelper } from './services/EditorHelper';
-import { CodeObjectInspector } from './services/codeObjects/codeObjectInspector';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
     const supportedLanguages = [
-        new PythonSupport(), new CSharpSupport()
+        new PythonLanguageExtractor(), 
+        new CSharpLanguageExtractor()
     ];
     const supportedSourceControls = [
         new Git()
@@ -29,8 +29,7 @@ export async function activate(context: vscode.ExtensionContext)
     const sourceControl = new SourceControl(supportedSourceControls);
     const symbolProvider = new SymbolProvider(supportedLanguages);
     const analyticsProvider = new AnalyticsProvider();
-    const codeObjectInspector = new CodeObjectInspector();
-    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, codeObjectInspector);
+    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
 
     if(!Settings.environment.value){

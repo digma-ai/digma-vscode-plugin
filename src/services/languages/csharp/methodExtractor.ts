@@ -1,23 +1,11 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
-import { ISupportedLanguage, SymbolInfo } from './languageSupport';
+import { IMethodExtractor, SymbolInfo } from "../extractors";
 
 
-export class CSharpSupport implements ISupportedLanguage {
-
-    requiredExtentionLoaded: boolean = false;
-
-    public get requiredExtentionId(): string {
-        return "ms-dotnettools.csharp";
-    }
-
-    public get documentFilter(): vscode.DocumentFilter {
-
-        return { scheme: 'file', language: 'csharp' };
-
-    }
-
-    public extractSymbolInfos(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
+export class CSharpMethodExtractor implements IMethodExtractor
+{
+    public extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
 
         const symbolInfos = this.extractFunctions(document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
@@ -54,7 +42,12 @@ export class CSharpSupport implements ISupportedLanguage {
                 // Example:  Code.Analytics.MyClass$_$get
                 const id = `${namespace}$_$${funcName}`;
 
-                symbolInfos.push(new SymbolInfo(id, funcName, namespace + "." + funcName, range));
+                symbolInfos.push({
+                    id, 
+                    name: funcName,
+                    displayName: namespace + "." + funcName, 
+                    range
+                });
             }
 
             if (sym.children)
@@ -66,6 +59,5 @@ export class CSharpSupport implements ISupportedLanguage {
         return symbolInfos;
 
     }
-
 
 }

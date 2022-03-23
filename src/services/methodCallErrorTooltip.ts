@@ -14,7 +14,7 @@ export class MethodCallErrorTooltip implements vscode.Disposable
     constructor(documentInfoProvider: DocumentInfoProvider)
     {
         this._disposables.push(vscode.languages.registerHoverProvider(
-            documentInfoProvider.symbolProvider.supportedLanguages.map(x => x.documentFilter),
+            documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter),
             new MethodCallErrorHoverProvider(documentInfoProvider))
         );
         this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ViewErrorFlow, async (args) => {

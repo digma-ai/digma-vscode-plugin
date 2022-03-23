@@ -1,20 +1,11 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
-import { ISupportedLanguage, SymbolInfo } from './languageSupport';
+import { IMethodExtractor, SymbolInfo } from "../extractors";
 
 
-export class PythonSupport implements ISupportedLanguage {
-    public requiredExtentionLoaded: boolean = false;
-
-    public get requiredExtentionId(): string {
-        return 'ms-python.python';
-    }
-
-    public get documentFilter(): vscode.DocumentFilter {
-        return { scheme: 'file', language: 'python' };
-    }
-
-    public extractSymbolInfos(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
+export class PythonMethodExtractor implements IMethodExtractor
+{
+    public extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
         const symbolInfos = this.extractFunctions(document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
     }
@@ -37,7 +28,12 @@ export class PythonSupport implements ISupportedLanguage {
                 // Example:  numpy/tools/linter.py$_$get_branch_diff
                 const id = `${filePath}$_$${sym.name}`;
 
-                symbolInfos.push(new SymbolInfo(id, sym.name, symPath, range));
+                symbolInfos.push({
+                    id, 
+                    name: sym.name,
+                    displayName: symPath, 
+                    range
+                });
             }
 
             if (sym.children)

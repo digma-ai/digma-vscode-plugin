@@ -1,6 +1,6 @@
 import moment = require('moment');
 import * as vscode from 'vscode';
-import { SymbolInfo } from './languages/languageSupport';
+import { SymbolInfo } from './languages/extractors';
 import { SymbolProvider } from './languages/symbolProvider';
 import { Dictionary } from './utils';
 

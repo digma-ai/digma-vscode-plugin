@@ -3,8 +3,8 @@ import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { delay } from '../utils';
-import { ISupportedLanguage, SymbolInfo } from './languageSupport';
 import { Logger } from '../logger';
+import { EndpointInfo, ILanguageExtractor, SpanInfo, SymbolInfo } from './extractors';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -35,12 +35,12 @@ export class SymbolProvider
 {
     private _creationTime: moment.Moment = moment.utc();
 
-    constructor(public supportedLanguages: ISupportedLanguage[]) 
+    constructor(public languageExtractors: ILanguageExtractor[]) 
     {
     }
 
     public supportsDocument(document: vscode.TextDocument): boolean{
-        return this.supportedLanguages.any(x => vscode.languages.match(x.documentFilter, document) > 0);
+        return this.languageExtractors.any(x => vscode.languages.match(x.documentFilter, document) > 0);
     }
 
     private async retryOnStartup<T>(lspCall: () => Promise<T | undefined>, predicate: (result: T | undefined) => boolean): Promise<T | undefined>
@@ -59,15 +59,34 @@ export class SymbolProvider
         return result;
     }
 
-    public async getSymbols(document: vscode.TextDocument) : Promise<SymbolInfo[]>
+    public async getEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]):  Promise<EndpointInfo[]>
     {
-        const supportedLanguage = this.supportedLanguages.find(x => vscode.languages.match(x.documentFilter, document) > 0);
-        if (!supportedLanguage ||
-            !(supportedLanguage.requiredExtentionLoaded || await this.loadRequiredExtention(supportedLanguage)))
-        {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        if(!supportedLanguage)
             return [];
-        }
-      
+
+        return supportedLanguage.endpointExtractors
+            .map(x => x.extractEndpoints(document, symbolInfo, tokens))
+            .flat();
+    }
+    
+    public async getSpans(document: vscode.TextDocument, tokens: Token[]):  Promise<SpanInfo[]>
+    {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        if(!supportedLanguage)
+            return [];
+
+        return supportedLanguage.spanExtractors
+            .map(x => x.extractSpans(document, tokens))
+            .flat();
+    }
+
+    public async getMethods(document: vscode.TextDocument) : Promise<SymbolInfo[]>
+    {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        if(!supportedLanguage)
+            return [];
+
         let result = await this.retryOnStartup<any[]>(
             async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
             value => value?.length ? true : false);
@@ -81,7 +100,7 @@ export class SymbolProvider
             if ((result[0] as any).range) {
                 // Document symbols
                 const allDocSymbols = result as DocumentSymbol[];
-                const symbolInfos = supportedLanguage.extractSymbolInfos(document, allDocSymbols);
+                const symbolInfos = supportedLanguage.methodExtractors.map(x => x.extractMethods(document, allDocSymbols)).flat();
 
                 return symbolInfos;
             } else {
@@ -165,7 +184,18 @@ export class SymbolProvider
         return tokes;
     }
 
-    private async loadRequiredExtention(language: ISupportedLanguage) : Promise<boolean>
+    private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined>
+    {
+        const supportedLanguage = this.languageExtractors.find(x => vscode.languages.match(x.documentFilter, document) > 0);
+        if (!supportedLanguage ||
+            !(supportedLanguage.requiredExtentionLoaded || await this.loadRequiredExtention(supportedLanguage)))
+        {
+            return;
+        }
+        return supportedLanguage;
+    }
+
+    private async loadRequiredExtention(language: ILanguageExtractor) : Promise<boolean>
     {
         var extention = vscode.extensions.getExtension(language.requiredExtentionId);
         if (!extention) 
@@ -180,7 +210,7 @@ export class SymbolProvider
             if(sel == installOption)
                 vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtentionId);
             else if(sel == ignoreOption)
-                this.supportedLanguages = this.supportedLanguages.filter(x => x != language);
+                this.languageExtractors = this.languageExtractors.filter(x => x != language);
             return false;
         }
         if(!extention.isActive)

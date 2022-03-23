@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import { SymbolInfo } from '../languages/languageSupport';
-import { Token, TokenType } from "../languages/symbolProvider";
-import { EndpointInfo, IEndpointExtractor } from "./extractors";
+import { Token, TokenType } from "../symbolProvider";
+import { EndpointInfo, IEndpointExtractor, SymbolInfo } from "../extractors";
 
 
 export class FastapiEndpointExtractor implements IEndpointExtractor
@@ -30,7 +29,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             const lineText = document.getText(new vscode.Range(
                 appToken.range.start, 
                 new vscode.Position(methodToken.range.end.line, 1000)));
-            const match = new RegExp(`^app\\.${method}\\("([^"]+)"`).exec(lineText);
+            const match = new RegExp(`^app\\.${method}\\("(.*?)"`).exec(lineText);
             if (!match)
                 continue;
             
