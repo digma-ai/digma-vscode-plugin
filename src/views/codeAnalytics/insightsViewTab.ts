@@ -52,34 +52,6 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             }
             console.log(codeObject.methodName);
 
-            if (codeObject.methodName ==='UserService.all'){
-
-                let spanListItems: string[] = [];
-                this.addSpanListItemsInternal(spanListItems, codeObject);
-                this.updateSpanListView(spanListItems.join(""));
-                this.refreshSpanLabel(codeObject, 'retrieve users');
-            }
-
-            if (codeObject.methodName ==='root'){
-                let spanListItems: string[] = [];
-                this.addSpanListItemsEndpoint(spanListItems, codeObject);
-                this.updateSpanListView(spanListItems.join(""));
-                this.refreshSpanLabel(codeObject, 'GET /');
-            }
-
-            if (codeObject.methodName ==='validate'){
-                let spanListItems: string[] = [];
-                this.addSpanListItemsEndpointSlow(spanListItems, codeObject);
-                this.updateSpanListView(spanListItems.join(""));
-                this.refreshSpanLabel(codeObject, 'GET validate/');
-            }
-
-            if (codeObject.methodName ==='process'){
-                let spanListItems: string[] = [];
-                this.addSpanListItemsEndpointRabbit(spanListItems, codeObject);
-                this.updateSpanListView(spanListItems.join(""));
-                this.refreshSpanLabelRabbit(codeObject, 'TransationProcessing');
-            }
 
             
         }
