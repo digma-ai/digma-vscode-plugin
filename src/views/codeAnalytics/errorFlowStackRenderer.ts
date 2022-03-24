@@ -5,6 +5,7 @@ import { ErrorFlowCommon } from '../errorFlow/common';
 
 export interface ErrorFlowStackViewModel {
     stacks: StackViewModel[];
+    stackIndex: number;
     stackTrace: string;
     lastInstanceCommitId: string;
     affectedSpanPaths: AffectedPathViewModel[];

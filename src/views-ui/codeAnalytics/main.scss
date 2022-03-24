@@ -189,6 +189,28 @@ vscode-panel-view {
         opacity: 0.4;
         margin-left: 10px;
     }
+    .stack-nav {
+        background-color: var(--vscode-activityBar-background);
+        color: var(--vscode-activityBar-foreground);
+
+        margin-bottom: calc(var(--design-unit) * 1px);
+        padding: calc(var(--design-unit) * 1px);
+        align-items: center;
+
+        > .stack-nav-previous, > .stack-nav-next {
+            cursor: pointer;
+
+            &.disabled {
+                opacity: 0.4;
+                cursor: unset;
+            }
+
+            &:hover {
+                background-color: var(--vscode-activityBar-foreground);
+                color: var(--vscode-activityBar-background);
+            }
+        }
+    }
 }
 
 .errors-view{

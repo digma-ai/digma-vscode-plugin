@@ -29,9 +29,9 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
         this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
         this._channel.consume(UiMessage.Notify.ErrorViewVisibilityChanged, e => this.onErrorViewVisibilityChanged(e.visible));
-
-        
+        this._channel.consume(UiMessage.Notify.NavigateStack, e => this.navigateStack(e.offset));
     }
+
     canDeactivate(): boolean {
         return !this.isErrorViewVisible;
     }
@@ -131,11 +131,46 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
 
         const viewModels = await this.createViewModels(errorDetails);
-        this._stackViewModel = viewModels.firstOrDefault();
-        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [this._stackViewModel]);
+        const stackViewModel = viewModels.firstOrDefault();
+        this._stackViewModel = stackViewModel;
+        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [stackViewModel]);
         this._channel.publish(new UiMessage.Set.ErrorDetails(html));
 
         this.updateEditorDecorations(this._stackViewModel);
+        this.navigateStack();
+    }
+
+    private async navigateStack(offset: number = 0) {
+        const stackViewModel = this._stackViewModel;
+        if(!stackViewModel) {
+            return;
+        }
+
+        const totalStacks = stackViewModel.stacks.length;
+        const stackIndex = this.calculateOffset(stackViewModel.stackIndex, totalStacks - 1, offset);
+        stackViewModel.stackIndex = stackIndex;
+
+        this._channel.publish(new UiMessage.Set.CurrenStackInfo({
+            stackNumber: stackIndex + 1,
+            totalStacks,
+            canNavigateToPrevious: stackIndex > 0,
+            canNavigateToNext: stackIndex < totalStacks - 1,
+        }));
+
+        const stack = stackViewModel.stacks[stackIndex];
+        const html = HtmlBuilder.buildStackDetails(stack);
+        this._channel.publish(new UiMessage.Set.StackDetails(html));
+    }
+
+    private calculateOffset(current: number = 0, max: number = 0, offset: number = 0) {
+        let result = current + offset;
+        if(result > max) {
+            result = max;
+        }
+        if(result < 0) {
+            result = 0;
+        }
+        return result;
     }
 
     private async createViewModels(errorDetails: CodeObjectErrorDetails): Promise<ErrorFlowStackViewModel[]> {
@@ -199,6 +234,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
             const viewModel: ErrorFlowStackViewModel = {
                 stacks: stacks,
+                stackIndex: 0,
                 stackTrace: '',
                 lastInstanceCommitId: '',
                 affectedSpanPaths: [],
@@ -334,7 +370,19 @@ class HtmlBuilder
                 </span>
             </section>
             <vscode-divider></vscode-divider>
-            ${this.getFlowStacksHtml(error, viewModels)}
+            ${this.getFlowStacksHtml(viewModels)}
+        `;
+    }
+
+    public static buildStackDetails(stack?: StackViewModel): string{
+        if(!stack) {
+            return '';
+        }
+
+        const stackHtml = ErrorFlowStackRenderer.getFlowStackHtml(stack);
+
+        return /*html*/`
+            ${stackHtml}
         `;
     }
 
@@ -387,23 +435,27 @@ class HtmlBuilder
         return html;
     }
 
-    private static getFlowStacksHtml(error: CodeObjectErrorDetails, viewModels?: ErrorFlowStackViewModel[]): string {
+    private static getFlowStacksHtml(
+        viewModels?: ErrorFlowStackViewModel[],
+    ): string {
         if(!viewModels || viewModels.length === 0) {
             return '';
         }
 
         const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
-        const stacksHtml = viewModels[0].stacks
-            .map(s => ErrorFlowStackRenderer.getFlowStackHtml(s))
-            .join('') ?? '';
         return  /*html*/ `
             <section>
+                <div class="stack-nav flex-row flex-max-space-between">
+                    <span class="stack-nav-previous codicon codicon-arrow-small-left" title="Previous"></span>
+                    <span class="stack-nav-header">
+                        <span class="stack-nav-current"></span>/<span class="stack-nav-total"></span> Flow Stacks</span>
+                    </span>
+                    <span class="stack-nav-next codicon codicon-arrow-small-right" title="Next"></span>
+                </div>
                 <div class="flex-row flex-max-space-between">
-                    <header>Stack</header>
                     <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
                 </div>
                 <div class="stack-details">
-                    ${stacksHtml}
                 </div>
             </section>    
         `;

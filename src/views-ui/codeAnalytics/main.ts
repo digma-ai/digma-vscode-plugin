@@ -59,6 +59,14 @@ window.addEventListener("load", () =>
         }
     });
     
+    consume(UiMessage.Set.CurrenStackInfo, (event) => {
+        const { stackInfo } = event;
+        $(".stack-nav-current").html("" + stackInfo?.stackNumber);
+        $(".stack-nav-total").html("" + stackInfo?.totalStacks);
+        $(".stack-nav-previous").toggleClass("disabled", !stackInfo?.canNavigateToPrevious);
+        $(".stack-nav-next").toggleClass("disabled", !stackInfo?.canNavigateToNext);
+    });
+    
     consume(UiMessage.Set.InsightsList, (event) => {
         if (event.htmlContent !== undefined) {
             insightsTab.find("#insightList").html(event.htmlContent);
@@ -119,6 +127,14 @@ window.addEventListener("load", () =>
     overlay.on("click", ".codeobject-link", function(){
         const line = $(this).data("line");
         publish(new UiMessage.Notify.GoToLine(parseInt(line)));
+    });
+
+    $(document).on("click", ".stack-nav-previous", function() {
+        publish(new UiMessage.Notify.NavigateStack(-1));
+    });
+
+    $(document).on("click", ".stack-nav-next", function() {
+        publish(new UiMessage.Notify.NavigateStack(1));
     });
 
     /* end of error-view */

@@ -21,6 +21,9 @@ export namespace UiMessage
         export class ErrorViewVisibilityChanged {
             constructor(public visible?: boolean){}
         }
+        export class NavigateStack {
+            constructor(public offset?: number) {}
+        }
     }
 
     export namespace Get
@@ -48,6 +51,14 @@ export namespace UiMessage
         export class StackDetails {
             constructor(public htmlContent?: string) {}
         }
+        export class CurrenStackInfo {
+            constructor(public stackInfo?: {
+                stackNumber: number
+                totalStacks: number
+                canNavigateToPrevious: boolean,
+                canNavigateToNext: boolean,
+            }) {}
+        }
         export class CodeObjectLabel {
             constructor(public htmlContent?: string) {}
         }
@@ -59,13 +70,6 @@ export namespace UiMessage
         }
     }
 }
-
-
-
-
-
-
-
 
 export class SetErrorViewContentUIEvent{
     constructor(public htmlContent?: string) {}
