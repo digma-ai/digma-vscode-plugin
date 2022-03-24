@@ -21,6 +21,9 @@ export namespace UiMessage
         export class ErrorViewVisibilityChanged {
             constructor(public visible?: boolean){}
         }
+        export class OverlayVisibilityChanged {
+            constructor(public visible?: boolean, public id?:string){}
+        }
     }
 
     export namespace Get
@@ -42,9 +45,6 @@ export namespace UiMessage
         export class ErrorsList {
             constructor(public htmlContent?: string) {}
         }
-        export class ErrorDetails {
-            constructor(public htmlContent?: string) {}
-        }
         export class CodeObjectLabel {
             constructor(public htmlContent?: string) {}
         }
@@ -52,7 +52,7 @@ export namespace UiMessage
             constructor(public htmlContent?: string) {}
         }
         export class Overlay {
-            constructor(public htmlContent?: string) {}
+            constructor(public htmlContent?: string, public id?: string) {}
         }
     }
 }

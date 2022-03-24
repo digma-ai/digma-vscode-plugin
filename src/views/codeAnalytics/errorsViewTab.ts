@@ -12,6 +12,7 @@ import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackV
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 import { Settings } from "../../settings";
 import { ErrorFlowParameterDecorator } from "../errorFlow/errorFlowParameterDecorator";
+import { OverlayView } from "./overlayView";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -23,17 +24,12 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _analyticsProvider: AnalyticsProvider,
 		private _documentInfoProvider: DocumentInfoProvider,
         private _editorHelper: EditorHelper,
-        private _errorFlowParamDecorator: ErrorFlowParameterDecorator) 
+        private _errorFlowParamDecorator: ErrorFlowParameterDecorator,
+        private _overlay: OverlayView) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
         this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
-        this._channel.consume(UiMessage.Notify.ErrorViewVisibilityChanged, e => this.onErrorViewVisibilityChanged(e.visible));
-
-        
-    }
-    canDeactivate(): boolean {
-        return !this.isErrorViewVisible;
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -42,7 +38,6 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     
     public onReset(): void{
         this._viewedCodeObjectId = undefined;
-        this.isErrorViewVisible = false;
     }
     public onActivate(codeObject: CodeObjectInfo): void {
         this.refreshList(codeObject);
@@ -60,9 +55,6 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     public getHtml(): string 
     {
         return /*html*/`
-            <div class="error-view" style="display: none">
-             <span class="codicon codicon-arrow-left" title="Back"></span>
-            </div>
             <div class="errors-view">
                 <div class="codeobject-selection"></div>
                 <div id="error-list" class="list"></div>
@@ -124,18 +116,18 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             originServices: [],
             errors: []
         };
-        let html = HtmlBuilder.buildErrorDetails(emptyError, emptyCodeObject);
-        this._channel.publish(new UiMessage.Set.ErrorDetails(html));
+        
+        this._overlay.show(HtmlHelper.getLoadingMessage('Loading error view...'), this.errorOverlayId);
 
-        const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
+        const errorDetails = await this.    _analyticsProvider.getCodeObjectError(e.errorSourceUID);
         const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
 
         const viewModels = await this.createViewModels(errorDetails);
         this._stackViewModel = viewModels.firstOrDefault();
-        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [this._stackViewModel]);
-        this._channel.publish(new UiMessage.Set.ErrorDetails(html));
-
+        let html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [this._stackViewModel]);
+        this._overlay.show(html, this.errorOverlayId);
         this.updateEditorDecorations(this._stackViewModel);
+        this._errorFlowParamDecorator.enabled = true;
     }
 
     private async createViewModels(errorDetails: CodeObjectErrorDetails): Promise<ErrorFlowStackViewModel[]> {
@@ -242,12 +234,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         if(value != undefined)
             await Settings.hideFramesOutsideWorkspace.set(value);
     }
-    private isErrorViewVisible: boolean = false;
-    private async onErrorViewVisibilityChanged(visible?: boolean){
-        if(visible === undefined) return;
-        this.isErrorViewVisible = visible;
-        this._errorFlowParamDecorator.enabled = visible;
-    }
+    private errorOverlayId = "errorOverlay";
     private async goToFileAndLineById(frameId?: number) {
         const frame = this._stackViewModel?.stacks
             .flatMap(s => s.frames)
@@ -314,6 +301,7 @@ class HtmlBuilder
             `
             : '';
         return /*html*/`
+        <div class="error-view">
             <div class="flex-row">
                 <vscode-button appearance="icon" class="error-view-close">
                     <span class="codicon codicon-arrow-left"></span>
@@ -335,6 +323,7 @@ class HtmlBuilder
             </section>
             <vscode-divider></vscode-divider>
             ${this.getFlowStacksHtml(error, viewModels)}
+        </div>
         `;
     }
 
