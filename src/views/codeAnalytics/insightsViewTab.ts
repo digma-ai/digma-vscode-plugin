@@ -23,7 +23,6 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private viewUris: WebViewUris
         ) { }
 
-    canDeactivate(): boolean { return true; }
     get tabTitle(): string { return "Insights"; }
     get tabId(): string { return "tab-insights"; }
     get viewId(): string { return "view-insights"; }
