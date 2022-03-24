@@ -3,24 +3,27 @@ import { UiMessage } from "./contracts";
 
 window.addEventListener("load", () => 
 {
-    function showTabs(){
-        overlay.hide();
+    let overlayVisibility = false;
+    let overlayId: string = undefined;
+    function hideOverlay(){
+        overlay.html("").hide();
         tabsContainer.show();
+        if(overlayVisibility)
+        {
+            overlayVisibility = false;
+            publish(new UiMessage.Notify.OverlayVisibilityChanged(overlayVisibility, overlayId));
+        }
+        overlayId = undefined;
     }
-    function showOverlay(html: string){
+    function showOverlay(html: string, id: string){
+        overlayId = id;
         overlay.html(html).show();
         tabsContainer.hide();
-    }
-    function showErrorView() {
-        $(".error-view").html("").show();
-        $(".errors-view").hide();
-        publish(new UiMessage.Notify.ErrorViewVisibilityChanged(true));
-
-    }
-    function hideErrorView() {
-        $(".errors-view").show();
-        $(".error-view").hide();
-        publish(new UiMessage.Notify.ErrorViewVisibilityChanged(false));
+        if(!overlayVisibility)
+        {
+            overlayVisibility = true;
+            publish(new UiMessage.Notify.OverlayVisibilityChanged(overlayVisibility, overlayId));
+        }
     }
     function moveToTab(tabId: string){
         let tabsElement: any = $(".analytics-nav")[0];
@@ -36,20 +39,14 @@ window.addEventListener("load", () =>
 
     consume(UiMessage.Set.Overlay, e => {
         if(e.htmlContent)
-            showOverlay(e.htmlContent);
+            showOverlay(e.htmlContent, e.id);
         else
-            showTabs();
+            hideOverlay();
     });
 
     consume(UiMessage.Set.ErrorsList, (event) => {
         if (event.htmlContent !== undefined) {
             errorsTab.find("#error-list").html(event.htmlContent);
-        }
-    });
-
-    consume(UiMessage.Set.ErrorDetails, (event) => {
-        if (event.htmlContent !== undefined) {
-            $(".error-view").html(event.htmlContent);
         }
     });
     
@@ -93,24 +90,17 @@ window.addEventListener("load", () =>
 
     /*error-view*/
     $(document).on("click", ".error-view-close", function () {
-        hideErrorView();
+        hideOverlay();
     });
 
     $(".analytics-nav").on("change", (e) => {
         if (e.target === $(".analytics-nav")[0]) {
             publish(new UiMessage.Notify.TabChanged((<any>e.originalEvent).detail.id));
-
-            let previousTabId = $(".analytics-nav").attr("activeid");
-            if(previousTabId == "tab-errors")
-                hideErrorView();
         }
     });
 
     $(document).on("click", ".error-name.link", function () {
         let errorSourceUID = $(this).data("error-source-uid");
-        // $(".error-view").html("<vscode-progress-ring></vscode-progress-ring>");
-        showErrorView();
-        moveToTab("tab-errors");
         publish(new UiMessage.Get.ErrorDetails(errorSourceUID));
     });
 

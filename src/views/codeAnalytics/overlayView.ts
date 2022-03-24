@@ -6,8 +6,14 @@ import { HtmlHelper } from "./common";
 
 export class OverlayView
 {
+    public static UnsupportedDocumentOverlayId = "UnsupportedDocument";
+    public static CodeSelectionNotFoundOverlayId = "CodeSelectionNotFound";
+
+    public isVisible: boolean = false;
+    public overlayId: string| undefined = undefined;
     constructor(private _channel: WebviewChannel){
-        this._channel.consume(UiMessage.Notify.GoToLine, this.onGoToLine.bind(this))
+        this._channel.consume(UiMessage.Notify.GoToLine, this.onGoToLine.bind(this));
+        this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
     }
 
     public getInitHtml(){
@@ -18,9 +24,14 @@ export class OverlayView
         this._channel.publish(new UiMessage.Set.Overlay());
     }
 
+    public show(html: string, overlayId: string| undefined)
+    {
+        this._channel.publish(new UiMessage.Set.Overlay(html, overlayId));
+    }
+
     public showUnsupportedDocumentMessage(){
         const html = HtmlHelper.getInfoMessage("Select a document containing code to see its insights");
-        this._channel.publish(new UiMessage.Set.Overlay(html))
+        this.show(html, OverlayView.UnsupportedDocumentOverlayId);
     }
 
     public showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
@@ -35,7 +46,19 @@ export class OverlayView
             ${HtmlHelper.getInfoMessage("No code object was selected")}
             <div>Try to place the caret on a method, or select one from following:</div>
             <div class="links-list">${links}</div>`;
-        this._channel.publish(new UiMessage.Set.Overlay(html))
+        this.show(html, OverlayView.UnsupportedDocumentOverlayId);
+    }
+    private onOverlayVisibilityChanged(e: UiMessage.Notify.OverlayVisibilityChanged)
+    {
+        if(e.visible !== undefined){
+            this.isVisible = e.visible;
+            if(this.isVisible){
+                this.overlayId = e.id;
+            }
+            else{
+                this.overlayId = undefined;
+            }
+        }
     }
 
     private onGoToLine(e: UiMessage.Notify.GoToLine){
