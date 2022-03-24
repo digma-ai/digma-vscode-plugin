@@ -30,12 +30,9 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
         this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
-        this._channel.consume(UiMessage.Notify.ErrorViewVisibilityChanged, e => this.onErrorViewVisibilityChanged(e.visible));
         this._channel.consume(UiMessage.Notify.NavigateStack, e => this.navigateStack(e.offset));
-    }
+        this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
 
-    canDeactivate(): boolean {
-        return !this.isErrorViewVisible;
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -131,15 +128,17 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         const viewModels = await this.createViewModels(errorDetails);
         const stackViewModel = viewModels.firstOrDefault();
         this._stackViewModel = stackViewModel;
-        html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [stackViewModel]);
-        this._channel.publish(new UiMessage.Set.ErrorDetails(html));
-
-        this._stackViewModel = viewModels.firstOrDefault();
-        let html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [this._stackViewModel]);
+        let html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [stackViewModel]);
         this._overlay.show(html, this.errorOverlayId);
-        this.updateEditorDecorations(this._stackViewModel);
-        this._errorFlowParamDecorator.enabled = true;
         this.navigateStack();
+        this.updateEditorDecorations(stackViewModel);
+    }
+
+    private onOverlayVisibilityChanged(e: UiMessage.Notify.OverlayVisibilityChanged)
+    {
+        if(e.visible !== undefined && e.id ===this.errorOverlayId){//error overlay visibility changed
+            this._errorFlowParamDecorator.enabled = e.visible;
+        }
     }
 
     private async navigateStack(offset: number = 0) {
@@ -162,6 +161,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         const stack = stackViewModel.stacks[stackIndex];
         const html = HtmlBuilder.buildStackDetails(stack);
         this._channel.publish(new UiMessage.Set.StackDetails(html));
+       // this.updateEditorDecorations(stack);
     }
 
     private calculateOffset(current: number = 0, max: number = 0, offset: number = 0) {
