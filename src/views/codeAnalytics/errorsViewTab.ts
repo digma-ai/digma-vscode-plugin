@@ -104,23 +104,6 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             id: '',
             methodName: ''
         };
-        const emptyError: CodeObjectErrorDetails = {
-            uid: '',
-            name: '',
-            scoreInfo: {
-                score: 0,
-                scoreParams: undefined,
-            },
-            sourceCodeObjectId: '',
-            characteristic: '',
-            startsHere: false,
-            endsHere: false,
-            firstOccurenceTime: moment(),
-            lastOccurenceTime: moment(),
-            dayAvg: 0,
-            originServices: [],
-            errors: []
-        };
 
         this._overlay.show(HtmlHelper.getLoadingMessage('Loading error view...'), this.errorOverlayId);
 
