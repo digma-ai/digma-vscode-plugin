@@ -15,6 +15,9 @@ export namespace UiMessage
         export class GoToLineByFrameId {
             constructor(public frameId?: number){}
         }
+        export class OpenRawTrace {
+            constructor(public content?: string) {}
+        }
         export class WorkspaceOnlyChanged {
             constructor(public value?: boolean){}
         }

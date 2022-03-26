@@ -31,6 +31,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
+        this._channel.consume(UiMessage.Notify.OpenRawTrace, e => this.openRawTrace());
         this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
         this._channel.consume(UiMessage.Notify.NavigateErrorFlow, e => this.navigateErrorFlow(e.offset));
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
@@ -226,8 +227,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
             const viewModel: ErrorFlowStackViewModel = {
                 stacks: stacks,
-                stackTrace: '',
-                lastInstanceCommitId: '',
+                stackTrace: sourceFlow.stackTrace,
+                lastInstanceCommitId: sourceFlow.lastInstanceCommitId,
                 affectedSpanPaths: [],
                 exceptionType: '',
                 summary: undefined
@@ -288,6 +289,18 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             lastInstanceCommitId: this._stackViewModel?.lastInstanceCommitId,
         };
         await this._editorHelper.goToFileAndLine(editorInfo);
+    }
+
+    private async openRawTrace() {
+        const viewModels = this._stackViewModels;
+        if(!viewModels) {
+            return;
+        }
+
+        const viewModel = viewModels[this._errorFlowIndex ?? 0];
+        const content = viewModel.stackTrace;
+
+        await this._editorHelper.openDocument(content);
     }
 
     private updateEditorDecorations(errorFlow: ErrorFlowStackViewModel)
@@ -453,6 +466,7 @@ class HtmlBuilder
         return `
             <section class="status-bar flex-row flex-max-space-between">
                 <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
+                <vscode-link class="raw-trace-link">Open Raw Trace</vscode-link>
             </section>
         `;
     }

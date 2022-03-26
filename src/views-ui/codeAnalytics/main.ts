@@ -127,6 +127,10 @@ window.addEventListener("load", () =>
         publish(new UiMessage.Notify.NavigateErrorFlow(1));
     });
 
+    $(document).on("click", ".raw-trace-link", function() {
+        publish(new UiMessage.Notify.OpenRawTrace());
+    });
+    
     /* end of error-view */
 
     $(document).on("click", ".expand", function () {
