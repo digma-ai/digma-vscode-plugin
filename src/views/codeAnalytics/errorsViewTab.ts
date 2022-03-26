@@ -358,6 +358,8 @@ class HtmlBuilder
             </section>
             <vscode-divider></vscode-divider>
             ${this.getFlowStacksHtml(viewModels)}
+            <vscode-divider></vscode-divider>
+            ${this.getStatusBarHtml()}
          </div>
         `;
     }
@@ -430,22 +432,28 @@ class HtmlBuilder
             return '';
         }
 
-        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
         return  /*html*/ `
-            <section>
-                <div class="stack-nav flex-row flex-max-space-between">
-                    <span class="stack-nav-previous codicon codicon-arrow-small-left" title="Previous"></span>
-                    <span class="stack-nav-header">
-                        <span class="stack-nav-current"></span>/<span class="stack-nav-total"></span> Flow Stacks</span>
-                    </span>
-                    <span class="stack-nav-next codicon codicon-arrow-small-right" title="Next"></span>
-                </div>
-                <div class="flex-row flex-max-space-between">
-                    <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
-                </div>
+            <div class="stack-nav flex-row flex-max-space-between">
+                <span class="stack-nav-previous codicon codicon-arrow-small-left" title="Previous"></span>
+                <span class="stack-nav-header">
+                    <span class="stack-nav-current"></span>/<span class="stack-nav-total"></span> Flow Stacks</span>
+                </span>
+                <span class="stack-nav-next codicon codicon-arrow-small-right" title="Next"></span>
+            </div>
+            <section class="stack-details-section">
                 <div class="stack-details">
                 </div>
             </section>    
+        `;
+    }
+
+    private static getStatusBarHtml(): string {
+        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
+
+        return `
+            <section class="status-bar flex-row flex-max-space-between">
+                <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
+            </section>
         `;
     }
 }
