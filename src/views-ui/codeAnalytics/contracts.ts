@@ -21,7 +21,7 @@ export namespace UiMessage
         export class ErrorViewVisibilityChanged {
             constructor(public visible?: boolean){}
         }
-        export class NavigateStack {
+        export class NavigateErrorFlow {
             constructor(public offset?: number) {}
         }
         export class OverlayVisibilityChanged {

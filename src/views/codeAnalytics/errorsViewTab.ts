@@ -18,6 +18,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 {
     private _viewedCodeObjectId?: string = undefined;
     private _stackViewModel?: ErrorFlowStackViewModel = undefined;
+    private _stackViewModels?: ErrorFlowStackViewModel[] = [];
+    private _errorFlowIndex: number = 0;
 
     constructor(
         private _channel: WebviewChannel,
@@ -30,7 +32,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
         this._channel.consume(UiMessage.Notify.WorkspaceOnlyChanged, e => this.onWorkspaceOnlyChanged(e.value));
-        this._channel.consume(UiMessage.Notify.NavigateStack, e => this.navigateStack(e.offset));
+        this._channel.consume(UiMessage.Notify.NavigateErrorFlow, e => this.navigateErrorFlow(e.offset));
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
 
     }
@@ -128,9 +130,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         const viewModels = await this.createViewModels(errorDetails);
         const stackViewModel = viewModels.firstOrDefault();
         this._stackViewModel = stackViewModel;
-        let html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, [stackViewModel]);
+        this._stackViewModels = viewModels;
+        let html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, viewModels);
         this._overlay.show(html, this.errorOverlayId);
-        this.navigateStack();
+        this.navigateErrorFlow();
         this.updateEditorDecorations(stackViewModel);
     }
 
@@ -141,25 +144,29 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         }
     }
 
-    private async navigateStack(offset: number = 0) {
+    private async navigateErrorFlow(offset: number = 0) {
         const stackViewModel = this._stackViewModel;
         if(!stackViewModel) {
             return;
         }
+        const stackViewModels = this._stackViewModels;
+        if(!stackViewModels || stackViewModels.length === 0) {
+            return;
+        }
 
-        const totalStacks = stackViewModel.stacks.length;
-        const stackIndex = this.calculateOffset(stackViewModel.stackIndex, totalStacks - 1, offset);
-        stackViewModel.stackIndex = stackIndex;
+        const errorFlows = stackViewModels;
+        const totalErrorFlows = errorFlows.length;
+        const errorFlowIndex = this.calculateOffset(this._errorFlowIndex, totalErrorFlows - 1, offset);
+        this._errorFlowIndex = errorFlowIndex;
 
         this._channel.publish(new UiMessage.Set.CurrenStackInfo({
-            stackNumber: stackIndex + 1,
-            totalStacks,
-            canNavigateToPrevious: stackIndex > 0,
-            canNavigateToNext: stackIndex < totalStacks - 1,
+            stackNumber: errorFlowIndex + 1,
+            totalStacks: totalErrorFlows,
+            canNavigateToPrevious: errorFlowIndex > 0,
+            canNavigateToNext: errorFlowIndex < totalErrorFlows - 1,
         }));
 
-        const stack = stackViewModel.stacks[stackIndex];
-        const html = HtmlBuilder.buildStackDetails(stack);
+        const html = HtmlBuilder.buildStackDetails(errorFlows[errorFlowIndex].stacks);
         this._channel.publish(new UiMessage.Set.StackDetails(html));
        // this.updateEditorDecorations(stack);
     }
@@ -236,7 +243,6 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
             const viewModel: ErrorFlowStackViewModel = {
                 stacks: stacks,
-                stackIndex: 0,
                 stackTrace: '',
                 lastInstanceCommitId: '',
                 affectedSpanPaths: [],
@@ -373,12 +379,12 @@ class HtmlBuilder
         `;
     }
 
-    public static buildStackDetails(stack?: StackViewModel): string{
-        if(!stack) {
+    public static buildStackDetails(stacks?: StackViewModel[]): string{
+        if(!stacks || stacks.length === 0) {
             return '';
         }
 
-        const stackHtml = ErrorFlowStackRenderer.getFlowStackHtml(stack);
+        const stackHtml = ErrorFlowStackRenderer.getFlowStackHtml(stacks);
 
         return /*html*/`
             ${stackHtml}

@@ -238,7 +238,6 @@ class ErrorFlowDetailsViewProvider implements vscode.WebviewViewProvider, vscode
             lastInstanceCommitId: response.lastInstanceCommitId,
             stackTrace: response.stackTrace,
             stacks: stackVms,
-            stackIndex: 0,
             affectedSpanPaths: response.affectedSpanPaths,
             exceptionType: response.exceptionType,
             summary: response.summary

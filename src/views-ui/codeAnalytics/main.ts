@@ -120,11 +120,11 @@ window.addEventListener("load", () =>
     });
 
     $(document).on("click", ".stack-nav-previous", function() {
-        publish(new UiMessage.Notify.NavigateStack(-1));
+        publish(new UiMessage.Notify.NavigateErrorFlow(-1));
     });
 
     $(document).on("click", ".stack-nav-next", function() {
-        publish(new UiMessage.Notify.NavigateStack(1));
+        publish(new UiMessage.Notify.NavigateErrorFlow(1));
     });
 
     /* end of error-view */
