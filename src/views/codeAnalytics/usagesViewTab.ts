@@ -10,6 +10,8 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider) {}
+    dispose() {
+    }
 
     get tabTitle(): string { return "Usages"; }
     get tabId(): string { return "tab-usages"; }

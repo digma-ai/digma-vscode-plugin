@@ -16,6 +16,11 @@ export class OverlayView
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
     }
 
+    public reset()
+    {
+        this.isVisible = false;
+        this.overlayId = undefined;
+    }
     public getInitHtml(){
         return HtmlHelper.getLoadingMessage("Loading...");
     }
