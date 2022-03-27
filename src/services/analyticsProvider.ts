@@ -129,9 +129,19 @@ export interface ExecutedCodeSummary{
     codeLineNumber: number;
 }
 
-export interface CodeObjectsSummaryResponse
+export interface EndpointSummary{
+    id: string;
+    route: string;
+    highUsage: boolean;
+    lowUsage: boolean;
+    callsValue: number;
+    callsTimeUnit: string;
+}
+
+export interface SummaryResponse
 {
     codeObjects: CodeObjectSummary[];
+    endpoints: EndpointSummary[];
 }
 
 export interface CodeObjectInsightErrorsResponse
@@ -274,22 +284,25 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getSummary(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
+    public async getSummary(symbolsIdentifiers: string[], endpointIds: string[]): Promise<SummaryResponse> 
     {
         try
         {
-            const response = await this.send<CodeObjectsSummaryResponse>(
+            const response = await this.send<SummaryResponse>(
                 'POST', 
                 `/CodeAnalytics/summary`, 
                 undefined, 
-                {codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
+                {codeObjectIds: symbolsIdentifiers, endpointIds: endpointIds, environment: Settings.environment.value});
 
-            return response.codeObjects;
+            return response;
         }
         catch(error){
             Logger.error('Failed to get summary', error);
         }
-        return [];
+        return {
+            codeObjects: [],
+            endpoints: []
+        };
     }
 
     public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> 

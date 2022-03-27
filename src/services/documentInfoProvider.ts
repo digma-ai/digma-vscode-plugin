@@ -1,6 +1,6 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AnalyticsProvider, CodeObjectScore, CodeObjectSummary } from './analyticsProvider';
+import { AnalyticsProvider, CodeObjectSummary, EndpointSummary } from './analyticsProvider';
 import { Logger } from "./logger";
 import { SymbolProvider, Token, TokenType } from './languages/symbolProvider';
 import { Dictionary, Future } from './utils';
@@ -66,19 +66,16 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const symbolInfos = await this.symbolProvider.getMethods(doc);
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
-                const codeObjectSummaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id));
+                const summaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id), endpoints.map(e => e.id));
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
-                const lines = this.createLineInfos(doc, codeObjectSummaries, methods);
-                const scores:CodeObjectScore[] = codeObjectSummaries.map(o=>{
-                    return {id:o.id, score:o.score};
-                });
+                const lines = this.createLineInfos(doc, summaries.codeObjects, methods);
                 latestVersionInfo.value = {
-                    codeObjectSummaries,
+                    codeObjectSummaries: summaries.codeObjects,
+                    endpointsSummaries: summaries.endpoints,
                     methods,
                     lines,
                     tokens,
-                    endpoints,
-                    scores
+                    endpoints
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
@@ -86,11 +83,11 @@ export class DocumentInfoProvider implements vscode.Disposable
             {
                 latestVersionInfo.value = {
                     codeObjectSummaries: [],
+                    endpointsSummaries: [],
                     methods: [],
                     lines: [],
                     tokens: [],
-                    endpoints: [],
-                    scores: []
+                    endpoints: []
                 };
                 Logger.error(`Failed to build DocumentInfo for ${doc.uri} v${doc.version}`, e);
             }
@@ -210,11 +207,11 @@ class DocumentInfoContainer
 export interface DocumentInfo
 {
     codeObjectSummaries: CodeObjectSummary[];
+    endpointsSummaries: EndpointSummary[];
     methods: MethodInfo[];
     lines: LineInfo[];
     tokens: Token[];
     endpoints: EndpointInfo[];
-    scores: CodeObjectScore[];
 }
 
 export interface LineInfo
