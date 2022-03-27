@@ -1,13 +1,12 @@
 import * as vscode from 'vscode';
-//import { ErrorFlowListView } from '../views/errorFlow/errorFlowListView';
-import { ErrorFlowsSortBy, Impact } from './analyticsProvider';
+import { ErrorsViewTab } from '../views/codeAnalytics/errorsViewTab';
 import { DocumentInfoProvider } from './documentInfoProvider';
 import { TokenType } from './languages/symbolProvider';
 
 export class MethodCallErrorTooltip implements vscode.Disposable
 {
     public static Commands = class {
-        public static readonly ViewErrorFlow = `digma.errorFlowHover.viewErrorFlow`;
+        public static readonly ShowErrorView = `digma.errorHover.showErrorView`;
     }
     private _disposables: vscode.Disposable[] = [];
 
@@ -17,9 +16,9 @@ export class MethodCallErrorTooltip implements vscode.Disposable
             documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter),
             new MethodCallErrorHoverProvider(documentInfoProvider))
         );
-        // this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ViewErrorFlow, async (args) => {
-        //     await vscode.commands.executeCommand(ErrorFlowListView.Commands.ShowForCodeObject, args.codeObjectId, args.codeObjectDisplayName, args.errorFlowId);
-        // }));
+        this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ShowErrorView, async (args) => {
+             await vscode.commands.executeCommand(ErrorsViewTab.Commands.ShowErrorView, args.codeObjectId, args.codeObjectDisplayName, args.errorFlowId);
+         }));
     }
 
     public dispose() 
@@ -70,19 +69,12 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
         markdown.appendText('Throws:\n');
         for(let error of errors)
         {
-            markdown.appendMarkdown(`- \`${error.name}\``)
-
-            // if (errorFlow.unhandled){
-            //     markdown.appendMarkdown(` \u00B7 <span style="color:#f14c4c;"><i>Unhandled</i></span>`);
-            // }
-            // if (errorFlow.unexpected){
-            //     markdown.appendMarkdown(` \u00B7 <span style="color:#cca700;"><i>Unexpected</i></span>`);
-            // }
-            
-            //const command = MethodCallErrorTooltip.Commands.ViewErrorFlow;
-            //const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: error.uid}));
-            //markdown.appendMarkdown(` \u00B7 [$(link-external)](command:${command}?${args} "Show in side panel") `);
-            markdown.appendText('\n')
+            markdown.appendMarkdown(`- \`${error.name}\``);
+            markdown.appendMarkdown(` \u00B7 <span style="color:#cca700;"><i>${error.characteristic}</i></span>`);
+            const command = MethodCallErrorTooltip.Commands.ShowErrorView;
+            const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: error.uid}));
+            markdown.appendMarkdown(` \u00B7 [$(link-external)](command:${command}?${args} "Show in side panel") `);
+            markdown.appendText('\n');
         }
         markdown.supportHtml = true;
         markdown.isTrusted = true;

@@ -27,6 +27,7 @@ export interface IMessage{
 export interface IConsumer{
     messageType: string;
     handler: MessageReceivedHandler<any>;
+    volatile: boolean;
 }
 
 const consumers: IConsumer[] = [];
@@ -36,6 +37,7 @@ export function consume<T>(type: { new(): T ;}, handler: MessageReceivedHandler<
     consumers.push({
         messageType: type.name,
         handler: handler,
+        volatile: false
     });
 }
 
