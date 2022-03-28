@@ -125,7 +125,6 @@ export interface ExecutedCodeSummary{
     exceptionMessage: string;
     handled: boolean;
     unexpected: boolean;
-    possibleLineNumbers: number[];
     codeLineNumber: number;
 }
 
