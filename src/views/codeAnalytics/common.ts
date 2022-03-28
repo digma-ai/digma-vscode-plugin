@@ -1,7 +1,8 @@
+import { Disposable } from "vscode";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 
 
-export interface ICodeAnalyticsViewTab 
+export interface ICodeAnalyticsViewTab extends Disposable
 {
     get tabTitle(): string;
     get tabId(): string;

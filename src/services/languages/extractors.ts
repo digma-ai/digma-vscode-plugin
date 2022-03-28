@@ -10,6 +10,7 @@ export interface SymbolInfo{
     range: vscode.Range;
 }
 export interface EndpointInfo{
+    id: string;
     method: string;
     path: string;
     range: vscode.Range;

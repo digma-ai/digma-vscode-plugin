@@ -1,6 +1,5 @@
 import { consume, publish } from "../common/contracts";
 import { UiMessage } from "./contracts";
-
 window.addEventListener("load", () => 
 {
     let overlayVisibility = false;
@@ -8,22 +7,16 @@ window.addEventListener("load", () =>
     function hideOverlay(){
         overlay.html("").hide();
         tabsContainer.show();
-        if(overlayVisibility)
-        {
-            overlayVisibility = false;
-            publish(new UiMessage.Notify.OverlayVisibilityChanged(overlayVisibility, overlayId));
-        }
+        overlayVisibility = false;
+        publish(new UiMessage.Notify.OverlayVisibilityChanged(overlayVisibility, overlayId));
         overlayId = undefined;
     }
     function showOverlay(html: string, id: string){
         overlayId = id;
         overlay.html(html).show();
         tabsContainer.hide();
-        if(!overlayVisibility)
-        {
-            overlayVisibility = true;
-            publish(new UiMessage.Notify.OverlayVisibilityChanged(overlayVisibility, overlayId));
-        }
+        overlayVisibility = true;
+        publish(new UiMessage.Notify.OverlayVisibilityChanged(overlayVisibility, overlayId));
     }
     function moveToTab(tabId: string){
         let tabsElement: any = $(".analytics-nav")[0];
@@ -111,7 +104,6 @@ window.addEventListener("load", () =>
         moveToTab("tab-errors");
     });
 
-    publish(new UiMessage.Notify.TabLoaded($(".analytics-nav").attr("activeid")));
 
     $(document).on("click", "vscode-link[data-frame-id]", function() {
         const frameId = $(this).data('frame-id');
@@ -128,4 +120,7 @@ window.addEventListener("load", () =>
             $(".all-outside-workspace").show();
         }
     });
+
+    publish(new UiMessage.Notify.TabLoaded($(".analytics-nav").attr("activeid")));
+
 });

@@ -22,6 +22,8 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _analyticsProvider: AnalyticsProvider,
         private viewUris: WebViewUris
         ) { }
+    dispose() {
+    }
 
     get tabTitle(): string { return "Insights"; }
     get tabId(): string { return "tab-insights"; }

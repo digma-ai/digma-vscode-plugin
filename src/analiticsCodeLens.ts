@@ -65,7 +65,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
-            const score = documentInfo.scores.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
+            const score = documentInfo.codeObjectSummaries.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
             if(score < 70)
                 continue; 
 
@@ -76,6 +76,22 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 arguments: [methodInfo]
             }));
         }
+
+        for(let endpoint of documentInfo.endpoints)
+        {
+            const summary = documentInfo.endpointsSummaries.firstOrDefault(x => x.id == endpoint.id);
+            if(!summary)
+                continue;
+            if(summary.lowUsage || summary.highUsage){
+                codelens.push(new vscode.CodeLens(endpoint.range, {
+                    title:  summary.lowUsage ? 'Low Usage' : 'High Usage',
+                    tooltip: `${summary.callsValue} in the last ${summary.callsTimeUnit}`,
+                    command: ''/*CodelensProvider.clickCommand,
+                    arguments: [methodInfo]*/
+                }));
+            }
+        }
+
         return codelens;
     }
 
