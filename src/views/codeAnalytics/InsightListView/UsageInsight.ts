@@ -1,6 +1,8 @@
 import { IListViewItem, ListViewGroupItem } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { WebviewChannel, WebViewUris } from "../../webViewUtils";
+import { DecimalRounder } from "../../utils/valueFormatting";
 
 export interface LowUsageInsight extends CodeObjectInsight
 {
@@ -9,8 +11,43 @@ export interface LowUsageInsight extends CodeObjectInsight
     callsTimeUnit: string;
 }
 
+export class UsageViewItemsTemplate  {
+    
+    constructor(
+        private viewUris: WebViewUris
+        ) { } 
+
+    public generateHtml(
+        callsValue: number,
+        callsTimeUnit: string,
+        header: string,
+        description: string,
+        image: string)
+    {
+        let value = new DecimalRounder().getRoundedString(callsValue);
+        return `
+        <div class="list-item">
+            <div class="list-item-content-area">
+                <div class="list-item-header"><strong>${header}</strong></div>
+                <div>${description}</div>
+            </div>
+            <div class="list-item-right-area">
+                <img style="align-self:center;" src="${this.viewUris.image(image)}" width="30" height="30">
+                <span style="text-align:center;">${value}/${callsTimeUnit}</span>
+            </div>
+        </div>
+        `;
+    }
+
+}
+
 export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreator
 {
+    constructor(
+        private template: UsageViewItemsTemplate
+        ) { 
+        } 
+
     public create(scope: CodeObjectInfo, codeObjectsInsight: LowUsageInsight []): IListViewItem [] {
         const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
         const listViewItems: IListViewItem [] = [];
@@ -28,29 +65,13 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
     public createListViewItem(codeObjectsInsight: LowUsageInsight) : IListViewItem
     {
         return {
-            getHtml: ()=>this.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint low traffic","Servicing a low number of requests"), 
+            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint low traffic","Servicing a low number of requests", "guage_low.png"), 
             sortIndex: 0, 
             groupId: undefined
         };
     }
 
-    private generateHtml(callsValue: number,
-        callsTimeUnit: string,
-        header: string,
-        description: string)
-    {
-        return `
-        <div class="list-item">
-            <div class="list-item-content-area">
-                <div class="list-item-header"><strong>${header}</strong></div>
-                <div>${description}</div>
-            </div>
-        <div class="list-item-right-area">
-            ${callsValue}/${callsTimeUnit}
-        </div>
-        </div>
-        `;
-    }
+
 }
 
 export interface NormalUsageInsight extends CodeObjectInsight
@@ -62,6 +83,12 @@ export interface NormalUsageInsight extends CodeObjectInsight
 
 export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCreator
 {
+    constructor(
+        private template: UsageViewItemsTemplate
+        ) { 
+        } 
+
+
     public create(scope: CodeObjectInfo, codeObjectsInsight: NormalUsageInsight []): IListViewItem [] {
         const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
         const listViewItems: IListViewItem [] = [];
@@ -79,31 +106,12 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
     public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItem
     {
         return {
-            getHtml: ()=>this.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint average traffic","Servicing an average number of requests"), 
+            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint normal level of traffic","Servicing an average number of requests", "guage_normal.png"), 
             sortIndex: 0, 
             groupId: undefined
         };
     }
 
-    private generateHtml(callsValue: number,
-        callsTimeUnit: string,
-        header: string,
-        description: string)
-    {
-
-
-        return `
-        <div class="list-item">
-            <div class="list-item-content-area">
-                <div class="list-item-header"><strong>${header}</strong></div>
-                <div>${description}</div>
-            </div>
-        <div class="list-item-right-area">
-            ${callsValue}/${callsTimeUnit}
-        </div>
-        </div>
-        `;
-    }
 }
 
 export interface HighUsageInsight extends CodeObjectInsight
@@ -116,10 +124,16 @@ export interface HighUsageInsight extends CodeObjectInsight
 
 export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreator
 {
+    constructor(
+        private template: UsageViewItemsTemplate
+        ) { 
+        } 
+
+
     public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItem
     {
         return {
-            getHtml: ()=>this.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint high traffic","Servicing a high number of requests"), 
+            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint high traffic","Servicing a high number of requests", "guage_high.png"), 
             sortIndex: 0, 
             groupId: undefined
         };
@@ -139,23 +153,6 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         return listViewItems;
     }
 
-    private generateHtml(callsValue: number,
-        callsTimeUnit: string,
-        header: string,
-        description: string)
-    {
-        return `
-        <div class="list-item">
-            <div class="list-item-content-area">
-                <div class="list-item-header"><strong>${header}</strong></div>
-                <div>${description}</div>
-            </div>
-            <div class="list-item-right-area">
-                ${callsValue}/${callsTimeUnit}
-            </div>
-        </div>
-        `;
-    }
 }
 
 
