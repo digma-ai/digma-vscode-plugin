@@ -1,4 +1,4 @@
-import { IListViewItem } from "../../ListView/IListViewItem";
+import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 
@@ -8,7 +8,7 @@ export interface HotspotInsight extends CodeObjectInsight
 }
 export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public create(scope: CodeObjectInfo, codeObjectsInsight: HotspotInsight []): IListViewItem [] {
+    public create(scope: CodeObjectInfo, codeObjectsInsight: HotspotInsight []): IListViewItemBase [] {
         return codeObjectsInsight.filter(o=>o.score >=70)
         .map(o=>{
             const html = `

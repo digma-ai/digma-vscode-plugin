@@ -1,4 +1,4 @@
-import { IListViewItem } from "../../ListView/IListViewItem";
+import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { HtmlHelper } from "../common";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
@@ -21,7 +21,7 @@ export interface ErrorsInsight extends CodeObjectInsight
 
 export class ErrorsListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public create(scope: CodeObjectInfo, codeObjectsInsight: ErrorsInsight []): IListViewItem [] {
+    public create(scope: CodeObjectInfo, codeObjectsInsight: ErrorsInsight []): IListViewItemBase [] {
         let codeObjectInsight = codeObjectsInsight.single();
         let errorsHtml: string[] = [];
         codeObjectInsight.topErrors.forEach((err) => {

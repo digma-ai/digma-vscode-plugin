@@ -1,4 +1,4 @@
-import { IListViewItem, ListViewGroupItem } from "../../ListView/IListViewItem";
+import { IListViewItemBase, ListViewGroupItem } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 
@@ -11,9 +11,9 @@ export interface LowUsageInsight extends CodeObjectInsight
 
 export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public create(scope: CodeObjectInfo, codeObjectsInsight: LowUsageInsight []): IListViewItem [] {
+    public create(scope: CodeObjectInfo, codeObjectsInsight: LowUsageInsight []): IListViewItemBase [] {
         const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
-        const listViewItems: IListViewItem [] = [];
+        const listViewItems: IListViewItemBase [] = [];
         for(let route in groupedByRoute)
         {
             const group = new HttpEndpointListViewGroupItem(route);
@@ -25,7 +25,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
         return listViewItems;
     }
 
-    public createListViewItem(codeObjectsInsight: LowUsageInsight) : IListViewItem
+    public createListViewItem(codeObjectsInsight: LowUsageInsight) : IListViewItemBase
     {
         return {
             getHtml: ()=>this.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint low traffic","Servicing a low number of requests"), 
@@ -45,11 +45,10 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
                 <div class="list-item-header"><strong>${header}</strong></div>
                 <div>${description}</div>
             </div>
-        <div class="list-item-right-area">
-            ${callsValue}/${callsTimeUnit}
-        </div>
-        </div>
-        `;
+            <div class="list-item-right-area">
+                <div class="usage-calls-rate">${callsValue}/${callsTimeUnit}</div>
+            </div>
+        </div>`;
     }
 }
 
@@ -62,9 +61,9 @@ export interface NormalUsageInsight extends CodeObjectInsight
 
 export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public create(scope: CodeObjectInfo, codeObjectsInsight: NormalUsageInsight []): IListViewItem [] {
+    public create(scope: CodeObjectInfo, codeObjectsInsight: NormalUsageInsight []): IListViewItemBase [] {
         const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
-        const listViewItems: IListViewItem [] = [];
+        const listViewItems: IListViewItemBase [] = [];
         for(let route in groupedByRoute)
         {
             const group = new HttpEndpointListViewGroupItem(route);
@@ -76,7 +75,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
         return listViewItems;
     }
 
-    public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItem
+    public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItemBase
     {
         return {
             getHtml: ()=>this.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint average traffic","Servicing an average number of requests"), 
@@ -96,11 +95,10 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
                 <div class="list-item-header"><strong>${header}</strong></div>
                 <div>${description}</div>
             </div>
-        <div class="list-item-right-area">
-            ${callsValue}/${callsTimeUnit}
-        </div>
-        </div>
-        `;
+            <div class="list-item-right-area">
+                <div class="usage-calls-rate">${callsValue}/${callsTimeUnit}</div>
+            </div>
+        </div>`;
     }
 }
 
@@ -114,7 +112,7 @@ export interface HighUsageInsight extends CodeObjectInsight
 
 export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItem
+    public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItemBase
     {
         return {
             getHtml: ()=>this.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint high traffic","Servicing a high number of requests"), 
@@ -123,9 +121,9 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         };
     }
    
-    public create(scope: CodeObjectInfo, codeObjectsInsight: HighUsageInsight []): IListViewItem [] {
+    public create(scope: CodeObjectInfo, codeObjectsInsight: HighUsageInsight []): IListViewItemBase [] {
         const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
-        const listViewItems: IListViewItem [] = [];
+        const listViewItems: IListViewItemBase [] = [];
         for(let route in groupedByRoute)
         {
             const group = new HttpEndpointListViewGroupItem(route);
@@ -149,10 +147,9 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
                 <div>${description}</div>
             </div>
             <div class="list-item-right-area">
-                ${callsValue}/${callsTimeUnit}
+                <div class="usage-calls-rate">${callsValue}/${callsTimeUnit}</div>
             </div>
-        </div>
-        `;
+        </div>`;
     }
 }
 
@@ -168,8 +165,8 @@ export class HttpEndpointListViewGroupItem extends ListViewGroupItem
     public getGroupHtml(itemsHtml: string): string {
         const parts = this.route.split(' ');
         return /*html*/ `
-        <div style="margin-top: 10px;">
-            <span style="text-transform:uppercase;"><strong>HTTP </strong>${parts[0]}</span><span>${parts[1]}</span>
+        <div class="group-item">
+            <span class="uppercase"><strong>HTTP </strong>${parts[0]} </span><span>${parts[1]}</span>
         </div>
         ${ itemsHtml}`;
     }

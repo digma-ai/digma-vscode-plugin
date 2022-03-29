@@ -1,10 +1,10 @@
-import { IListViewGroupItem, IListViewItem } from "./IListViewItem";
+import { IListViewGroupItem, IListViewItem, IListViewItemBase, sort } from "./IListViewItem";
 
 export class ListViewRender
 {
  
-   // private _preDefinedGroups: Map<string,IListViewGroupItem> = new Map<string,IListViewGroupItem>();
-    constructor(private _listViewItems: IListViewItem [])
+    //private _preDefinedGroups: Map<string,IListViewGroupItem> = new Map<string,IListViewGroupItem>();
+    constructor(private _listViewItems: IListViewItemBase [])
     {
 
     }
@@ -16,15 +16,49 @@ export class ListViewRender
 
     public getHtml(): string | undefined
     {
-        if(this._listViewItems.length > 0)
+        const groupsMap = new Map<string,IListViewGroupItem>();
+        const grouplessItems : IListViewItem[] = [];
+
+        this._listViewItems.forEach(item=>{
+            if(this.isGroup(item)) {   
+                const group = <IListViewGroupItem>item;
+                if(!groupsMap.has(group.groupId)) {
+                    groupsMap.set(group.groupId, group);
+                }
+                else {
+                    groupsMap.get(group.groupId)?.addItems(...group.getItems());
+                }
+            }
+            else{
+                if(item.groupId !== undefined)
+                {
+                    const group = groupsMap.get(item.groupId);
+                    if(group)
+                    {
+                        group.addItems(item);
+                    }
+                    else
+                    {
+                        throw new Error(`no group with id ${item.groupId} found`);
+                    }
+                }
+                else{
+                    grouplessItems.push(item);
+                }
+            }
+        });
+        
+        const sortedItems = sort(grouplessItems).concat(sort(Array.from(groupsMap.values())));
+        if(sortedItems.length > 0)
         {
-            return this._listViewItems
-            .sort((a,b)=>(a.sortIndex === undefined ? 0: a.sortIndex) - (b.sortIndex === undefined ? 0: b.sortIndex))
-            .map(o=>o.getHtml()).join("");
+            return sortedItems.map(o=>o.getHtml()).join("");
         }
         else{
             return undefined;
         }
     
+    }
+    private isGroup(item: any):boolean {
+        return (item as IListViewGroupItem).getItems !== undefined; 
     }
 }

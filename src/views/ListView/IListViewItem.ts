@@ -1,37 +1,39 @@
-export interface IListViewItem
+export function sort(items: IListViewItemBase []): IListViewItemBase [] 
+{
+    return items.sort((a,b)=>(a.sortIndex === undefined ? 0: a.sortIndex) - (b.sortIndex === undefined ? 0: b.sortIndex));
+}
+export interface IListViewItemBase
 {
     sortIndex: number| undefined;
     getHtml(): string | undefined;
     groupId: string | undefined;
-    
 }
 
-export abstract class ListViewItem implements IListViewItem
+export interface IListViewItem extends IListViewItemBase
 {
-    sortIndex: number | undefined;
-    abstract getHtml(): string | undefined ;
-    groupId: string | undefined;
+
 }
 
-export interface IListViewGroupItem extends IListViewItem
+export interface IListViewGroupItem extends IListViewItemBase
 {
     groupId: string;
-    addItems(...items: ListViewItem []): void;
-    getItems() : ListViewItem [];
+    addItems(...items: IListViewItem []): void;
+    getItems() : IListViewItem [];
 }
 
 export abstract class ListViewGroupItem implements IListViewGroupItem
 {
-    private _items: ListViewItem [] = [];
+    private _items: IListViewItem [] = [];
 
     constructor(public groupId: string, public sortIndex: number|undefined = undefined)
     {
 
     }
-    getItems(): ListViewItem[] {
+    
+    getItems(): IListViewItem[] {
         return this._items;
     }
-    addItems(...items: ListViewItem []){
+    addItems(...items: IListViewItem []){
         this._items.push(...items);
     }
     public getHtml(): string | undefined
@@ -39,16 +41,12 @@ export abstract class ListViewGroupItem implements IListViewGroupItem
         if (this._items.length === 0) {
            return undefined;
         }
-
-        let itemsHtml: string [] = [];
-        this._items.forEach(item=>{
-            const html = item.getHtml();
-            if(html)
-            {
-                itemsHtml.push(html);
-            }
-        });
-        return this.getGroupHtml(itemsHtml.join(""));
+        const html = sort(this._items)
+            .map(o=>o.getHtml())
+            .filter((o)=>o)
+            .join("");
+            
+        return this.getGroupHtml(html);
     }
 
     public abstract getGroupHtml(itemsHtml: string): string;
@@ -62,10 +60,10 @@ export class DefaultListViewGroupItem extends ListViewGroupItem
     }
     public getGroupHtml(itemsHtml: string): string {
         return /*html*/ `
-        <div>
-        <span>${this.name}</span>
-        ${ itemsHtml}
-        </div`;
+            <div class="group-item">
+                ${this.name}
+            </div>
+            ${ itemsHtml}`;
     }
 
 }

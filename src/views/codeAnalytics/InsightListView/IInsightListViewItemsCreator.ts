@@ -1,4 +1,4 @@
-import { IListViewItem } from "../../ListView/IListViewItem";
+import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 
 export interface CodeObjectInsight{
@@ -7,7 +7,7 @@ export interface CodeObjectInsight{
 }
 export interface IInsightListViewItemsCreator
 {
-    create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight []): IListViewItem [];
+    create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight []): IListViewItemBase [];
 }
 
 
@@ -22,10 +22,10 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
 
     }
 
-    public create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[]): IListViewItem[] {
+    public create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[]): IListViewItemBase[] {
 
         const groupedByType = codeObjectInsight.groupBy(x => x.type);
-        const items: IListViewItem [] = [];
+        const items: IListViewItemBase [] = [];
         for(let type in groupedByType)
         { 
             const creator = this._creators.get(type);
