@@ -1,28 +1,27 @@
-import * as vscode from "vscode";
 import {
     AnalyticsProvider,
-    CodeObjectInsightErrorsResponse,
     CodeObjectInsightHotSpotResponse,
-    CodeObjectInsightResponse,
-    HttpError,
 } from "../../services/analyticsProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
-import { Uri } from "vscode";
+import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
+import { ListViewRender } from "../ListView/ListViewRender";
+
+
 
 export class InsightsViewTab implements ICodeAnalyticsViewTab 
 {
     private _viewedCodeObjectId?: string = undefined;
-
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
-        private viewUris: WebViewUris
-        ) { }
-    dispose() {
+        private viewUris: WebViewUris,
+        private _listViewItemsCreator: IInsightListViewItemsCreator) { }
+    
+    dispose() { 
     }
 
     get tabTitle(): string { return "Insights"; }
@@ -38,37 +37,27 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.updateListView(HtmlHelper.getLoadingMessage("Loading insights..."));
         this.updateSpanListView("");
         this.clearSpanLabel();
-
-
-        let listItems: string[] = [];
+        let responseItems: any [] | undefined = undefined;
         try
         {
-            const response = await this._analyticsProvider.getCodeObjectInsights(codeObject.id);
-            if (response.spot && response.spot.score>=70) {
-                this.addHotspotListItem(response.spot, listItems);
-            }
-            if (response.errors) {
-                this.addErrorsListItem(response.errors, listItems, codeObject);
-            }
-            console.log(codeObject.methodName);
-
-
-
+            responseItems = await this._analyticsProvider.getCodeObjectInsights(`method:${codeObject.id}`);
         }
         catch(e)
         {
-            if(!(e instanceof HttpError) || e.status != 404){
-                Logger.error(`Failed to get codeObject ${codeObject.id} insights`, e);
-                this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
-                return;
-            }
+            Logger.error(`Failed to get codeObjects insights`, e);
+            this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
+            return;
         }
-
-        if(listItems.length == 0){
+        const listViewItems = this._listViewItemsCreator.create(codeObject, responseItems);
+        const html = new ListViewRender(listViewItems).getHtml();
+        if(html)
+        {
+            this.updateListView(html);
+        }
+        else{
             this.updateListView(HtmlHelper.getInfoMessage("No insights about this code object yet."));
-        }else{
-            this.updateListView(listItems.join(""));
         }
+       
         this._viewedCodeObjectId = codeObject.id;
     }
 
@@ -260,7 +249,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
         `);
     }
-
+/*
     private addErrorsListItem(
         errors: CodeObjectInsightErrorsResponse,
         listItems: string[], 
@@ -296,7 +285,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
     `);
     }
-
+*/
     public getHtml(): string {
         return /*html*/`
             <div id="codeObjectScope" class="codeobject-selection"></div>

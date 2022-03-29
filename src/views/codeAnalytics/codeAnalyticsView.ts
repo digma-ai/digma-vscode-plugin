@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { EditorHelper } from './../../services/EditorHelper';
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
@@ -10,6 +9,10 @@ import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
 import { UsagesViewTab } from "./usagesViewTab";
 import { ErrorFlowParameterDecorator } from "../errorFlow/errorFlowParameterDecorator";
+import { AnalyticsProvider } from "../../services/analyticsProvider";
+import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
+import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
+import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -113,8 +116,13 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
 
 
+        const listViewItemsCreator = new InsightListViewItemsCreator();
+        listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator());
+        listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
+
+
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris),
+            new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris,listViewItemsCreator),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
