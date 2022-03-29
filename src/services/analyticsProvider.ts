@@ -257,7 +257,7 @@ export class AnalyticsProvider
 
  
 
-    public async getCodeObjectInsights(codeObjectId: string): Promise<any []> 
+    public async getCodeObjectInsights(codeObjectIds: string []): Promise<any []> 
     {
         
         const response: any [] = await this.send<any>(
@@ -265,7 +265,7 @@ export class AnalyticsProvider
             `/CodeAnalytics/codeObjects/insights`,
             undefined,
             {
-                codeObjectIds: [codeObjectId],
+                codeObjectIds: codeObjectIds,
                 environment: Settings.environment.value
             });
             return response;

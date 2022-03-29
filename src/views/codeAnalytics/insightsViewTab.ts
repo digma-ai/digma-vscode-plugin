@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import {
     AnalyticsProvider,
     CodeObjectInsightHotSpotResponse,
@@ -9,6 +10,7 @@ import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { ListViewRender } from "../ListView/ListViewRender";
+import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 
 
 
@@ -19,10 +21,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
         private viewUris: WebViewUris,
-        private _listViewItemsCreator: IInsightListViewItemsCreator) { }
+        private _listViewItemsCreator: IInsightListViewItemsCreator,
+        private _documentInfoProvider: DocumentInfoProvider) { }
     
-    dispose() { 
-    }
+    dispose() { }
 
     get tabTitle(): string { return "Insights"; }
     get tabId(): string { return "tab-insights"; }
@@ -38,9 +40,21 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.updateSpanListView("");
         this.clearSpanLabel();
         let responseItems: any [] | undefined = undefined;
+
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) {
+            return;
+        }
+        const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
+        const endpoints = docInfo?.endpoints.filter((o) => o.range.contains(editor.selection.anchor));
+        const codeObjectsIds: string [] = [`method:${codeObject.id}`];
+        if(endpoints)
+        {
+            codeObjectsIds.push(...endpoints.map(o=>`endpoint:${o.id}`));
+        }
         try
         {
-            responseItems = await this._analyticsProvider.getCodeObjectInsights(`method:${codeObject.id}`);
+            responseItems = await this._analyticsProvider.getCodeObjectInsights(codeObjectsIds);
         }
         catch(e)
         {
@@ -48,16 +62,22 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
             return;
         }
-        const listViewItems = this._listViewItemsCreator.create(codeObject, responseItems);
-        const html = new ListViewRender(listViewItems).getHtml();
-        if(html)
+        try{
+            const listViewItems = this._listViewItemsCreator.create(codeObject, responseItems);
+            const html = new ListViewRender(listViewItems).getHtml();
+            if(html)
+            {
+                this.updateListView(html);
+            }
+            else{
+                this.updateListView(HtmlHelper.getInfoMessage("No insights about this code object yet."));
+            }
+        }
+        catch(e)
         {
-            this.updateListView(html);
+            Logger.error(`Failed to get create insights view`, e);
+            throw e;
         }
-        else{
-            this.updateListView(HtmlHelper.getInfoMessage("No insights about this code object yet."));
-        }
-       
         this._viewedCodeObjectId = codeObject.id;
     }
 

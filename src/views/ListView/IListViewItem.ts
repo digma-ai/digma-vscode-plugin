@@ -16,24 +16,23 @@ export abstract class ListViewItem implements IListViewItem
 export interface IListViewGroupItem extends IListViewItem
 {
     groupId: string;
-    addItem(item: ListViewItem): void;
+    addItems(...items: ListViewItem []): void;
     getItems() : ListViewItem [];
 }
 
 export abstract class ListViewGroupItem implements IListViewGroupItem
 {
     private _items: ListViewItem [] = [];
-    public sortIndex: number | undefined;
 
-    constructor(public groupId: string)
+    constructor(public groupId: string, public sortIndex: number|undefined = undefined)
     {
 
     }
     getItems(): ListViewItem[] {
         return this._items;
     }
-    addItem(item: ListViewItem): void {
-        this._items.push(item);
+    addItems(...items: ListViewItem []){
+        this._items.push(...items);
     }
     public getHtml(): string | undefined
     {

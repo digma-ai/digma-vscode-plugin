@@ -13,6 +13,7 @@ import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
 import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
+import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator } from "./InsightListView/UsageInsight";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -120,9 +121,14 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator());
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
 
+        listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator());
+        listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator());
+        listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator());
+
+
 
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris,listViewItemsCreator),
+            new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris,listViewItemsCreator, _documentInfoProvider),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
