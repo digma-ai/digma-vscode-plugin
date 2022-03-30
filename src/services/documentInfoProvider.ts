@@ -4,7 +4,7 @@ import { AnalyticsProvider, CodeObjectSummary, EndpointSummary } from './analyti
 import { Logger } from "./logger";
 import { SymbolProvider, Token, TokenType } from './languages/symbolProvider';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SymbolInfo } from './languages/extractors';
+import { EndpointInfo, SpanInfo, SymbolInfo } from './languages/extractors';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -66,6 +66,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const symbolInfos = await this.symbolProvider.getMethods(doc);
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
+                const spans = await this.symbolProvider.getSpans(doc, tokens);
                 const summaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id), endpoints.map(e => e.id));
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
                 const lines = this.createLineInfos(doc, summaries.codeObjects, methods);
@@ -75,7 +76,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                     methods,
                     lines,
                     tokens,
-                    endpoints
+                    endpoints,
+                    spans
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
@@ -87,7 +89,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                     methods: [],
                     lines: [],
                     tokens: [],
-                    endpoints: []
+                    endpoints: [],
+                    spans: []
                 };
                 Logger.error(`Failed to build DocumentInfo for ${doc.uri} v${doc.version}`, e);
             }
@@ -212,6 +215,7 @@ export interface DocumentInfo
     lines: LineInfo[];
     tokens: Token[];
     endpoints: EndpointInfo[];
+    spans: SpanInfo[];
 }
 
 export interface LineInfo

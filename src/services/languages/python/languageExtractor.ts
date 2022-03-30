@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
 import { FastapiEndpointExtractor } from './fastapiEndpointExtractor';
 import { PythonMethodExtractor } from './methodExtractor';
+import { PythonSpanExtractor } from './spanExtractor';
 
 
 export class PythonLanguageExtractor implements ILanguageExtractor 
@@ -29,6 +30,8 @@ export class PythonLanguageExtractor implements ILanguageExtractor
     }
 
     public get spanExtractors(): ISpanExtractor[] {
-        return [];
+        return [
+            new PythonSpanExtractor()
+        ];
     }
 }
