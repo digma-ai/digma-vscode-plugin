@@ -133,8 +133,7 @@ export interface EndpointSummary{
     route: string;
     highUsage: boolean;
     lowUsage: boolean;
-    callsValue: number;
-    callsTimeUnit: string;
+    maxCallsIn1Min: number;
 }
 
 

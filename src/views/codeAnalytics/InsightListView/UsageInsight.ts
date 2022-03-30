@@ -7,8 +7,7 @@ import { DecimalRounder } from "../../utils/valueFormatting";
 export interface LowUsageInsight extends CodeObjectInsight
 {
     route: string;
-    callsValue: number;
-    callsTimeUnit: string;
+    maxCallsIn1Min: number;
 }
 
 export class UsageViewItemsTemplate  {
@@ -18,13 +17,12 @@ export class UsageViewItemsTemplate  {
         ) { } 
 
     public generateHtml(
-        callsValue: number,
-        callsTimeUnit: string,
+        maxCallsIn1Min: number,
         header: string,
         description: string,
         image: string)
     {
-        let value = new DecimalRounder().getRoundedString(callsValue);
+        let value = new DecimalRounder().getRoundedString(maxCallsIn1Min);
         return `
         <div class="list-item">
             <div class="list-item-content-area">
@@ -33,7 +31,7 @@ export class UsageViewItemsTemplate  {
             </div>
             <div class="list-item-right-area">
                 <img style="align-self:center;" src="${this.viewUris.image(image)}" width="30" height="30">
-                <span style="text-align:center;">${value}/${callsTimeUnit}</span>
+                <span style="text-align:center;" title="Maximum of ${value} requests per minute">${value}/min</span>
             </div>
         </div>
         `;
@@ -65,7 +63,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
     public createListViewItem(codeObjectsInsight: LowUsageInsight) : IListViewItem
     {
         return {
-            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint low traffic","Servicing a low number of requests", "guage_low.png"), 
+            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint low traffic","Servicing a low number of requests", "guage_low.png"), 
             sortIndex: 0, 
             groupId: undefined
         };
@@ -77,8 +75,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
 export interface NormalUsageInsight extends CodeObjectInsight
 {
     route: string;
-    callsValue: number;
-    callsTimeUnit: string;
+    maxCallsIn1Min: number;
 }
 
 export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCreator
@@ -106,7 +103,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
     public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItem
     {
         return {
-            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint normal level of traffic","Servicing an average number of requests", "guage_normal.png"), 
+            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint normal level of traffic","Servicing an average number of requests", "guage_normal.png"), 
             sortIndex: 0, 
             groupId: undefined
         };
@@ -117,8 +114,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
 export interface HighUsageInsight extends CodeObjectInsight
 {
     route: string;
-    callsValue: number;
-    callsTimeUnit: string;
+    maxCallsIn1Min: number;
 }
 
 
@@ -133,7 +129,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
     public createListViewItem(codeObjectsInsight: HighUsageInsight) : IListViewItem
     {
         return {
-            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.callsValue,codeObjectsInsight.callsTimeUnit, "Endpoint high traffic","Servicing a high number of requests", "guage_high.png"), 
+            getHtml: ()=>this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint high traffic","Servicing a high number of requests", "guage_high.png"), 
             sortIndex: 0, 
             groupId: undefined
         };
