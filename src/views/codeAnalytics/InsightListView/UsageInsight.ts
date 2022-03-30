@@ -167,10 +167,10 @@ export class HttpEndpointListViewGroupItem extends ListViewGroupItem
     public getGroupHtml(itemsHtml: string): string {
         const parts = this.route.split(' ');
         return /*html*/ `
-        <div class="codeobject-selection" style="margin-top: 10px;">
+        <div class="group-item">
             <span class="scope">REST: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span style="text-transform:uppercase;">
+            <span class="uppercase">
             <strong>HTTP </strong>${parts[0]}</span>
             <span>${parts[1]}</span>
         </div>
