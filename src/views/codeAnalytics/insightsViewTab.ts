@@ -311,7 +311,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             <div id="codeObjectScope" class="codeobject-selection"></div>
             <div id="insightList" class="list"></div>
             <div class="spacer" style="height:15px"></div>
-            <div id="spanScope" class="codeobject-selection"></div>
+            <div id="spanScope" ></div>
             <div id="spanList" class="list"></div>
 
             `;
