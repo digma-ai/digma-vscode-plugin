@@ -31,10 +31,13 @@ export class SpanListViewItemsCreator implements IInsightListViewItemsCreator
     public createListViewItem(insight: SpanInsight) : IListViewItem
     {
         const usages = insight.flows.map(flow => /*html*/`
-            <div class="flex-row">
+            <div class="flex-row" style="margin: 10px 0">
                 <span style="margin-right: 10px;">${flow.percentage.toFixed(1)}%</span>
-                <span style="margin-right: 10px;">${flow.rootSerivce}</span>
-                <span>${flow.intermediateSpan}</span>
+                <span class="codicon codicon-server-process" style="margin-right: 3px;"></span>
+                <span style="margin-right: 15px;">${flow.rootSerivce}</span>
+                <span>...</span>
+                <span style="margin: 0 5px;">${flow.intermediateSpan}</span>
+                <span>...</span>
             </div>
         `);
 
