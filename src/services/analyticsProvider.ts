@@ -125,7 +125,6 @@ export interface ExecutedCodeSummary{
     exceptionMessage: string;
     handled: boolean;
     unexpected: boolean;
-    possibleLineNumbers: number[];
     codeLineNumber: number;
 }
 
@@ -134,9 +133,13 @@ export interface EndpointSummary{
     route: string;
     highUsage: boolean;
     lowUsage: boolean;
-    callsValue: number;
-    callsTimeUnit: string;
+    maxCallsIn1Min: number;
 }
+
+
+
+
+
 
 export interface SummaryResponse
 {
@@ -144,30 +147,11 @@ export interface SummaryResponse
     endpoints: EndpointSummary[];
 }
 
-export interface CodeObjectInsightErrorsResponse
-{
-    errorCount: number,
-    unhandledCount: number,
-    unexpectedCount: number,
-    topErrors: [NamedError]
-}
-export interface NamedError
-{
-    uid: string,
-    errorType: string,
-    sourceCodeObjectId: string
-}
-
 export interface CodeObjectInsightHotSpotResponse
 {
     score: number,
 }
-export class CodeObjectInsightResponse
-{
-    constructor(public codeObjectId ?: string,
-        public spot ? : CodeObjectInsightHotSpotResponse,
-        public errors ? : CodeObjectInsightErrorsResponse){};
-}
+
 
 export interface CodeObjectError{
     uid: string;
@@ -270,18 +254,20 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getCodeObjectInsights(codeObjectId: string): Promise<CodeObjectInsightResponse> 
+ 
+
+    public async getCodeObjectInsights(codeObjectIds: string []): Promise<any []> 
     {
-        const response = await this.send<CodeObjectInsightResponse>(
-            'GET', 
-            `/CodeAnalytics/codeObjects/insights`, 
+        
+        const response: any [] = await this.send<any>(
+            'POST', 
+            `/CodeAnalytics/codeObjects/insights`,
+            undefined,
             {
-                codeObjectId: codeObjectId,
+                codeObjectIds: codeObjectIds,
                 environment: Settings.environment.value
-            }, 
-            undefined);
-            
-        return response;
+            });
+            return response;
     }
 
     public async getSummary(symbolsIdentifiers: string[], endpointIds: string[]): Promise<SummaryResponse> 
@@ -350,6 +336,7 @@ export class AnalyticsProvider
         return;
     }
 
+
     private async send<TResponse>(method: string, relativePath: string, queryParams?: Dictionary<string, any>, body?: any): Promise<TResponse>
     {
         let url = vscode.Uri.joinPath(vscode.Uri.parse(Settings.url.value), relativePath).toString();
@@ -378,9 +365,7 @@ export class AnalyticsProvider
             const txt = await response.text();
             throw new HttpError(response.status, response.statusText, txt);
         }
-
-        var reponseJson = JSON.parse(await response.text(), momentJsDateParser);
-        return <TResponse>reponseJson;
+        return <TResponse>JSON.parse(await response.text(), momentJsDateParser);
     }
 }
 

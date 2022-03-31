@@ -66,28 +66,25 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         for(let methodInfo of documentInfo.methods)
         {
             const score = documentInfo.codeObjectSummaries.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
-            if(score < 70)
-                continue; 
+            if(score >= 70)
+            {
+                codelens.push(new vscode.CodeLens(methodInfo.range, {
+                    title:  'Error Hotspot',
+                    // tooltip: methodInfo.symbol.id,
+                    command: CodelensProvider.clickCommand,
+                    arguments: [methodInfo]
+                }));
+            }
 
-            codelens.push(new vscode.CodeLens(methodInfo.range, {
-                title:  'Error Hotspot',
-                // tooltip: methodInfo.symbol.id,
-                command: CodelensProvider.clickCommand,
-                arguments: [methodInfo]
-            }));
-        }
-
-        for(let endpoint of documentInfo.endpoints)
-        {
-            const summary = documentInfo.endpointsSummaries.firstOrDefault(x => x.id == endpoint.id);
-            if(!summary)
-                continue;
-            if(summary.lowUsage || summary.highUsage){
-                codelens.push(new vscode.CodeLens(endpoint.range, {
+            const endpoint = documentInfo.endpoints.find(e => e.range.intersection(methodInfo.range) != undefined);
+            const summary = documentInfo.endpointsSummaries.find(x => x.id == endpoint?.id);
+            if(summary?.lowUsage || summary?.highUsage)
+            {
+                codelens.push(new vscode.CodeLens(endpoint!.range, {
                     title:  summary.lowUsage ? 'Low Usage' : 'High Usage',
-                    tooltip: `${summary.callsValue} in the last ${summary.callsTimeUnit}`,
-                    command: ''/*CodelensProvider.clickCommand,
-                    arguments: [methodInfo]*/
+                    tooltip: `Maximum of ${summary.maxCallsIn1Min} requests per minute`,
+                    command: CodelensProvider.clickCommand,
+                    arguments: [methodInfo]
                 }));
             }
         }
