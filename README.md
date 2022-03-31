@@ -7,6 +7,7 @@ It provides code objects insights and runtime analytics inside the IDE. The IDE 
 
 - [Code Objects Discovery](#code-object-discovery)
 - :soon: [Pull Request Insights](#pr-insights) (WIP)
+- [Code Insights](#code-insights)
 - [Method Declaration Codelens](#method-declaration-codelens)
 - [Method Tooltip](#method-tooltip)
 - [Line Decoration & Tooltip](#line-decoration--tooltip)
@@ -16,29 +17,39 @@ It provides code objects insights and runtime analytics inside the IDE. The IDE 
 
 
 #### :microscope: [Code Object Discovery](#code-object-discovery)	
-Discovering code objects is a key part of the extension functionality. Code objects can be anything that can be found in the code on the client side, and from the observability data on the backend. Code objects are associated with aggregated data and insights. There are many types of possible code objects, we are working to add them on both the server and client side:
-
-  - :white_check_mark: Functions/methods 	
-  - :white_check_mark: API endpoints 
-  - :eight_spoked_asterisk:	 OTEL Spans (WIP)	
-  - :heavy_check_mark:	 RabbitMQ event classes
-  - :heavy_check_mark:	 Kafka producer
-  - :heavy_check_mark:	 Classes/modules
+Discovering code objects is a key part of the extension functionality. Code objects can be anything that can be found in the code on the client side, and from the observability data on the backend. Code objects are associated with aggregated data and insights. 
   
-Here is what it looks like side by side:
+In the below example, you can see some potential code objects to discover marked out in red:
 
 ![Code Object Discovery](/.github/assets/discovery.png)
 
+There are many types of possible code objects, this is where the platform is extensible to support them both on client and server. Here is some of current backlog
+
+  - :white_check_mark: Functions/methods 	
+  - :white_check_mark: REST endpoints 
+  - :eight_spoked_asterisk:	 OTEL Spans (WIP)	
+  - :eight_spoked_asterisk:	 GRPC endpoints (WIP)	
+  - :heavy_check_mark:	 RabbitMQ event classes
+  - :heavy_check_mark:	 Kafka producer
+  - :heavy_check_mark:	 Classes/modules
+  - More...
+
+Of course code object discovery is language specific, sometimes platform or library specific.
+
+More basic method/function discovery is done using the language server for that specific programming language already installed in the IDE.
 #### :soon: :octocat: [Pull Request Insights](#pr-insights) (WIP)
 
 Commits are a way to group code object feedback together. Digma's backend already tags each metric and trace by the relevant commit identifier. 
 
 TBD 
 
+#### 🧑‍🔬 [Code Insights](#code-insights)
 
-  
+Based on the code section currently focused on the IDE, the Code Insights sidebar panel displays the relevant insights for the discovered code objects in that section. Which focused on a specific function in the code I'll be able to see all revant insights. 
 
-## Features
+The IDE extension in this case simply queries the backend API with the discovered code object identifer. The backend provides back a list of insights that were gleaned from the observability data that relate to these objects. 
+
+![Code Object Discovery](/.github/assets/insights_tab.png)
 
 ### Method Declaration Codelens
 Annotating how many errors go through the method.
