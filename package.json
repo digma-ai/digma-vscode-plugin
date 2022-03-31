@@ -1,13 +1,53 @@
 {
   	"name": "digma",
-  	"displayName": "Digma for VSCode",
-  	"description": "",
-  	"version": "0.0.3",
-  	"publisher": "Digma",
+  	"displayName": "Digma Continuous Feedback",
+  	"description": "👩‍💻🧑‍💻🔭 Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
+  	"version": "0.5.1",
+  	"publisher": "digma",
   	"icon": "digma.png",
   	"engines": {
   	  	"vscode": "^1.63.0"
   	},
+    "keywords": [
+        "Opentelemetry",
+        "Observability",
+        "Intellisense",
+        "Intellicode",
+        "Flask",
+        "FastApi",
+        "ASP.NET",
+        "C#",
+        "Ebpf",
+        "Jaeger",
+        "Pyhon",
+        "Dotnet",
+        "CD",
+        "DevOps"
+    ],
+    "badges": [
+    {
+        "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
+        "description": "Star Digma on Github",
+        "href": "bit.ly/36LyUcr"
+    },
+    {
+        "url": "https://img.shields.io/twitter/follow/doppleware?style=social",
+        "description": "Follow us on Twitter",
+        "href": "bit.ly/3reNG2z"
+    },
+    {
+        "url": "https://img.shields.io/visual-studio-marketplace/r/digma.digma?logo=visual-studio-code&style=social",
+        "description": "Rate us in VSCode Marketplace",
+        "href": "bit.ly/36Lzird"
+    },
+    {
+        "url": "https://img.shields.io/youtube/views/MnJIyVVqPDU?style=social",
+        "description": "Watch a Digma demo video",
+        "href": "bit.ly/379pVli"
+    }
+    ],
+
+    "license": "MIT",
   	"repository": {
   	  	"type": "git",
   	  	"url": "https://github.com/digma-ai/digma-vscode-plugin"
@@ -17,7 +57,7 @@
   	},
   	"homepage": "https://github.com/digma-ai/digma-vscode-plugin",
   	"categories": [
-  	  	"Other"
+  	  "Programming Languages", "Visualization", "Linters", "Debuggers"
   	],
   	"activationEvents": [
   	  	"onStartupFinished"
