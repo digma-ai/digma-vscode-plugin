@@ -94,6 +94,12 @@ vscode-panel-view {
         font-family: var(--vscode-editor-font-family);
     }
 }
+
+.codeobject-selection-internal{
+    @extend .codeobject-selection;
+    margin-top: 10px;
+}
+
 .error-property{
     .label {
         opacity: 0.3;
