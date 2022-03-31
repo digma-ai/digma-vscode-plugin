@@ -46,11 +46,20 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             return;
         }
         const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
-        const endpoints = docInfo?.endpoints.filter((o) => o.range.contains(editor.selection.anchor));
+        if(!docInfo) {
+            return;
+        }
+        const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
         const codeObjectsIds: string [] = [`method:${codeObject.id}`];
+        const endpoints = docInfo.endpoints.filter((o) => methodInfo.range.intersection(o.range));
         if(endpoints)
         {
             codeObjectsIds.push(...endpoints.map(o=>`endpoint:${o.id}`));
+        }
+        const spans = docInfo.spans.filter((o) => methodInfo.range.intersection(o.range));
+        if(spans)
+        {
+            codeObjectsIds.push(...spans.map(o=>`span:${o.id}`));
         }
         try
         {

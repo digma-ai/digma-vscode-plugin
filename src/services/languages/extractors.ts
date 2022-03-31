@@ -16,7 +16,9 @@ export interface EndpointInfo{
     range: vscode.Range;
 }
 export interface SpanInfo{
-
+    id: string;
+    name: string;
+    range: vscode.Range;
 }
 
 
