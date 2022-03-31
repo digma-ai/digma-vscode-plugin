@@ -29,7 +29,7 @@ There are many types of possible code objects, this is where the platform is ext
 
   - :white_check_mark: Functions/methods 	
   - :white_check_mark: REST endpoints 
-  - :white_check_mark::	 OTEL Spans (WIP)	
+  - :white_check_mark:	 OTEL Spans (WIP)	
   - :eight_spoked_asterisk:	 GRPC endpoints (WIP)	
   - :heavy_check_mark:	 RabbitMQ event classes
   - :heavy_check_mark:	 Kafka producer
