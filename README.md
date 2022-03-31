@@ -11,12 +11,10 @@ It provides code objects insights and runtime analytics inside the IDE. The IDE 
 - [Code Objects Discovery](#code-object-discovery)
 - :soon: [Pull Request Insights](#pr-insights) (WIP)
 - [Code Insights](#code-insights)
-- [Method Declaration Codelens](#method-declaration-codelens)
-- [Method Tooltip](#method-tooltip)
-- [Line Decoration & Tooltip](#line-decoration--tooltip)
-- [Context (panel)](#context-panel)
-- [Error Flow List (panel)](#error-flow-list-panel)
-- [Error Flow Details (panel)](#error-flow-details-panel)
+- [Runtime Errors](#runtime-errors)
+- [Runtime Errors Drilldown](#runtime-errors-drilldown)
+- [Code Objects Annotation](#code-obj-annotation)
+- [Selecting Environments](#environment)
 
 
 #### :microscope: [Code Object Discovery](#code-object-discovery)	
@@ -54,10 +52,9 @@ The IDE extension in this case simply queries the backend API with the discovere
 
 ![Insights](/.github/assets/insights_tab.png)
 
-#### 🐛 [Runtime Errors](#runtime-errors)
+#### 🪳 [Runtime Errors](#runtime-errors)
 
 The runtime errors panel provides analytics over the error behavior of both the specific code object and the different code object flows it particpates in. 
-
 
 The errors are not displayed as raw data 🥩 . Digma already groups together errors which essentially singify the same problem and also highlights those errors that are "interesting". What makes an error interesting? That is something decided by the backend scoring processses but some reasons may include:
 
@@ -81,14 +78,11 @@ Including highlighting of specific lines within the code itself. However, by dou
 
 ![Errors Drilldown](/.github/assets/error_drilldown.png)
 
- #### 🔦 [Insight Annotation](#insight-annotation)
+ #### :flashlight: [Code Objects Annotation](#code-obj-annotation)
 
 Some insights can be highlighting in the code itself using code annotations. Based on the information passed on from the backend the extension will proactively display annotations or even highlight a specific code object to provide feedback.
 
 <img src="/.github/assets/annotation.png" alt="Insight annotation">
-
-
-### 🎱 [Code Object Data](#insight-annotation)
 
 Another way to provide feedback on code object behavior is through their tooltips. For example, looking at this function object I can already see which runtime error types I should be expecting:
 
@@ -100,12 +94,13 @@ Insights on runtime data can also be displayed. For example, in this case Digma 
 
 <img src="/.github/assets/data_info.png" alt="Parmater data insights">
 
-### Selecting Environments 
+ #### :computer: [Selecting Environments](#environment)
+
 The observability data is typically collected from multiple environment (staging, dev, prod, CI, etc.). The Context panel allows the user to choose the enviroment he would like to see feedback from .
 
 ![context-panel](/.github/assets/context-panel.png)
 
-## Extension Settings
+ #### :computer: [Extension Settings](#settings)
 
 This extension contributes the following settings:
 | Key | Description |
@@ -116,12 +111,13 @@ This extension contributes the following settings:
 | `digma.hideFramesOutsideWorkspace` | Show/Hide frame of files that do not belog to the opened workspace(s)<br/>Can be in [Error Flow Details](#error-flow-details-panel) panel, by checking/unchecking the **Workspace only** checkbox). |
 | `digma.sourceControl` | Workspace's source control - used to open files in specific revision.<br/>Only `git` is supported for now. |
 
-## Build
+## How to Build
 
 ```
 npm install
 vsce package
 ```
+:warning: This is still a pre-release and will undergo many breaking changes in the near future. The beta vesion of this extension along with the backend will be released soon (pending feedback). Please considering joining our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/)!
 
 ### License
 
