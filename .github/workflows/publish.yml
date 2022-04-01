@@ -20,7 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          persist-credentials: false
+          token: ${{ secrets.GH_PAT }}
+          ref: ${{ github.head_ref }}
       - uses: actions/setup-node@v1
         with:
           node-version: 16
@@ -58,9 +59,7 @@ jobs:
           commit_message: "bump version"
           # Commit options (eg. --no-verify)
           file_pattern: "./package.json"
-          ref: ${{ github.head_ref }}
           branch: main
-          token: ${{ secrets.GH_PAT }}
           push_options: --force
 
 
