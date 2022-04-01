@@ -57,4 +57,5 @@ jobs:
           # Commit message
           commit_message: "bump version"
           # Commit options (eg. --no-verify)
-          file_pattern: ${{ steps.publishToMarketplace.outputs.vsixPath }}
+          file_pattern: "./package.json"
+
