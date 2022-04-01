@@ -2,7 +2,7 @@
     "name": "digma",
     "displayName": "Digma Continuous Feedback",
     "description": "👩‍💻🧑‍💻🔭 Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
-    "version": "0.5.11",
+    "version": "0.5.12",
     "publisher": "digma",
     "icon": "digma.png",
     "engines": {
