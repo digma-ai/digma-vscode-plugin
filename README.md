@@ -1,11 +1,11 @@
 # Digma Visual Studio Code Plugin
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555) ![vscode](https://vsmarketplacebadge.apphb.com/version-short/digma.digma.svg) ![version](https://img.shields.io/badge/Release:%20-alpha-orange.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555) ![version](https://img.shields.io/badge/Release:%20-alpha-orange.svg) [![vsCode](https://vsmarketplacebadge.apphb.com/version-short/digma.digma.svg)](https://marketplace.visualstudio.com/items?itemName=digma.digma)
 
 
 This is a  [Visual Studio Code](https://code.visualstudio.com)  extension for Digma, providing continuous feedback to developers. With this extension, developer can see insights related to their code, derived from sources such as OpenTelemetry, right in the IDE. To read more about the Digma platform visit our [main repo](https://github.com/digma-ai/digma).
 
-⚠️ Note that this is still a pre-release and will undergo many breaking changes in the near future. The beta vesion of this extension along with the backend will be released soon (pending feedback). Please considering joining our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/)! 
+⚠️ Note that this is still a *pre-release* extension, and will probably not be very useful without a Digma backend. If we've picked your interest and you'd like to try it out please joing our our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/) which will be released soon! (pending feedback 🤞). Also notice that there's guaranteed to be a slew of breakign changes between now and the public release.
 ### 🤨 What does this extension do? 
 It provides code objects insights and runtime analytics inside the IDE. The IDE is inteded to be extensible (currentluy refactoring toward that), so that anyone would be able to define new types of insights based on the collected data. 
 
@@ -15,6 +15,7 @@ It provides code objects insights and runtime analytics inside the IDE. The IDE 
 - [Runtime Errors](#runtime-errors)
 - [Runtime Errors Drilldown](#runtime-errors-drilldown)
 - [Code Objects Annotation](#code-obj-annotation)
+- [Usage Analytics](#usage-analytics)
 - [Selecting Environments](#environment)
 
 
@@ -95,15 +96,17 @@ Insights on runtime data can also be displayed. For example, in this case Digma 
 
 <img src="/.github/assets/data_info.png" alt="Parmater data insights">
 
-#### 🎯 [Usage Analytics](#code-insights)
+#### 🎯 [Usage Analytics](#usage-analytics)
 
 Some of the insights provide additional information regarding how the code is used and what is the change impact radius. Before we cna see different span sources reaching the selection code section with a simple breakdown.
 
 <img src="/.github/assets/usage.png" alt="Parmater data insights">
 
- #### 💻 [Selecting Environments](#environment)
+ #### ፨ [Selecting Environments](#environment)
 
-The observability data is typically collected from multiple environment (staging, dev, prod, CI, etc.). The Context panel allows the user to choose the enviroment he would like to see feedback from .
+The observability data is typically collected from multiple environment (staging, dev, prod, CI, etc.). The Context panel allows the user to choose the enviroment he would like to see feedback from.
+
+Environments can be easily assigned to observability data collected via an env variable on the running process.
 
 ![context-panel](/.github/assets/context-panel.png)
 
