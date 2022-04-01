@@ -59,5 +59,7 @@ jobs:
           ref: ${{ github.head_ref }}
           branch: main
           token: ${{ secrets.GH_PAT }}
+          push_options: --force
+
 
 
