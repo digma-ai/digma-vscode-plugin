@@ -5,9 +5,9 @@
 
 This is an extension for [Visual Studio Code](https://code.visualstudio.com) providing continuous feedback to developers. To read more about the Digma platform visit our [main repo](https://github.com/digma-ai/digma).
 
-:warning: Note that this is still a pre-release and will undergo many breaking changes in the near future. The beta vesion of this extension along with the backend will be released soon (pending feedback). Please considering joining our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/)!
-### What does this extension do?
-It provides code objects insights and runtime analytics inside the IDE. The IDE is inteded to be extensible (currentluy refactoring toward that), so that anyone would be able to define new types of insights based on the collected data. 
+:warning: Note that this is still a pre-release and will undergo many breaking changes in the near future. The beta vesion of this extension along with the backend will be released soon (pending feedback). Please considering joining our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/)! 
+### What does this extension do? 
+🤨 It provides code objects insights and runtime analytics inside the IDE. The IDE is inteded to be extensible (currentluy refactoring toward that), so that anyone would be able to define new types of insights based on the collected data. 
 
 - [Code Objects Discovery](#code-object-discovery)
 - :soon: [Pull Request Insights](#pr-insights) (WIP)

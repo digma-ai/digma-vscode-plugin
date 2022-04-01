@@ -21,10 +21,11 @@
         "Jaeger",
         "Pyhon",
         "Dotnet",
-        "CD",
+        "Continuous Delivery",
         "DevOps"
-    ],
+    ],	
     "badges": [
+
         {
             "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
             "description": "Star Digma on Github",
@@ -44,7 +45,13 @@
             "url": "https://img.shields.io/youtube/views/MnJIyVVqPDU?style=social",
             "description": "Watch a Digma demo video",
             "href": "bit.ly/379pVli"
+        },
+		{
+            "url": "https://img.shields.io/badge/Blog-black?style=flat&logo=medium&logoColor=white&link=https://medium.com/@roni-dover",
+            "description": "Watch a Digma demo video",
+            "href": "https://medium.com/@roni-dover"
         }
+
     ],
     "license": "MIT",
     "repository": {
