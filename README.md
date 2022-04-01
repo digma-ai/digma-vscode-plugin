@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555) ![vscode](https://vsmarketplacebadge.apphb.com/version-short/digma.digma.svg) ![version](https://img.shields.io/badge/Release:%20-alpha-orange.svg)
 
 
-This is a Visual Studio Code extension for [Visual Studio Code](https://code.visualstudio.com) Digma, providing continuous feedback to developers. With this extension, developer can see insights related to their code, derived from sources such as OpenTelemetry, right in the IDE. To read more about the Digma platform visit our [main repo](https://github.com/digma-ai/digma).
+This is a  [Visual Studio Code](https://code.visualstudio.com)  extension for Digma, providing continuous feedback to developers. With this extension, developer can see insights related to their code, derived from sources such as OpenTelemetry, right in the IDE. To read more about the Digma platform visit our [main repo](https://github.com/digma-ai/digma).
 
 ⚠️ Note that this is still a pre-release and will undergo many breaking changes in the near future. The beta vesion of this extension along with the backend will be released soon (pending feedback). Please considering joining our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/)! 
 ### 🤨 What does this extension do? 
