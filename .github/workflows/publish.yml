@@ -8,7 +8,7 @@ on:
   push:
     branches: [ main ]
     tags:
-      - "*"
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -41,3 +41,11 @@ jobs:
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.publishToOpenVSX.outputs.vsixPath }}
+          asset_name: digma.vsix
+          tag: ${{ github.ref }}
+          overwrite: true
