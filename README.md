@@ -47,7 +47,7 @@ TBD
 
 #### 🧑‍🔬 [Code Insights](#code-insights)
 
-Based on the code section currently focused on the IDE, the Code Insights sidebar panel displays the relevant insights for the discovered code objects in that section. Which focused on a specific function in the code I'll be able to see all revant insights. 
+Based on the code section currently focused on the IDE, the Code Insights sidebar panel displays the relevant insights for the discovered code objects in that section. While focused on a specific function in the code I'll be able to see all revant insights. 
 
 The IDE extension in this case simply queries the backend API with the discovered code object identifer. The backend provides back a list of insights that were gleaned from the observability data that relate to these objects. 
 
