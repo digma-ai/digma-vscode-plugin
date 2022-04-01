@@ -29,7 +29,7 @@ jobs:
         with:
           # Optionally strip `v` prefix
           strip_v: true
-      - name: update metadata in package.json
+      - name: update version in package.json
         uses: onlyutkarsh/patch-files-action@v1.0.1
         with:
           files: '${{github.workspace}}/package.json'
@@ -50,12 +50,12 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
       - name: commit new version file
-  # You may pin to the exact commit or the version.
-  # uses: stefanzweifel/git-auto-commit-action@c4b132ec2c77a21fcab564bd3c92610cee84b894
         uses: stefanzweifel/git-auto-commit-action@v4.14.0
         with:
           # Commit message
           commit_message: "bump version"
           # Commit options (eg. --no-verify)
           file_pattern: "./package.json"
+          branch: main
+
 
