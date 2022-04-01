@@ -37,6 +37,7 @@ jobs:
           patch-syntax: |
             = /version => "${{ steps.tag.outputs.tag }}"
       - name: Publish to Visual Studio Marketplace
+        id: publishToMarketplace
         uses: HaaLeo/publish-vscode-extension@v1
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
@@ -45,7 +46,16 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.publishToOpenVSX.outputs.vsixPath }}
+          file: ${{ steps.publishToMarketplace.outputs.vsixPath }}
           asset_name: digma.vsix
           tag: ${{ github.ref }}
           overwrite: true
+      - name: commit new version file
+  # You may pin to the exact commit or the version.
+  # uses: stefanzweifel/git-auto-commit-action@c4b132ec2c77a21fcab564bd3c92610cee84b894
+        uses: stefanzweifel/git-auto-commit-action@v4.14.0
+        with:
+          # Commit message
+          commit_message: "bump version"
+          # Commit options (eg. --no-verify)
+          file_pattern: ${{ steps.publishToMarketplace.outputs.vsixPath }}
