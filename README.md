@@ -95,6 +95,12 @@ Insights on runtime data can also be displayed. For example, in this case Digma 
 
 <img src="/.github/assets/data_info.png" alt="Parmater data insights">
 
+#### 🎯 [Usage Analytics](#code-insights)
+
+Some of the insights provide additional information regarding how the code is used and what is the change impact radius. Before we cna see different span sources reaching the selection code section with a simple breakdown.
+
+<img src="/.github/assets/usage.png" alt="Parmater data insights">
+
  #### 💻 [Selecting Environments](#environment)
 
 The observability data is typically collected from multiple environment (staging, dev, prod, CI, etc.). The Context panel allows the user to choose the enviroment he would like to see feedback from .
