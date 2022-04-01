@@ -1,1 +1,170 @@
-{"name":"digma","displayName":"Digma Continuous Feedback","description":"👩‍💻🧑‍💻🔭 Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.","version":"0.5.11","publisher":"digma","icon":"digma.png","engines":{"vscode":"^1.63.0"},"keywords":["Opentelemetry","Observability","Intellisense","Intellicode","Flask","FastApi","ASP.NET","C#","Ebpf","Jaeger","Pyhon","Dotnet","CD","DevOps"],"badges":[{"url":"https://img.shields.io/github/stars/digma-ai/digma?style=social","description":"Star Digma on Github","href":"bit.ly/36LyUcr"},{"url":"https://img.shields.io/twitter/follow/doppleware?style=social","description":"Follow us on Twitter","href":"bit.ly/3reNG2z"},{"url":"https://img.shields.io/visual-studio-marketplace/r/digma.digma?logo=visual-studio-code&style=social","description":"Rate us in VSCode Marketplace","href":"bit.ly/36Lzird"},{"url":"https://img.shields.io/youtube/views/MnJIyVVqPDU?style=social","description":"Watch a Digma demo video","href":"bit.ly/379pVli"}],"license":"MIT","repository":{"type":"git","url":"https://github.com/digma-ai/digma-vscode-plugin"},"bugs":{"url":"https://github.com/digma-ai/digma-vscode-plugin/issues"},"homepage":"https://github.com/digma-ai/digma-vscode-plugin","categories":["Programming Languages","Visualization","Linters","Debuggers"],"activationEvents":["onStartupFinished"],"main":"./out/extension.js","contributes":{"views":{"digma":[{"type":"webview","id":"context","name":"Context"},{"type":"webview","id":"errorFlowList","name":"Error Flows List"},{"type":"webview","id":"errorFlowDetails","name":"Error Flow Details"},{"type":"webview","id":"codeAnalytics","name":"CodeAnalytics"}]},"viewsContainers":{"activitybar":[{"id":"digma","title":"Digma","icon":"icon.png"}]},"configuration":{"properties":{"digma.enableCodeLens":{"type":"boolean","default":true},"digma.url":{"type":"string","default":"http://localhost:5051"},"digma.environment":{"type":"string"},"digma.hideFramesOutsideWorkspace":{"type":"bool","defult":true},"digma.sourceControl":{"type":"string","default":"None","enum":["None","Git"]}}}},"dependencies":{"@types/jquery":"^3.5.14","@vscode/codicons":"0.0.20","@vscode/webview-ui-toolkit":"^0.8.5","https":"^1.0.0","moment":"^2.29.1","node-fetch":"^2.6.6","vscode-languageclient":"^7.0.0"},"scripts":{"vscode:prepublish":"npm run compile","compile":"npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js","compile:all":"tsc -p ./","compile:views":"tsc -p ./src/views-ui/codeAnalytics/tsconfig.json","compile:sass":"node-sass ./src -o ./out","copy:js":"copyfiles -u 1 src/**/*.js out","watch":"npm run watch:all || npm run watch:views","watch:all":"tsc -watch -p ./","watch:views":"tsc -watch -p ./src/views-ui/codeAnalytics/tsconfig.json","pretest":"npm run compile && npm run lint","lint":"eslint src --ext ts","test":"node ./out/test/runTest.js"},"devDependencies":{"@types/glob":"^7.1.4","@types/mocha":"^9.0.0","@types/node":"14.x","@types/node-fetch":"^2.5.10","@types/vscode":"^1.63.0","@typescript-eslint/eslint-plugin":"^5.1.0","@typescript-eslint/parser":"^5.1.0","@vscode/test-electron":"^1.6.2","concurrently":"^7.0.0","copyfiles":"^2.4.1","eslint":"^8.1.0","glob":"^7.1.7","mocha":"^9.1.3","node-sass":"^7.0.1","typescript":"^4.4.4"}}
+{
+    "name": "digma",
+    "displayName": "Digma Continuous Feedback",
+    "description": "👩‍💻🧑‍💻🔭 Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
+    "version": "0.5.11",
+    "publisher": "digma",
+    "icon": "digma.png",
+    "engines": {
+        "vscode": "^1.63.0"
+    },
+    "keywords": [
+        "Opentelemetry",
+        "Observability",
+        "Intellisense",
+        "Intellicode",
+        "Flask",
+        "FastApi",
+        "ASP.NET",
+        "C#",
+        "Ebpf",
+        "Jaeger",
+        "Pyhon",
+        "Dotnet",
+        "CD",
+        "DevOps"
+    ],
+    "badges": [
+        {
+            "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
+            "description": "Star Digma on Github",
+            "href": "bit.ly/36LyUcr"
+        },
+        {
+            "url": "https://img.shields.io/twitter/follow/doppleware?style=social",
+            "description": "Follow us on Twitter",
+            "href": "bit.ly/3reNG2z"
+        },
+        {
+            "url": "https://img.shields.io/visual-studio-marketplace/r/digma.digma?logo=visual-studio-code&style=social",
+            "description": "Rate us in VSCode Marketplace",
+            "href": "bit.ly/36Lzird"
+        },
+        {
+            "url": "https://img.shields.io/youtube/views/MnJIyVVqPDU?style=social",
+            "description": "Watch a Digma demo video",
+            "href": "bit.ly/379pVli"
+        }
+    ],
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/digma-ai/digma-vscode-plugin"
+    },
+    "bugs": {
+        "url": "https://github.com/digma-ai/digma-vscode-plugin/issues"
+    },
+    "homepage": "https://github.com/digma-ai/digma-vscode-plugin",
+    "categories": [
+        "Programming Languages",
+        "Visualization",
+        "Linters",
+        "Debuggers"
+    ],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "views": {
+            "digma": [
+                {
+                    "type": "webview",
+                    "id": "context",
+                    "name": "Context"
+                },
+                {
+                    "type": "webview",
+                    "id": "errorFlowList",
+                    "name": "Error Flows List"
+                },
+                {
+                    "type": "webview",
+                    "id": "errorFlowDetails",
+                    "name": "Error Flow Details"
+                },
+                {
+                    "type": "webview",
+                    "id": "codeAnalytics",
+                    "name": "CodeAnalytics"
+                }
+            ]
+        },
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "digma",
+                    "title": "Digma",
+                    "icon": "icon.png"
+                }
+            ]
+        },
+        "configuration": {
+            "properties": {
+                "digma.enableCodeLens": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "digma.url": {
+                    "type": "string",
+                    "default": "http://localhost:5051"
+                },
+                "digma.environment": {
+                    "type": "string"
+                },
+                "digma.hideFramesOutsideWorkspace": {
+                    "type": "bool",
+                    "defult": true
+                },
+                "digma.sourceControl": {
+                    "type": "string",
+                    "default": "None",
+                    "enum": [
+                        "None",
+                        "Git"
+                    ]
+                }
+            }
+        }
+    },
+    "dependencies": {
+        "@types/jquery": "^3.5.14",
+        "@vscode/codicons": "0.0.20",
+        "@vscode/webview-ui-toolkit": "^0.8.5",
+        "https": "^1.0.0",
+        "moment": "^2.29.1",
+        "node-fetch": "^2.6.6",
+        "vscode-languageclient": "^7.0.0"
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js",
+        "compile:all": "tsc -p ./",
+        "compile:views": "tsc -p ./src/views-ui/codeAnalytics/tsconfig.json",
+        "compile:sass": "node-sass ./src -o ./out",
+        "copy:js": "copyfiles -u 1 src/**/*.js out",
+        "watch": "npm run watch:all || npm run watch:views",
+        "watch:all": "tsc -watch -p ./",
+        "watch:views": "tsc -watch -p ./src/views-ui/codeAnalytics/tsconfig.json",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.1.4",
+        "@types/mocha": "^9.0.0",
+        "@types/node": "14.x",
+        "@types/node-fetch": "^2.5.10",
+        "@types/vscode": "^1.63.0",
+        "@typescript-eslint/eslint-plugin": "^5.1.0",
+        "@typescript-eslint/parser": "^5.1.0",
+        "@vscode/test-electron": "^1.6.2",
+        "concurrently": "^7.0.0",
+        "copyfiles": "^2.4.1",
+        "eslint": "^8.1.0",
+        "glob": "^7.1.7",
+        "mocha": "^9.1.3",
+        "node-sass": "^7.0.1",
+        "typescript": "^4.4.4"
+    }
+}
