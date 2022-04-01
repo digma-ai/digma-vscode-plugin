@@ -25,7 +25,7 @@ In the below example, you can see some potential code objects to discover marked
 
 <img src="/.github/assets/discovery.png" width="500" alt="Code object discovery">
 
-There are many types of possible code objects, this is where the platform is extensible to support them both on client and server. Here is some of current backlog
+There are many types of possible code objects, this is where the platform is extensible to support them both on client and server. Here is some of current backlog:
 
   - :white_check_mark: Functions/methods 	
   - :white_check_mark: REST endpoints 
