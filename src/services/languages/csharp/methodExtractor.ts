@@ -45,6 +45,7 @@ export class CSharpMethodExtractor implements IMethodExtractor
                 symbolInfos.push({
                     id, 
                     name: funcName,
+                    codeLocation: namespace,
                     displayName: namespace + "." + funcName, 
                     range
                 });

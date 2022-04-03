@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
 import { CSharpMethodExtractor } from './methodExtractor';
+import { CSharpSpanExtractor } from './spanExtractor';
 
 
 export class CSharpLanguageExtractor implements ILanguageExtractor 
@@ -26,6 +27,8 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
     }
 
     public get spanExtractors(): ISpanExtractor[] {
-        return [];
+        return [
+            new CSharpSpanExtractor()
+        ];
     }
 }
