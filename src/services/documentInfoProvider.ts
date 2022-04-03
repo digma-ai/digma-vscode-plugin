@@ -66,7 +66,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const symbolInfos = await this.symbolProvider.getMethods(doc);
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
-                const spans = await this.symbolProvider.getSpans(doc, tokens);
+                const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
                 const summaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id), endpoints.map(e => e.id));
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens);
                 const lines = this.createLineInfos(doc, summaries.codeObjects, methods);
