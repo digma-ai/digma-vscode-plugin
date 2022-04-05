@@ -1,0 +1,67 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Publish
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    
+      # Ready everything
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GH_PAT }}
+          ref: ${{ github.head_ref }}    
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 16
+      - run: npm ci
+      
+      - name: Get tag
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+        with:
+          # Optionally strip `v` prefix
+          strip_v: true
+          
+      - name: update version in package.json
+        run: npm version ${{ steps.tag.outputs.tag }} --no-commit-hooks --no-git-tag-version
+
+      - name: Publish to Visual Studio Marketplace
+        id: publishToMarketplace
+        uses: HaaLeo/publish-vscode-extension@v1
+        with:
+          pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
+          registryUrl: https://marketplace.visualstudio.com
+          
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ steps.publishToMarketplace.outputs.vsixPath }}
+          asset_name: digma.vsix
+          tag: ${{ github.ref }}
+          overwrite: true
+          
+      - name: commit new version file
+        uses: stefanzweifel/git-auto-commit-action@v4.14.0
+        with:
+          # Commit message
+          commit_message: "bump version"
+          # Commit options (eg. --no-verify)
+          branch: main
+
+
+

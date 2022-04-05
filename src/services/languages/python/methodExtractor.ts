@@ -31,6 +31,7 @@ export class PythonMethodExtractor implements IMethodExtractor
                 symbolInfos.push({
                     id, 
                     name: sym.name,
+                    codeLocation: filePath,
                     displayName: symPath, 
                     range
                 });

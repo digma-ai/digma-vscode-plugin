@@ -37,6 +37,7 @@ export namespace UiMessage
         export class ErrorDetails{
             constructor(public errorSourceUID?: string) {}
         }
+       
     }
 
     export namespace Set

@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetails, HttpError } from "../../services/analyticsProvider";
-import { WebviewChannel } from "../webViewUtils";
-import { CodeObjectInfo } from "./codeAnalyticsView";
+import { WebviewChannel, WebViewProvider } from "../webViewUtils";
+import { CodeAnalyticsView, CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
@@ -18,8 +18,14 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 {
     private _viewedCodeObjectId?: string = undefined;
     private _stackViewModel?: ErrorFlowStackViewModel = undefined;
+    private _disposables: vscode.Disposable[] = [];
     private _stackViewModels?: ErrorFlowStackViewModel[] = [];
     private _errorFlowIndex: number = 0;
+
+    public static Commands = class {
+        public static readonly ShowErrorView = `digma.ErrorView.show`;
+    };
+
 
     constructor(
         private _channel: WebviewChannel,
@@ -27,7 +33,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 		private _documentInfoProvider: DocumentInfoProvider,
         private _editorHelper: EditorHelper,
         private _errorFlowParamDecorator: ErrorFlowParameterDecorator,
-        private _overlay: OverlayView)
+        private _overlay: OverlayView,
+        private _webViewProvider: WebViewProvider) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
@@ -36,6 +43,29 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._channel.consume(UiMessage.Notify.NavigateErrorFlow, e => this.navigateErrorFlow(e.offset));
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
 
+        this._disposables.push(vscode.commands.registerCommand(ErrorsViewTab.Commands.ShowErrorView, async (codeObjectId: string, codeObjectDisplayName: string, errorSourceUID: string) => {
+            const view = this._webViewProvider.get();
+            if(view === undefined || view.visible === false){
+
+                this._channel.consume(UiMessage.Notify.TabLoaded, async (e: UiMessage.Notify.TabLoaded)=>{
+                        this.onShowErrorDetailsEvent(new UiMessage.Get.ErrorDetails(errorSourceUID));
+                    }, true);
+
+                await vscode.commands.executeCommand(CodeAnalyticsView.Commands.Show);
+               
+            }
+            else{ //visible true
+                this.onShowErrorDetailsEvent(new UiMessage.Get.ErrorDetails(errorSourceUID));
+            }
+
+        }));
+    
+    }
+    dispose() {
+        for (let dis of this._disposables)
+		{
+			dis.dispose();
+		}
     }
 
     get tabTitle(): string { return "Errors"; }
@@ -58,6 +88,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this.refreshCodeObjectLabel(codeObject);
         vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, codeObject.id);
     }
+
     public getHtml(): string 
     {
         return /*html*/`
@@ -95,7 +126,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             this._viewedCodeObjectId = codeObject.id;
         }
     }
-
+    
     private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
         if(!e.errorSourceUID) {
             return;

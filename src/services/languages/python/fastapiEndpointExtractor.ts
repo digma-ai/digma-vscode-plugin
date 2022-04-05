@@ -5,8 +5,6 @@ import { EndpointInfo, IEndpointExtractor, SymbolInfo } from "../extractors";
 
 export class FastapiEndpointExtractor implements IEndpointExtractor
 {
-    public language = 'python';
-
     extractEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]): EndpointInfo[] 
     {
         // Ensure fastapi module was imported
@@ -29,7 +27,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             const lineText = document.getText(new vscode.Range(
                 appToken.range.start, 
                 new vscode.Position(methodToken.range.end.line, 1000)));
-            const match = new RegExp(`^app\\.${method}\\("(.*?)"`).exec(lineText);
+            const match = new RegExp(`^app\\.${method}\\(["'](.*?)["']`).exec(lineText);
             if (!match)
                 continue;
             
@@ -38,6 +36,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
                 continue;
 
             results.push({
+                id: document.uri.toModulePath() + '$_$' + method + ' ' + match[1],
                 method: method, 
                 path: match[1],
                 range: relevantFunc.range

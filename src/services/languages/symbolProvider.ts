@@ -59,25 +59,25 @@ export class SymbolProvider
         return result;
     }
 
-    public async getEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]):  Promise<EndpointInfo[]>
+    public async getEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]):  Promise<EndpointInfo[]>
     {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage)
             return [];
 
         return supportedLanguage.endpointExtractors
-            .map(x => x.extractEndpoints(document, symbolInfo, tokens))
+            .map(x => x.extractEndpoints(document, symbolInfos, tokens))
             .flat();
     }
     
-    public async getSpans(document: vscode.TextDocument, tokens: Token[]):  Promise<SpanInfo[]>
+    public async getSpans(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]):  Promise<SpanInfo[]>
     {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage)
             return [];
 
         return supportedLanguage.spanExtractors
-            .map(x => x.extractSpans(document, tokens))
+            .map(x => x.extractSpans(document, symbolInfos, tokens))
             .flat();
     }
 
@@ -244,4 +244,9 @@ export enum TokenType
     clsParameter = 'clsParameter',
     magicFunction = 'magicFunction',
     builtinConstant = 'builtinConstant',
+    field = 'field',
+    operator = 'operator',
+    member = 'member',
+    punctuation = 'punctuation',
+    string = 'string',
 } 

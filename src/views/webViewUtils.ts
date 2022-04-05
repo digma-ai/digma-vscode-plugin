@@ -2,6 +2,11 @@ import * as vscode from 'vscode';
 import { integer } from 'vscode-languageclient';
 import { IConsumer, IMessage, MessageReceivedHandler } from '../views-ui/common/contracts';
 
+export interface WebViewProvider
+{
+    get():vscode.WebviewView | undefined;
+}
+
 export class WebViewUris
 {
     constructor(
@@ -81,7 +86,23 @@ export class WebviewChannel implements vscode.Disposable
     private readonly _disposables: vscode.Disposable[] = [];
     private readonly _consumers: IConsumer[] = [];
     private _webview?: vscode.Webview;
+    public getWebView(): vscode.Webview| undefined{
+        return this._webview;
+    }
 
+    // public onDidReceive<T>(type: { new(): T ;}, listener: (e: T) => any): vscode.Disposable |undefined {
+    //     if(this._webview)
+    //     {
+    //         const sub =  this._webview.onDidReceiveMessage(message => {
+
+    //             if(message.type === type.name) {
+    //                 listener(message.data);
+    //             }
+
+    //         });
+    //         return sub;
+    //     }
+    // }
     public subscrib(value: vscode.Webview) 
     {
         if(this._webview === value) {
@@ -91,22 +112,32 @@ export class WebviewChannel implements vscode.Disposable
         this._webview = value;
         this._webview.onDidReceiveMessage(
             async (message: any) => {
-                for(let consumer of this._consumers) {
+                let volatileIndexes:number [] = [];
+                for (let i = 0; i < this._consumers.length; i++) {
+                    const consumer = this._consumers[i];
                     if(message.type === consumer.messageType) {
                         consumer.handler(message.data);
+                        if(consumer.volatile)
+                        {
+                            volatileIndexes.push(i);
+                        }
                     }
+                }
+                for(let idx of volatileIndexes) {
+                    this._consumers.splice(idx, 1);
                 }
             },
             undefined,
             this._disposables
         );
     }
-
-    public consume<T>(type: { new(): T ;}, handler: MessageReceivedHandler<T>)
+ 
+    public consume<T>(type: { new(): T ;}, handler: MessageReceivedHandler<T>, volatile: boolean = false)
     {
         this._consumers.push({
             messageType: type.name,
             handler: handler,
+            volatile: volatile
         });
     }
 

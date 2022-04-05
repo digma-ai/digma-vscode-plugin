@@ -61,7 +61,7 @@ export class HotspotMarkerDecorator implements vscode.Disposable
         const rangesByLevel: Dictionary<number, vscode.Range[]> = {};
         for(let methodInfo of docInfo.methods)
         {
-            const score = docInfo.scores.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
+            const score = docInfo.codeObjectSummaries.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
             if(score < 70)
                 continue;
             

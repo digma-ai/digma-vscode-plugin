@@ -1,57 +1,116 @@
-# Digma vscode plugin
+# Digma Visual Studio Code Plugin
 
-This is an extension for [Visual Studio Code](https://code.visualstudio.com) providing continuous feedback to developers. 
-- [Method Declaration Codelens](#method-declaration-codelens)
-- [Method Tooltip](#method-tooltip)
-- [Line Decoration & Tooltip](#line-decoration--tooltip)
-- [Context (panel)](#context-panel)
-- [Error Flow List (panel)](#error-flow-list-panel)
-- [Error Flow Details (panel)](#error-flow-details-panel)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555) ![version](https://img.shields.io/badge/Release:%20-alpha-orange.svg) [![vsCode](https://vsmarketplacebadge.apphb.com/version-short/digma.digma.svg)](https://marketplace.visualstudio.com/items?itemName=digma.digma)
 
-## Features
 
-### Method Declaration Codelens
-Annotating how many errors go through the method.
+This is a  [Visual Studio Code](https://code.visualstudio.com)  extension for Digma, providing continuous feedback to developers. With this extension, developer can see insights related to their code, derived from sources such as OpenTelemetry, right in the IDE. To read more about the Digma platform visit our [main repo](https://github.com/digma-ai/digma).
 
-![method-decleration-codelens](/.github/assets/method-decleration-codelens.png)
+⚠️ Note that this is still a *pre-release* extension, and will probably not be very useful without a Digma backend. If we've picked your interest and you'd like to try it out please joing our our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/) which will be released soon! (pending feedback 🤞). Also notice that there's guaranteed to be a slew of breakign changes between now and the public release.
+### 🤨 What does this extension do? 
+It provides code objects insights and runtime analytics inside the IDE. The IDE is inteded to be extensible (currentluy refactoring toward that), so that anyone would be able to define new types of insights based on the collected data. 
 
-### Method Tooltip
-Listing the errors that go through the method.
+- [Code Objects Discovery](#code-object-discovery)
+- [Pull Request Insights](#pr-insights) (WIP)
+- [Code Insights](#code-insights)
+- [Runtime Errors](#runtime-errors)
+- [Runtime Errors Drilldown](#runtime-errors-drilldown)
+- [Code Objects Annotation](#code-obj-annotation)
+- [Usage Analytics](#usage-analytics)
+- [Selecting Environments](#environment)
 
-By hovering method declaration:
 
-![method-name-tooltip](/.github/assets/method-name-tooltip.png)
+#### 🔬 [Code Object Discovery](#code-object-discovery)	
+Discovering code objects is a key part of the extension functionality. Code objects can be anything that can be found in the code on the client side, and from the observability data on the backend. Code objects are associated with aggregated data and insights. 
+  
+In the below example, you can see some potential code objects to discover marked out in red:
 
-By hovering method call:
+<img src="/.github/assets/discovery.png" width="500" alt="Code object discovery">
 
-![method-name-tooltip](/.github/assets/method-name-tooltip-2.png)
+There are many types of possible code objects, this is where the platform is extensible to support them both on client and server. Here is some of current backlog:
 
-### Line Decoration & Tooltip
-Annotating how many errors go through the line and a tooltip listing them.
+  - ✅ Functions/methods 	
+  - ✅ REST endpoints 
+  - ✅	OTEL Spans	
+  - 🏗 GRPC endpoints (WIP)	
+  - RabbitMQ event classes
+  - Kafka producer
+  - Classes/modules
+  - More...
 
-![line-decoration](/.github/assets/line-decoration.png)
+Of course code object discovery is language specific, sometimes platform or library specific.
 
-### Context (panel)
-Allowing to choose the enviroment the telemetry data is filtered by.
+More basic method/function discovery is done using the language server for that specific programming language already installed in the IDE.
+#### 🧑‍💻 [Pull Request Insights](#pr-insights) (WIP)
+
+Commits are a way to group code object feedback together. Digma's backend already tags each metric and trace by the relevant commit identifier. 
+
+TBD 
+
+#### 🧑‍🔬 [Code Insights](#code-insights)
+
+Based on the code section currently focused on the IDE, the Code Insights sidebar panel displays the relevant insights for the discovered code objects in that section. While focused on a specific function in the code I'll be able to see all revant insights. 
+
+The IDE extension in this case simply queries the backend API with the discovered code object identifer. The backend provides back a list of insights that were gleaned from the observability data that relate to these objects. 
+
+![Insights](/.github/assets/insights_tab.png)
+
+#### 🪳 [Runtime Errors](#runtime-errors)
+
+The runtime errors panel provides analytics over the error behavior of both the specific code object and the different code object flows it particpates in. 
+
+The errors are not displayed as raw data 🥩 . Digma already groups together errors which essentially singify the same problem and also highlights those errors that are "interesting". What makes an error interesting? That is something decided by the backend scoring processses but some reasons may include:
+
+- 📈 It is trending up! 
+- 🆕 It is something that started recently 
+- 💣 It is affecting multiple services 
+- 🕳 It is not handled internally some other place
+
+<br>
+<p align=center>
+<img src="/.github/assets/errors_tab.png" width="500" alt="Code object discovery">
+</p>
+
+##### ? What is a code object flow ?
+Digma identifies flows which describe how code objects are used together. It can be usedful to think about a code flow like a 'proto-trace'. Basically grouping together all traces that are extremely similar as a 'flow' within the application and starting to aggregate information about that flow.
+
+#### 👓 [Runtime Errors Drilldown](#runtime-errors-drilldown)
+
+There are multiple ways in which additional information is provided regarding the errors. 
+Including highlighting of specific lines within the code itself. However, by double clicking into a specific error type we can get more information about it as well as navigate the callstack to understand its origins:
+
+![Errors Drilldown](/.github/assets/error_drilldown.png)
+
+ #### 🔦 [Code Objects Annotation](#code-obj-annotation)
+
+Some insights can be highlighting in the code itself using code annotations. Based on the information passed on from the backend the extension will proactively display annotations or even highlight a specific code object to provide feedback.
+
+<img src="/.github/assets/annotation.png" alt="Insight annotation">
+
+Another way to provide feedback on code object behavior is through their tooltips. For example, looking at this function object I can already see which runtime error types I should be expecting:
+
+<p align=center>
+<img src="/.github/assets/tooltip.png" width="400" alt="Insight annotation">
+</p>
+
+Insights on runtime data can also be displayed. For example, in this case Digma has identified that in all different occurences of this specific error, a pameter is always null:
+
+<img src="/.github/assets/data_info.png" alt="Parmater data insights">
+
+#### 🎯 [Usage Analytics](#usage-analytics)
+
+Some of the insights provide additional information regarding how the code is used and what is the change impact radius. Before we cna see different span sources reaching the selection code section with a simple breakdown.
+
+<img src="/.github/assets/usage.png" alt="Parmater data insights">
+
+ #### ፨ [Selecting Environments](#environment)
+
+The observability data is typically collected from multiple environment (staging, dev, prod, CI, etc.). The Context panel allows the user to choose the enviroment he would like to see feedback from.
+
+Environments can be easily assigned to observability data collected via an env variable on the running process.
 
 ![context-panel](/.github/assets/context-panel.png)
 
-### Error Flow List (panel)
-Lisitng the errors by 3 categories:
-- **New/Trending**: New error (first seen in the last 7 days) and errors that are treding up in last 7 days.
-- **Unexpected** - Native errors that are thrown by the framework (e.g. `AttributeError` in Python).
-- **All**: An unfilterd list of the errors accured in the last 7 days.
-
-Clicking on the error name shows the error's details in the [Error Flow List](#errorflow-list-panel)
-Double-Clicking does the same + focus on the last visible frame.
-
-
-![errorflow-list-panel](/.github/assets/errorflow-list-panel.png)
-
-### Error Flow Details (panel)
-![errorflow-details-panel](/.github/assets/errorflow-details-panel.png)
-
-## Extension Settings
+ #### ⚙️ [Extension Settings](#settings)
 
 This extension contributes the following settings:
 | Key | Description |
@@ -62,10 +121,14 @@ This extension contributes the following settings:
 | `digma.hideFramesOutsideWorkspace` | Show/Hide frame of files that do not belog to the opened workspace(s)<br/>Can be in [Error Flow Details](#error-flow-details-panel) panel, by checking/unchecking the **Workspace only** checkbox). |
 | `digma.sourceControl` | Workspace's source control - used to open files in specific revision.<br/>Only `git` is supported for now. |
 
-## Build
+## How to Build
 
 ```
 npm install
 vsce package
 ```
 
+
+### License
+
+[MIT](/LICENSE)

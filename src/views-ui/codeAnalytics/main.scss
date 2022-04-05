@@ -99,6 +99,12 @@ vscode-panel-view {
         font-family: var(--vscode-editor-font-family);
     }
 }
+
+.codeobject-selection-internal{
+    @extend .codeobject-selection;
+    margin-top: 10px;
+}
+
 .error-property{
     .label {
         opacity: 0.3;
@@ -296,3 +302,15 @@ vscode-panel-view {
     display:none;
 }
 /* end of error view*/
+
+.usage-calls-rate
+{
+    text-align: center; 
+}
+.group-item
+{
+    margin-top: 10px;
+}
+.uppercase {
+    text-transform: uppercase;
+}
