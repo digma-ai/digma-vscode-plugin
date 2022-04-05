@@ -314,3 +314,18 @@ vscode-panel-view {
 .uppercase {
     text-transform: uppercase;
 }
+
+.grid-area {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+    align-items: flex-start;
+  }
+
+  .grid-area > div {
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-right: 3px;
+  }
