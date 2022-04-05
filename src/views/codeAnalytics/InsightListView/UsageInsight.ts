@@ -169,6 +169,60 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
 
 }
 
+export interface SlowestSpansInsight extends CodeObjectInsight
+{
+    route: string;
+    spans: string[];
+}
+
+export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCreator
+{
+    constructor() { 
+    } 
+
+    private duration(duration:Duration)
+    {
+        return `${duration.value} ${duration.unit}`;
+    }
+
+    public createListViewItem(codeObjectsInsight: SlowestSpansInsight) : IListViewItem
+    {
+        const items = codeObjectsInsight.spans.map(span => `<div>${span}</div>`);
+        const html = `
+        <div class="list-item">
+            <div class="list-item-content-area">
+                <div class="list-item-header" title="Spans that take more than 50% of the endpoint duration">
+                    <strong>Slowest Spans</strong>
+                </div>
+                <div>
+                    ${items.join('')}
+                </div>
+            </div>
+        </div>`;
+
+        return {
+            getHtml: ()=>html, 
+            sortIndex: 0, 
+            groupId: undefined
+        };
+    }
+
+    public create(scope: CodeObjectInfo, codeObjectsInsight: SlowestSpansInsight []): IListViewItem [] {
+        const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
+        const listViewItems: IListViewItem [] = [];
+        for(let route in groupedByRoute)
+        {
+            const group = new HttpEndpointListViewGroupItem(route);
+            group.sortIndex = 10;
+            const items = groupedByRoute[route].map(o=>this.createListViewItem(o));
+            group.addItems(...items);
+            listViewItems.push(group);
+        }
+        return listViewItems;
+    }
+
+}
+
 export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCreator
 {
     constructor() { 
