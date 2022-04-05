@@ -5,7 +5,7 @@
 
 This is a  [Visual Studio Code](https://code.visualstudio.com)  extension for Digma, providing continuous feedback to developers. With this extension, developer can see insights related to their code, derived from sources such as OpenTelemetry, right in the IDE. To read more about the Digma platform visit our [main repo](https://github.com/digma-ai/digma).
 
-⚠️ Note that this is still a *pre-release* extension, and will probably not be very useful without a Digma backend. If we've picked your interest and you'd like to try it out please joing our our early [beta program](https://lucent-biscochitos-0ce778.netlify.app/) which will be released soon! (pending feedback 🤞). Also notice that there's guaranteed to be a slew of breakign changes between now and the public release.
+⚠️ Note that this is still a *pre-release* extension, and will probably not be very useful without a Digma backend. If we've picked your interest and you'd like to try it out please joing our our early [beta program](https://www.digma.ai/) which will be released soon! (pending feedback 🤞). Also notice that there's guaranteed to be a slew of breakign changes between now and the public release.
 ### 🤨 What does this extension do? 
 It provides code objects insights and runtime analytics inside the IDE. The IDE is inteded to be extensible (currentluy refactoring toward that), so that anyone would be able to define new types of insights based on the collected data. 
 
@@ -89,7 +89,7 @@ Some insights can be highlighting in the code itself using code annotations. Bas
 Another way to provide feedback on code object behavior is through their tooltips. For example, looking at this function object I can already see which runtime error types I should be expecting:
 
 <p align=center>
-<img src="/.github/assets/tooltip.png" width="400" alt="Insight annotation">
+<img src="/.github/assets/tooltip.png" width="600" alt="Insight annotation">
 </p>
 
 Insights on runtime data can also be displayed. For example, in this case Digma has identified that in all different occurences of this specific error, a pameter is always null:
