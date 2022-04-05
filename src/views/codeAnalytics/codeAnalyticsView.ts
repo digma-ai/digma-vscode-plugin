@@ -13,7 +13,7 @@ import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
 import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
-import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/UsageInsight";
+import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/UsageInsight";
 import { SpanListViewItemsCreator } from "./InsightListView/SpanInsight";
 
 export class CodeAnalyticsView implements vscode.Disposable 
@@ -126,6 +126,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
+        listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator());
 
 
 
