@@ -66,7 +66,7 @@ export class SpanListViewGroupItem extends ListViewGroupItem
 
     public getGroupHtml(itemsHtml: string): string {
         return /*html*/ `
-            <div class="codeobject-selection-internal">
+            <div class="group-item">
                 <span class="scope">Span: </span>
                 <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
                 <span>${this.span}</span>

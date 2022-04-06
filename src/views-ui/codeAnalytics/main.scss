@@ -21,7 +21,7 @@ vscode-panel-view {
   padding: 3px;
   display: flex;
   background: var(--vscode-list-hoverBackground);
-  margin-top: 3px;
+  margin-top: 6px;
   border-radius: 2px;
   width: 100%;
 }
@@ -268,7 +268,17 @@ vscode-panel-view {
 }
 .group-item
 {
+    display: flex;
+    align-items: center;
     margin-top: 10px;
+    .scope{
+        margin-right: 5px;
+        opacity: 0.6;
+    }
+    .codicon{
+        margin-right: 5px;
+        padding-top: 1px;
+    }
 }
 .uppercase {
     text-transform: uppercase;
@@ -286,5 +296,5 @@ vscode-panel-view {
   .grid-area > div {
     margin-top: 2px;
     margin-bottom: 2px;
-    margin-right: 3px;
+    padding-right: 10px;
   }
