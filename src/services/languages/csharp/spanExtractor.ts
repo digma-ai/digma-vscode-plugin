@@ -31,7 +31,7 @@ export class CSharpSpanExtractor implements ISpanExtractor
                 if(!symbolInfo)
                     continue;
                 
-                const spanName = spanNameToken.text.replace(new RegExp('"', 'g'), '');
+                const spanName = spanNameToken.text.replace(/\"/g, '');
                 results.push({
                     id: symbolInfo.codeLocation + '$_$' + spanName,
                     name: spanName,
