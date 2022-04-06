@@ -155,7 +155,7 @@ suite('CSharpSpanExtractor', () => {
                 // @ts-ignore
                 const spans = extractor.extractSpans(undefined, symbolInfos, tokens);
 
-                expect(spans[0].name).to.equal(expectedSpan.name);
+                expect(spans[0].id).to.equal(expectedSpan.id);
             });
         });
 
