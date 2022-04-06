@@ -121,6 +121,7 @@ export interface Duration
 {
     value: number;
     unit: string;
+    raw: number;
 }
 
 
@@ -230,14 +231,19 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
 
 export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    constructor() {
+    constructor(private viewUris: WebViewUris
+        ) {
         }
 
     private duration(duration:Duration)
     {
-        return `${duration.value} ${duration.unit}`;
+        return `${duration.value}${duration.unit}`;
     }
 
+    private computePercentageDiff(value: number, compare:number){
+
+        return `${((1-(value/compare))*100).toFixed(0)}%`;
+    }
     public createListViewItem(codeObjectsInsight: SlowEndpointInsight) : IListViewItem
     {
         const tooltip = `
@@ -247,21 +253,26 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         <div class="list-item">
             <div class="list-item-content-area">
                 <div class="list-item-header" title="${tooltip}"><strong>Slow Endpoint</strong></div>
-                <div title="${tooltip}">On average requests are slower than other endpoints</div>
-                <div class="grid-area">
-                    <div title="endpoint processed 50% of requests in less than ${this.duration(codeObjectsInsight.median)}">
-                        <strong>median</strong>: ${this.duration(codeObjectsInsight.median)}
-                    </div>
-                    <div title="endpoint processed 5% of requests in higher than ${this.duration(codeObjectsInsight.p95)}">
-                        <strong>95th percentile</strong>: ${this.duration(codeObjectsInsight.p95)}
-                    </div>
-                    <div>
-                        <strong>mean</strong>: ${this.duration(codeObjectsInsight.mean)}
-                    </div>
-                </div>
+                <div title="${tooltip}">On average requests are slower than other endpoints by <span class="negative-value">${this.computePercentageDiff(codeObjectsInsight.median.raw, codeObjectsInsight.endpointsMedian.raw)}</span></div>
+        
             </div>
+            <div class="list-item-right-area">
+            <img style="align-self:center;" src="${this.viewUris.image("slow.png")}" width="30" height="30">
+            <span style="text-align:center;">${this.duration(codeObjectsInsight.median)}</span>
+        </div>
         </div>`;
 
+    //     <div class="grid-area">
+    //     <div title="endpoint processed 50% of requests in less than ${this.duration(codeObjectsInsight.median)}">
+    //         <strong>median</strong>: ${this.duration(codeObjectsInsight.median)}
+    //     </div>
+    //     <div title="endpoint processed 5% of requests in higher than ${this.duration(codeObjectsInsight.p95)}">
+    //         <strong>95th percentile</strong>: ${this.duration(codeObjectsInsight.p95)}
+    //     </div>
+    //     <div>
+    //         <strong>mean</strong>: ${this.duration(codeObjectsInsight.mean)}
+    //     </div>
+    // </div>
         return {
             getHtml: ()=>html,
             sortIndex: 0,
