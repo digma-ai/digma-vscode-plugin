@@ -93,6 +93,11 @@ export class EditorHelper {
         }
     }
 
+    public async openDocument(content: string, language: string = 'text') {
+        const doc = await vscode.workspace.openTextDocument({ language, content });
+        return await vscode.window.showTextDocument(doc);
+    }
+
     private async askAndOpenFromSourceControl(editorInfo: EditorInfo) : Promise<vscode.TextDocument | undefined>
     {
         if(!this._sourceControl.current)

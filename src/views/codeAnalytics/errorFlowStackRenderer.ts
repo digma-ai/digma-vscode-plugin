@@ -199,9 +199,7 @@ export class ErrorFlowStackRenderer {
         let content = undefined;
         if(this._viewModel)
         {
-            const stacksHtml = this._viewModel?.stacks
-                .map(s => ErrorFlowStackRenderer.getFlowStackHtml(s))
-                .join('') ?? '';
+            const stacksHtml = ErrorFlowStackRenderer.getFlowStackHtml(this._viewModel?.stacks);
             
             content = stacksHtml 
                 ? /*html*/`<div class="list">${stacksHtml}</div>`
@@ -222,43 +220,46 @@ export class ErrorFlowStackRenderer {
             </div>`;
     }
 
-    public static getFlowStackHtml(stack: StackViewModel)
+    public static getFlowStackHtml(stacks: StackViewModel[])
     {
-        if(!stack)
-            return '';
-
         // if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
         //     return '';
 
-        let html : string='';
-        const allOutsideWorkspaceClass = stack.frames.all(f => !f.workspaceUri) ? "all-outside-workspace" : "";
-        const hidden = Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri) ? "hidden" : "";
-        const frames = stack.frames;
-            //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
-        var lastSpan='';
-        for (var frame of frames ){
-            if (frame.spanName!==lastSpan){
-                html+=`
-                <div style="color: #4F62AD;" class="list ellipsis">
-                    <span>
-                        <span>${frame.spanName}</span> 
-                        <span style="color:#4F62AD;line-height:25px;margin-right:5px" class="codicon codicon-telescope"> 
-                        </span>
-                    </span>
-                </div>`;
+        let html = '';
 
-                lastSpan=frame.spanName;
+        for (const stack of stacks) {
+            let stackHtml = '';
+            const allOutsideWorkspaceClass = stack.frames.all(f => !f.workspaceUri) ? "all-outside-workspace" : "";
+            const hidden = Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri) ? "hidden" : "";
+            const frames = stack.frames;
+                //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
+            let lastSpan = '';
+            for (const frame of frames ){
+                if (frame.spanName !== lastSpan){
+                    stackHtml += `
+                    <div style="color: #4F62AD;" class="list ellipsis">
+                        <span>
+                            <span>${frame.spanName}</span> 
+                            <span style="color:#4F62AD;line-height:25px;margin-right:5px" class="codicon codicon-telescope"> 
+                            </span>
+                        </span>
+                    </div>`;
+
+                    lastSpan = frame.spanName;
+                }
+                stackHtml += ErrorFlowStackRenderer.getFrameItemHtml(frame);
             }
-            html+=ErrorFlowStackRenderer.getFrameItemHtml(frame);
+
+            html += /*html*/`
+                <div class="${allOutsideWorkspaceClass}" ${hidden}>
+                    <div class="flow-stack-title">${stack.exceptionType}</div>
+                    <div class="flow-stack-message">${stack.exceptionMessage}</div>
+                    <div class="flow-stack-frames"><ul class="tree frames">${stackHtml}</ul></div>
+                </div>
+            `;
         }
 
-        return /*html*/`
-            <div class="${allOutsideWorkspaceClass}" ${hidden}>
-                <div class="flow-stack-title">${stack.exceptionType}</div>
-                <div class="flow-stack-message">${stack.exceptionMessage}</div>
-                <div class="flow-stack-frames"><ul class="tree frames">${html}</ul></div>
-            </div>
-        `;
+        return html;
     }
 
     private static getFrameItemHtml(frame: FrameViewModel)

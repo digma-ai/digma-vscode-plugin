@@ -15,11 +15,17 @@ export namespace UiMessage
         export class GoToLineByFrameId {
             constructor(public frameId?: number){}
         }
+        export class OpenRawTrace {
+            constructor(public content?: string) {}
+        }
         export class WorkspaceOnlyChanged {
             constructor(public value?: boolean){}
         }
         export class ErrorViewVisibilityChanged {
             constructor(public visible?: boolean){}
+        }
+        export class NavigateErrorFlow {
+            constructor(public offset?: number) {}
         }
         export class OverlayVisibilityChanged {
             constructor(public visible?: boolean, public id?:string){}
@@ -46,6 +52,17 @@ export namespace UiMessage
         export class ErrorsList {
             constructor(public htmlContent?: string) {}
         }
+        export class StackDetails {
+            constructor(public htmlContent?: string) {}
+        }
+        export class CurrenStackInfo {
+            constructor(public stackInfo?: {
+                stackNumber: number
+                totalStacks: number
+                canNavigateToPrevious: boolean,
+                canNavigateToNext: boolean,
+            }) {}
+        }
         export class CodeObjectLabel {
             constructor(public htmlContent?: string) {}
         }
@@ -57,13 +74,6 @@ export namespace UiMessage
         }
     }
 }
-
-
-
-
-
-
-
 
 export class SetErrorViewContentUIEvent{
     constructor(public htmlContent?: string) {}

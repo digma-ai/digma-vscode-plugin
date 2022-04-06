@@ -1,3 +1,7 @@
+html, body {
+    height: 100%;
+}
+
 vscode-panel-view {
   flex-direction: column;
   padding-left: 0;
@@ -5,6 +9,7 @@ vscode-panel-view {
 #view-overlay{
     display: flex;
     flex-direction: column;
+    height: 100%;
 
     .codeobject-link{
         display: block;
@@ -108,7 +113,11 @@ vscode-panel-view {
     }
 }
 
-.error-view{
+.error-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+
     .score-box {
         margin: 0px;
         width: 30px;
@@ -194,6 +203,38 @@ vscode-panel-view {
         align-items: flex-end;
         opacity: 0.4;
         margin-left: 10px;
+    }
+    .stack-details-section {
+        flex-grow: 1;
+        overflow-y: auto;
+        margin-block: 0;
+        padding-block-start: 1em;
+    }
+    .stack-nav {
+        background-color: var(--vscode-activityBar-background);
+        color: var(--vscode-activityBar-foreground);
+
+        margin-bottom: calc(var(--design-unit) * 1px);
+        padding: calc(var(--design-unit) * 1px);
+        align-items: center;
+
+        > .stack-nav-previous, > .stack-nav-next {
+            cursor: pointer;
+
+            &.disabled {
+                opacity: 0.4;
+                cursor: unset;
+            }
+
+            &:hover {
+                background-color: var(--vscode-activityBar-foreground);
+                color: var(--vscode-activityBar-background);
+            }
+        }
+    }
+    .status-bar {
+        margin-block-start: 0;
+        margin-block-end: 0.2em;
     }
 }
 
