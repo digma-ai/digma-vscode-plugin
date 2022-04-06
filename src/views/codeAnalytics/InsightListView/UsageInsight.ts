@@ -1,7 +1,7 @@
 import { IListViewItem, ListViewGroupItem } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
-import { WebviewChannel, WebViewUris } from "../../webViewUtils";
+import { WebViewUris } from "../../webViewUtils";
 import { DecimalRounder } from "../../utils/valueFormatting";
 
 export interface LowUsageInsight extends CodeObjectInsight
@@ -213,63 +213,6 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
     }
 
     public create(scope: CodeObjectInfo, codeObjectsInsight: SlowestSpansInsight []): IListViewItem [] {
-        const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
-        const listViewItems: IListViewItem [] = [];
-        for(let route in groupedByRoute)
-        {
-            const group = new HttpEndpointListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = groupedByRoute[route].map(o=>this.createListViewItem(o));
-            group.addItems(...items);
-            listViewItems.push(group);
-        }
-        return listViewItems;
-    }
-
-}
-
-export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCreator
-{
-    constructor() {
-        }
-
-    private duration(duration:Duration)
-    {
-        return `${duration.value} ${duration.unit}`;
-    }
-
-    public createListViewItem(codeObjectsInsight: SlowEndpointInsight) : IListViewItem
-    {
-        const tooltip = `
-        server processed 50% of requests in less than ${this.duration(codeObjectsInsight.endpointsMedian)}\n
-        server processed 25% of requests in higher than ${this.duration(codeObjectsInsight.endpointsP75)}`;
-        const html = `
-        <div class="list-item">
-            <div class="list-item-content-area">
-                <div class="list-item-header" title="${tooltip}"><strong>Slow Endpoint</strong></div>
-                <div title="${tooltip}">On average requests are slower than other endpoints</div>
-                <div class="grid-area">
-                    <div title="endpoint processed 50% of requests in less than ${this.duration(codeObjectsInsight.median)}">
-                        <strong>median</strong>: ${this.duration(codeObjectsInsight.median)}
-                    </div>
-                    <div title="endpoint processed 5% of requests in higher than ${this.duration(codeObjectsInsight.p95)}">
-                        <strong>95th percentile</strong>: ${this.duration(codeObjectsInsight.p95)}
-                    </div>
-                    <div>
-                        <strong>mean</strong>: ${this.duration(codeObjectsInsight.mean)}
-                    </div>
-                </div>
-            </div>
-        </div>`;
-
-        return {
-            getHtml: ()=>html,
-            sortIndex: 0,
-            groupId: undefined
-        };
-    }
-
-    public create(scope: CodeObjectInfo, codeObjectsInsight: SlowEndpointInsight []): IListViewItem [] {
         const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
         const listViewItems: IListViewItem [] = [];
         for(let route in groupedByRoute)
