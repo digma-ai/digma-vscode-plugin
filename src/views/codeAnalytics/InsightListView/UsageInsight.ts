@@ -177,7 +177,9 @@ export interface SlowestSpansInsight extends CodeObjectInsight
 
 export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    constructor() { 
+    constructor(
+        private viewUris: WebViewUris
+    ) { 
     } 
 
     private duration(duration:Duration)
@@ -192,11 +194,14 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         <div class="list-item">
             <div class="list-item-content-area">
                 <div class="list-item-header" title="Spans that take more than 50% of the endpoint duration">
-                    <strong>Slowest Spans</strong>
+                    <strong>Span Bottleneck</strong>
                 </div>
                 <div>
                     ${items.join('')}
                 </div>
+            </div>
+            <div class="list-item-right-area">
+                <img style="align-self:center;" src="${this.viewUris.image("bottleneck.png")}" width="30" height="30">
             </div>
         </div>`;
 

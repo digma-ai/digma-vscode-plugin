@@ -122,7 +122,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator());
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
         listViewItemsCreator.add("SpanUsages", new SpanListViewItemsCreator());
-        listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator());
+        listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris));
         const usageTemplate = new UsageViewItemsTemplate(this._webViewUris);
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
