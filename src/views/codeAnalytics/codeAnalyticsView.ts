@@ -127,7 +127,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
-        listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator());
+        listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
 
 
