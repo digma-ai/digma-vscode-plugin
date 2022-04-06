@@ -1,7 +1,7 @@
 import { IListViewItem, ListViewGroupItem } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
-import { WebviewChannel, WebViewUris } from "../../webViewUtils";
+import { WebViewUris } from "../../webViewUtils";
 import { DecimalRounder } from "../../utils/valueFormatting";
 
 export interface LowUsageInsight extends CodeObjectInsight
@@ -179,8 +179,8 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
 {
     constructor(
         private viewUris: WebViewUris
-    ) { 
-    } 
+    ) {
+    }
 
     private duration(duration:Duration)
     {
@@ -206,8 +206,8 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         </div>`;
 
         return {
-            getHtml: ()=>html, 
-            sortIndex: 0, 
+            getHtml: ()=>html,
+            sortIndex: 0,
             groupId: undefined
         };
     }
@@ -230,8 +230,8 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
 
 export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    constructor() { 
-        } 
+    constructor() {
+        }
 
     private duration(duration:Duration)
     {
@@ -263,12 +263,12 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         </div>`;
 
         return {
-            getHtml: ()=>html, 
-            sortIndex: 0, 
+            getHtml: ()=>html,
+            sortIndex: 0,
             groupId: undefined
         };
     }
-   
+
     public create(scope: CodeObjectInfo, codeObjectsInsight: SlowEndpointInsight []): IListViewItem [] {
         const groupedByRoute = codeObjectsInsight.groupBy(o=>o.route);
         const listViewItems: IListViewItem [] = [];
@@ -298,7 +298,7 @@ export class HttpEndpointListViewGroupItem extends ListViewGroupItem
     public getGroupHtml(itemsHtml: string): string {
         const parts = this.route.split(' ');
         return /*html*/ `
-        <div class="codeobject-selection-internal">
+        <div class="group-item">
             <span class="scope">REST: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
             <span class="uppercase">
