@@ -46,9 +46,19 @@ vscode-panel-view {
 
 .list-item-content-area>div {
     margin: 2px;
+    font-size: var(--type-ramp-minus1-font-size);
     &:not(:first-child) {
-        font-size: 12px;
+        font-size: var(--type-ramp-minus1-font-size);
     }
+}
+
+.list-item-content-description {
+    opacity: 0.8;
+}
+
+.insight-main-value {
+    font-size: var(--type-ramp-minus1-font-size);
+    text-align: center;
 }
 
 .list-item-right-area {
@@ -89,6 +99,10 @@ vscode-panel-view {
 }
 
 .error-name {
+    font-weight: bold;
+}
+
+.span-name {
     font-weight: bold;
 }
 

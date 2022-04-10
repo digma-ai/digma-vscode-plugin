@@ -13,7 +13,7 @@ export interface SpanInsight extends CodeObjectInsight
 }
 export class SpanListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public create(scope: CodeObjectInfo, codeObjectsInsight: SpanInsight []): IListViewItemBase []
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanInsight []): Promise<IListViewItemBase []>
     {
         const groupedBySpan = codeObjectsInsight.groupBy(o => o.span);
         const listViewItems: IListViewItem [] = [];

@@ -15,6 +15,10 @@ export namespace UiMessage
         export class GoToLineByFrameId {
             constructor(public frameId?: number){}
         }
+
+        export class GoToFileAndLine {
+            constructor(public file?: string, public line?:number){}
+        }
         export class OpenRawTrace {
             constructor(public content?: string) {}
         }

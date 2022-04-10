@@ -7,7 +7,7 @@ export interface CodeObjectInsight{
 }
 export interface IInsightListViewItemsCreator
 {
-    create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight []): IListViewItemBase [];
+    create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight []): Promise<IListViewItemBase[]>;
 }
 
 
@@ -22,7 +22,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
 
     }
 
-    public create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[]): IListViewItemBase[] {
+    public async create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[]): Promise<IListViewItemBase[]> {
 
         const groupedByType = codeObjectInsight.groupBy(x => x.type);
         const items: IListViewItemBase [] = [];
@@ -31,7 +31,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
             const creator = this._creators.get(type);
             if(creator)
             {
-                items.push(...creator.create(scope, groupedByType[type]));
+                items.push(...await creator.create(scope, groupedByType[type]));
             }
             else{
                 throw new Error(`codeobject of type ${type} is not supported`);

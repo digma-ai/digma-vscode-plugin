@@ -7,7 +7,7 @@ export class CSharpMethodExtractor implements IMethodExtractor
 {
     public extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
 
-        const symbolInfos = this.extractFunctions(document.uri.toModulePath(), '', docSymbols);
+        const symbolInfos = this.extractFunctions(document.uri,document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
     }
 
@@ -24,7 +24,7 @@ export class CSharpMethodExtractor implements IMethodExtractor
     }
 
 
-    private extractFunctions(filePath: string, namespace: string, symbols: DocumentSymbol[]): SymbolInfo[] {
+    private extractFunctions(uri: vscode.Uri,filePath: string, namespace: string, symbols: DocumentSymbol[]): SymbolInfo[] {
 
         let symbolInfos: SymbolInfo[] = [];
 
@@ -47,13 +47,15 @@ export class CSharpMethodExtractor implements IMethodExtractor
                     name: funcName,
                     codeLocation: namespace,
                     displayName: namespace + "." + funcName, 
-                    range
+                    range,
+                    documentUri:uri
+
                 });
             }
 
             if (sym.children)
             {
-                symbolInfos = symbolInfos.concat(this.extractFunctions(filePath, sym.name, sym.children));
+                symbolInfos = symbolInfos.concat(this.extractFunctions(uri,filePath, sym.name, sym.children));
             }
         }
 

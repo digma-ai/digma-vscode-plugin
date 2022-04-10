@@ -97,6 +97,13 @@ window.addEventListener("load", () =>
         publish(new UiMessage.Get.ErrorDetails(errorSourceUID));
     });
 
+    $(document).on("click", ".span-name.link", function () {
+        let codeUri = $(this).data("code-uri");
+        let line = $(this).data("code-line");
+
+        publish(new UiMessage.Notify.GoToFileAndLine(codeUri,Number(line)));
+    });
+
     $(document).on("click", ".error_frames_btn", function () {
         $(".error-raw").hide();
         $(".error-frames").show();

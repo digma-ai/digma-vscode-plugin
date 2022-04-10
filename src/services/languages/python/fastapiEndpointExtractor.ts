@@ -39,7 +39,8 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
                 id: document.uri.toModulePath() + '$_$' + method + ' ' + match[1],
                 method: method, 
                 path: match[1],
-                range: relevantFunc.range
+                range: relevantFunc.range,
+                documentUri: document.uri
             });
         }
         return results;

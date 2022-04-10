@@ -9,17 +9,24 @@ export interface SymbolInfo{
     codeLocation: string;
     displayName: string;
     range: vscode.Range;
+    documentUri: vscode.Uri;
+
 }
 export interface EndpointInfo{
     id: string;
     method: string;
     path: string;
     range: vscode.Range;
+    documentUri: vscode.Uri;
+
+
 }
 export interface SpanInfo{
     id: string;
     name: string;
     range: vscode.Range;
+    documentUri: vscode.Uri;
+
 }
 
 

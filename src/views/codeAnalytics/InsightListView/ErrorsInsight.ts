@@ -21,7 +21,7 @@ export interface ErrorsInsight extends CodeObjectInsight
 
 export class ErrorsListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public create(scope: CodeObjectInfo, codeObjectsInsight: ErrorsInsight []): IListViewItemBase [] {
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: ErrorsInsight []): Promise<IListViewItemBase []> {
         let codeObjectInsight = codeObjectsInsight.single();
         let errorsHtml: string[] = [];
         codeObjectInsight.topErrors.forEach((err) => {

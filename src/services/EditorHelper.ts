@@ -16,6 +16,11 @@ export interface EditorInfo {
     lastInstanceCommitId?: string;
 }
 
+export interface InstrumentationInfo {
+    instrumentationName?: string;
+    spanName?: string;
+}
+
 export class EditorHelper {
 
     constructor(
@@ -80,10 +85,7 @@ export class EditorHelper {
             
             if(doc)
             {
-                await vscode.window.showTextDocument(doc, { preview: true });
-                const line = doc.lineAt(lineNumber-1);
-                vscode.window.activeTextEditor!.selection = new vscode.Selection(line.range.start, line.range.start);
-                vscode.window.activeTextEditor!.revealRange(line.range, vscode.TextEditorRevealType.InCenter); 
+                await this.openFileAndLine(doc, lineNumber); 
             }
         }
         catch(error)
@@ -91,6 +93,19 @@ export class EditorHelper {
             Logger.error(`Failed to open file: ${editorInfo.modulePhysicalPath}`, error);
             vscode.window.showErrorMessage(`Failed to open file: ${editorInfo.modulePhysicalPath}`)
         }
+    }
+
+    public async openTextDocumentFromUri(uri: vscode.Uri) : Promise<vscode.TextDocument>{
+        let doc = await vscode.workspace.openTextDocument(uri);
+        return doc;
+
+    }
+
+    public async openFileAndLine(doc: vscode.TextDocument, lineNumber: number) {
+        await vscode.window.showTextDocument(doc, { preview: true });
+        const line = doc.lineAt(lineNumber - 1);
+        vscode.window.activeTextEditor!.selection = new vscode.Selection(line.range.start, line.range.start);
+        vscode.window.activeTextEditor!.revealRange(line.range, vscode.TextEditorRevealType.InCenter);
     }
 
     public async openDocument(content: string, language: string = 'text') {
@@ -136,11 +151,12 @@ export class EditorHelper {
         return await this._sourceControl.current?.getFile(uri, commit);
     }
 
+
     public async getWorkspaceFileUri(editorInfo: EditorInfo) : Promise<vscode.Uri | undefined>    {
         
         const moduleLogicalPath = editorInfo.moduleLogicalPath;
         //Try first using the logical name of the function if we have it
-        if (moduleLogicalPath){
+        if (moduleLogicalPath){ 
 
             var symbols = await this.lookupCodeObjectByFullName(moduleLogicalPath);
             //We have a match
@@ -163,11 +179,16 @@ export class EditorHelper {
                 return workspaceUri;
             }
         }
+
+       
     }
 
     private async lookupCodeObjectByFullName(name:string) : Promise<vscode.SymbolInformation[]>{
         return await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", name);
     }
+
+
+
 
     public async getExecutedCodeFromScm(uri: vscode.Uri, commit: string, line: integer) : Promise<string |undefined>{
         var doc = await this.getFromSourceControl(uri, commit);

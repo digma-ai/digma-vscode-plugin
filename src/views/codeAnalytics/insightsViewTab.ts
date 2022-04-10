@@ -72,7 +72,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             return;
         }
         try{
-            const listViewItems = this._listViewItemsCreator.create(codeObject, responseItems);
+            const listViewItems = await this._listViewItemsCreator.create(codeObject, responseItems);
             const html = new ListViewRender(listViewItems).getHtml();
             if(html)
             {
