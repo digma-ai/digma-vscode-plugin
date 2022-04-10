@@ -122,12 +122,16 @@ export interface Duration {
 export interface SlowEndpointInsight extends CodeObjectInsight {
     route: string;
     endpointsMedian: Duration;
+    endpointsMedianOfMedians: Duration;
+    endpointsMedianOfP75: Duration;
     endpointsP75: Duration;
     min: Duration;
     max: Duration;
     mean: Duration;
     median: Duration;
+    p75: Duration;
     p95: Duration;
+    p99: Duration;
 }
 
 export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreator {
@@ -288,7 +292,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         <div class="list-item">
             <div class="list-item-content-area">
                 <div class="list-item-header" title="${tooltip}"><strong>Slow Endpoint</strong></div>
-                <div title="${tooltip}"><span class="list-item-content-description" >On average requests are slower than other endpoints by</span> <span class="negative-value">${this.computePercentageDiff(codeObjectsInsight.median.raw, codeObjectsInsight.endpointsMedian.raw)}</span></div>
+                <div title="${tooltip}"><span class="list-item-content-description" >On average requests are slower than other endpoints by</span> <span class="negative-value">${this.computePercentageDiff(codeObjectsInsight.median.raw, codeObjectsInsight.endpointsMedianOfMedians.raw)}</span></div>
         
             </div>
             <div class="list-item-right-area">

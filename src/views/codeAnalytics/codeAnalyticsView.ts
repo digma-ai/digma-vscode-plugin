@@ -14,7 +14,7 @@ import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
 import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { SpanListViewItemsCreator } from "./InsightListView/SpanInsight";
-import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/UsageInsight";
+import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
