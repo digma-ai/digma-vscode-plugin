@@ -163,6 +163,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
 export interface SpanInfo {
     instrumentationLibrary : string;
     name: string;
+    displayName: string;
     serviceName: string;
 }
 
@@ -221,7 +222,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         for (let i=0;i<spansLocations.length;i++){
             let result = await spansLocations[i].spanSearchResult;
             items.push(`<div>
-                <span class="span-name ${result ? "link" : ""} ellipsis" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">${spansLocations[i].slowspaninfo.spanInfo.name}</span>
+                <span class="span-name ${result ? "link" : ""} ellipsis" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">${spansLocations[i].slowspaninfo.spanInfo.displayName}</span>
                 <span class="negative-value">${(spansLocations[i].slowspaninfo.value*100).toFixed(1)}%</span>
             </div>`);
         }
