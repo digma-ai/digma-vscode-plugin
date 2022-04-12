@@ -6,14 +6,22 @@ export interface SpanInsight extends CodeObjectInsight
 {
     span: string,
     flows:{
-        rootSerivce: string,
-        intermediateSpan: string,
         percentage: Number,
+        firstService:{
+            service: string,
+            span: string
+        },
+        intermediateSpan: string | undefined,
+        lastService:{
+            service: string,
+            span: string
+        } | undefined,
+        lastServiceSpan: string | undefined
     }[]
 }
 export class SpanListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public create(scope: CodeObjectInfo, codeObjectsInsight: SpanInsight []): IListViewItemBase []
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanInsight []): Promise<IListViewItemBase []>
     {
         const groupedBySpan = codeObjectsInsight.groupBy(o => o.span);
         const listViewItems: IListViewItem [] = [];
@@ -30,19 +38,48 @@ export class SpanListViewItemsCreator implements IInsightListViewItemsCreator
 
     public createListViewItem(insight: SpanInsight) : IListViewItem
     {
-        const usages = insight.flows.map(flow => /*html*/`
-            <div class="flex-row" style="margin: 10px 0">
-                <span style="margin-right: 10px;">${flow.percentage.toFixed(1)}%</span>
-                <span class="codicon codicon-server-process" style="margin-right: 3px;"></span>
-                <span style="margin-right: 15px;">${flow.rootSerivce}</span>
-                <span>...</span>
-                <span style="margin: 0 5px;">${flow.intermediateSpan}</span>
-                <span>...</span>
-            </div>
-        `);
+        // <span class="codicon codicon-server-process" style="margin-right: 3px;"></span>
+        const usages = insight.flows.map(flow => {
+
+            let firstServiceHtml = /*html*/`
+                <span class="flow-entry ellipsis" title="${flow.firstService.service}: ${flow.firstService.span}">
+                    <span class="flow-service">${flow.firstService.service}:</span>
+                    <span class="flow-span">${flow.firstService.span}</span>
+                </span>`;
+
+            let lastServiceHtml = '';
+            if(flow.lastService)
+                lastServiceHtml = /*html*/`
+                    <span class="codicon codicon-arrow-small-right"></span>
+                    <span class="flow-entry ellipsis" title="${flow.lastService.service}: ${flow.lastService.span}">
+                        <span class="flow-service">${flow.lastService.service}:</span>
+                        <span class="flow-span">${flow.lastService.span}</span>
+                    </span>`;
+
+            let intermediateSpanHtml = '';
+            let lastServiceSpanHtml = '';
+            if(flow.intermediateSpan)
+                intermediateSpanHtml = /*html*/`
+                    <span class="codicon codicon-arrow-small-right"></span>
+                    <span class="ellipsis" title="${flow.intermediateSpan}">${flow.intermediateSpan}</span>`;
+            else if(flow.lastServiceSpan)
+                lastServiceSpanHtml = /*html*/`
+                    <span class="codicon codicon-arrow-small-right"></span>
+                    <span class="ellipsis" title="${flow.lastServiceSpan}">${flow.lastServiceSpan}</span>`;
+
+            return /*html*/`<div class="flow-row flex-row">
+                <span class="flow-percent">${flow.percentage.toFixed(1)}%</span>
+                <span class="flex-row flex-wrap ellipsis">
+                    ${firstServiceHtml}    
+                    ${intermediateSpanHtml}
+                    ${lastServiceHtml}        
+                    ${lastServiceSpanHtml}
+                </span>
+            </div>`
+        });
 
         const html = /*html*/ `
-            <div class="list-item">
+            <div class="list-item span-usages-insight">
                 <div class="list-item-content-area">
                     <div class="list-item-header"><strong>Top Usage</strong></div>
                     <div>${usages.join('')}</div>
@@ -66,7 +103,7 @@ export class SpanListViewGroupItem extends ListViewGroupItem
 
     public getGroupHtml(itemsHtml: string): string {
         return /*html*/ `
-            <div class="codeobject-selection-internal">
+            <div class="group-item">
                 <span class="scope">Span: </span>
                 <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
                 <span>${this.span}</span>

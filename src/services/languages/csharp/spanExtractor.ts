@@ -35,7 +35,8 @@ export class CSharpSpanExtractor implements ISpanExtractor
                 results.push({
                     id: symbolInfo.codeLocation + '$_$' + spanName,
                     name: spanName,
-                    range: spanNameToken.range
+                    range: spanNameToken.range,
+                    documentUri: document.uri
                 });
             }
         }

@@ -5,6 +5,7 @@ import { Logger } from "./logger";
 import { SymbolProvider, Token, TokenType } from './languages/symbolProvider';
 import { Dictionary, Future } from './utils';
 import { EndpointInfo, SpanInfo, SymbolInfo } from './languages/extractors';
+import { InstrumentationInfo } from './EditorHelper';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -43,6 +44,55 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
+    public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanInfo|undefined>{
+        const codeFileHint = instrumentationInfo.instrumentationName;
+        if (codeFileHint){
+            
+            
+            let codeHintFiles = codeFileHint.split(' ');
+            var head = codeHintFiles[0];
+            let folder = await vscode.workspace.workspaceFolders?.find(w => w.name === head);
+            var tail= codeHintFiles;
+
+            if (folder) {
+                tail = codeHintFiles.slice(1);
+            }
+
+            if (codeHintFiles.length>1){
+                
+                let files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`)
+                    .then(files=> 
+                        files.map(file=>vscode.workspace.openTextDocument(file)
+                                            .then(document=>
+                                                this.getDocumentInfo(document))
+                                                
+                                                .then(docInfo=>{
+                                                   let spans = docInfo!.spans
+                                                        .filter(x=>x.name===instrumentationInfo.spanName!);
+                                                   return {
+                                                        spanLocation : (spans === undefined || spans.length === 0) ? undefined : spans[0]
+                                                    };
+                                               
+                                            })));                
+                var candidates = [];
+                for (var i=0; i<files.length;i++){
+                    let spanData = (await files[i])
+                    if (spanData.spanLocation){
+                        candidates.push(spanData);
+                    }
+                }
+                
+                if (candidates.length===1){
+                    return (await candidates[0]).spanLocation;
+                }
+                
+
+            }
+
+
+        }
+    }
+
     private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
         const docRelativePath = doc.uri.toModulePath();
@@ -77,7 +127,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                     lines,
                     tokens,
                     endpoints,
-                    spans
+                    spans,
+                    uri: doc.uri
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
@@ -90,7 +141,9 @@ export class DocumentInfoProvider implements vscode.Disposable
                     lines: [],
                     tokens: [],
                     endpoints: [],
-                    spans: []
+                    spans: [],
+                    uri: doc.uri
+
                 };
                 Logger.error(`Failed to build DocumentInfo for ${doc.uri} v${doc.version}`, e);
             }
@@ -216,6 +269,7 @@ export interface DocumentInfo
     tokens: Token[];
     endpoints: EndpointInfo[];
     spans: SpanInfo[];
+    uri: vscode.Uri;
 }
 
 export interface LineInfo

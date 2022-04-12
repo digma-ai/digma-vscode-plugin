@@ -6,11 +6,11 @@ import { IMethodExtractor, SymbolInfo } from "../extractors";
 export class PythonMethodExtractor implements IMethodExtractor
 {
     public extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
-        const symbolInfos = this.extractFunctions(document.uri.toModulePath(), '', docSymbols);
+        const symbolInfos = this.extractFunctions(document.uri, document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
     }
 
-    private extractFunctions(filePath: string, parentSymPath: string, symbols: DocumentSymbol[]): SymbolInfo[] {
+    private extractFunctions(uri: vscode.Uri, filePath: string, parentSymPath: string, symbols: DocumentSymbol[]): SymbolInfo[] {
         let symbolInfos: SymbolInfo[] = [];
 
         for (let sym of symbols)
@@ -33,13 +33,14 @@ export class PythonMethodExtractor implements IMethodExtractor
                     name: sym.name,
                     codeLocation: filePath,
                     displayName: symPath, 
-                    range
+                    range,
+                    documentUri: uri
                 });
             }
 
             if (sym.children)
             {
-                symbolInfos = symbolInfos.concat(this.extractFunctions(filePath, symPath, sym.children));
+                symbolInfos = symbolInfos.concat(this.extractFunctions(uri,filePath, symPath, sym.children));
             }
         }
 

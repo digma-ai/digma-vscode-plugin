@@ -24,7 +24,8 @@ export class PythonSpanExtractor implements ISpanExtractor
             results.push({
                 id: document.uri.toModulePath() + '$_$' + spanName,
                 name: spanName,
-                range: token.range
+                range: token.range,
+                documentUri: document.uri
             });
         }
 
