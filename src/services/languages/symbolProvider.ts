@@ -46,15 +46,16 @@ export class SymbolProvider
     private async retryOnStartup<T>(lspCall: () => Promise<T | undefined>, predicate: (result: T | undefined) => boolean): Promise<T | undefined>
     {
         let result = await lspCall();
-        if(!predicate(result) && this._creationTime.clone().add(10, 'second') > moment.utc())
+        if(!predicate(result) && this._creationTime.clone().add(15, 'second') > moment.utc())
         {
-            for(let delayMs of [100, 200, 400, 800, 1600])
+            for(let delayMs of [100, 200, 400, 800, 1600, 3200, 3200, 3200])
             {
                 await delay(delayMs);
                 result = await lspCall();
                 if(predicate(result))
-                    break;
+                    return result;
             }
+            Logger.warn(`Retry ended with timeout for "${lspCall.toString()}"`)
         }
         return result;
     }

@@ -45,7 +45,12 @@ jobs:
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
-          
+      
+      - name: Publish to Open VSX Registry
+        uses: HaaLeo/publish-vscode-extension@v1
+        with:
+          pat: ${{ secrets.OVSX_TOKEN }}
+      
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
