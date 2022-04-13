@@ -15,6 +15,7 @@ import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { ErrorsLineDecorator } from './decorators/errorsLineDecorator';
 import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
 import { EditorHelper } from './services/EditorHelper';
+import { CodeInvestigator } from './services/codeInvestigator';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -30,6 +31,7 @@ export async function activate(context: vscode.ExtensionContext)
     const analyticsProvider = new AnalyticsProvider();
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
+    const codeInvestigator = new CodeInvestigator(documentInfoProvider);
 
     if(!Settings.environment.value){
         const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();
@@ -42,7 +44,7 @@ export async function activate(context: vscode.ExtensionContext)
     //context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
    // context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, editorHelper, context.extensionUri));
     //context.subscriptions.push(new ErrorFlowRawStackEditor());
-    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider));
+    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInvestigator));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider,
