@@ -3,14 +3,12 @@ import { CodeObjectInfo } from "../codeAnalyticsView";
 import { HtmlHelper } from "../common";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 
-export interface NamedError
-{
+export interface NamedError {
     uid: string,
     errorType: string,
     sourceCodeObjectId: string
 }
-export interface ErrorsInsight extends CodeObjectInsight
-{
+export interface ErrorsInsight extends CodeObjectInsight {
     errorCount: number,
     unhandledCount: number,
     unexpectedCount: number,
@@ -19,21 +17,20 @@ export interface ErrorsInsight extends CodeObjectInsight
 
 
 
-export class ErrorsListViewItemsCreator implements IInsightListViewItemsCreator
-{
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: ErrorsInsight []): Promise<IListViewItemBase []> {
+export class ErrorsListViewItemsCreator implements IInsightListViewItemsCreator {
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: ErrorsInsight[]): Promise<IListViewItemBase[]> {
         let codeObjectInsight = codeObjectsInsight.single();
         let errorsHtml: string[] = [];
         codeObjectInsight.topErrors.forEach((err) => {
-            errorsHtml.push(`<div>${HtmlHelper.getErrorName(scope,err.errorType, err.sourceCodeObjectId, err.uid)}</div>`);
+            errorsHtml.push(`<div>${HtmlHelper.getErrorName(scope, err.errorType, err.sourceCodeObjectId, err.uid)}</div>`);
         });
-        
+
         const html = `
             <div class="list-item">
                 <div class="list-item-content-area">
                     <div class="list-item-header"><strong>Errors</strong></div>
-                    <div>${codeObjectInsight.errorCount} Errors (${codeObjectInsight.unhandledCount} unhandled ${codeObjectInsight.unexpectedCount} unexpected)</div>
-                    <div class="spacer"></div>
+                    <div class="list-item-content-description">${codeObjectInsight.errorCount} Errors (${codeObjectInsight.unhandledCount} unhandled ${codeObjectInsight.unexpectedCount} unexpected)</div>
+                    <div class="small-spacer"></div>
                     ${errorsHtml.join("")}
                 </div>
 
@@ -43,6 +40,6 @@ export class ErrorsListViewItemsCreator implements IInsightListViewItemsCreator
                     </div>
                 </div>
             </div>`;
-        return [{getHtml: ()=>html, sortIndex: 1, groupId: undefined}];
+        return [{ getHtml: () => html, sortIndex: 1, groupId: undefined }];
     }
 }

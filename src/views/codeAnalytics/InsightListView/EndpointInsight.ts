@@ -237,7 +237,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
                 <div class="list-item-header" title="Spans that take more than 50% of the endpoint duration">
                     <strong>Span Bottleneck</strong>
                 </div>
-                <div class="list-item-content-description">The following spans slowing request handling</div>
+                <div class="list-item-content-description">The following spans are slowing request handling</div>
                 <div>
                     ${items.join('')}
                 </div>
