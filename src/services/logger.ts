@@ -5,6 +5,7 @@ import * as vscode from 'vscode';
 enum LogLevel{
 	Trace,
 	Info,
+	Warn,
 	Error
 }
 
@@ -28,6 +29,10 @@ export class Logger {
 
 	public static info(message: string, data?: any): void {
 		this.logLevel(LogLevel.Info, message, data);
+	}
+
+	public static warn(message: string, data?: any): void {
+		this.logLevel(LogLevel.Warn, message, data);
 	}
 
 	public static error(message: string, data?: any): void {

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { Token, TokenType } from "../symbolProvider";
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from "../extractors";
 
@@ -34,9 +35,9 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             const relevantFunc = symbolInfo.firstOrDefault(s => s.range.contains(methodToken.range))
             if (!relevantFunc)
                 continue;
-
+            
             results.push({
-                id: document.uri.toModulePath() + '$_$' + method + ' ' + match[1],
+                id: vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method + ' ' + match[1],
                 method: method, 
                 path: match[1],
                 range: relevantFunc.range,
