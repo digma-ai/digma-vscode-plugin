@@ -19,7 +19,7 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
                             <div><vscode-link href="#">See how this was calculated</vscode-link></div>
                         </div>
                     <div class="list-item-right-area">
-                        <img style="align-self:center;" src="https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png" width="30" height="30">
+                        <img style="align-self:center;" src="https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png" width="32" height="32">
                     </div>
                     </div>
                     `;
