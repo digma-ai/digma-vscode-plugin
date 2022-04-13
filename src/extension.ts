@@ -27,11 +27,11 @@ export async function activate(context: vscode.ExtensionContext)
         new Git()
     ];
     const sourceControl = new SourceControl(supportedSourceControls);
-    const symbolProvider = new SymbolProvider(supportedLanguages);
+    const codeInvestigator = new CodeInvestigator();
+    const symbolProvider = new SymbolProvider(supportedLanguages, codeInvestigator);
     const analyticsProvider = new AnalyticsProvider();
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
-    const codeInvestigator = new CodeInvestigator(documentInfoProvider);
 
     if(!Settings.environment.value){
         const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();

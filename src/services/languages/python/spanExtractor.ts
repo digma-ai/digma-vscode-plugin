@@ -1,12 +1,16 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
-import { Token, TokenType } from "../symbolProvider";
+import { SymbolProvider, Token, TokenType } from "../symbolProvider";
 
 export class PythonSpanExtractor implements ISpanExtractor
 {
-    extractSpans(document: TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]): SpanInfo[] 
-    {
+    async extractSpans(
+        document: TextDocument,
+        symbolInfos: SymbolInfo[],
+        tokens: Token[],
+        symbolProvider: SymbolProvider,
+    ): Promise<SpanInfo[]> {
         const results: SpanInfo[] = []
         for(const token of tokens)
         {

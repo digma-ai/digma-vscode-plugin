@@ -1,9 +1,9 @@
-
 import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { delay } from '../utils';
 import { Logger } from '../logger';
+import { CodeInvestigator } from './../codeInvestigator';
 import { EndpointInfo, ILanguageExtractor, SpanInfo, SymbolInfo } from './extractors';
 
 export function trendToCodIcon(trend: number): string 
@@ -35,8 +35,10 @@ export class SymbolProvider
 {
     private _creationTime: moment.Moment = moment.utc();
 
-    constructor(public languageExtractors: ILanguageExtractor[]) 
-    {
+    constructor(
+        public languageExtractors: ILanguageExtractor[],
+        private _codeInvestigator: CodeInvestigator,
+    ) {
     }
 
     public supportsDocument(document: vscode.TextDocument): boolean{
@@ -70,15 +72,21 @@ export class SymbolProvider
             .flat();
     }
     
-    public async getSpans(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]):  Promise<SpanInfo[]>
-    {
+    public async getSpans(
+        document: vscode.TextDocument,
+        symbolInfos: SymbolInfo[],
+        tokens: Token[],
+    ):  Promise<SpanInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage)
             return [];
 
-        return supportedLanguage.spanExtractors
-            .map(x => x.extractSpans(document, symbolInfos, tokens))
-            .flat();
+        const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInvestigator);
+        const extractedSpans = await Promise.all(
+            spanExtractors.map(async (x) => await x.extractSpans(document, symbolInfos, tokens, this))
+        );
+        const spans = extractedSpans.flat();
+        return spans;
     }
 
     public async getMethods(document: vscode.TextDocument) : Promise<SymbolInfo[]>

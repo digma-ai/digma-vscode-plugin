@@ -1,3 +1,4 @@
+import { CodeInvestigator } from './../../codeInvestigator';
 import { SymbolInfo } from './../extractors';
 import { expect } from 'chai';
 
@@ -26,9 +27,10 @@ suite('CSharpSpanExtractor', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
     let extractor: CSharpSpanExtractor;
+    let codeInvestigator: CodeInvestigator;
 
     setup(() => {
-        extractor = new CSharpSpanExtractor();
+        extractor = new CSharpSpanExtractor(codeInvestigator);
     });
 
     suite('#extractSpans', () => {
@@ -135,25 +137,26 @@ suite('CSharpSpanExtractor', () => {
                     codeLocation: "dotnet_api_example.Controllers.TransferController",
                     displayName: "dotnet_api_example.Controllers.TransferController.Get",
                     range: range(23, 4, 31, 5),
+                    documentUri: vscode.Uri.file('')
                 },
             ];
 
             const expectedSpan = {
-                id: `dotnet_api_example.Controllers.TransferController$_$${ spanName }`,
+                id: `TransferController$_$${ spanName }`,
                 name: spanName,
                 range: range(26, 53, 26, 71),
             };
 
-            test('should extract the span name from the call arguments', () => {
+            test('should extract the span name from the call arguments', async () => {
                 // @ts-ignore
-                const spans = extractor.extractSpans(undefined, symbolInfos, tokens);
+                const spans = await extractor.extractSpans(undefined, symbolInfos, tokens);
 
                 expect(spans[0].name).to.equal(expectedSpan.name);
             });
 
-            test('should calculate the code object id using the code location and span name', () => {
+            test('should calculate the code object id using the name of the activity source and span name', async () => {
                 // @ts-ignore
-                const spans = extractor.extractSpans(undefined, symbolInfos, tokens);
+                const spans = await extractor.extractSpans(undefined, symbolInfos, tokens);
 
                 expect(spans[0].id).to.equal(expectedSpan.id);
             });

@@ -1,47 +1,89 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
+import { CodeInvestigator } from './../../codeInvestigator';
 import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
 import { Token, TokenType } from "../symbolProvider";
+import { SymbolProvider } from './../symbolProvider';
 
 export class CSharpSpanExtractor implements ISpanExtractor
 {
-    extractSpans(document: TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]): SpanInfo[] 
-    {
-        const results: SpanInfo[] = []
-        for(var i=0; i<tokens.length; i++)
+    constructor(private _codeInvestigator: CodeInvestigator) {}
+
+    async extractSpans(
+        document: TextDocument,
+        symbolInfos: SymbolInfo[],
+        tokens: Token[],
+        symbolProvider: SymbolProvider,
+    ): Promise<SpanInfo[]> {
+        const results: SpanInfo[] = [];
+        for(var i = 0; i < tokens.length - 3; i++)
         {
-            if (tokens[i+0].type == TokenType.field && tokens[i+0].text == 'Activity' &&
-                tokens[i+1].type == TokenType.operator && tokens[i+1].text == '.' &&
-                tokens[i+2].type == TokenType.member && tokens[i+2].text == 'StartActivity' &&
-                tokens[i+3].type == TokenType.punctuation && tokens[i+3].text == '(')
+            const isMatch = this.isCallToStartActivity(tokens, i);
+            if (isMatch)
             {
-                const startIdx = i+3;
-                const endIdx = this.getEndOfMethodCall(tokens, startIdx);
-                if(!endIdx)
+                const startIndex = i + 3;
+                const endIndex = this.getEndOfMethodCall(tokens, startIndex);
+                if(!endIndex)
                     continue;
-                
-                const spanNameToken = 
-                    this.detectByArgumentsOrder(tokens, startIdx, endIdx) ||
-                    this.detectByNamedArguments(tokens, startIdx, endIdx);
+
+                const spanNameToken = this.detectArgumentToken(tokens, startIndex, endIndex);
                 if(!spanNameToken)
                     continue;
-                
-                const symbolInfo = symbolInfos.firstOrDefault(s => s.range.contains(spanNameToken.range));
-                if(!symbolInfo)
+
+                const activityTokenPosition = tokens[i].range.start;
+                const activityDefinition = await this._codeInvestigator.getTokensFromSymbolProvider(document, activityTokenPosition, symbolProvider);
+                if(!activityDefinition)
                     continue;
-                
-                const spanName = spanNameToken.text.replace(/\"/g, '');
+
+                const { cursorIndex: activityCursorIndex, endIndex: activityEndIndex } = this.getStatementIndexes(activityDefinition.tokens, activityDefinition.location);
+                if(activityCursorIndex === -1 || activityEndIndex === -1)
+                    continue;
+
+                const activityToken = this.detectArgumentToken(tokens, activityCursorIndex, activityEndIndex);
+                if(!activityToken)
+                    continue;
+
+                const instrumentationLibrary = this.cleanSpanName(activityToken.text);
+                const spanName = this.cleanSpanName(spanNameToken.text);
+
                 results.push({
-                    id: symbolInfo.codeLocation + '$_$' + spanName,
+                    id: instrumentationLibrary + '$_$' + spanName,
                     name: spanName,
                     range: spanNameToken.range,
-                    documentUri: document.uri
+                    documentUri: document.uri,
                 });
             }
         }
 
         return results;
+    }
+
+    private isCallToStartActivity(tokens: Token[], i: number) {
+        const activityToken = tokens[i + 0];
+        const isActivity = (activityToken.type === 'field' || activityToken.type === 'variable') && activityToken.text === 'Activity';
+
+        const dotToken = tokens[i + 1];
+        const isDot = dotToken.type === 'operator' && dotToken.text === '.';
+
+        const startActivityToken = tokens[i + 2];
+        const isStartActivity = (startActivityToken.type === 'member' || startActivityToken.type === 'variable') && startActivityToken.text === 'StartActivity';
+
+        const openParensToken = tokens[i + 3];
+        const isOpenParens = openParensToken.type === 'punctuation' && openParensToken.text === '(';
+
+        const isMatch = isActivity && isDot && isStartActivity && isOpenParens;
+        return isMatch;
+    }
+
+    private cleanSpanName(text: string): string {
+        return text.replace(/\"/g, '');
+    }
+
+    private getStatementIndexes(tokens: Token[], cursorLocation: vscode.Location): { cursorIndex: integer, endIndex: integer } {
+        const cursorIndex = tokens.findIndex((token) => !!token.range.intersection(cursorLocation.range));
+        const endIndex = tokens.findIndex((token, index) => index > cursorIndex && token.type === TokenType.punctuation && token.text === ';' );
+        return { cursorIndex, endIndex };
     }
 
     private getEndOfMethodCall(tokens: Token[], startIdx: integer): integer | undefined
@@ -64,6 +106,13 @@ export class CSharpSpanExtractor implements ISpanExtractor
         }
 
         return;
+    }
+
+    private detectArgumentToken(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined {
+        const token =
+            this.detectByArgumentsOrder(tokens, startIdx, endIdx) ||
+            this.detectByNamedArguments(tokens, startIdx, endIdx);
+        return token;
     }
 
     // Detects: Activity.StartActivity("THIS IS SPAN NAME"...)

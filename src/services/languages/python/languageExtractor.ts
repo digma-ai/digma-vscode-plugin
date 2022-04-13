@@ -29,7 +29,7 @@ export class PythonLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public get spanExtractors(): ISpanExtractor[] {
+    public getSpanExtractors(): ISpanExtractor[] {
         return [
             new PythonSpanExtractor()
         ];
