@@ -71,9 +71,6 @@ export class PythonSpanExtractor implements ISpanExtractor {
             }
 
             const tracerName =  match[1];
-            if(tracerName === '__name__'){
-                
-            }
             const instrumentationLibrary = tracerName === '__name__'
                 ? path.parse(tracerDefinition.document.fileName).name
                 : tracerName;
