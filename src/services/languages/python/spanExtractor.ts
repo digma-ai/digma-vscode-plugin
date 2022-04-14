@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInvestigator } from '../../codeInvestigator';
@@ -25,12 +26,12 @@ export class PythonSpanExtractor implements ISpanExtractor {
                 continue;
             }
                 
-            const lineText = document.getText(new vscode.Range(
+            let lineText = document.getText(new vscode.Range(
                 token.range.start, 
                 new vscode.Position(token.range.end.line, 1000)
             ));
             
-            const match = lineText.match(/^start_as_current_span\(["'](.*?)["']/);
+            let match = lineText.match(/^start_as_current_span\(["'](.*?)["']/);
             if(!match) {
                 continue;
             }
@@ -48,19 +49,34 @@ export class PythonSpanExtractor implements ISpanExtractor {
                 continue;
             }
 
-            const { cursorIndex: tracerCursorIndex, endIndex: tracerNameTokenIndex } = this.getStatementIndexes(tracerDefinition.tokens, tracerDefinition.location);
-            if(tracerCursorIndex === -1 || tracerNameTokenIndex === -1) {
+            const tracerDefinitionIdx = tracerDefinition.tokens.findIndex(x => x.range.intersection(tracerDefinition.location.range));
+            if(tracerDefinitionIdx < 0) {
                 continue;
             }
 
-            const tracerNameToken = tokens[tracerNameTokenIndex];
-
-            if(tracerNameToken.type === TokenType.variable && tracerNameToken.text === '__name__') {
-                // search for if __name__ == '__main__'
-                //   if !found: use document.filename without extension
-                //   if found: use '__main__'
+            const traceModuleToken = tracerDefinition.tokens[tracerDefinitionIdx+1];
+            const getTracerMethodToken = tracerDefinition.tokens[tracerDefinitionIdx+2];
+            if(traceModuleToken.text != 'trace' || traceModuleToken.type != TokenType.module ||
+                getTracerMethodToken.text != 'get_tracer' || getTracerMethodToken.type != TokenType.function){
+                continue;
             }
-            const instrumentationLibrary = this.cleanSpanName(tracerNameToken.text);
+
+            lineText = document.getText(new vscode.Range(
+                getTracerMethodToken.range.start, 
+                new vscode.Position(token.range.end.line, 1000)
+            ));
+            match = lineText.match(/^get_tracer\(["'](.*?)["']/);
+            if(!match) {
+                continue;
+            }
+
+            const tracerName =  match[1];
+            if(tracerName === '__name__'){
+                
+            }
+            const instrumentationLibrary = tracerName === '__name__'
+                ? path.parse(tracerDefinition.document.fileName).name
+                : tracerName;
 
             results.push({
                 id: instrumentationLibrary + '$_$' + spanName,
