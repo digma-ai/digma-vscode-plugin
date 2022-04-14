@@ -15,11 +15,11 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
                     <div class="list-item">
                         <div class="list-item-content-area">
                             <div class="list-item-header"><strong>This is an error hotspot</strong></div>
-                            <div class="list-item-content-description">Many major errors occur or propogate through this function.</div>
-                            <div><vscode-link href="#">See how this was calculated</vscode-link></div>
+                            <div><span class="list-item-content-description">Many major errors occur or propogate through this function. </span>
+                                 <span class="link ellipsis" href="#">See how this was calculated</span></div>
                         </div>
                     <div class="list-item-right-area">
-                        <img style="align-self:center;" src="https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png" width="30" height="30">
+                        <img style="align-self:center;" src="https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png" width="32" height="32">
                     </div>
                     </div>
                     `;

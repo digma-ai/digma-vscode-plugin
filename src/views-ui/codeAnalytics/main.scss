@@ -56,6 +56,10 @@ vscode-panel-view {
     opacity: 0.8;
 }
 
+.list-item-content-moredetails {
+    font-size: var(--type-ramp-minus1-font-size);
+}
+
 .insight-main-value {
     font-size: var(--type-ramp-minus1-font-size);
     text-align: center;
@@ -96,6 +100,10 @@ vscode-panel-view {
 
 .spacer {
     height: 3px;
+}
+
+.small-spacer {
+    margin: 0.1em;
 }
 
 .error-name {
