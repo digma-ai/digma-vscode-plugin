@@ -44,7 +44,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
                 continue;
             }
 
-            const activityDefinitionToken = this.detectArgumentToken(tokens, activityCursorIndex, activityEndIndex);
+            const activityDefinitionToken = this.detectArgumentToken(activityDefinition.tokens, activityCursorIndex, activityEndIndex);
             if(!activityDefinitionToken) {
                 continue;
             }
@@ -125,9 +125,9 @@ export class CSharpSpanExtractor implements ISpanExtractor {
     // Detects: Activity.StartActivity("THIS IS SPAN NAME"...)
     private detectByArgumentsOrder(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined {
         for(let i = startIdx; i < endIdx; i++) {
-            if(tokens[i].type === TokenType.string) {
-                return tokens[i];
-            }
+            const catitade = this.detectStringOrNameof(tokens, i);
+            if(catitade)
+                return catitade;
         }
     }
 
@@ -135,10 +135,20 @@ export class CSharpSpanExtractor implements ISpanExtractor {
     private detectByNamedArguments(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined {
         for(let i = startIdx; i < endIdx - 2; i++) {
             if (tokens[i+0].type === TokenType.parameter && tokens[i+0].text === 'name' &&
-                tokens[i+1].type === TokenType.punctuation && tokens[i+1].text === ':' &&
-                tokens[i+2].type === TokenType.string) {
-                return tokens[i+2];
+                tokens[i+1].type === TokenType.punctuation && tokens[i+1].text === ':') {
+                const catitade = this.detectStringOrNameof(tokens, i+2);
+                if(catitade)
+                    return catitade;
             }
         }
+    }
+
+    private detectStringOrNameof(tokens: Token[], index: integer): Token | undefined{
+        if (tokens[index].type == TokenType.string)
+            return tokens[index];
+        if (tokens[index+0].type == TokenType.plainKeyword && tokens[index+0].text == 'nameof' &&
+            tokens[index+1].type == TokenType.punctuation && tokens[index+1].text == '(' &&
+            tokens[index+3].type == TokenType.punctuation && tokens[index+3].text == ')')
+            return tokens[index+2];
     }
 }

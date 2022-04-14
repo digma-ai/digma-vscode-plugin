@@ -258,4 +258,5 @@ export enum TokenType
     member = 'member',
     punctuation = 'punctuation',
     string = 'string',
+    plainKeyword = 'plainKeyword',
 } 
