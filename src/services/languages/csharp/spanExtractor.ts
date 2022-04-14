@@ -65,16 +65,16 @@ export class CSharpSpanExtractor implements ISpanExtractor {
 
     private isCallToStartActivity(tokens: Token[], i: number) {
         const activityToken = tokens[i + 0];
-        const isActivity = (activityToken.type === 'field' || activityToken.type === 'variable') && activityToken.text === 'Activity';
+        const isActivity = (activityToken.type === TokenType.field || activityToken.type === TokenType.variable) && activityToken.text === 'Activity';
 
         const dotToken = tokens[i + 1];
-        const isDot = dotToken.type === 'operator' && dotToken.text === '.';
+        const isDot = dotToken.type === TokenType.operator && dotToken.text === '.';
 
         const startActivityToken = tokens[i + 2];
-        const isStartActivity = (startActivityToken.type === 'member' || startActivityToken.type === 'variable') && startActivityToken.text === 'StartActivity';
+        const isStartActivity = (startActivityToken.type === TokenType.member || startActivityToken.type === TokenType.variable) && startActivityToken.text === 'StartActivity';
 
         const openParensToken = tokens[i + 3];
-        const isOpenParens = openParensToken.type === 'punctuation' && openParensToken.text === '(';
+        const isOpenParens = openParensToken.type === TokenType.punctuation && openParensToken.text === '(';
 
         const isMatch = isActivity && isDot && isStartActivity && isOpenParens;
         return isMatch;
