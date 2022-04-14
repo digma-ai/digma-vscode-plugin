@@ -6,8 +6,7 @@ import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
 import { Token, TokenType } from "../symbolProvider";
 import { SymbolProvider } from './../symbolProvider';
 
-export class CSharpSpanExtractor implements ISpanExtractor
-{
+export class CSharpSpanExtractor implements ISpanExtractor {
     constructor(private _codeInvestigator: CodeInvestigator) {}
 
     async extractSpans(
@@ -17,43 +16,48 @@ export class CSharpSpanExtractor implements ISpanExtractor
         symbolProvider: SymbolProvider,
     ): Promise<SpanInfo[]> {
         const results: SpanInfo[] = [];
-        for(var i = 0; i < tokens.length - 3; i++)
-        {
+        for(let i = 0; i < tokens.length - 3; i++) {
             const isMatch = this.isCallToStartActivity(tokens, i);
-            if (isMatch)
-            {
-                const startIndex = i + 3;
-                const endIndex = this.getEndOfMethodCall(tokens, startIndex);
-                if(!endIndex)
-                    continue;
-
-                const spanNameToken = this.detectArgumentToken(tokens, startIndex, endIndex);
-                if(!spanNameToken)
-                    continue;
-
-                const activityTokenPosition = tokens[i].range.start;
-                const activityDefinition = await this._codeInvestigator.getTokensFromSymbolProvider(document, activityTokenPosition, symbolProvider);
-                if(!activityDefinition)
-                    continue;
-
-                const { cursorIndex: activityCursorIndex, endIndex: activityEndIndex } = this.getStatementIndexes(activityDefinition.tokens, activityDefinition.location);
-                if(activityCursorIndex === -1 || activityEndIndex === -1)
-                    continue;
-
-                const activityToken = this.detectArgumentToken(tokens, activityCursorIndex, activityEndIndex);
-                if(!activityToken)
-                    continue;
-
-                const instrumentationLibrary = this.cleanSpanName(activityToken.text);
-                const spanName = this.cleanSpanName(spanNameToken.text);
-
-                results.push({
-                    id: instrumentationLibrary + '$_$' + spanName,
-                    name: spanName,
-                    range: spanNameToken.range,
-                    documentUri: document.uri,
-                });
+            if(!isMatch) {
+                continue;
             }
+
+            const startIndex = i + 3;
+            const endIndex = this.getEndOfMethodCall(tokens, startIndex);
+            if(!endIndex) {
+                continue;
+            }
+
+            const spanNameToken = this.detectArgumentToken(tokens, startIndex, endIndex);
+            if(!spanNameToken) {
+                continue;
+            }
+
+            const activityTokenPosition = tokens[i].range.start;
+            const activityDefinition = await this._codeInvestigator.getTokensFromSymbolProvider(document, activityTokenPosition, symbolProvider);
+            if(!activityDefinition) {
+                continue;
+            }
+
+            const { cursorIndex: activityCursorIndex, endIndex: activityEndIndex } = this.getStatementIndexes(activityDefinition.tokens, activityDefinition.location);
+            if(activityCursorIndex === -1 || activityEndIndex === -1) {
+                continue;
+            }
+
+            const activityDefinitionToken = this.detectArgumentToken(tokens, activityCursorIndex, activityEndIndex);
+            if(!activityDefinitionToken) {
+                continue;
+            }
+
+            const instrumentationLibrary = this.cleanSpanName(activityDefinitionToken.text);
+            const spanName = this.cleanSpanName(spanNameToken.text);
+
+            results.push({
+                id: instrumentationLibrary + '$_$' + spanName,
+                name: spanName,
+                range: spanNameToken.range,
+                documentUri: document.uri,
+            });
         }
 
         return results;
@@ -86,22 +90,25 @@ export class CSharpSpanExtractor implements ISpanExtractor
         return { cursorIndex, endIndex };
     }
 
-    private getEndOfMethodCall(tokens: Token[], startIdx: integer): integer | undefined
-    {
+    private getEndOfMethodCall(tokens: Token[], startIdx: integer): integer | undefined {
         var i = startIdx;
-        if(tokens[i].type != TokenType.punctuation || tokens[i].text != '(')
+        if(tokens[i].type !== TokenType.punctuation || tokens[i].text !== '(') {
             return;
+        }
 
         i++;
         var parenthesesBalance = 1;
-        for(;i<tokens.length; i++){
-            if(tokens[i].type == TokenType.punctuation){
-                if(tokens[i].text == '(')
+        for(; i < tokens.length; i++){
+            if(tokens[i].type === TokenType.punctuation) {
+                if(tokens[i].text === '(') {
                     parenthesesBalance++;
-                if(tokens[i].text == ')')
+                }
+                if(tokens[i].text === ')') {
                     parenthesesBalance--;
-                if(parenthesesBalance == 0)
+                }
+                if(parenthesesBalance === 0) {
                     return i;
+                }
             }
         }
 
@@ -116,24 +123,22 @@ export class CSharpSpanExtractor implements ISpanExtractor
     }
 
     // Detects: Activity.StartActivity("THIS IS SPAN NAME"...)
-    private detectByArgumentsOrder(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined
-    {
-        for(var i=startIdx; i<endIdx; i++)
-        {
-            if(tokens[i].type == TokenType.string)
+    private detectByArgumentsOrder(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined {
+        for(let i = startIdx; i < endIdx; i++) {
+            if(tokens[i].type === TokenType.string) {
                 return tokens[i];
+            }
         }
     }
 
     // Detects: Activity.StartActivity(...name:"THIS IS SPAN NAME"..)
-    private detectByNamedArguments(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined
-    {
-        for(var i=startIdx; i<endIdx-2; i++)
-        {
-            if (tokens[i+0].type == TokenType.parameter && tokens[i+0].text == 'name' &&
-                tokens[i+1].type == TokenType.punctuation && tokens[i+1].text == ':' &&
-                tokens[i+2].type == TokenType.string)
+    private detectByNamedArguments(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined {
+        for(let i = startIdx; i < endIdx - 2; i++) {
+            if (tokens[i+0].type === TokenType.parameter && tokens[i+0].text === 'name' &&
+                tokens[i+1].type === TokenType.punctuation && tokens[i+1].text === ':' &&
+                tokens[i+2].type === TokenType.string) {
                 return tokens[i+2];
+            }
         }
     }
 }

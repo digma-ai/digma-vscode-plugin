@@ -5,8 +5,7 @@ import { CodeInvestigator } from '../../codeInvestigator';
 import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
 import { SymbolProvider, Token, TokenType } from "../symbolProvider";
 
-export class PythonSpanExtractor implements ISpanExtractor
-{
+export class PythonSpanExtractor implements ISpanExtractor {
     constructor(private _codeInvestigator: CodeInvestigator) {}
     
     async extractSpans(
@@ -15,15 +14,16 @@ export class PythonSpanExtractor implements ISpanExtractor
         tokens: Token[],
         symbolProvider: SymbolProvider,
     ): Promise<SpanInfo[]> {
-        const results: SpanInfo[] = []
-        for(const [index, token] of tokens.entries())
-        {
-            if(index < 1)
+        const results: SpanInfo[] = [];
+        for(const [index, token] of tokens.entries()) {
+            if(index < 1) {
                 continue;
+            }
             
             const isMatch = this.isCallToStartSpan(token);
-            if(!isMatch)
+            if(!isMatch) {
                 continue;
+            }
                 
             const lineText = document.getText(new vscode.Range(
                 token.range.start, 
@@ -31,23 +31,27 @@ export class PythonSpanExtractor implements ISpanExtractor
             ));
             
             const match = lineText.match(/^start_as_current_span\(["'](.*?)["']/);
-            if(!match)
+            if(!match) {
                 continue;
+            }
 
             const spanName =  match[1];
 
             const tracerToken = tokens[index - 1];
-            if(tracerToken.type !== TokenType.variable)
+            if(tracerToken.type !== TokenType.variable) {
                 continue;
+            }
 
             const tracerTokenPosition = tracerToken.range.start;
             const tracerDefinition = await this._codeInvestigator.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
-            if(!tracerDefinition)
+            if(!tracerDefinition) {
                 continue;
+            }
 
             const { cursorIndex: tracerCursorIndex, endIndex: tracerNameTokenIndex } = this.getStatementIndexes(tracerDefinition.tokens, tracerDefinition.location);
-            if(tracerCursorIndex === -1 || tracerNameTokenIndex === -1)
+            if(tracerCursorIndex === -1 || tracerNameTokenIndex === -1) {
                 continue;
+            }
 
             const tracerNameToken = tokens[tracerNameTokenIndex];
 
