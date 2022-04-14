@@ -48,9 +48,9 @@ export class DocumentInfoProvider implements vscode.Disposable
         const codeFileHint = instrumentationInfo.instrumentationName;
         if (codeFileHint){
             let codeHintFiles = codeFileHint.split(' ');
-            var head = codeHintFiles[0];
+            let head = codeHintFiles[0];
             let folder = await vscode.workspace.workspaceFolders?.find(w => w.name === head);
-            var tail= codeHintFiles;
+            let tail= codeHintFiles;
 
             if (folder) {
                 tail = codeHintFiles.slice(1);
@@ -59,23 +59,21 @@ export class DocumentInfoProvider implements vscode.Disposable
             if (codeHintFiles.length>1){
                 const files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`);
 
-                const docs = (await Promise.all(files.map(async file =>{
-                        try{
-                            return await vscode.workspace.openTextDocument(file);
+                const spansPromises = files.map(async file =>{
+                    try{
+                        const doc = await vscode.workspace.openTextDocument(file);
+                        const docInfo = await this.getDocumentInfo(doc);
+                        if(docInfo){
+                            return docInfo.spans.filter(span => span.name===instrumentationInfo.spanName);
                         }
-                        catch(error){
-                            Logger.warn(`Searching for span "${instrumentationInfo.spanName}" skipped ${file.fsPath}`);
-                        }
-                    })))
-                    .filter(docInfo => docInfo)
-                    .map(docInfo => docInfo!);;
+                    }
+                    catch(error){
+                        Logger.warn(`Searching for span "${instrumentationInfo.spanName}" skipped ${file.fsPath}`, error);
+                    }
+                    return [];
+                });
 
-                const docInfos = await Promise.all(docs.map(doc => this.getDocumentInfo(doc)));
-
-                const spnaInfos = docInfos.flatMap(docInfo => docInfo?.spans)
-                    .filter(span => span && span.name===instrumentationInfo.spanName)
-                    .map(span => span!);
-
+                const spnaInfos = (await Promise.all(spansPromises)).flat();
                 if (spnaInfos.length===1){
                     return spnaInfos[0];
                 }
