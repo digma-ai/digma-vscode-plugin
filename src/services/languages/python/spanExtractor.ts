@@ -16,6 +16,10 @@ export class PythonSpanExtractor implements ISpanExtractor {
         symbolProvider: SymbolProvider,
     ): Promise<SpanInfo[]> {
         const results: SpanInfo[] = [];
+
+        var strippedText = document.getText().replace("\n","").replace(/\s+/g,"").replace(/"/g, '\'');
+        var mainDeclared = strippedText.indexOf("if__name__=='__main__'")>=0;
+
         for(const [index, token] of tokens.entries()) {
             if(index < 1) {
                 continue;
@@ -65,15 +69,15 @@ export class PythonSpanExtractor implements ISpanExtractor {
                 getTracerMethodToken.range.start, 
                 new vscode.Position(token.range.end.line, 1000)
             ));
-            match = lineText.match(/^get_tracer\(["'](.*?)["']/);
+            match = lineText.match(/^get_tracer\(["']?(.*?)["']?\)/);
             if(!match) {
                 continue;
             }
-
             const tracerName =  match[1];
-            const instrumentationLibrary = tracerName === '__name__'
-                ? path.parse(tracerDefinition.document.fileName).name
-                : tracerName;
+
+            const instrumentationLibrary = mainDeclared ? '__main__' :
+                tracerName === '__name__'  ? 
+                    await this.extractNameTypeTrace(tracerDefinition.document.fileName): tracerName;
 
             results.push({
                 id: instrumentationLibrary + '$_$' + spanName,
@@ -84,6 +88,32 @@ export class PythonSpanExtractor implements ISpanExtractor {
         }
 
         return results;
+    }
+
+    private async extractNameTypeTrace(filePath: string) : Promise<string> {
+
+        const pythonFileSuffix = ".py";
+        const specialFolders = ["venv","site-packages"];
+
+        let folder = vscode.workspace.workspaceFolders?.filter(f=>filePath.startsWith(f.uri.path))
+            .map(f=>f.uri.path).firstOrDefault();
+
+        if (!folder){
+            folder = specialFolders.filter(x=>filePath.indexOf(x)>0).firstOrDefault();
+        }
+
+        if (folder){
+            let relativePath = filePath.substring(filePath.indexOf(folder)+ folder.length+1);
+            if (relativePath.endsWith(pythonFileSuffix)){
+                relativePath=relativePath.substring(0,relativePath.length-pythonFileSuffix.length);
+            }
+            relativePath=relativePath.replace("/",".").replace("\\",".");
+            
+            return relativePath;
+        }
+  
+        return "";
+
     }
 
     private isCallToStartSpan(token: Token) {
