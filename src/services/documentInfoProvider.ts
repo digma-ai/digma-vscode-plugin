@@ -47,49 +47,37 @@ export class DocumentInfoProvider implements vscode.Disposable
     public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanInfo|undefined>{
         const codeFileHint = instrumentationInfo.instrumentationName;
         if (codeFileHint){
-            
-            
             let codeHintFiles = codeFileHint.split(' ');
-            var head = codeHintFiles[0];
+            let head = codeHintFiles[0];
             let folder = await vscode.workspace.workspaceFolders?.find(w => w.name === head);
-            var tail= codeHintFiles;
+            let tail= codeHintFiles;
 
             if (folder) {
                 tail = codeHintFiles.slice(1);
             }
 
             if (codeHintFiles.length>1){
-                
-                let files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`)
-                    .then(files=> 
-                        files.map(file=>vscode.workspace.openTextDocument(file)
-                                            .then(document=>
-                                                this.getDocumentInfo(document))
-                                                
-                                                .then(docInfo=>{
-                                                   let spans = docInfo!.spans
-                                                        .filter(x=>x.name===instrumentationInfo.spanName!);
-                                                   return {
-                                                        spanLocation : (spans === undefined || spans.length === 0) ? undefined : spans[0]
-                                                    };
-                                               
-                                            })));                
-                var candidates = [];
-                for (var i=0; i<files.length;i++){
-                    let spanData = (await files[i])
-                    if (spanData.spanLocation){
-                        candidates.push(spanData);
+                const files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`);
+
+                const spansPromises = files.map(async file =>{
+                    try{
+                        const doc = await vscode.workspace.openTextDocument(file);
+                        const docInfo = await this.getDocumentInfo(doc);
+                        if(docInfo){
+                            return docInfo.spans.filter(span => span.name===instrumentationInfo.spanName);
+                        }
                     }
-                }
-                
-                if (candidates.length===1){
-                    return (await candidates[0]).spanLocation;
-                }
-                
+                    catch(error){
+                        Logger.warn(`Searching for span "${instrumentationInfo.spanName}" skipped ${file.fsPath}`, error);
+                    }
+                    return [];
+                });
 
+                const spnaInfos = (await Promise.all(spansPromises)).flat();
+                if (spnaInfos.length===1){
+                    return spnaInfos[0];
+                }
             }
-
-
         }
     }
 

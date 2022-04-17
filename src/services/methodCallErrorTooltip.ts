@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ErrorsViewTab } from '../views/codeAnalytics/errorsViewTab';
 import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
 import { TokenType } from './languages/symbolProvider';
+import { CodeInvestigator } from './codeInvestigator';
 
 export class MethodCallErrorTooltip implements vscode.Disposable
 {
@@ -10,11 +11,13 @@ export class MethodCallErrorTooltip implements vscode.Disposable
     }
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(documentInfoProvider: DocumentInfoProvider)
-    {
+    constructor(
+        documentInfoProvider: DocumentInfoProvider,
+        codeInvestigator: CodeInvestigator,
+    ) {
         this._disposables.push(vscode.languages.registerHoverProvider(
             documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter),
-            new MethodCallErrorHoverProvider(documentInfoProvider))
+            new MethodCallErrorHoverProvider(documentInfoProvider, codeInvestigator))
         );
         this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ShowErrorView, async (args) => {
              await vscode.commands.executeCommand(ErrorsViewTab.Commands.ShowErrorView, args.codeObjectId, args.codeObjectDisplayName, args.errorFlowId);
@@ -30,8 +33,10 @@ export class MethodCallErrorTooltip implements vscode.Disposable
 
 class MethodCallErrorHoverProvider implements vscode.HoverProvider
 {
-    constructor(private _documentInfoProvider: DocumentInfoProvider)
-    {
+    constructor(
+        private _documentInfoProvider: DocumentInfoProvider,
+        private _codeInvestigator: CodeInvestigator,
+    ) {
     }
 
     public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined> 
@@ -44,7 +49,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
         if(!methodInfo){
             if(!sourceDocInfo.tokens.any(t => (t.type == TokenType.function || t.type == TokenType.method) && t.range.contains(position)))
                 return;
-            methodInfo = await this.getExecuteDefinitionMethodInfo(document, position);
+            methodInfo = await this._codeInvestigator.getExecuteDefinitionMethodInfo(document, position, this._documentInfoProvider);
             if(!methodInfo) {
                 return;
             }
@@ -73,25 +78,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
         // markdown.isTrusted = true;
         //return new vscode.Hover(markdown);
     }
-    private async getExecuteDefinitionMethodInfo(document: vscode.TextDocument, position: vscode.Position): Promise<MethodInfo | undefined>
-    {
-        const results: any[] = await vscode.commands.executeCommand('vscode.executeDefinitionProvider', document.uri, position);
-        if(!results?.length || !results[0].uri || !results[0].range)
-            return;
 
-        const location = <vscode.Location>results[0];
-
-        const doc = await vscode.workspace.openTextDocument(location.uri);
-        if(!doc)
-            return;
-
-        const docInfo = await this._documentInfoProvider.getDocumentInfo(doc);
-        if(!docInfo)
-            return;
-        
-        const methodInfo = docInfo.methods.firstOrDefault(m => m.range.contains(location.range.end));
-        return methodInfo;
-    }
     private async getMethodMarkdown(methodInfo: MethodInfo): Promise<vscode.MarkdownString | undefined>
     {
         const errors = await this._documentInfoProvider.analyticsProvider.getCodeObjectErrors(methodInfo.symbol.id);
