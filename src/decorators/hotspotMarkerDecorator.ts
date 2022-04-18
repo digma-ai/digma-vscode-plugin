@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DecorationRangeBehavior } from 'vscode';
+import { MethodCodeObjectSummary } from '../services/analyticsProvider';
 import { DocumentInfoProvider, LineInfo } from '../services/documentInfoProvider';
 import { Dictionary } from '../services/utils';
 
@@ -61,13 +62,13 @@ export class HotspotMarkerDecorator implements vscode.Disposable
         const rangesByLevel: Dictionary<number, vscode.Range[]> = {};
         for(let methodInfo of docInfo.methods)
         {
-            const score = docInfo.codeObjectSummaries.firstOrDefault(x => x.id == methodInfo.symbol.id)?.score ?? 0;
+            const score = docInfo.summaries.get(MethodCodeObjectSummary, methodInfo.symbol.id)?.score ?? 0;
             if(score < 70)
                 continue;
             
             const level = Math.floor((score/101)*this.LEVELS); // [0-100] => [0-9]
             const decorationType = this._decorationTypes[level];
-            var s =new vscode.Position(methodInfo.NameRange!.end.line+1,
+            var s =new vscode.Position(methodInfo.nameRange!.end.line+1,
                 0);
             var e = new vscode.Position(methodInfo.range.end.line,
                 0);

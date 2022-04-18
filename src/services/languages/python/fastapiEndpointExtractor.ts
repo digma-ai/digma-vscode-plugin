@@ -36,13 +36,13 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             if (!relevantFunc)
                 continue;
             
-            results.push({
-                id: vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method + ' ' + match[1],
-                method: method, 
-                path: match[1],
-                range: relevantFunc.range,
-                documentUri: document.uri
-            });
+            const path = match[1];
+            results.push(new EndpointInfo(
+                vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method + ' ' + match[1],
+                method, 
+                path,
+                relevantFunc.range,
+                document.uri));
         }
         return results;
     }

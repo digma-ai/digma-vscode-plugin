@@ -52,12 +52,11 @@ export class CSharpSpanExtractor implements ISpanExtractor {
             const instrumentationLibrary = this.cleanSpanName(activityDefinitionToken.text);
             const spanName = this.cleanSpanName(spanNameToken.text);
 
-            results.push({
-                id: instrumentationLibrary + '$_$' + spanName,
-                name: spanName,
-                range: spanNameToken.range,
-                documentUri: document.uri,
-            });
+            results.push(new SpanInfo(
+                instrumentationLibrary + '$_$' + spanName,
+                spanName,
+                spanNameToken.range,
+                document.uri));
         }
 
         return results;

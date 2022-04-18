@@ -75,16 +75,15 @@ export class PythonSpanExtractor implements ISpanExtractor {
             }
             const tracerName =  match[1];
 
-            const instrumentationLibrary = mainDeclared ? '__main__' :
-                tracerName === '__name__'  ? 
-                    await this.extractNameTypeTrace(tracerDefinition.document.fileName): tracerName;
-
-            results.push({
-                id: instrumentationLibrary + '$_$' + spanName,
-                name: spanName,
-                range: token.range,
-                documentUri: document.uri
-            });
+            const instrumentationLibrary = tracerName === '__name__'
+                ? (mainDeclared ? '__main__' : await this.extractNameTypeTrace(tracerDefinition.document.fileName))
+                : tracerName
+            
+            results.push(new SpanInfo(
+                instrumentationLibrary + '$_$' + spanName,
+                spanName,
+                token.range,
+                document.uri));
         }
 
         return results;

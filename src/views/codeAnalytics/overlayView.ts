@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { MethodCodeObjectSummary } from "../../services/analyticsProvider";
 import { DocumentInfo } from "../../services/documentInfoProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../webViewUtils";
@@ -40,17 +41,21 @@ export class OverlayView
     }
 
     public showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
-        let codeObjectIdsWithData = new Set<string>(docInfo.codeObjectSummaries.map(o=>o.id));
-        const links = docInfo.methods
-        .filter(o=>codeObjectIdsWithData.has(o.id))
-        .map(m => {
-            return /*html*/`<vscode-link class="codeobject-link" data-line="${m.range.start.line}">${m.displayName}</vscode-link>`;
-        }).join("");
+        const links = [];
+        for(const method of docInfo.methods){
+            const methodSummary = docInfo.summaries.get(MethodCodeObjectSummary, method.id);
+            const relatedSummaries = docInfo.summaries.all.filter(s => method.relatedCodeObjects.any(r => r.id == s.codeObjectId));
+            if( methodSummary?.insightsCount ||
+                methodSummary?.score ||
+                relatedSummaries.any(x => x.insightsCount > 0)){
+                    links.push(/*html*/`<vscode-link class="codeobject-link" data-line="${method.range.start.line}">${method.displayName}</vscode-link>`);
+            }
+        }    
 
         const html = /*html*/ `
             ${HtmlHelper.getInfoMessage("No code object was selected")}
             <div>Try to place the caret on a method, or select one from following:</div>
-            <div class="links-list">${links}</div>`;
+            <div class="links-list">${links.join("")}</div>`;
         this.show(html, OverlayView.UnsupportedDocumentOverlayId);
     }
     private onOverlayVisibilityChanged(e: UiMessage.Notify.OverlayVisibilityChanged)
