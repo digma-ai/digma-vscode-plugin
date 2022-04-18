@@ -117,6 +117,7 @@ export interface CodeObjectSummary
     type: string;
     codeObjectId: string;
     insightsCount: integer;
+    errorsCount: integer;
 }
 
 export class MethodCodeObjectSummary implements CodeObjectSummary
@@ -124,6 +125,7 @@ export class MethodCodeObjectSummary implements CodeObjectSummary
     type: string = 'MethodSummary';
     codeObjectId: string = '';
     insightsCount: integer = 0;
+    errorsCount: integer = 0;
     score: integer = 0;
     executedCodes: ExecutedCodeSummary[] = [];
 }
@@ -132,9 +134,17 @@ export class EndpointCodeObjectSummary implements CodeObjectSummary
     type: string = 'EndpointSummary';
     codeObjectId: string = '';
     insightsCount: integer = 0;
+    errorsCount: integer = 0;
     highUsage: boolean = false;
     lowUsage: boolean = false;
     maxCallsIn1Min: integer = 0;
+}
+export class SpanCodeObjectSummary implements CodeObjectSummary
+{
+    type: string = 'SpanSummary';
+    codeObjectId: string = '';
+    insightsCount: integer = 0;
+    errorsCount: integer = 0;
 }
 
 export interface ExecutedCodeSummary{

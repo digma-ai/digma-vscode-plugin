@@ -43,11 +43,10 @@ export class OverlayView
     public showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
         const links = [];
         for(const method of docInfo.methods){
-            const methodSummary = docInfo.summaries.get(MethodCodeObjectSummary, method.id);
-            const relatedSummaries = docInfo.summaries.all.filter(s => method.relatedCodeObjects.any(r => r.id == s.codeObjectId));
-            if( methodSummary?.insightsCount ||
-                methodSummary?.score ||
-                relatedSummaries.any(x => x.insightsCount > 0)){
+            const relatedSummaries = docInfo.summaries.all.filter(s => 
+                method.id === s.codeObjectId ||
+                method.relatedCodeObjects.any(r => r.id === s.codeObjectId));
+            if(relatedSummaries.any(x => x.errorsCount > 0 || x.insightsCount > 0)){
                     links.push(/*html*/`<vscode-link class="codeobject-link" data-line="${method.range.start.line}">${method.displayName}</vscode-link>`);
             }
         }    
