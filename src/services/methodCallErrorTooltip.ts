@@ -45,7 +45,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
         if(!sourceDocInfo)
             return;
         
-        let methodInfo: MethodInfo | undefined = sourceDocInfo?.methods.firstOrDefault((m) => m.NameRange?.contains(position) ?? false);
+        let methodInfo: MethodInfo | undefined = sourceDocInfo?.methods.firstOrDefault((m) => m.nameRange?.contains(position) ?? false);
         if(!methodInfo){
             if(!sourceDocInfo.tokens.any(t => (t.type == TokenType.function || t.type == TokenType.method) && t.range.contains(position)))
                 return;

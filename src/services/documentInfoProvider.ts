@@ -1,10 +1,10 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AnalyticsProvider, CodeObjectSummary, EndpointSummary } from './analyticsProvider';
+import { AnalyticsProvider, CodeObjectSummary, MethodCodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
 import { SymbolProvider, Token, TokenType } from './languages/symbolProvider';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SpanInfo, SymbolInfo } from './languages/extractors';
+import { EndpointInfo, SpanInfo, SymbolInfo, CodeObjectInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 
 export class DocumentInfoProvider implements vscode.Disposable
@@ -105,12 +105,11 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
-                const summaries = await this.analyticsProvider.getSummary(symbolInfos.map(s => s.id), endpoints.map(e => e.id));
-                const methods = this.createMethodInfos(doc, symbolInfos, tokens);
-                const lines = this.createLineInfos(doc, summaries.codeObjects, methods);
+                const methods = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
+                const summaries = new CodeObjectSummeryAccessor(await this.analyticsProvider.getSummaries(methods.map(s => s.idWithType).concat(endpoints.map(e => e.idWithType)).concat(spans.map(s => s.idWithType))));
+                const lines = this.createLineInfos(doc, summaries, methods);
                 latestVersionInfo.value = {
-                    codeObjectSummaries: summaries.codeObjects,
-                    endpointsSummaries: summaries.endpoints,
+                    summaries,
                     methods,
                     lines,
                     tokens,
@@ -123,8 +122,7 @@ export class DocumentInfoProvider implements vscode.Disposable
             catch(e)
             {
                 latestVersionInfo.value = {
-                    codeObjectSummaries: [],
-                    endpointsSummaries: [],
+                    summaries: new CodeObjectSummeryAccessor([]),
                     methods: [],
                     lines: [],
                     tokens: [],
@@ -144,17 +142,25 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
  
-    private createMethodInfos(document: vscode.TextDocument, symbols: SymbolInfo[], tokens: Token[]): MethodInfo[] 
+    private createMethodInfos(document: vscode.TextDocument, symbols: SymbolInfo[], tokens: Token[], 
+        spans: SpanInfo[], endpoints: EndpointInfo[]): MethodInfo[] 
     {
         let methods: MethodInfo[] = [];
 
         for(let symbol of symbols)
         {
-            const method: MethodInfo = {
-                ...symbol,
-                symbol: symbol,
-                parameters: []
-            };
+            const method = new MethodInfo(
+                symbol.id,
+                symbol.name,
+                undefined,
+                symbol.displayName,
+                symbol.range,
+                [],
+                symbol,
+                ([] as CodeObjectInfo[])
+                    .concat(spans.filter(s => s.range.intersection(symbol.range)))
+                    .concat(endpoints.filter(e => e.range.intersection(symbol.range)))
+            );
             methods.push(method);
 
             const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
@@ -163,10 +169,10 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const name = token.text;// document.getText(token.range);
 
                 if((token.type === TokenType.method || token.type==TokenType.function)
-                 && !method.NameRange
+                 && !method.nameRange
                     && name ===symbol.name)
                 {
-                    method.NameRange = token.range;
+                    method.nameRange = token.range;
                 }
 
                 if(token.type == TokenType.parameter)
@@ -182,12 +188,14 @@ export class DocumentInfoProvider implements vscode.Disposable
         return methods;
     }
 
-    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummary[], methods: MethodInfo[]): LineInfo[]
+    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummeryAccessor, methods: MethodInfo[]): LineInfo[]
     {
         const lineInfos: LineInfo[] = [];
-        for(let codeObjectSummary of codeObjectSummaries)
+        for(let method of methods)
         {
-            const method = methods.single(m => m.symbol.id == codeObjectSummary.id);
+            const codeObjectSummary = codeObjectSummaries.get(MethodCodeObjectSummary, method.symbol.id);
+            if(!codeObjectSummary)
+                continue;
 
             for(let executedCodeSummary of codeObjectSummary.executedCodes)
             {
@@ -250,14 +258,26 @@ class DocumentInfoContainer
 
 export interface DocumentInfo
 {
-    codeObjectSummaries: CodeObjectSummary[];
-    endpointsSummaries: EndpointSummary[];
+    summaries: CodeObjectSummeryAccessor;
     methods: MethodInfo[];
     lines: LineInfo[];
     tokens: Token[];
     endpoints: EndpointInfo[];
     spans: SpanInfo[];
     uri: vscode.Uri;
+}
+export class CodeObjectSummeryAccessor{
+    constructor(private _codeObejctSummeries: CodeObjectSummary[]){}
+
+    public get<T extends CodeObjectSummary>(type: { new(): T ;}, codeObjectId: string): T | undefined
+    {
+        const result = this._codeObejctSummeries.find(s => s.codeObjectId == codeObjectId && s.type == new type().type);
+        if(result)
+            return result as T;
+    }
+    public get all(): CodeObjectSummary[]{
+        return this._codeObejctSummeries;
+    }
 }
 
 export interface LineInfo
@@ -272,15 +292,20 @@ export interface LineInfo
     }[];
 }
 
-export interface MethodInfo
+export class MethodInfo implements CodeObjectInfo
 {
-    id: string,
-    name: string;
-    NameRange?: vscode.Range;
-    displayName: string;
-    range: vscode.Range;
-    parameters: ParameterInfo[];
-    symbol: SymbolInfo;
+    constructor(
+        public id: string,
+        public name: string,
+        public nameRange: vscode.Range | undefined,
+        public displayName: string,
+        public range: vscode.Range,
+        public parameters: ParameterInfo[],
+        public symbol: SymbolInfo,
+        public relatedCodeObjects: CodeObjectInfo[]){}
+    get idWithType(): string {
+        return 'method:'+this.id;
+    }
 }
 
 export interface ParameterInfo

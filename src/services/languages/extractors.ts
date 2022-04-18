@@ -13,21 +13,31 @@ export interface SymbolInfo{
     documentUri: vscode.Uri;
 
 }
-export interface EndpointInfo{
+export interface CodeObjectInfo{
     id: string;
-    method: string;
-    path: string;
-    range: vscode.Range;
-    documentUri: vscode.Uri;
-
-
+    get idWithType(): string;
 }
-export interface SpanInfo{
-    id: string;
-    name: string;
-    range: vscode.Range;
-    documentUri: vscode.Uri;
 
+export class EndpointInfo implements CodeObjectInfo{
+    constructor(
+        public id: string,
+        public method: string,
+        public path: string,
+        public range: vscode.Range,
+        public documentUri: vscode.Uri){}
+    get idWithType(){
+        return 'endpoint:'+this.id;
+    }
+}
+export class SpanInfo implements CodeObjectInfo{
+    constructor(
+        public id: string,
+        public name: string,
+        public range: vscode.Range,
+        public documentUri: vscode.Uri){}
+    get idWithType(){
+        return 'span:'+this.id;
+    }
 }
 
 

@@ -114,9 +114,37 @@ export interface CodeObjectErrorFlowsResponse
 
 export interface CodeObjectSummary
 {
-    id: string;
-    score: integer;
-    executedCodes: ExecutedCodeSummary[];
+    type: string;
+    codeObjectId: string;
+    insightsCount: integer;
+    errorsCount: integer;
+}
+
+export class MethodCodeObjectSummary implements CodeObjectSummary
+{
+    type: string = 'MethodSummary';
+    codeObjectId: string = '';
+    insightsCount: integer = 0;
+    errorsCount: integer = 0;
+    score: integer = 0;
+    executedCodes: ExecutedCodeSummary[] = [];
+}
+export class EndpointCodeObjectSummary implements CodeObjectSummary
+{
+    type: string = 'EndpointSummary';
+    codeObjectId: string = '';
+    insightsCount: integer = 0;
+    errorsCount: integer = 0;
+    highUsage: boolean = false;
+    lowUsage: boolean = false;
+    maxCallsIn1Min: integer = 0;
+}
+export class SpanCodeObjectSummary implements CodeObjectSummary
+{
+    type: string = 'SpanSummary';
+    codeObjectId: string = '';
+    insightsCount: integer = 0;
+    errorsCount: integer = 0;
 }
 
 export interface ExecutedCodeSummary{
@@ -130,22 +158,11 @@ export interface ExecutedCodeSummary{
 
 export interface EndpointSummary{
     id: string;
-    route: string;
     highUsage: boolean;
     lowUsage: boolean;
     maxCallsIn1Min: number;
 }
 
-
-
-
-
-
-export interface SummaryResponse
-{
-    codeObjects: CodeObjectSummary[];
-    endpoints: EndpointSummary[];
-}
 
 export interface CodeObjectInsightHotSpotResponse
 {
@@ -256,7 +273,7 @@ export class AnalyticsProvider
 
  
 
-    public async getCodeObjectInsights(codeObjectIds: string []): Promise<any []> 
+    public async getInsights(codeObjectIds: string []): Promise<any []> 
     {
         
         const response: any [] = await this.send<any>(
@@ -270,25 +287,22 @@ export class AnalyticsProvider
             return response;
     }
 
-    public async getSummary(symbolsIdentifiers: string[], endpointIds: string[]): Promise<SummaryResponse> 
+    public async getSummaries(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
     {
         try
         {
-            const response = await this.send<SummaryResponse>(
+            const response = await this.send<CodeObjectSummary[]>(
                 'POST', 
                 `/CodeAnalytics/summary`, 
                 undefined, 
-                {codeObjectIds: symbolsIdentifiers, endpointIds: endpointIds, environment: Settings.environment.value});
+                {codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
 
             return response;
         }
         catch(error){
             Logger.error('Failed to get summary', error);
         }
-        return {
-            codeObjects: [],
-            endpoints: []
-        };
+        return [];
     }
 
     public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> 
