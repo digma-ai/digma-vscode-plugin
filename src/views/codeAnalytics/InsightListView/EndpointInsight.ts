@@ -8,6 +8,7 @@ import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { Uri } from "vscode";
 import path = require("path");
+import moment = require("moment");
 
 export interface LowUsageInsight extends CodeObjectInsight {
     route: string;
@@ -173,18 +174,13 @@ export interface SpanInfo {
 
 export interface SlowSpanInfo {
     value: number;
-    spanInfo: SpanInfo
-
+    spanInfo: SpanInfo;
+    lastOccurredAt: moment.Moment;
 }
-export interface SlowSpanInfo {
-    value: number;
 
-}
 export interface SlowestSpansInsight extends CodeObjectInsight {
     spans: SlowSpanInfo[];
     route: string;
-
-
 }
 
 export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCreator {
@@ -225,9 +221,10 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
                         
         for (let i=0;i<spansLocations.length;i++){
             let result = await spansLocations[i].spanSearchResult;
-            items.push(`<div>
+            items.push(`<div class="flex-row endpoint-bottleneck-insight">
+                <span class="span-percent negative-value">${(spansLocations[i].slowspaninfo.value*100).toFixed(1)}%</span>
                 <span class="span-name ${result ? "link" : ""} ellipsis" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">${spansLocations[i].slowspaninfo.spanInfo.displayName}</span>
-                <span class="negative-value">${(spansLocations[i].slowspaninfo.value*100).toFixed(1)}%</span>
+                <span class="span-last-time" title="Last time this span took more than 50% of the endpoint duration: ${spansLocations[i].slowspaninfo.lastOccurredAt}">${spansLocations[i].slowspaninfo.lastOccurredAt.fromNow()}</span>
             </div>`);
         }
 

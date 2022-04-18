@@ -401,4 +401,15 @@ vscode-panel-view {
             }
         }
     }
+    .endpoint-bottleneck-insight{
+        .span-percent{
+            margin-right: 5px;
+        }
+        .span-name{
+            margin-right: 5px;
+        }
+        .span-last-time{
+            opacity: 0.6;
+        }
+    }
 }
