@@ -15,6 +15,7 @@ import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
 import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { SpanListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
+import { Logger } from "../../services/logger";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -51,7 +52,8 @@ export class CodeAnalyticsView implements vscode.Disposable
 			),
 			vscode.window.onDidChangeTextEditorSelection(
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
-					await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
+                    if(e.textEditor.document.languageId !== 'Log')
+					    await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
 				}
 			),
             vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
@@ -153,7 +155,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     {
         if(e.visible === false && this._currentCodeObject === undefined){
             let editor = vscode.window.activeTextEditor;
-            if(editor)
+            if(editor && editor.document.languageId !== 'Log')
             {
                 await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
             }
@@ -192,8 +194,10 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		document: vscode.TextDocument,
 		position: vscode.Position
 	): Promise<CodeObjectInfo | undefined> {
-        if(document.uri.scheme == 'output')
+        if(document.uri.scheme !== 'file'){
+            Logger.error("getCodeObjectOrShowOverlay was called with a non file document! " + document.uri.toString())
             return;
+        }
 
         const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
             ? await this._documentInfoProvider.getDocumentInfo(document)
@@ -233,7 +237,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._tabs.forEach((v,k)=> v.onReset());
 
         const editor = vscode.window.activeTextEditor;
-        if(!editor){
+        if(!editor || editor.document.languageId === 'Log'){
             this._overlay.showUnsupportedDocumentMessage();
             this._activeTab?.onDectivate();
             this._activeTab = undefined;
