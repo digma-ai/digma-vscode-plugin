@@ -221,10 +221,12 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
                         
         for (let i=0;i<spansLocations.length;i++){
             let result = await spansLocations[i].spanSearchResult;
-            items.push(`<div class="flex-row endpoint-bottleneck-insight">
-                <span class="span-percent negative-value">${(spansLocations[i].slowspaninfo.value*100).toFixed(1)}%</span>
-                <span class="span-name ${result ? "link" : ""} ellipsis" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">${spansLocations[i].slowspaninfo.spanInfo.displayName}</span>
-                <span class="span-last-time" title="Last time this span took more than 50% of the endpoint duration: ${spansLocations[i].slowspaninfo.lastOccurredAt}">${spansLocations[i].slowspaninfo.lastOccurredAt.fromNow()}</span>
+            const slowSpan = spansLocations[i].slowspaninfo;
+            const old = moment().diff(slowSpan.lastOccurredAt, 'hours') > 48 ? "old" : "";
+            items.push(`<div class="flex-row endpoint-bottleneck-insight ${old}">
+                <span class="span-percent negative-value">${(slowSpan.value*100).toFixed(1)}%</span>
+                <span class="span-name ${result ? "link" : ""} ellipsis" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">${slowSpan.spanInfo.displayName}</span>
+                <span class="span-last-time" title="Last time this span took more than 50% of the endpoint duration: ${slowSpan.lastOccurredAt}">${slowSpan.lastOccurredAt.fromNow()}</span>
             </div>`);
         }
 

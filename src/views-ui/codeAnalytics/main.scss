@@ -402,6 +402,9 @@ vscode-panel-view {
         }
     }
     .endpoint-bottleneck-insight{
+        &.old{
+            opacity: 0.6;
+        }
         .span-percent{
             margin-right: 5px;
         }
