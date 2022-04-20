@@ -56,7 +56,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 tail = codeHintFiles.slice(1);
             }
 
-            if (codeHintFiles.length>1){
+            if (codeHintFiles.length>=1){
                 const files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`);
 
                 const spansPromises = files.map(async file =>{
