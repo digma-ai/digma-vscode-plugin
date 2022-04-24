@@ -16,7 +16,6 @@ export function trendToCodIcon(trend: number): string
     return '';
 }
 
-
 export function trendToAsciiIcon(trend: number): string 
 {
     if(trend < 0)

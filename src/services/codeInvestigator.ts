@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { DocumentInfoProvider, MethodInfo } from "./documentInfoProvider";
+import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token } from './languages/tokens';
 

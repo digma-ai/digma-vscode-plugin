@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { DocumentSymbol } from "vscode-languageclient";
+import { DocumentSymbol } from 'vscode-languageclient';
 import { CodeInvestigator } from '../codeInvestigator';
 import { SymbolProvider } from './symbolProvider';
 import { Token } from './tokens';
@@ -56,7 +56,7 @@ export interface ISpanExtractor {
     ): Promise<SpanInfo[]>;
 }
 
-export interface ILanguageExtractor{
+export interface ILanguageExtractor {
     requiredExtentionLoaded: boolean;
     get requiredExtentionId(): string;
     get documentFilter() : vscode.DocumentFilter;

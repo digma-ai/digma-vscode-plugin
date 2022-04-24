@@ -3,7 +3,7 @@ import * as path from 'path';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInvestigator } from '../../codeInvestigator';
-import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
+import { ISpanExtractor, SpanInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
 
