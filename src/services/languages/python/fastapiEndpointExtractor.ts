@@ -1,8 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { Token, TokenType } from "../symbolProvider";
+import { Token, TokenType } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from "../extractors";
-
 
 export class FastapiEndpointExtractor implements IEndpointExtractor
 {

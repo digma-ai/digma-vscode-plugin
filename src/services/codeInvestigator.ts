@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 
 import { DocumentInfoProvider, MethodInfo } from "./documentInfoProvider";
-import { Token, SymbolProvider } from './languages/symbolProvider';
+import { SymbolProvider } from './languages/symbolProvider';
+import { Token } from './languages/tokens';
 
 export interface Definition {
     document: vscode.TextDocument

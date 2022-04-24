@@ -3,7 +3,7 @@ import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInvestigator } from './../../codeInvestigator';
 import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
-import { Token, TokenType } from "../symbolProvider";
+import { Token, TokenType } from '../tokens';
 import { SymbolProvider } from './../symbolProvider';
 
 export class CSharpSpanExtractor implements ISpanExtractor {

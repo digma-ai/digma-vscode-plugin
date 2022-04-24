@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ErrorsViewTab } from '../views/codeAnalytics/errorsViewTab';
 import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
-import { TokenType } from './languages/symbolProvider';
+import { TokenType } from './languages/tokens';
 import { CodeInvestigator } from './codeInvestigator';
 
 export class MethodCallErrorTooltip implements vscode.Disposable

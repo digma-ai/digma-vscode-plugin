@@ -4,7 +4,8 @@ import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInvestigator } from '../../codeInvestigator';
 import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
-import { SymbolProvider, Token, TokenType } from "../symbolProvider";
+import { SymbolProvider } from '../symbolProvider';
+import { Token, TokenType } from '../tokens';
 
 export class PythonSpanExtractor implements ISpanExtractor {
     constructor(private _codeInvestigator: CodeInvestigator) {}

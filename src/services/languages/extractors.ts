@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol } from "vscode-languageclient";
 import { CodeInvestigator } from '../codeInvestigator';
-import { SymbolProvider, Token } from './symbolProvider';
-
+import { SymbolProvider } from './symbolProvider';
+import { Token } from './tokens';
 
 export interface SymbolInfo{
     id: string;
