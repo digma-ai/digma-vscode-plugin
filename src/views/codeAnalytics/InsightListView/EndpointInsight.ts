@@ -173,11 +173,15 @@ export interface SpanInfo {
 }
 
 export interface SlowSpanInfo {
-    value: number;
     spanInfo: SpanInfo;
-    lastOccurredAt: moment.Moment;
+    p50: Percentile;
+    p95: Percentile;
+    p99: Percentile;
 }
-
+export interface Percentile {
+    fraction: number,
+    maxDuration: Duration,
+}
 export interface SlowestSpansInsight extends CodeObjectInsight {
     spans: SlowSpanInfo[];
     route: string;
@@ -222,12 +226,14 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         for (let i=0;i<spansLocations.length;i++){
             let result = await spansLocations[i].spanSearchResult;
             const slowSpan = spansLocations[i].slowspaninfo;
-            const old = moment().diff(slowSpan.lastOccurredAt, 'hours') > 48 ? "old" : "";
-            items.push(`<div class="flex-row endpoint-bottleneck-insight ${old}">
-                <span class="span-percent negative-value">${(slowSpan.value*100).toFixed(1)}%</span>
-                <span class="span-name ${result ? "link" : ""} ellipsis" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">${slowSpan.spanInfo.displayName}</span>
-                <span class="span-last-time" title="Last time this span took more than 50% of the endpoint duration: ${slowSpan.lastOccurredAt}">${slowSpan.lastOccurredAt.fromNow()}</span>
-            </div>`);
+
+            items.push(`
+                <div class="endpoint-bottleneck-insight" title="${this.getTooltip(slowSpan)}">
+                    <div class="span-name flex-row ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
+                        <span class="left-ellipsis">${slowSpan.spanInfo.displayName}</span>
+                    </div>
+                    <div class="span-description">${this.getDescription(slowSpan)}</div>
+                </div>`);
         }
 
         const html = `
@@ -255,6 +261,23 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         };
     }
 
+    private getDescription(span: SlowSpanInfo){
+        if(span.p50.fraction > 0.4)
+            return `50% of the users by up to ${span.p50.maxDuration.value}${span.p50.maxDuration.unit}`;
+        if(span.p95.fraction > 0.4)
+            return `5% of the users by up to ${span.p95.maxDuration.value}${span.p95.maxDuration.unit}`;
+        return `1% of the users by up to ${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`;
+    }
+
+    private getTooltip(span: SlowSpanInfo){
+        //&#13;
+        return `${span.spanInfo.displayName} 
+
+Percentage of time spent in span:
+Median: ${(span.p50.fraction*100).toFixed(0)}% ~${span.p50.maxDuration.value}${span.p50.maxDuration.unit}
+P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${span.p95.maxDuration.unit}
+P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
+    }
     public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
