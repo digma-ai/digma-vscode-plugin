@@ -85,22 +85,20 @@ export class DocumentInfoProvider implements vscode.Disposable
     private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
         const docRelativePath = doc.uri.toModulePath();
-        if(!docRelativePath || !this.symbolProvider.supportsDocument(doc))
+        if(!docRelativePath || !this.symbolProvider.supportsDocument(doc)) {
             return undefined;
+        }
 
         let document = this._documents[docRelativePath];
-        if(!document)
-        {
+        if(!document) {
             document = this._documents[docRelativePath] = new DocumentInfoContainer();
         }
 
         let latestVersionInfo = document.versions[doc.version];
-        if(!latestVersionInfo)
-        {
+        if(!latestVersionInfo) {
             latestVersionInfo = document.versions[doc.version] = new Future<DocumentInfo>();
 
-            try
-            {
+            try {
                 Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
                 const symbolInfos = await this.symbolProvider.getMethods(doc);
                 const tokens = await this.symbolProvider.getTokens(doc);
@@ -120,8 +118,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
-            catch(e)
-            {
+            catch(e) {
                 latestVersionInfo.value = {
                     summaries: new CodeObjectSummeryAccessor([]),
                     methods: [],
@@ -137,8 +134,7 @@ export class DocumentInfoProvider implements vscode.Disposable
 
             return latestVersionInfo.value;
         }
-        else
-        {
+        else {
             return await latestVersionInfo.wait();
         }
     }
@@ -148,8 +144,7 @@ export class DocumentInfoProvider implements vscode.Disposable
     {
         let methods: MethodInfo[] = [];
 
-        for(let symbol of symbols)
-        {
+        for(let symbol of symbols) {
             const method = new MethodInfo(
                 symbol.id,
                 symbol.name,
@@ -165,22 +160,22 @@ export class DocumentInfoProvider implements vscode.Disposable
             methods.push(method);
 
             const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
-            for(let token of methodTokens)
-            {
+            for(let token of methodTokens) {
                 const name = token.text;// document.getText(token.range);
 
-                if((token.type === TokenType.method || token.type==TokenType.function)
-                 && !method.nameRange
-                    && name ===symbol.name)
-                {
+                if(
+                    (token.type === TokenType.method || token.type === TokenType.function)
+                    && !method.nameRange
+                    && name ===symbol.name
+                ) {
                     method.nameRange = token.range;
                 }
 
-                if(token.type == TokenType.parameter)
-                {
-                    if(method.parameters.any(p => p.name == name))
+                if(token.type === TokenType.parameter) {
+                    if(method.parameters.any(p => p.name === name)) {
                         continue;
-                    
+                    }
+
                     method.parameters.push({ name, range: token.range, token });
                 }
             }

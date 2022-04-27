@@ -59,8 +59,9 @@ export class SymbolProvider
     public async getEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]):  Promise<EndpointInfo[]>
     {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
-        if(!supportedLanguage)
+        if(!supportedLanguage) {
             return [];
+        }
 
         return supportedLanguage.endpointExtractors
             .map(x => x.extractEndpoints(document, symbolInfos, tokens))
@@ -73,8 +74,9 @@ export class SymbolProvider
         tokens: Token[],
     ):  Promise<SpanInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
-        if(!supportedLanguage)
+        if(!supportedLanguage) {
             return [];
+        }
 
         const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInvestigator);
         const extractedSpans = await Promise.all(
@@ -87,8 +89,9 @@ export class SymbolProvider
     public async getMethods(document: vscode.TextDocument) : Promise<SymbolInfo[]>
     {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
-        if(!supportedLanguage)
+        if(!supportedLanguage) {
             return [];
+        }
 
         let result = await this.retryOnStartup<any[]>(
             async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
@@ -116,53 +119,50 @@ export class SymbolProvider
         return [];
     }
 
-    public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]>
-    {
+    public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
         let tokes: Token[] = [];
-        try
-        {
+        try {
             //  at index `5*i`   - `deltaLine`: token line number, relative to the previous token
             //  at index `5*i+1` - `deltaStart`: token start character, relative to the previous token (relative to 0 or the previous token's start if they are on the same line)
             //  at index `5*i+2` - `length`: the length of the token. A token cannot be multiline.
             //  at index `5*i+3` - `tokenType`: will be looked up in `SemanticTokensLegend.tokenTypes`. We currently ask that `tokenType` < 65536.
             //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
             
-            let legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
+            const legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
                 async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
                 value => value?.tokenTypes ? true : false);
-            if(!legends)
+            if(!legends) {
                 return tokes;
-            
+            }
+
             let semanticTokens: vscode.SemanticTokens | undefined;
-            if(range)
-            {
+            if(range) {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
                     value => value?.data?.length ? true : false);
             }
-            else
-            {
+            else {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
                     value => value?.data?.length ? true : false);
             }
-            if(!semanticTokens)
+            if(!semanticTokens) {
                 return tokes;
-            
+            }
+
             let line = 0;
             let char = 0;
-            for(let i=0; i<semanticTokens.data.length; i += 5)
-            {
+            for(let i = 0; i < semanticTokens.data.length; i += 5) {
                 const deltaLine = semanticTokens.data[i];
                 const deltaStart = semanticTokens.data[i+1];
                 const length = semanticTokens.data[i+2];
                 const tokenType = semanticTokens.data[i+3];
                 const tokenModifiers = semanticTokens.data[i+4];
                 
-                if(deltaLine == 0){
+                if(deltaLine == 0) {
                     char += deltaStart;
                 }
-                else{ 
+                else {
                     line += deltaLine;
                     char = deltaStart;
                 }
@@ -179,8 +179,7 @@ export class SymbolProvider
                 });
             }
         }
-        catch(e)
-        {
+        catch(e) {
             Logger.error('Failed to get tokens', e);
         }
 
