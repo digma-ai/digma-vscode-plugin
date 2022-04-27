@@ -18,7 +18,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
         {
             const appToken = tokens[i];
             const methodToken = tokens[i+1];
-            if (appToken.text != 'app' || appToken.type != TokenType.variable || methodToken.type != TokenType.method)
+            if ((appToken.text != 'app' && appToken.text != 'router') || appToken.type != TokenType.variable || methodToken.type != TokenType.method)
                 continue;
 
             const method = methodToken.text;
@@ -28,7 +28,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             const lineText = document.getText(new vscode.Range(
                 appToken.range.start, 
                 new vscode.Position(methodToken.range.end.line, 1000)));
-            const match = new RegExp(`^app\\.${method}\\(["'](.*?)["']`).exec(lineText);
+            const match = new RegExp(`^(app|router)\\.${method}\\(["'](.*?)["']`).exec(lineText);
             if (!match)
                 continue;
             
@@ -36,9 +36,9 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             if (!relevantFunc)
                 continue;
             
-            const path = match[1];
+            const path = match[2];
             results.push(new EndpointInfo(
-                vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method + ' ' + match[1],
+                vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method + ' ' + path,
                 method, 
                 path,
                 relevantFunc.range,
