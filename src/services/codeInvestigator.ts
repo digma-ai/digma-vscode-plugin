@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
-import { SymbolProvider } from './languages/symbolProvider';
+import { SymbolProvider, SymbolTree } from './languages/symbolProvider';
 import { Token } from './languages/tokens';
 
 export interface Definition {
@@ -63,5 +63,18 @@ export class CodeInvestigator {
             document,
             location,
         };
+    }
+
+    public * getAllSymbolsOfKind(symbolTrees: SymbolTree[] | undefined, kind: vscode.SymbolKind): Generator<SymbolTree> {
+        if(!symbolTrees) {
+            return;
+        }
+
+        for (const symbolTree of symbolTrees) {
+            if(symbolTree.kind === kind) {
+                yield symbolTree;
+            }
+            yield * this.getAllSymbolsOfKind(symbolTree.children as SymbolTree[] | undefined, kind);
+        }
     }
 }
