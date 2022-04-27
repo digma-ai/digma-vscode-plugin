@@ -4,8 +4,6 @@ import { AnalyticsProvider} from './services/analyticsProvider';
 import { SymbolProvider } from './services/languages/symbolProvider';
 import { PythonLanguageExtractor } from "./services/languages/python/languageExtractor";
 import { CSharpLanguageExtractor } from './services/languages/csharp/languageExtractor';
-import { ErrorFlowStackView } from './views/errorFlow/errorFlowStackView';
-import { ErrorFlowListView } from './views/errorFlow/errorFlowListView';
 import { ContextView } from './views/contextView';
 import { Settings } from './settings';
 import { SourceControl, Git } from './services/sourceControl';
@@ -41,9 +39,6 @@ export async function activate(context: vscode.ExtensionContext)
     }
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
-    //context.subscriptions.push(new ErrorFlowListView(analyticsProvider, context.extensionUri));
-   // context.subscriptions.push(new ErrorFlowStackView(documentInfoProvider, editorHelper, context.extensionUri));
-    //context.subscriptions.push(new ErrorFlowRawStackEditor());
     context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInvestigator));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);

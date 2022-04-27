@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { Settings } from '../../settings';
 import { AffectedSpanPathResponse, ErrorFlowFrame, ErrorFlowSummary, ParamStats } from "../../services/analyticsProvider";
-import { ErrorFlowCommon } from '../errorFlow/common';
 
 export interface ErrorFlowStackViewModel {
     stacks: StackViewModel[];
@@ -58,7 +57,7 @@ export class ErrorFlowStackRenderer {
                     
                     <div class="property-col">
                         <span style="vertical-align:sub;font-size: 13px;margin-top: 5px;color: burlywood;font-weight: bold;" class="title">
-                            ${ErrorFlowCommon.getAlias(summary)}
+                            ${this.getAlias(summary)}
                         </span>
                         ${this.getFrameSpanToggleHtml()}
 
@@ -108,6 +107,11 @@ export class ErrorFlowStackRenderer {
         `;
 
         return summaryHtml + errorTracesTreeHtml + errorFramesListHtml;
+    }
+
+    public getAlias(errorVm: ErrorFlowSummary) : string{
+
+        return `${errorVm.exceptionName} from ${errorVm.sourceFunction}`;
     }
 
     private getFrameSpanToggleHtml():string{

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
-import { ErrorFlowResponse, ParamStats } from '../../services/analyticsProvider';
-import { IParameter, ParameterDecorator } from "../../services/parameterDecorator";
-import { DocumentInfoProvider, ParameterInfo } from '../../services/documentInfoProvider';
-import { ErrorFlowStackViewModel } from '../codeAnalytics/errorFlowStackRenderer';
+import { ErrorFlowResponse, ParamStats } from '../services/analyticsProvider';
+import { IParameter, ParameterDecorator } from "../services/parameterDecorator";
+import { DocumentInfoProvider, ParameterInfo } from '../services/documentInfoProvider';
+import { ErrorFlowStackViewModel } from '../views/codeAnalytics/errorFlowStackRenderer';
 
 export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
 {
