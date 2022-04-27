@@ -23,7 +23,7 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public get endpointExtractors(): IEndpointExtractor[] {
+    public getEndpointExtractors(codeInvestigator: CodeInvestigator): IEndpointExtractor[] {
         return [];
     }
 

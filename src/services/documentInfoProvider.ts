@@ -100,16 +100,23 @@ export class DocumentInfoProvider implements vscode.Disposable
 
             try {
                 Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
-                const symbolInfos = await this.symbolProvider.getMethods(doc);
+                const symbolTrees = await this.symbolProvider.getSymbolTree(doc);
+                const symbolInfos = await this.symbolProvider.getMethods(doc, symbolTrees);
                 const tokens = await this.symbolProvider.getTokens(doc);
-                const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
+                const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens, symbolTrees, this);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
-                const methods = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
-                const lines = this.createLineInfos(doc, summaries, methods);
-                const summaries = new CodeObjectSummaryAccessor(await this.analyticsProvider.getSummaries(methods.map(s => s.idWithType).concat(endpoints.map(e => e.idWithType)).concat(spans.map(s => s.idWithType))));
+                const methodInfos = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
+                const summaries = new CodeObjectSummaryAccessor(
+                    await this.analyticsProvider.getSummaries(
+                        methodInfos.map(s => s.idWithType)
+                            .concat(endpoints.map(e => e.idWithType))
+                            .concat(spans.map(s => s.idWithType))
+                    )
+                );
+                const lines = this.createLineInfos(doc, summaries, methodInfos);
                 latestVersionInfo.value = {
                     summaries,
-                    methods,
+                    methods: methodInfos,
                     lines,
                     tokens,
                     endpoints,

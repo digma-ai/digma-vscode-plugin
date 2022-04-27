@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol } from 'vscode-languageclient';
+import { DocumentInfoProvider } from '../documentInfoProvider';
 import { CodeInvestigator } from '../codeInvestigator';
-import { SymbolProvider } from './symbolProvider';
+import { SymbolProvider, SymbolTree } from './symbolProvider';
 import { Token } from './tokens';
 
 export interface SymbolInfo{
@@ -44,9 +45,17 @@ export class SpanInfo implements CodeObjectInfo{
 export interface IMethodExtractor {
     extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]) : SymbolInfo[];
 }
+
 export interface IEndpointExtractor {
-    extractEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]): EndpointInfo[];
+    extractEndpoints(
+        document: vscode.TextDocument,
+        symbolInfos: SymbolInfo[],
+        tokens: Token[],
+        symbolTrees: SymbolTree[] | undefined,
+        documentInfoProvider: DocumentInfoProvider,
+    ): Promise<EndpointInfo[]>;
 }
+
 export interface ISpanExtractor {
     extractSpans(
         document: vscode.TextDocument,
@@ -61,6 +70,6 @@ export interface ILanguageExtractor {
     get requiredExtentionId(): string;
     get documentFilter() : vscode.DocumentFilter;
     get methodExtractors(): IMethodExtractor[];
-    get endpointExtractors(): IEndpointExtractor[];
+    getEndpointExtractors(codeInvestigator: CodeInvestigator): IEndpointExtractor[];
     getSpanExtractors(codeInvestigator: CodeInvestigator): ISpanExtractor[];
 }

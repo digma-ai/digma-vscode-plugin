@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
+import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInvestigator } from './../codeInvestigator';
@@ -24,6 +25,8 @@ export function trendToAsciiIcon(trend: number): string
         return `+${trend}\u2191`;  // \u2191 = ArrowUp
     return '';
 }
+
+export type SymbolTree = DocumentSymbol & SymbolInformation;
 
 export class SymbolProvider 
 {
@@ -56,16 +59,32 @@ export class SymbolProvider
         return result;
     }
 
-    public async getEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]):  Promise<EndpointInfo[]>
-    {
+    public async getSymbolTree(document: vscode.TextDocument): Promise<SymbolTree[] | undefined> {
+        const symbolTree: SymbolTree[] | undefined = await this.retryOnStartup<SymbolTree[]>(
+            async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
+            value => value && value.length > 0 ? true : false,
+        );
+        return symbolTree;
+    }
+        
+    public async getEndpoints(
+        document: vscode.TextDocument,
+        symbolInfos: SymbolInfo[],
+        tokens: Token[],
+        symbolTrees: SymbolTree[] | undefined,
+        documentInfoProvider: DocumentInfoProvider,
+    ): Promise<EndpointInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage) {
             return [];
         }
 
-        return supportedLanguage.endpointExtractors
-            .map(x => x.extractEndpoints(document, symbolInfos, tokens))
-            .flat();
+        const endpointExtractors = supportedLanguage.getEndpointExtractors(this._codeInvestigator);
+        const extractedEndpoints = await Promise.all(
+            endpointExtractors.map(async (x) => await x.extractEndpoints(document, symbolInfos, tokens, symbolTrees, documentInfoProvider))
+        );
+        const endpoints = extractedEndpoints.flat();
+        return endpoints;
     }
     
     public async getSpans(
@@ -86,32 +105,25 @@ export class SymbolProvider
         return spans;
     }
 
-    public async getMethods(document: vscode.TextDocument) : Promise<SymbolInfo[]>
-    {
+    public async getMethods(document: vscode.TextDocument, symbolTrees: SymbolTree[] | undefined) : Promise<SymbolInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage) {
             return [];
         }
 
-        let result = await this.retryOnStartup<any[]>(
-            async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
-            value => value?.length ? true : false);
-        // let result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
-        // if(!result?.length && this._creationTime.clone().add(10, 'second') > moment.utc()){
-        //     await delay(2000);
-        //     result = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
-        // }
-
-        if (result?.length) {
-            if ((result[0] as any).range) {
+        if (symbolTrees?.length) {
+            if (symbolTrees[0].range) {
                 // Document symbols
-                const allDocSymbols = result as DocumentSymbol[];
-                const symbolInfos = supportedLanguage.methodExtractors.map(x => x.extractMethods(document, allDocSymbols)).flat();
+                const allDocSymbols = symbolTrees as DocumentSymbol[];
+                const symbolInfos = supportedLanguage.methodExtractors
+                    .map(x => x.extractMethods(document, allDocSymbols))
+                    .flat();
 
                 return symbolInfos;
-            } else {
+            }
+            else {
                 // Document symbols
-                const symbols = result as SymbolInformation[];
+                const symbols = symbolTrees as SymbolInformation[];
                 // TODO: ?
             }
         }

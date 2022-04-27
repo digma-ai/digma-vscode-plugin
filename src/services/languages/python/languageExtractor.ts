@@ -24,7 +24,7 @@ export class PythonLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public get endpointExtractors(): IEndpointExtractor[] {
+    public getEndpointExtractors(codeInvestigator: CodeInvestigator): IEndpointExtractor[] {
         return [
             new FastapiEndpointExtractor()
         ];
