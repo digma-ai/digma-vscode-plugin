@@ -105,8 +105,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
                 const methods = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
-                const summaries = new CodeObjectSummeryAccessor(await this.analyticsProvider.getSummaries(methods.map(s => s.idWithType).concat(endpoints.map(e => e.idWithType)).concat(spans.map(s => s.idWithType))));
                 const lines = this.createLineInfos(doc, summaries, methods);
+                const summaries = new CodeObjectSummaryAccessor(await this.analyticsProvider.getSummaries(methods.map(s => s.idWithType).concat(endpoints.map(e => e.idWithType)).concat(spans.map(s => s.idWithType))));
                 latestVersionInfo.value = {
                     summaries,
                     methods,
@@ -120,7 +120,7 @@ export class DocumentInfoProvider implements vscode.Disposable
             }
             catch(e) {
                 latestVersionInfo.value = {
-                    summaries: new CodeObjectSummeryAccessor([]),
+                    summaries: new CodeObjectSummaryAccessor([]),
                     methods: [],
                     lines: [],
                     tokens: [],
@@ -184,7 +184,7 @@ export class DocumentInfoProvider implements vscode.Disposable
         return methods;
     }
 
-    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummeryAccessor, methods: MethodInfo[]): LineInfo[]
+    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummaryAccessor, methods: MethodInfo[]): LineInfo[]
     {
         const lineInfos: LineInfo[] = [];
         for(let method of methods)
@@ -254,7 +254,7 @@ class DocumentInfoContainer
 
 export interface DocumentInfo
 {
-    summaries: CodeObjectSummeryAccessor;
+    summaries: CodeObjectSummaryAccessor;
     methods: MethodInfo[];
     lines: LineInfo[];
     tokens: Token[];
@@ -262,7 +262,7 @@ export interface DocumentInfo
     spans: SpanInfo[];
     uri: vscode.Uri;
 }
-export class CodeObjectSummeryAccessor{
+export class CodeObjectSummaryAccessor{
     constructor(private _codeObejctSummeries: CodeObjectSummary[]){}
 
     public get<T extends CodeObjectSummary>(type: { new(): T ;}, codeObjectId: string): T | undefined
