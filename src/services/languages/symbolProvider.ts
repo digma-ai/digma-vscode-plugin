@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
@@ -30,7 +29,7 @@ export type SymbolTree = DocumentSymbol & SymbolInformation;
 
 export class SymbolProvider 
 {
-    private _creationTime: moment.Moment = moment.utc();
+    private _languageServiceIsAlive: Map<string, boolean> = new Map();
 
     constructor(
         public languageExtractors: ILanguageExtractor[],
@@ -42,19 +41,39 @@ export class SymbolProvider
         return this.languageExtractors.any(x => vscode.languages.match(x.documentFilter, document) > 0);
     }
 
-    private async retryOnStartup<T>(lspCall: () => Promise<T | undefined>, predicate: (result: T | undefined) => boolean): Promise<T | undefined>
-    {
+    /**
+     * There seems to be no simple way to determine if any given language service has been fully activated.
+     * 
+     * This function attempts to make the desired language service call and then asks the caller to guess
+     * if the reply indicates that the language service is alive or hasn't been fully activated yet. Some
+     * of the replies are ambiguous. For example, it sometimes returns undefined instead of an empty
+     * array.
+     * 
+     * If it looks like it hasn't loaded yet, the original call will be attempted several more times
+     * before failing.
+     * 
+     * Once a language service is determined to be alive, the retry logic will not be invoked on later
+     * invocations.
+     * @param lspCall
+     * @param predicate 
+     * @returns a promise that resolves to the result of the lsp call or undefined
+     */
+    private async retryOnStartup<T>(
+        lspCall: () => Promise<T | undefined>,
+        predicate: (result: T | undefined) => boolean,
+        languageId: string,
+    ): Promise<T | undefined> {
         let result = await lspCall();
-        if(!predicate(result) && this._creationTime.clone().add(15, 'second') > moment.utc())
-        {
-            for(let delayMs of [100, 200, 400, 800, 1600, 3200, 3200, 3200])
-            {
+        if(!this._languageServiceIsAlive.get(languageId) && !predicate(result)) {
+            for(const delayMs of [100, 200, 400, 800, 1600, 3200, 3200, 3200]) {
                 await delay(delayMs);
                 result = await lspCall();
-                if(predicate(result))
+                if(predicate(result)) {
+                    this._languageServiceIsAlive.set(languageId, true);
                     return result;
+                }
             }
-            Logger.warn(`Retry ended with timeout for "${lspCall.toString()}"`)
+            Logger.warn(`Retry ended with timeout for "${lspCall.toString()}"`);
         }
         return result;
     }
@@ -63,6 +82,7 @@ export class SymbolProvider
         const symbolTree: SymbolTree[] | undefined = await this.retryOnStartup<SymbolTree[]>(
             async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
             value => value && value.length > 0 ? true : false,
+            document.languageId,
         );
         return symbolTree;
     }
@@ -142,7 +162,9 @@ export class SymbolProvider
             
             const legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
                 async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
-                value => value?.tokenTypes ? true : false);
+                value => value?.tokenTypes ? true : false,
+                document.languageId,
+            );
             if(!legends) {
                 return tokes;
             }
@@ -151,12 +173,16 @@ export class SymbolProvider
             if(range) {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
-                    value => value?.data?.length ? true : false);
+                    value => !!value?.data,
+                    document.languageId,
+                );
             }
             else {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
-                    value => value?.data?.length ? true : false);
+                    value => !!value?.data,
+                    document.languageId,
+                );
             }
             if(!semanticTokens) {
                 return tokes;
