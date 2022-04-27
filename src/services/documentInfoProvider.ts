@@ -139,9 +139,13 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
  
-    private createMethodInfos(document: vscode.TextDocument, symbols: SymbolInfo[], tokens: Token[], 
-        spans: SpanInfo[], endpoints: EndpointInfo[]): MethodInfo[] 
-    {
+    private createMethodInfos(
+        document: vscode.TextDocument,
+        symbols: SymbolInfo[],
+        tokens: Token[], 
+        spans: SpanInfo[],
+        endpoints: EndpointInfo[],
+    ): MethodInfo[] {
         let methods: MethodInfo[] = [];
 
         for(let symbol of symbols) {
