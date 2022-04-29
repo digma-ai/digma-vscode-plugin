@@ -80,16 +80,6 @@
                 },
                 {
                     "type": "webview",
-                    "id": "errorFlowList",
-                    "name": "Error Flows List"
-                },
-                {
-                    "type": "webview",
-                    "id": "errorFlowDetails",
-                    "name": "Error Flow Details"
-                },
-                {
-                    "type": "webview",
                     "id": "codeAnalytics",
                     "name": "CodeAnalytics"
                 }

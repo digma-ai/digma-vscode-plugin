@@ -70,7 +70,7 @@ vscode-panel-view {
     display: flex;
     flex-direction: column;
     margin: 3px;
-    justify-content: space-between;
+    justify-content: flex-start;
 }
 
 .score-box {
@@ -402,16 +402,12 @@ vscode-panel-view {
         }
     }
     .endpoint-bottleneck-insight{
-        &.old{
-            opacity: 0.6;
-        }
-        .span-percent{
-            margin-right: 5px;
-        }
+        margin-top: 5px;
+
         .span-name{
             margin-right: 5px;
         }
-        .span-last-time{
+        .span-description{
             opacity: 0.6;
         }
     }

@@ -8,7 +8,7 @@ import { ErrorsViewTab } from "./errorsViewTab";
 import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
 import { UsagesViewTab } from "./usagesViewTab";
-import { ErrorFlowParameterDecorator } from "../errorFlow/errorFlowParameterDecorator";
+import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
