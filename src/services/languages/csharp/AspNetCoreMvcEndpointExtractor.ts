@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
 import { DocumentInfoProvider } from './../../documentInfoProvider';
 import { CodeInspector } from '../../codeInspector';
-import { SymbolTree, SymbolProvider } from './../symbolProvider';
-import { Token, TokenType, matchTokenSequence } from '../tokens';
+import { SymbolTree } from './../symbolProvider';
+import { Token, TokenType } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
+import { convertRange } from '../../utils';
 
 export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
     constructor(
@@ -22,46 +23,54 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
         const classes = Array.from(this._codeInspector.getAllSymbolsOfKind(symbolTrees, vscode.SymbolKind.Class));
 
         for (const currentClass of classes) {
+            const classDefinition = this.getClassDefinition(currentClass, document, tokens);
 
-            const { line, character } = currentClass.selectionRange.start;
-            const classNamePosition = new vscode.Position(line, character);
-    
-            const derivesFromControllerBase = await this.derivesFrom(classNamePosition, 'ControllerBase', document, tokens, documentInfoProvider.symbolProvider);
-            if(derivesFromControllerBase) {
-                const children = currentClass.children;
-                if(!children) {
-                    continue;
-                }
+            const derivesFromControllerBase = await this._codeInspector.derivesFrom(
+                classDefinition,
+                'ControllerBase',
+                documentInfoProvider.symbolProvider,
+                this.findParentToken,
+            );
+            if(!derivesFromControllerBase) {
+                continue;
+            }
 
-                const methods = children.filter(child => child.kind === vscode.SymbolKind.Method);
-                for (const method of methods) {
-                    const id = vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method.name;
-                    const { start, end } = method.range;
-                    const range = new vscode.Range(
-                        new vscode.Position(start.line, start.character),
-                        new vscode.Position(end.line, end.character),
-                    );
-                    results.push(new EndpointInfo(
-                        id,
-                        method.name,
-                        currentClass.name,
-                        range,
-                        document.uri
-                    ));
-                }
+            const children = currentClass.children;
+            if(!children) {
+                continue;
+            }
+
+            const methods = children.filter(child => child.kind === vscode.SymbolKind.Method);
+            for (const method of methods) {
+                const id = vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method.name;
+                const range = convertRange(method.range);
+                results.push(new EndpointInfo(
+                    id,
+                    method.name,
+                    currentClass.name,
+                    range,
+                    document.uri,
+                ));
             }
         }
 
         return results;
     }
 
-    private async derivesFrom(
-        classNamePosition: vscode.Position,
-        ancestorName: string,
-        document: vscode.TextDocument,
-        tokens: Token[],
-        symbolProvider: SymbolProvider,
-    ): Promise<boolean> {
+    private getClassDefinition(currentClass: SymbolTree, document: vscode.TextDocument, tokens: Token[]) {
+        const { line, character } = currentClass.selectionRange.start;
+        const classNamePosition = new vscode.Position(line, character);
+        const classNameLocation = new vscode.Location(document.uri, classNamePosition);
+
+        const classDefinition = {
+            location: classNameLocation,
+            document,
+            tokens,
+        };
+        return classDefinition;
+    }
+
+    private findParentToken(tokens: Token[], classNamePosition: vscode.Position): Token | undefined {
         const openBraceToken = tokens.find(
             token =>
                 token.range.start.isAfter(classNamePosition)
@@ -69,7 +78,7 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
                 && token.text === '{'
         );
         if(!openBraceToken) {
-            return false;
+            return undefined;
         }
 
         const parentToken = tokens.find(
@@ -78,26 +87,6 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
                 && token.range.end.isBefore(openBraceToken.range.start)
                 && token.type === TokenType.class
         );
-        if(!parentToken) {
-            return false;
-        }
-
-        if(parentToken.text === ancestorName) {
-            return true;
-        }
-
-        const parentInfo = await this._codeInspector.getTokensFromSymbolProvider(document, parentToken.range.start, symbolProvider);
-        if(!parentInfo) {
-            return false;
-        }
-
-        const parentDocument = parentInfo.document;
-        const parentSymbolTree = await symbolProvider.getSymbolTree(parentDocument);
-        if(!parentSymbolTree) {
-            return false;
-        }
-
-        const parentDerivesFromAncestor = this.derivesFrom(parentInfo.location.range.start, ancestorName, parentDocument, parentInfo.tokens, symbolProvider);
-        return parentDerivesFromAncestor;
+        return parentToken;
     }
 }

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
 import { SymbolProvider, SymbolTree } from './languages/symbolProvider';
-import { Token } from './languages/tokens';
+import { Token, TokenType } from './languages/tokens';
 
 export interface Definition {
     document: vscode.TextDocument
@@ -76,5 +76,39 @@ export class CodeInspector {
             }
             yield * this.getAllSymbolsOfKind(symbolTree.children as SymbolTree[] | undefined, kind);
         }
+    }
+
+    public async derivesFrom(
+        definition: DefinitionWithTokens,
+        ancestorName: string,
+        symbolProvider: SymbolProvider,
+        findParentToken: (tokens: Token[], position: vscode.Position) => Token | undefined,
+    ): Promise<boolean> {
+        const parentToken = findParentToken(definition.tokens, definition.location.range.start);
+        if(!parentToken) {
+            return false;
+        }
+
+        if(parentToken.text === ancestorName) {
+            return true;
+        }
+
+        const parentInfo = await this.getTokensFromSymbolProvider(definition.document, parentToken.range.start, symbolProvider);
+        if(!parentInfo) {
+            return false;
+        }
+
+        const parentSymbolTree = await symbolProvider.getSymbolTree(parentInfo.document);
+        if(!parentSymbolTree) {
+            return false;
+        }
+
+        const parentDerivesFromAncestor = this.derivesFrom(
+            parentInfo,
+            ancestorName,
+            symbolProvider,
+            findParentToken,
+        );
+        return parentDerivesFromAncestor;
     }
 }
