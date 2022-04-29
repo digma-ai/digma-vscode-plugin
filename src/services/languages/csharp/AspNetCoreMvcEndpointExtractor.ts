@@ -50,14 +50,7 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
                     ));
                 }
             }
-            // console.log(currentClass, definition);
         }
-
-        symbolInfo.forEach(async (currentSymbol: SymbolInfo) => {
-            const { codeLocation, range } = currentSymbol;
-            const defintion = await this._codeInspector.getExecuteDefinitionMethodInfo(document, range.start, documentInfoProvider);
-            console.log(defintion);
-        });
 
         return results;
     }
