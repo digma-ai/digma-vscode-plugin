@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { CodeInvestigator } from '../../codeInvestigator';
+import { CodeInspector } from '../../codeInspector';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
 import { FastapiEndpointExtractor } from './fastapiEndpointExtractor';
 import { PythonMethodExtractor } from './methodExtractor';
@@ -24,15 +24,15 @@ export class PythonLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public getEndpointExtractors(codeInvestigator: CodeInvestigator): IEndpointExtractor[] {
+    public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
         return [
             new FastapiEndpointExtractor()
         ];
     }
 
-    public getSpanExtractors(codeInvestigator: CodeInvestigator): ISpanExtractor[] {
+    public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
-            new PythonSpanExtractor(codeInvestigator)
+            new PythonSpanExtractor(codeInspector)
         ];
     }
 }

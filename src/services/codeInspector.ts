@@ -13,7 +13,7 @@ export type DefinitionWithTokens = Definition & {
     tokens: Token[]
 };
 
-export class CodeInvestigator {
+export class CodeInspector {
 
     public async getExecuteDefinitionMethodInfo(
         usageDocument: vscode.TextDocument,

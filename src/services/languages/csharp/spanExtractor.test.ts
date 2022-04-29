@@ -1,4 +1,4 @@
-import { CodeInvestigator } from './../../codeInvestigator';
+import { CodeInspector } from '../../codeInspector';
 import { SymbolInfo } from './../extractors';
 import { expect } from 'chai';
 
@@ -27,10 +27,10 @@ suite('CSharpSpanExtractor', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
     let extractor: CSharpSpanExtractor;
-    let codeInvestigator: CodeInvestigator;
+    let codeInspector: CodeInspector;
 
     setup(() => {
-        extractor = new CSharpSpanExtractor(codeInvestigator);
+        extractor = new CSharpSpanExtractor(codeInspector);
     });
 
     suite('#extractSpans', () => {

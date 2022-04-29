@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { DocumentInfoProvider } from './../../documentInfoProvider';
-import { CodeInvestigator } from './../../codeInvestigator';
+import { CodeInspector } from '../../codeInspector';
 import { SymbolTree } from './../symbolProvider';
 import { Token, TokenType, matchTokenSequence } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
 
 export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
     constructor(
-        private _codeInvestigator: CodeInvestigator,
+        private _codeInspector: CodeInspector,
     ) {}
 
     async extractEndpoints(
@@ -19,14 +19,14 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
     ): Promise<EndpointInfo[]> {
         const results: EndpointInfo[] = [];
 
-        const classes = Array.from(this._codeInvestigator.getAllSymbolsOfKind(symbolTrees, vscode.SymbolKind.Class));
+        const classes = Array.from(this._codeInspector.getAllSymbolsOfKind(symbolTrees, vscode.SymbolKind.Class));
 
         for (const currentClass of classes) {
             const { line, character } = currentClass.selectionRange.start;
             const position = new vscode.Position(line, character);
 
-            // const definition = await this._codeInvestigator.getExecuteDefinitionMethodInfo(document, position, documentInfoProvider);
-            // const definition = await this._codeInvestigator.getDefinition(document, position);
+            // const definition = await this._codeInspector.getExecuteDefinitionMethodInfo(document, position, documentInfoProvider);
+            // const definition = await this._codeInspector.getDefinition(document, position);
 
             const openBraceToken = tokens.find(t => t.range.start.isAfter(position) && t.type === TokenType.punctuation && t.text === '{');
             if(!openBraceToken) {
@@ -71,7 +71,7 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
 
         symbolInfo.forEach(async (currentSymbol: SymbolInfo) => {
             const { codeLocation, range } = currentSymbol;
-            const defintion = await this._codeInvestigator.getExecuteDefinitionMethodInfo(document, range.start, documentInfoProvider);
+            const defintion = await this._codeInspector.getExecuteDefinitionMethodInfo(document, range.start, documentInfoProvider);
             console.log(defintion);
         });
 

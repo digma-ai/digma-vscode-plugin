@@ -13,7 +13,7 @@ import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { ErrorsLineDecorator } from './decorators/errorsLineDecorator';
 import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
 import { EditorHelper } from './services/EditorHelper';
-import { CodeInvestigator } from './services/codeInvestigator';
+import { CodeInspector } from './services/codeInspector';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -25,8 +25,8 @@ export async function activate(context: vscode.ExtensionContext)
         new Git()
     ];
     const sourceControl = new SourceControl(supportedSourceControls);
-    const codeInvestigator = new CodeInvestigator();
-    const symbolProvider = new SymbolProvider(supportedLanguages, codeInvestigator);
+    const codeInspector = new CodeInspector();
+    const symbolProvider = new SymbolProvider(supportedLanguages, codeInspector);
     const analyticsProvider = new AnalyticsProvider();
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
@@ -39,7 +39,7 @@ export async function activate(context: vscode.ExtensionContext)
     }
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
     context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
-    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInvestigator));
+    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInspector));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider,

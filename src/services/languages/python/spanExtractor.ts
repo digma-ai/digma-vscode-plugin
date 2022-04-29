@@ -2,13 +2,13 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
-import { CodeInvestigator } from '../../codeInvestigator';
+import { CodeInspector } from '../../codeInspector';
 import { ISpanExtractor, SpanInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
 
 export class PythonSpanExtractor implements ISpanExtractor {
-    constructor(private _codeInvestigator: CodeInvestigator) {}
+    constructor(private _codeInspector: CodeInspector) {}
     
     async extractSpans(
         document: TextDocument,
@@ -49,7 +49,7 @@ export class PythonSpanExtractor implements ISpanExtractor {
             }
 
             const tracerTokenPosition = tracerToken.range.start;
-            const tracerDefinition = await this._codeInvestigator.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
+            const tracerDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
             if(!tracerDefinition) {
                 continue;
             }

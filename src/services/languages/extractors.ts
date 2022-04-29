@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol } from 'vscode-languageclient';
 import { DocumentInfoProvider } from '../documentInfoProvider';
-import { CodeInvestigator } from '../codeInvestigator';
+import { CodeInspector } from '../codeInspector';
 import { SymbolProvider, SymbolTree } from './symbolProvider';
 import { Token } from './tokens';
 
@@ -70,6 +70,6 @@ export interface ILanguageExtractor {
     get requiredExtentionId(): string;
     get documentFilter() : vscode.DocumentFilter;
     get methodExtractors(): IMethodExtractor[];
-    getEndpointExtractors(codeInvestigator: CodeInvestigator): IEndpointExtractor[];
-    getSpanExtractors(codeInvestigator: CodeInvestigator): ISpanExtractor[];
+    getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];
+    getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
 }

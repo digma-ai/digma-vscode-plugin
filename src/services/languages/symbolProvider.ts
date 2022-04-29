@@ -3,7 +3,7 @@ import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
 import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
-import { CodeInvestigator } from './../codeInvestigator';
+import { CodeInspector } from '../codeInspector';
 import { EndpointInfo, ILanguageExtractor, SpanInfo, SymbolInfo } from './extractors';
 import { Token, TokenType } from './tokens';
 
@@ -33,7 +33,7 @@ export class SymbolProvider
 
     constructor(
         public languageExtractors: ILanguageExtractor[],
-        private _codeInvestigator: CodeInvestigator,
+        private _codeInspector: CodeInspector,
     ) {
     }
 
@@ -99,7 +99,7 @@ export class SymbolProvider
             return [];
         }
 
-        const endpointExtractors = supportedLanguage.getEndpointExtractors(this._codeInvestigator);
+        const endpointExtractors = supportedLanguage.getEndpointExtractors(this._codeInspector);
         const extractedEndpoints = await Promise.all(
             endpointExtractors.map(async (x) => await x.extractEndpoints(document, symbolInfos, tokens, symbolTrees, documentInfoProvider))
         );
@@ -117,7 +117,7 @@ export class SymbolProvider
             return [];
         }
 
-        const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInvestigator);
+        const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInspector);
         const extractedSpans = await Promise.all(
             spanExtractors.map(async (x) => await x.extractSpans(document, symbolInfos, tokens, this))
         );

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { ErrorsViewTab } from '../views/codeAnalytics/errorsViewTab';
 import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
 import { TokenType } from './languages/tokens';
-import { CodeInvestigator } from './codeInvestigator';
+import { CodeInspector } from './codeInspector';
 
 export class MethodCallErrorTooltip implements vscode.Disposable
 {
@@ -13,11 +13,11 @@ export class MethodCallErrorTooltip implements vscode.Disposable
 
     constructor(
         documentInfoProvider: DocumentInfoProvider,
-        codeInvestigator: CodeInvestigator,
+        codeInspector: CodeInspector,
     ) {
         this._disposables.push(vscode.languages.registerHoverProvider(
             documentInfoProvider.symbolProvider.languageExtractors.map(x => x.documentFilter),
-            new MethodCallErrorHoverProvider(documentInfoProvider, codeInvestigator))
+            new MethodCallErrorHoverProvider(documentInfoProvider, codeInspector))
         );
         this._disposables.push(vscode.commands.registerCommand(MethodCallErrorTooltip.Commands.ShowErrorView, async (args) => {
              await vscode.commands.executeCommand(ErrorsViewTab.Commands.ShowErrorView, args.codeObjectId, args.codeObjectDisplayName, args.errorFlowId);
@@ -35,7 +35,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
 {
     constructor(
         private _documentInfoProvider: DocumentInfoProvider,
-        private _codeInvestigator: CodeInvestigator,
+        private _codeInspector: CodeInspector,
     ) {
     }
 
@@ -49,7 +49,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
         if(!methodInfo){
             if(!sourceDocInfo.tokens.any(t => (t.type == TokenType.function || t.type == TokenType.method) && t.range.contains(position)))
                 return;
-            methodInfo = await this._codeInvestigator.getExecuteDefinitionMethodInfo(document, position, this._documentInfoProvider);
+            methodInfo = await this._codeInspector.getExecuteDefinitionMethodInfo(document, position, this._documentInfoProvider);
             if(!methodInfo) {
                 return;
             }
