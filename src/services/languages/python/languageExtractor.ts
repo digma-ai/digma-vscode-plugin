@@ -8,9 +8,9 @@ import { PythonSpanExtractor } from './spanExtractor';
 
 export class PythonLanguageExtractor implements ILanguageExtractor 
 {
-    public requiredExtentionLoaded: boolean = false;
+    public requiredExtensionLoaded: boolean = false;
 
-    public get requiredExtentionId(): string {
+    public get requiredExtensionId(): string {
         return 'ms-python.python';
     }
 

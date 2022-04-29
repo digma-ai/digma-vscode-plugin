@@ -66,8 +66,8 @@ export interface ISpanExtractor {
 }
 
 export interface ILanguageExtractor {
-    requiredExtentionLoaded: boolean;
-    get requiredExtentionId(): string;
+    requiredExtensionLoaded: boolean;
+    get requiredExtensionId(): string;
     get documentFilter() : vscode.DocumentFilter;
     get methodExtractors(): IMethodExtractor[];
     getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];

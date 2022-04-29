@@ -7,9 +7,9 @@ import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor
 
 export class CSharpLanguageExtractor implements ILanguageExtractor 
 {
-    public requiredExtentionLoaded: boolean = false;
+    public requiredExtensionLoaded: boolean = false;
 
-    public get requiredExtentionId(): string {
+    public get requiredExtensionId(): string {
         return 'ms-dotnettools.csharp';
     }
 

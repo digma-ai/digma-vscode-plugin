@@ -228,40 +228,40 @@ export class SymbolProvider
     {
         const supportedLanguage = this.languageExtractors.find(x => vscode.languages.match(x.documentFilter, document) > 0);
         if (!supportedLanguage ||
-            !(supportedLanguage.requiredExtentionLoaded || await this.loadRequiredExtention(supportedLanguage)))
+            !(supportedLanguage.requiredExtensionLoaded || await this.loadRequiredExtension(supportedLanguage)))
         {
             return;
         }
         return supportedLanguage;
     }
 
-    private async loadRequiredExtention(language: ILanguageExtractor) : Promise<boolean>
+    private async loadRequiredExtension(language: ILanguageExtractor) : Promise<boolean>
     {
-        var extention = vscode.extensions.getExtension(language.requiredExtentionId);
-        if (!extention) 
+        const extension = vscode.extensions.getExtension(language.requiredExtensionId);
+        if (!extension) 
         {
-            const installOption = `Install ${language.requiredExtentionId}`;
+            const installOption = `Install ${language.requiredExtensionId}`;
             const ignoreOption = `Ignore python files`;
             let sel = await vscode.window.showErrorMessage(
-                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtentionId}' installed.`,
+                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtensionId}' installed.`,
                 ignoreOption,
                 installOption
             )
             if(sel == installOption)
-                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtentionId);
+                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtensionId);
             else if(sel == ignoreOption)
                 this.languageExtractors = this.languageExtractors.filter(x => x != language);
             return false;
         }
-        if(!extention.isActive)
+        if(!extension.isActive)
         {
-            Logger.info(`Starting activating "${extention.id}" extension`)
-            await extention.activate();
-            Logger.info(`Finished activating "${extention.id}" extension`)
+            Logger.info(`Starting activating "${extension.id}" extension`)
+            await extension.activate();
+            Logger.info(`Finished activating "${extension.id}" extension`)
         }
             
 
-        language.requiredExtentionLoaded = true;
+        language.requiredExtensionLoaded = true;
         return true;
     }
 }
