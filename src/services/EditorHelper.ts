@@ -41,7 +41,7 @@ export class EditorHelper {
         {
             let doc: vscode.TextDocument | undefined = undefined;
 
-            if(!await utils.fileExits(workspaceUri))
+            if(!await utils.fileExists(workspaceUri))
             {
                 doc = await this.askAndOpenFromSourceControl(editorInfo);
             }

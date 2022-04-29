@@ -96,7 +96,7 @@ vscode.Uri.prototype.toModulePath = function() {
         : '';
 }
 
-export async function fileExits(uri: vscode.Uri) : Promise<boolean>
+export async function fileExists(uri: vscode.Uri) : Promise<boolean>
 {
     try{
         await vscode.workspace.fs.stat(uri);
