@@ -42,11 +42,12 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
 
             const methods = children.filter(child => child.kind === vscode.SymbolKind.Method);
             for (const method of methods) {
-                const id = vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + method.name;
+                const methodName = method.name.split('(')[0];
+                const id = vscode.workspace.getWorkspaceFolder(document.uri)!.name + '$_$' + methodName;
                 const range = convertRange(method.range);
                 results.push(new EndpointInfo(
                     id,
-                    method.name,
+                    methodName,
                     currentClass.name,
                     range,
                     document.uri,
