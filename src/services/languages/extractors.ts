@@ -45,7 +45,7 @@ export interface IMethodExtractor {
     extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]) : SymbolInfo[];
 }
 export interface IEndpointExtractor {
-    extractEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]): EndpointInfo[];
+    extractEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]): Promise<EndpointInfo[]>;
 }
 export interface ISpanExtractor {
     extractSpans(

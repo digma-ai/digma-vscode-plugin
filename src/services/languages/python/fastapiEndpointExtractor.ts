@@ -6,7 +6,7 @@ import { EndpointInfo, IEndpointExtractor, SymbolInfo } from "../extractors";
 
 export class FastapiEndpointExtractor implements IEndpointExtractor
 {
-    extractEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]): EndpointInfo[] 
+    async extractEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]): Promise<EndpointInfo[]> 
     {
         // Ensure fastapi module was imported
         if(!tokens.any(t => t.text == 'fastapi' && t.type == TokenType.module))
@@ -34,6 +34,21 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
                 if (match){
                     prefix = match[2];
                 }
+
+                //Future: use the references to extract the 'include' statement to the router if it contains a prefix
+                
+                // const position  =new vscode.Position(appToken.range.start.line,appToken.range.start.character );
+
+                // let references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,position);
+                // references = references.filter(x=>x.uri.fsPath!==document.uri.fsPath);
+                // if (references.length>0){
+                //     let referencedDocument = vscode.workspace.openTextDocument(references[0].uri);
+                //     let text = (await referencedDocument).getText(references[0].range);
+                //     console.log(text);
+
+                // }
+
+
             }
                 
 

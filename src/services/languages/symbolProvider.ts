@@ -68,9 +68,10 @@ export class SymbolProvider
         if(!supportedLanguage)
             return [];
 
-        return supportedLanguage.endpointExtractors
-            .map(x => x.extractEndpoints(document, symbolInfos, tokens))
-            .flat();
+        let extractedInfos = await Promise.all( supportedLanguage.endpointExtractors
+            .map( x =>  x.extractEndpoints(document, symbolInfos, tokens)));
+
+        return extractedInfos.flat();
     }
     
     public async getSpans(
