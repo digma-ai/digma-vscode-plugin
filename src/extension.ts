@@ -14,6 +14,7 @@ import { ErrorsLineDecorator } from './decorators/errorsLineDecorator';
 import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
 import { EditorHelper } from './services/EditorHelper';
 import { CodeInspector } from './services/codeInspector';
+import { VsCodeDebugInstrumentation } from './instrumentation/vscodeInstrumentation';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -46,6 +47,7 @@ export async function activate(context: vscode.ExtensionContext)
         context.extensionUri, editorHelper));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
+    context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
 
 }
 

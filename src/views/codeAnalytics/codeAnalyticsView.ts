@@ -131,8 +131,6 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
-
-
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris,listViewItemsCreator, _documentInfoProvider),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider),
