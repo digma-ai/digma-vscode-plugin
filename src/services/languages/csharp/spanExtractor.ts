@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
-import { CodeInvestigator } from './../../codeInvestigator';
+import { CodeInspector } from '../../codeInspector';
 import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
-import { Token, TokenType } from "../symbolProvider";
+import { Token, TokenType } from '../tokens';
 import { SymbolProvider } from './../symbolProvider';
 
 export class CSharpSpanExtractor implements ISpanExtractor {
-    constructor(private _codeInvestigator: CodeInvestigator) {}
+    constructor(private _codeInspector: CodeInspector) {}
 
     async extractSpans(
         document: TextDocument,
@@ -34,7 +34,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
             }
 
             const activityTokenPosition = tokens[i].range.start;
-            const activityDefinition = await this._codeInvestigator.getTokensFromSymbolProvider(document, activityTokenPosition, symbolProvider);
+            const activityDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, activityTokenPosition, symbolProvider);
             if(!activityDefinition) {
                 continue;
             }

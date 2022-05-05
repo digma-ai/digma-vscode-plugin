@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
-import * as moment from 'moment';
 import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
+import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
-import { CodeInvestigator } from './../codeInvestigator';
+import { CodeInspector } from '../codeInspector';
 import { EndpointInfo, ILanguageExtractor, SpanInfo, SymbolInfo } from './extractors';
+import { Token, TokenType } from './tokens';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -15,7 +16,6 @@ export function trendToCodIcon(trend: number): string
     return '';
 }
 
-
 export function trendToAsciiIcon(trend: number): string 
 {
     if(trend < 0)
@@ -25,19 +25,15 @@ export function trendToAsciiIcon(trend: number): string
     return '';
 }
 
-export interface Token {
-    range: vscode.Range;
-    type: TokenType;
-    text: string,
-    modifiers: string[];
-}
+export type SymbolTree = DocumentSymbol & SymbolInformation;
+
 export class SymbolProvider 
 {
-    private _creationTime: moment.Moment = moment.utc();
+    private _languageServiceIsAlive: Map<string, boolean> = new Map();
 
     constructor(
         public languageExtractors: ILanguageExtractor[],
-        private _codeInvestigator: CodeInvestigator,
+        private _codeInspector: CodeInspector,
     ) {
     }
 
@@ -45,32 +41,70 @@ export class SymbolProvider
         return this.languageExtractors.any(x => vscode.languages.match(x.documentFilter, document) > 0);
     }
 
-    private async retryOnStartup<T>(lspCall: () => Promise<T | undefined>, predicate: (result: T | undefined) => boolean): Promise<T | undefined>
-    {
+    /**
+     * There seems to be no simple way to determine if any given language service has been fully activated.
+     * 
+     * This function attempts to make the desired language service call and then asks the caller to guess
+     * if the reply indicates that the language service is alive or hasn't been fully activated yet. Some
+     * of the replies are ambiguous. For example, it sometimes returns undefined instead of an empty
+     * array.
+     * 
+     * If it looks like it hasn't loaded yet, the original call will be attempted several more times
+     * before failing.
+     * 
+     * Once a language service is determined to be alive, the retry logic will not be invoked on later
+     * invocations.
+     * @param lspCall
+     * @param predicate 
+     * @returns a promise that resolves to the result of the lsp call or undefined
+     */
+    private async retryOnStartup<T>(
+        lspCall: () => Promise<T | undefined>,
+        predicate: (result: T | undefined) => boolean,
+        languageId: string,
+    ): Promise<T | undefined> {
         let result = await lspCall();
-        if(!predicate(result) && this._creationTime.clone().add(15, 'second') > moment.utc())
-        {
-            for(let delayMs of [100, 200, 400, 800, 1600, 3200, 3200, 3200])
-            {
+        if(!this._languageServiceIsAlive.get(languageId) && !predicate(result)) {
+            for(const delayMs of [100, 200, 400, 800, 1600, 3200, 3200, 3200]) {
                 await delay(delayMs);
                 result = await lspCall();
-                if(predicate(result))
+                if(predicate(result)) {
+                    this._languageServiceIsAlive.set(languageId, true);
                     return result;
+                }
             }
-            Logger.warn(`Retry ended with timeout for "${lspCall.toString()}"`)
+            Logger.warn(`Retry ended with timeout for "${lspCall.toString()}"`);
         }
         return result;
     }
 
-    public async getEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]):  Promise<EndpointInfo[]>
-    {
+    public async getSymbolTree(document: vscode.TextDocument): Promise<SymbolTree[] | undefined> {
+        const symbolTree: SymbolTree[] | undefined = await this.retryOnStartup<SymbolTree[]>(
+            async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
+            value => value && value.length > 0 ? true : false,
+            document.languageId,
+        );
+        return symbolTree;
+    }
+        
+    public async getEndpoints(
+        document: vscode.TextDocument,
+        symbolInfos: SymbolInfo[],
+        tokens: Token[],
+        symbolTrees: SymbolTree[] | undefined,
+        documentInfoProvider: DocumentInfoProvider,
+    ): Promise<EndpointInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
-        if(!supportedLanguage)
+        if(!supportedLanguage) {
             return [];
+        }
 
-        return supportedLanguage.endpointExtractors
-            .map(x => x.extractEndpoints(document, symbolInfos, tokens))
-            .flat();
+        const endpointExtractors = supportedLanguage.getEndpointExtractors(this._codeInspector);
+        const extractedEndpoints = await Promise.all(
+            endpointExtractors.map(async (x) => await x.extractEndpoints(document, symbolInfos, tokens, symbolTrees, documentInfoProvider))
+        );
+        const endpoints = extractedEndpoints.flat();
+        return endpoints;
     }
     
     public async getSpans(
@@ -79,10 +113,11 @@ export class SymbolProvider
         tokens: Token[],
     ):  Promise<SpanInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
-        if(!supportedLanguage)
+        if(!supportedLanguage) {
             return [];
+        }
 
-        const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInvestigator);
+        const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInspector);
         const extractedSpans = await Promise.all(
             spanExtractors.map(async (x) => await x.extractSpans(document, symbolInfos, tokens, this))
         );
@@ -90,31 +125,25 @@ export class SymbolProvider
         return spans;
     }
 
-    public async getMethods(document: vscode.TextDocument) : Promise<SymbolInfo[]>
-    {
+    public async getMethods(document: vscode.TextDocument, symbolTrees: SymbolTree[] | undefined) : Promise<SymbolInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
-        if(!supportedLanguage)
+        if(!supportedLanguage) {
             return [];
+        }
 
-        let result = await this.retryOnStartup<any[]>(
-            async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
-            value => value?.length ? true : false);
-        // let result: any[] = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
-        // if(!result?.length && this._creationTime.clone().add(10, 'second') > moment.utc()){
-        //     await delay(2000);
-        //     result = await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri);
-        // }
-
-        if (result?.length) {
-            if ((result[0] as any).range) {
+        if (symbolTrees?.length) {
+            if (symbolTrees[0].range) {
                 // Document symbols
-                const allDocSymbols = result as DocumentSymbol[];
-                const symbolInfos = supportedLanguage.methodExtractors.map(x => x.extractMethods(document, allDocSymbols)).flat();
+                const allDocSymbols = symbolTrees as DocumentSymbol[];
+                const symbolInfos = supportedLanguage.methodExtractors
+                    .map(x => x.extractMethods(document, allDocSymbols))
+                    .flat();
 
                 return symbolInfos;
-            } else {
+            }
+            else {
                 // Document symbols
-                const symbols = result as SymbolInformation[];
+                const symbols = symbolTrees as SymbolInformation[];
                 // TODO: ?
             }
         }
@@ -122,53 +151,56 @@ export class SymbolProvider
         return [];
     }
 
-    public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]>
-    {
+    public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
         let tokes: Token[] = [];
-        try
-        {
+        try {
             //  at index `5*i`   - `deltaLine`: token line number, relative to the previous token
             //  at index `5*i+1` - `deltaStart`: token start character, relative to the previous token (relative to 0 or the previous token's start if they are on the same line)
             //  at index `5*i+2` - `length`: the length of the token. A token cannot be multiline.
             //  at index `5*i+3` - `tokenType`: will be looked up in `SemanticTokensLegend.tokenTypes`. We currently ask that `tokenType` < 65536.
             //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
             
-            let legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
+            const legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
                 async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
-                value => value?.tokenTypes ? true : false);
-            if(!legends)
+                value => value?.tokenTypes ? true : false,
+                document.languageId,
+            );
+            if(!legends) {
                 return tokes;
-            
+            }
+
             let semanticTokens: vscode.SemanticTokens | undefined;
-            if(range)
-            {
+            if(range) {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
-                    value => value?.data?.length ? true : false);
+                    value => !!value?.data,
+                    document.languageId,
+                );
             }
-            else
-            {
+            else {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
-                    value => value?.data?.length ? true : false);
+                    value => !!value?.data,
+                    document.languageId,
+                );
             }
-            if(!semanticTokens)
+            if(!semanticTokens) {
                 return tokes;
-            
+            }
+
             let line = 0;
             let char = 0;
-            for(let i=0; i<semanticTokens.data.length; i += 5)
-            {
+            for(let i = 0; i < semanticTokens.data.length; i += 5) {
                 const deltaLine = semanticTokens.data[i];
                 const deltaStart = semanticTokens.data[i+1];
                 const length = semanticTokens.data[i+2];
                 const tokenType = semanticTokens.data[i+3];
                 const tokenModifiers = semanticTokens.data[i+4];
                 
-                if(deltaLine == 0){
+                if(deltaLine == 0) {
                     char += deltaStart;
                 }
-                else{ 
+                else {
                     line += deltaLine;
                     char = deltaStart;
                 }
@@ -185,8 +217,7 @@ export class SymbolProvider
                 });
             }
         }
-        catch(e)
-        {
+        catch(e) {
             Logger.error('Failed to get tokens', e);
         }
 
@@ -197,66 +228,40 @@ export class SymbolProvider
     {
         const supportedLanguage = this.languageExtractors.find(x => vscode.languages.match(x.documentFilter, document) > 0);
         if (!supportedLanguage ||
-            !(supportedLanguage.requiredExtentionLoaded || await this.loadRequiredExtention(supportedLanguage)))
+            !(supportedLanguage.requiredExtensionLoaded || await this.loadRequiredExtension(supportedLanguage)))
         {
             return;
         }
         return supportedLanguage;
     }
 
-    private async loadRequiredExtention(language: ILanguageExtractor) : Promise<boolean>
+    private async loadRequiredExtension(language: ILanguageExtractor) : Promise<boolean>
     {
-        var extention = vscode.extensions.getExtension(language.requiredExtentionId);
-        if (!extention) 
+        const extension = vscode.extensions.getExtension(language.requiredExtensionId);
+        if (!extension) 
         {
-            const installOption = `Install ${language.requiredExtentionId}`;
+            const installOption = `Install ${language.requiredExtensionId}`;
             const ignoreOption = `Ignore python files`;
             let sel = await vscode.window.showErrorMessage(
-                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtentionId}' installed.`,
+                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtensionId}' installed.`,
                 ignoreOption,
                 installOption
             )
             if(sel == installOption)
-                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtentionId);
+                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtensionId);
             else if(sel == ignoreOption)
                 this.languageExtractors = this.languageExtractors.filter(x => x != language);
             return false;
         }
-        if(!extention.isActive)
+        if(!extension.isActive)
         {
-            Logger.info(`Starting activating "${extention.id}" extension`)
-            await extention.activate();
-            Logger.info(`Finished activating "${extention.id}" extension`)
+            Logger.info(`Starting activating "${extension.id}" extension`)
+            await extension.activate();
+            Logger.info(`Finished activating "${extension.id}" extension`)
         }
             
 
-        language.requiredExtentionLoaded = true;
+        language.requiredExtensionLoaded = true;
         return true;
     }
 }
-
-export enum TokenType
-{
-    class = 'class',
-    interface = 'interface',
-    enum = 'enum',
-    enumMember = 'enumMember',
-    typeParameter = 'typeParameter',
-    function = 'function',
-    method = 'method',
-    property = 'property',
-    variable = 'variable',
-    parameter = 'parameter',
-    module = 'module',
-    intrinsic = 'intrinsic',
-    selfParameter = 'selfParameter',
-    clsParameter = 'clsParameter',
-    magicFunction = 'magicFunction',
-    builtinConstant = 'builtinConstant',
-    field = 'field',
-    operator = 'operator',
-    member = 'member',
-    punctuation = 'punctuation',
-    string = 'string',
-    plainKeyword = 'plainKeyword',
-} 

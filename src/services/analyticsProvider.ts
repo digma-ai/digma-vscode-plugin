@@ -6,6 +6,8 @@ import { Logger } from "./logger";
 import { Dictionary, momentJsDateParser } from "./utils";
 import moment = require("moment");
 import { integer } from "vscode-languageclient";
+import * as os from 'os';
+
 
 export enum Impact 
 {
@@ -341,6 +343,25 @@ export class AnalyticsProvider
                 `/CodeAnalytics/errorFlow`, 
                 undefined,
                 {id: errorFlowId, environment: Settings.environment.value});
+
+            return response;
+        }
+        catch(error){
+            Logger.error('Failed to get error flow', error);
+        }
+        return;
+    }
+    
+    public async sendInsturmentationEvent(event:integer): Promise<undefined> 
+    {
+        try
+        {
+            const timestamp = Date.now().toString();
+            const response = await this.send<undefined>(
+                'POST',
+                `/CodeAnalytics/instrumentation/event`, 
+                undefined,
+                {event: event.toString(), machineName: os.hostname(),timestamp:timestamp });
 
             return response;
         }

@@ -1,6 +1,7 @@
 
 import moment = require('moment');
 import * as vscode from 'vscode';
+import { Range } from 'vscode-languageclient';
 
 export function getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathList: string[]) {
     return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
@@ -95,7 +96,7 @@ vscode.Uri.prototype.toModulePath = function() {
         : '';
 }
 
-export async function fileExits(uri: vscode.Uri) : Promise<boolean>
+export async function fileExists(uri: vscode.Uri) : Promise<boolean>
 {
     try{
         await vscode.workspace.fs.stat(uri);
@@ -147,3 +148,12 @@ export function momentJsDateParser(key: string, value: any): any
     }
     return value;
 };
+
+export function convertRange(sourceRange: Range): vscode.Range {
+    const { start, end } = sourceRange;
+    const targetRange = new vscode.Range(
+        new vscode.Position(start.line, start.character),
+        new vscode.Position(end.line, end.character),
+    );
+    return targetRange;
+}

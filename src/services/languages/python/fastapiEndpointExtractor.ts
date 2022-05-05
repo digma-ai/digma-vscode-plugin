@@ -1,13 +1,18 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { Token, TokenType } from "../symbolProvider";
-import { EndpointInfo, IEndpointExtractor, SymbolInfo } from "../extractors";
-
+import { DocumentInfoProvider } from './../../documentInfoProvider';
+import { SymbolTree } from './../symbolProvider';
+import { Token, TokenType } from '../tokens';
+import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
 
 export class FastapiEndpointExtractor implements IEndpointExtractor
 {
-    extractEndpoints(document: vscode.TextDocument, symbolInfo: SymbolInfo[], tokens: Token[]): EndpointInfo[] 
-    {
+    async extractEndpoints(
+        document: vscode.TextDocument,
+        symbolInfo: SymbolInfo[],
+        tokens: Token[],
+        symbolTrees: SymbolTree[] | undefined,
+        documentInfoProvider: DocumentInfoProvider,
+    ): Promise<EndpointInfo[]> {
         // Ensure fastapi module was imported
         if(!tokens.any(t => t.text == 'fastapi' && t.type == TokenType.module))
             return [];

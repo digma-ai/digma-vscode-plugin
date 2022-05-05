@@ -2,7 +2,8 @@ import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
 import { AnalyticsProvider, CodeObjectSummary, MethodCodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
-import { SymbolProvider, Token, TokenType } from './languages/symbolProvider';
+import { SymbolProvider } from './languages/symbolProvider';
+import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
 import { EndpointInfo, SpanInfo, SymbolInfo, CodeObjectInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
@@ -84,33 +85,38 @@ export class DocumentInfoProvider implements vscode.Disposable
     private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
         const docRelativePath = doc.uri.toModulePath();
-        if(!docRelativePath || !this.symbolProvider.supportsDocument(doc))
+        if(!docRelativePath || !this.symbolProvider.supportsDocument(doc)) {
             return undefined;
+        }
 
         let document = this._documents[docRelativePath];
-        if(!document)
-        {
+        if(!document) {
             document = this._documents[docRelativePath] = new DocumentInfoContainer();
         }
 
         let latestVersionInfo = document.versions[doc.version];
-        if(!latestVersionInfo)
-        {
+        if(!latestVersionInfo) {
             latestVersionInfo = document.versions[doc.version] = new Future<DocumentInfo>();
 
-            try
-            {
+            try {
                 Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
-                const symbolInfos = await this.symbolProvider.getMethods(doc);
+                const symbolTrees = await this.symbolProvider.getSymbolTree(doc);
+                const symbolInfos = await this.symbolProvider.getMethods(doc, symbolTrees);
                 const tokens = await this.symbolProvider.getTokens(doc);
-                const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens);
+                const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens, symbolTrees, this);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
-                const methods = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
-                const summaries = new CodeObjectSummeryAccessor(await this.analyticsProvider.getSummaries(methods.map(s => s.idWithType).concat(endpoints.map(e => e.idWithType)).concat(spans.map(s => s.idWithType))));
-                const lines = this.createLineInfos(doc, summaries, methods);
+                const methodInfos = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
+                const summaries = new CodeObjectSummaryAccessor(
+                    await this.analyticsProvider.getSummaries(
+                        methodInfos.map(s => s.idWithType)
+                            .concat(endpoints.map(e => e.idWithType))
+                            .concat(spans.map(s => s.idWithType))
+                    )
+                );
+                const lines = this.createLineInfos(doc, summaries, methodInfos);
                 latestVersionInfo.value = {
                     summaries,
-                    methods,
+                    methods: methodInfos,
                     lines,
                     tokens,
                     endpoints,
@@ -119,10 +125,9 @@ export class DocumentInfoProvider implements vscode.Disposable
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
-            catch(e)
-            {
+            catch(e) {
                 latestVersionInfo.value = {
-                    summaries: new CodeObjectSummeryAccessor([]),
+                    summaries: new CodeObjectSummaryAccessor([]),
                     methods: [],
                     lines: [],
                     tokens: [],
@@ -136,19 +141,21 @@ export class DocumentInfoProvider implements vscode.Disposable
 
             return latestVersionInfo.value;
         }
-        else
-        {
+        else {
             return await latestVersionInfo.wait();
         }
     }
  
-    private createMethodInfos(document: vscode.TextDocument, symbols: SymbolInfo[], tokens: Token[], 
-        spans: SpanInfo[], endpoints: EndpointInfo[]): MethodInfo[] 
-    {
+    private createMethodInfos(
+        document: vscode.TextDocument,
+        symbols: SymbolInfo[],
+        tokens: Token[], 
+        spans: SpanInfo[],
+        endpoints: EndpointInfo[],
+    ): MethodInfo[] {
         let methods: MethodInfo[] = [];
 
-        for(let symbol of symbols)
-        {
+        for(let symbol of symbols) {
             const method = new MethodInfo(
                 symbol.id,
                 symbol.name,
@@ -164,22 +171,22 @@ export class DocumentInfoProvider implements vscode.Disposable
             methods.push(method);
 
             const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
-            for(let token of methodTokens)
-            {
+            for(let token of methodTokens) {
                 const name = token.text;// document.getText(token.range);
 
-                if((token.type === TokenType.method || token.type==TokenType.function)
-                 && !method.nameRange
-                    && name ===symbol.name)
-                {
+                if(
+                    (token.type === TokenType.method || token.type === TokenType.function || token.type === TokenType.member)
+                    && !method.nameRange
+                    && name === symbol.name
+                ) {
                     method.nameRange = token.range;
                 }
 
-                if(token.type == TokenType.parameter)
-                {
-                    if(method.parameters.any(p => p.name == name))
+                if(token.type === TokenType.parameter) {
+                    if(method.parameters.any(p => p.name === name)) {
                         continue;
-                    
+                    }
+
                     method.parameters.push({ name, range: token.range, token });
                 }
             }
@@ -188,7 +195,7 @@ export class DocumentInfoProvider implements vscode.Disposable
         return methods;
     }
 
-    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummeryAccessor, methods: MethodInfo[]): LineInfo[]
+    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummaryAccessor, methods: MethodInfo[]): LineInfo[]
     {
         const lineInfos: LineInfo[] = [];
         for(let method of methods)
@@ -258,7 +265,7 @@ class DocumentInfoContainer
 
 export interface DocumentInfo
 {
-    summaries: CodeObjectSummeryAccessor;
+    summaries: CodeObjectSummaryAccessor;
     methods: MethodInfo[];
     lines: LineInfo[];
     tokens: Token[];
@@ -266,7 +273,7 @@ export interface DocumentInfo
     spans: SpanInfo[];
     uri: vscode.Uri;
 }
-export class CodeObjectSummeryAccessor{
+export class CodeObjectSummaryAccessor{
     constructor(private _codeObejctSummeries: CodeObjectSummary[]){}
 
     public get<T extends CodeObjectSummary>(type: { new(): T ;}, codeObjectId: string): T | undefined
