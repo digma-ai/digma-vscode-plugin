@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { CodeInvestigator } from './../../codeInvestigator';
+import { CodeInspector } from '../../codeInspector';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
-
+// import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor';
 
 export class CSharpLanguageExtractor implements ILanguageExtractor 
 {
-    public requiredExtentionLoaded: boolean = false;
+    public requiredExtensionLoaded: boolean = false;
 
-    public get requiredExtentionId(): string {
+    public get requiredExtensionId(): string {
         return 'ms-dotnettools.csharp';
     }
 
@@ -23,13 +23,15 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public get endpointExtractors(): IEndpointExtractor[] {
-        return [];
+    public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
+        return [
+            // new AspNetCoreMvcEndpointExtractor(codeInspector),
+        ];
     }
 
-    public getSpanExtractors(codeInvestigator: CodeInvestigator): ISpanExtractor[] {
+    public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
-            new CSharpSpanExtractor(codeInvestigator),
+            new CSharpSpanExtractor(codeInspector),
         ];
     }
 }

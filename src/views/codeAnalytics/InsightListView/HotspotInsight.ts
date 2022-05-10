@@ -1,4 +1,5 @@
 import { IListViewItemBase } from "../../ListView/IListViewItem";
+import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 
@@ -8,6 +9,12 @@ export interface HotspotInsight extends CodeObjectInsight
 }
 export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
 {
+    constructor(
+        private viewUris: WebViewUris
+
+    ){
+
+    }
     public async create(scope: CodeObjectInfo, codeObjectsInsight: HotspotInsight []): Promise<IListViewItemBase []> {
         let result =  codeObjectsInsight.filter(o=>o.score >=70)
                 .map(o=>{
@@ -15,12 +22,13 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
                     <div class="list-item">
                         <div class="list-item-content-area">
                             <div class="list-item-header"><strong>This is an error hotspot</strong></div>
-                            <div><span class="list-item-content-description">Many major errors occur or propogate through this function. </span>
-                                 <span class="link ellipsis" href="#">See how this was calculated</span></div>
+                            <div class="list-item-content-description">Major errors occur or propogate through this function. </div>
+                            </div>
+                            <div class="list-item-right-area">
+                            <img style="align-self:center;" src="${this.viewUris.image("target.png")}" width="32" height="32">
+                            <span class="insight-main-value" title="Error hostpot">Hotspot</span>
+                            </div>
                         </div>
-                    <div class="list-item-right-area">
-                        <img style="align-self:center;" src="https://phmecloud.blob.core.windows.net/photo/web/ou0ehpjndrfhkkx1tekojx0-3.png" width="32" height="32">
-                    </div>
                     </div>
                     `;
             return {getHtml: ()=>html, sortIndex: 0, groupId: undefined};

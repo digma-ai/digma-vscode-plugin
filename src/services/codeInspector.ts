@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 
-import { DocumentInfoProvider, MethodInfo } from "./documentInfoProvider";
-import { Token, SymbolProvider } from './languages/symbolProvider';
+import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
+import { SymbolProvider, SymbolTree } from './languages/symbolProvider';
+import { Token, TokenType } from './languages/tokens';
 
 export interface Definition {
     document: vscode.TextDocument
@@ -12,7 +13,7 @@ export type DefinitionWithTokens = Definition & {
     tokens: Token[]
 };
 
-export class CodeInvestigator {
+export class CodeInspector {
 
     public async getExecuteDefinitionMethodInfo(
         usageDocument: vscode.TextDocument,
@@ -62,5 +63,52 @@ export class CodeInvestigator {
             document,
             location,
         };
+    }
+
+    public * getAllSymbolsOfKind(symbolTrees: SymbolTree[] | undefined, kind: vscode.SymbolKind): Generator<SymbolTree> {
+        if(!symbolTrees) {
+            return;
+        }
+
+        for (const symbolTree of symbolTrees) {
+            if(symbolTree.kind === kind) {
+                yield symbolTree;
+            }
+            yield * this.getAllSymbolsOfKind(symbolTree.children as SymbolTree[] | undefined, kind);
+        }
+    }
+
+    public async derivesFrom(
+        definition: DefinitionWithTokens,
+        ancestorName: string,
+        symbolProvider: SymbolProvider,
+        findParentToken: (tokens: Token[], position: vscode.Position) => Token | undefined,
+    ): Promise<boolean> {
+        const parentToken = findParentToken(definition.tokens, definition.location.range.start);
+        if(!parentToken) {
+            return false;
+        }
+
+        if(parentToken.text === ancestorName) {
+            return true;
+        }
+
+        const parentInfo = await this.getTokensFromSymbolProvider(definition.document, parentToken.range.start, symbolProvider);
+        if(!parentInfo) {
+            return false;
+        }
+
+        const parentSymbolTree = await symbolProvider.getSymbolTree(parentInfo.document);
+        if(!parentSymbolTree) {
+            return false;
+        }
+
+        const parentDerivesFromAncestor = this.derivesFrom(
+            parentInfo,
+            ancestorName,
+            symbolProvider,
+            findParentToken,
+        );
+        return parentDerivesFromAncestor;
     }
 }

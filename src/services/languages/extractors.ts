@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import { DocumentSymbol } from "vscode-languageclient";
-import { CodeInvestigator } from '../codeInvestigator';
-import { SymbolProvider, Token } from './symbolProvider';
-
+import { DocumentSymbol } from 'vscode-languageclient';
+import { DocumentInfoProvider } from '../documentInfoProvider';
+import { CodeInspector } from '../codeInspector';
+import { SymbolProvider, SymbolTree } from './symbolProvider';
+import { Token } from './tokens';
 
 export interface SymbolInfo{
     id: string;
@@ -44,9 +45,17 @@ export class SpanInfo implements CodeObjectInfo{
 export interface IMethodExtractor {
     extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]) : SymbolInfo[];
 }
+
 export interface IEndpointExtractor {
-    extractEndpoints(document: vscode.TextDocument, symbolInfos: SymbolInfo[], tokens: Token[]): Promise<EndpointInfo[]>;
+    extractEndpoints(
+        document: vscode.TextDocument,
+        symbolInfos: SymbolInfo[],
+        tokens: Token[],
+        symbolTrees: SymbolTree[] | undefined,
+        documentInfoProvider: DocumentInfoProvider,
+    ): Promise<EndpointInfo[]>;
 }
+
 export interface ISpanExtractor {
     extractSpans(
         document: vscode.TextDocument,
@@ -56,11 +65,11 @@ export interface ISpanExtractor {
     ): Promise<SpanInfo[]>;
 }
 
-export interface ILanguageExtractor{
-    requiredExtentionLoaded: boolean;
-    get requiredExtentionId(): string;
+export interface ILanguageExtractor {
+    requiredExtensionLoaded: boolean;
+    get requiredExtensionId(): string;
     get documentFilter() : vscode.DocumentFilter;
     get methodExtractors(): IMethodExtractor[];
-    get endpointExtractors(): IEndpointExtractor[];
-    getSpanExtractors(codeInvestigator: CodeInvestigator): ISpanExtractor[];
+    getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];
+    getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
 }

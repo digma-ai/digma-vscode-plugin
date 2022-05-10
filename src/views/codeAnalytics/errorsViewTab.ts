@@ -11,7 +11,7 @@ import moment = require('moment');
 import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 import { Settings } from "../../settings";
-import { ErrorFlowParameterDecorator } from "../errorFlow/errorFlowParameterDecorator";
+import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";
 import { OverlayView } from "./overlayView";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 

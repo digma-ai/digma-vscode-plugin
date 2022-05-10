@@ -8,7 +8,7 @@ import { ErrorsViewTab } from "./errorsViewTab";
 import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
 import { UsagesViewTab } from "./usagesViewTab";
-import { ErrorFlowParameterDecorator } from "../errorFlow/errorFlowParameterDecorator";
+import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
@@ -121,7 +121,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
 
         const listViewItemsCreator = new InsightListViewItemsCreator();
-        listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator());
+        listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
         listViewItemsCreator.add("SpanUsages", new SpanListViewItemsCreator());
         listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
@@ -130,8 +130,6 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
-
-
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris,listViewItemsCreator, _documentInfoProvider),

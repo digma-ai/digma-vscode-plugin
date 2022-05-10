@@ -1,11 +1,11 @@
-import { CodeInvestigator } from './../../codeInvestigator';
+import { CodeInspector } from '../../codeInspector';
 import { SymbolInfo } from './../extractors';
 import { expect } from 'chai';
 
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
-import { Token, TokenType } from '../symbolProvider';
+import { Token, TokenType } from '../tokens';
 // import * as myExtension from '../../extension';
 
 import { CSharpSpanExtractor } from './spanExtractor';
@@ -27,10 +27,10 @@ suite('CSharpSpanExtractor', () => {
     vscode.window.showInformationMessage('Start all tests.');
 
     let extractor: CSharpSpanExtractor;
-    let codeInvestigator: CodeInvestigator;
+    let codeInspector: CodeInspector;
 
     setup(() => {
-        extractor = new CSharpSpanExtractor(codeInvestigator);
+        extractor = new CSharpSpanExtractor(codeInspector);
     });
 
     suite('#extractSpans', () => {
