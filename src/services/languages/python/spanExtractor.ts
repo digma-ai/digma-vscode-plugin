@@ -90,6 +90,8 @@ export class PythonSpanExtractor implements ISpanExtractor {
         return results;
     }
 
+
+
     private async extractNameTypeTrace(filePath: string) : Promise<string> {
 
         const pythonFileSuffix = ".py";
@@ -107,7 +109,9 @@ export class PythonSpanExtractor implements ISpanExtractor {
             if (relativePath.endsWith(pythonFileSuffix)){
                 relativePath=relativePath.substring(0,relativePath.length-pythonFileSuffix.length);
             }
-            relativePath=relativePath.replace("/",".").replace("\\",".");
+
+            relativePath=this.replaceAll(relativePath,"/",".");
+            relativePath=this.replaceAll(relativePath,"\\",".");
             
             return relativePath;
         }
@@ -115,6 +119,14 @@ export class PythonSpanExtractor implements ISpanExtractor {
         return "";
 
     }
+
+    private escapeRegExp(s: string) {
+        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    }
+    private replaceAll(str:string, find:string, replace:string) {
+        return str.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
+    }
+    
 
     private isCallToStartSpan(token: Token) {
         return token.type === TokenType.method && token.text === 'start_as_current_span';

@@ -48,37 +48,55 @@ export class DocumentInfoProvider implements vscode.Disposable
     public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanInfo|undefined>{
         const codeFileHint = instrumentationInfo.instrumentationName;
         if (codeFileHint){
-            let codeHintFiles = codeFileHint.split(' ');
-            let head = codeHintFiles[0];
-            let folder = await vscode.workspace.workspaceFolders?.find(w => w.name === head);
-            let tail= codeHintFiles;
 
-            if (folder) {
-                tail = codeHintFiles.slice(1);
+            if (codeFileHint==='__main__'){
+
+                let doc = vscode.window.activeTextEditor?.document
+                if (doc){
+                    const docInfo = await this.getDocumentInfo(doc);
+                    if (docInfo){
+                        let spanInfos = docInfo.spans.filter(span => span.name===instrumentationInfo.spanName);
+                        return spanInfos.firstOrDefault(x=>x!== undefined);
+
+                    }
+
+                }
+
             }
+            else{
 
-            if (codeHintFiles.length>=1){
-                const files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`);
-
-                const spansPromises = files.map(async file =>{
-                    try{
-                        const doc = await vscode.workspace.openTextDocument(file);
-                        const docInfo = await this.getDocumentInfo(doc);
-                        if(docInfo){
-                            return docInfo.spans.filter(span => span.name===instrumentationInfo.spanName);
+                let codeHintFiles = codeFileHint.split(' ');
+                let head = codeHintFiles[0];
+                let folder = await vscode.workspace.workspaceFolders?.find(w => w.name === head);
+                let tail= codeHintFiles;
+    
+                if (folder) {
+                    tail = codeHintFiles.slice(1);
+                }
+    
+                if (codeHintFiles.length>=1){
+                    const files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`);
+    
+                    const spansPromises = files.map(async file =>{
+                        try{
+                            const doc = await vscode.workspace.openTextDocument(file);
+                            const docInfo = await this.getDocumentInfo(doc);
+                            if(docInfo){
+                                return docInfo.spans.filter(span => span.name===instrumentationInfo.spanName);
+                            }
                         }
-                    }
-                    catch(error){
-                        Logger.warn(`Searching for span "${instrumentationInfo.spanName}" skipped ${file.fsPath}`, error);
-                    }
-                    return [];
-                });
-
-                const spnaInfos = (await Promise.all(spansPromises)).flat();
-                if (spnaInfos.length===1){
-                    return spnaInfos[0];
+                        catch(error){
+                            Logger.warn(`Searching for span "${instrumentationInfo.spanName}" skipped ${file.fsPath}`, error);
+                        }
+                        return [];
+                    });
+    
+                    const spnaInfos = (await Promise.all(spansPromises)).flat().firstOrDefault(x=>x!== undefined);
+                    return spnaInfos;
                 }
             }
+
+ 
         }
     }
 
