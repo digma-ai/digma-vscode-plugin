@@ -78,8 +78,16 @@ export class PythonSpanExtractor implements ISpanExtractor {
 
             const instrumentationLibrary = tracerName === '__name__'
                 ? (mainDeclared ? '__main__' : await this.extractNameTypeTrace(tracerDefinition.document.fileName))
-                : tracerName
-            
+                : tracerName;
+            //Add the unrooted form
+            if (instrumentationLibrary.includes(".")){
+                let unrootedForm = instrumentationLibrary.split(".").slice(1).join(".");
+                results.push(new SpanInfo(
+                    unrootedForm + '$_$' + spanName,
+                    spanName,
+                    token.range,
+                    document.uri));
+            }
             results.push(new SpanInfo(
                 instrumentationLibrary + '$_$' + spanName,
                 spanName,
