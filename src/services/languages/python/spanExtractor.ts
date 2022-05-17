@@ -75,24 +75,31 @@ export class PythonSpanExtractor implements ISpanExtractor {
                 continue;
             }
             const tracerName =  match[1];
+            
+            let instLibraryOptions = []
+            if  (tracerName === '__name__' && mainDeclared ){
+                instLibraryOptions.push('__main__');  
 
-            const instrumentationLibrary = tracerName === '__name__'
-                ? (mainDeclared ? '__main__' : await this.extractNameTypeTrace(tracerDefinition.document.fileName))
-                : tracerName;
+                let fileName = await this.extractNameTypeTrace(tracerDefinition.document.fileName);
+                instLibraryOptions.push(fileName );
+                if (fileName.includes(".")){
+                    let unrootedForm = fileName.split(".").slice(1).join(".");
+                    instLibraryOptions.push(unrootedForm);
+                }
+            } 
+            else{
+                instLibraryOptions.push(tracerName);
+            }
             //Add the unrooted form
-            if (instrumentationLibrary.includes(".")){
-                let unrootedForm = instrumentationLibrary.split(".").slice(1).join(".");
+            for (let i=0;i<instLibraryOptions.length;i++){
+
                 results.push(new SpanInfo(
-                    unrootedForm + '$_$' + spanName,
+                    instLibraryOptions[i] + '$_$' + spanName,
                     spanName,
                     token.range,
                     document.uri));
             }
-            results.push(new SpanInfo(
-                instrumentationLibrary + '$_$' + spanName,
-                spanName,
-                token.range,
-                document.uri));
+
         }
 
         return results;
