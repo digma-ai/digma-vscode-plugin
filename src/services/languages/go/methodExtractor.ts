@@ -28,14 +28,17 @@ export class GoMethodExtractor implements IMethodExtractor{
             }
             packageName = match[1]; 
         }
-        else{
+        if(!packageName || packageName !== 'main'){
             const modDocument = await vscode.workspace.openTextDocument(modFile);
             const match = modDocument.getText().match(/^module (.+)$/m);
             if(!match){
                 Logger.warn(`Could not found module name in '${modFile.path}'`)
                 return [];
             }
-            packageName = match[1] + '/' + path.relative(modFolder, docFolder);
+            packageName = match[1] 
+            
+            if(modFolder !== docFolder)
+                packageName += '/' + path.relative(modFolder, docFolder);
         }
 
         const methods: SymbolInfo[] = methodSymbols.map(s => {
