@@ -15,12 +15,14 @@ import { HotspotMarkerDecorator } from './decorators/hotspotMarkerDecorator';
 import { EditorHelper } from './services/EditorHelper';
 import { CodeInspector } from './services/codeInspector';
 import { VsCodeDebugInstrumentation } from './instrumentation/vscodeInstrumentation';
+import { GoLanguageExtractor } from './services/languages/go/languageExtractor';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
     const supportedLanguages = [
         new PythonLanguageExtractor(),
-        new CSharpLanguageExtractor()
+        new CSharpLanguageExtractor(),
+        new GoLanguageExtractor()
     ];
     const supportedSourceControls = [
         new Git()

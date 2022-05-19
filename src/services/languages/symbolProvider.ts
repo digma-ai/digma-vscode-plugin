@@ -135,11 +135,12 @@ export class SymbolProvider
             if (symbolTrees[0].range) {
                 // Document symbols
                 const allDocSymbols = symbolTrees as DocumentSymbol[];
-                const symbolInfos = supportedLanguage.methodExtractors
-                    .map(x => x.extractMethods(document, allDocSymbols))
-                    .flat();
-
-                return symbolInfos;
+                const methodExtractors = supportedLanguage.methodExtractors;
+                const extractedMethods = await Promise.all(
+                    methodExtractors.map(async (x) => await x.extractMethods(document, allDocSymbols))
+                );
+                const methods = extractedMethods.flat()
+                return methods;
             }
             else {
                 // Document symbols
@@ -160,11 +161,11 @@ export class SymbolProvider
             //  at index `5*i+3` - `tokenType`: will be looked up in `SemanticTokensLegend.tokenTypes`. We currently ask that `tokenType` < 65536.
             //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
             
-            const legends = await this.retryOnStartup<vscode.SemanticTokensLegend>(
+            let legends = (await this.retryOnStartup<vscode.SemanticTokensLegend>(
                 async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
                 value => value?.tokenTypes ? true : false,
                 document.languageId,
-            );
+            ));
             if(!legends) {
                 return tokes;
             }
