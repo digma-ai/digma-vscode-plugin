@@ -43,7 +43,10 @@ export class SpanInfo implements CodeObjectInfo{
 
 
 export interface IMethodExtractor {
-    extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]) : SymbolInfo[];
+    extractMethods(
+        document: vscode.TextDocument, 
+        docSymbols: DocumentSymbol[],
+        ) : Promise<SymbolInfo[]>;
 }
 
 export interface IEndpointExtractor {

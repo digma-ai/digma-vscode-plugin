@@ -38,13 +38,6 @@ export class HtmlHelper
 
     public static getCodeObjectLabel(funcName: string): string 
     {
-        if (funcName.includes(".")) {
-            let tokens = funcName.split(".");
-            if(tokens.length > 1){
-                funcName = `${tokens[tokens.length-2]}.${tokens[tokens.length-1]}`;
-            }
-        }
-
         return /*html*/ `
             <span class="scope">Scope:</span>
             <span class="codicon codicon-symbol-method" title="Method"></span>

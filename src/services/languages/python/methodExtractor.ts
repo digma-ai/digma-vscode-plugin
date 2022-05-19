@@ -5,7 +5,7 @@ import { IMethodExtractor, SymbolInfo } from "../extractors";
 
 export class PythonMethodExtractor implements IMethodExtractor
 {
-    public extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): SymbolInfo[] {
+    public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): Promise<SymbolInfo[]> {
         const symbolInfos = this.extractFunctions(document.uri, document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
     }

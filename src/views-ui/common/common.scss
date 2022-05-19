@@ -105,6 +105,7 @@ ul.tree{
 .left-ellipsis{
     @extend .ellipsis;
     direction: rtl;
+    unicode-bidi: plaintext;
 }
 
 .filter-tag {
