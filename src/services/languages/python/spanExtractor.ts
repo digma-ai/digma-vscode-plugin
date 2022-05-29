@@ -77,10 +77,11 @@ export class PythonSpanExtractor implements ISpanExtractor {
             const tracerName =  match[1];
             
             let instLibraryOptions = []
-            if  (tracerName === '__name__' && mainDeclared ){
-                instLibraryOptions.push('__main__');  
-
-                let fileName = await this.extractNameTypeTrace(tracerDefinition.document.fileName);
+            if (tracerName === '__name__'){
+                if (mainDeclared)
+                    instLibraryOptions.push('__main__');  
+                
+                let fileName = await this.extractNameTypeTrace(tracerDefinition.document.uri.fsPath);
                 instLibraryOptions.push(fileName );
                 if (fileName.includes(".")){
                     let unrootedForm = fileName.split(".").slice(1).join(".");
@@ -112,7 +113,7 @@ export class PythonSpanExtractor implements ISpanExtractor {
         const pythonFileSuffix = ".py";
         const specialFolders = ["venv","site-packages"];
 
-        let folder = vscode.workspace.workspaceFolders?.filter(f=>filePath.startsWith(f.uri.path))
+        let folder = vscode.workspace.workspaceFolders?.filter(f=> filePath.startsWith(f.uri.fsPath))
             .map(f=>f.uri.path).firstOrDefault();
 
         if (!folder){

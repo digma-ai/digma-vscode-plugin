@@ -401,6 +401,18 @@ vscode-panel-view {
             }
         }
     }
+    .span-durations-insight{
+        .percentiles-grid{
+            display: grid;
+            justify-content: start;
+            grid-template-columns: auto auto auto;
+            column-gap: 10px;
+            row-gap: 5px;
+        }
+        .bad-change{
+            color: #f95959;
+        }
+    }
     .endpoint-bottleneck-insight{
         margin-top: 5px;
 
