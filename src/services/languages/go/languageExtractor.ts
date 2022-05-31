@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
 import { GoMethodExtractor } from './methodExtractor';
+import { GoSpanExtractor } from './spanExtractor';
 
 
 
@@ -28,6 +29,8 @@ export class GoLanguageExtractor implements ILanguageExtractor
     }
 
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
-        return [];
+        return [
+            new GoSpanExtractor(codeInspector)
+        ];
     }
 }

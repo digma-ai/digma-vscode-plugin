@@ -36,7 +36,8 @@ export enum TokenType {
     string = 'string',
     plainKeyword = 'plainKeyword',
     namespace = 'namespace',
-    keyword = 'keyword'
+    keyword = 'keyword',
+    type = 'type'
 }
 
 export function matchTokenSequence(tokens: Token[], matchers: TokenMatcher[]): boolean {
