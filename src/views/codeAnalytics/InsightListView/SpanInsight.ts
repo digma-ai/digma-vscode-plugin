@@ -1,3 +1,4 @@
+import moment = require("moment");
 import { IListViewItem, IListViewItemBase, ListViewGroupItem } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { Duration } from "./EndpointInsight";
@@ -99,8 +100,9 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
     span: string,
     percentiles: {
         percentile: number,
-        change: number,
-        latestDuration: Duration
+        currentDuration: Duration,
+        previousDuration: Duration
+        changeTime: moment.Moment,
     }[]
 }
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
@@ -123,15 +125,13 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     {
         const percentileHtmls = []
         for(const item of insight.percentiles){
-            const changeHtml = Math.abs(item.change*100).toFixed(0);
+            percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
+            percentileHtmls.push(/*html*/ `<span>${item.currentDuration.value} ${item.currentDuration.unit}</span>`);
 
-            percentileHtmls.push(/*html*/ `<span>P${item.percentile}</span>`);
-            percentileHtmls.push(/*html*/ `<span>${item.latestDuration.value} ${item.latestDuration.unit}</span>`);
-
-            if (item.change > 0.1)
-                percentileHtmls.push(/*html*/ `<span class="bad-change">increased by ${changeHtml}%</span>`);
-            else if (item.change < -0.1)
-                percentileHtmls.push(/*html*/ `<span class="good-change">decreased by ${changeHtml}%</span>`);
+            if (item.previousDuration && item.changeTime){
+                let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped' : 'raised';
+                percentileHtmls.push(/*html*/ `<span class="change">${verb} from ${item.previousDuration.value} ${item.previousDuration.unit}, ${item.changeTime.fromNow()}</span>`);
+            }
             else
                 percentileHtmls.push(/*html*/ `<span></span>`);
         }
