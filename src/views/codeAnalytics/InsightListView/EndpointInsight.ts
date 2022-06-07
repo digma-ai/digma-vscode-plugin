@@ -371,7 +371,7 @@ export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
             <span class="scope">REST: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
             <span class="uppercase">
-            <strong>HTTP </strong>${parts[0]}</span>
+            <strong>HTTP </strong>${parts[0]}&nbsp;</span>
             <span>${parts[1]}</span>
         </div>
         
