@@ -1,63 +1,117 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { TextDocument } from "vscode";
-import { integer } from 'vscode-languageclient';
 import { CodeInspector } from '../../codeInspector';
 import { ISpanExtractor, SpanInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
-
-export enum SpanExtractorState {
-    start,
-
-}
-
-export class SpanFinder{
-
-    private state:SpanExtractorState = SpanExtractorState.start;
-
-    public scan( document: TextDocument,
-        symbolInfos: SymbolInfo[],
-        tokens: Token[],
-        symbolProvider: SymbolProvider,
-        currIndex: number,
-        currentToken: Token
-        ){
-            
-            switch (this.state) {
-                case SpanExtractorState.start:
-                    if(currentToken.type === TokenType.function && currentToken.text === "Start"){
-                        
-                    }
-              
-            }
-        }
-
-}
+import { Logger } from '../../logger';
 
 
 export class GoSpanExtractor implements ISpanExtractor {
     constructor(private _codeInspector: CodeInspector) {}
     
-    // private ScanState State { get; set; }
-    // private scan(s: number, token:Token) {
-    //     switch()
-    // }
 
-    private async extractInstrumentationName(traceVarToken: Token, traceVarTokenIndex: number,  tokens: Token[], document: TextDocument, symbolProvider: SymbolProvider): Promise<string | undefined>{
-        const tracerTokenPosition = traceVarToken.range.start;
-        const tracerDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
-        if(!tracerDefinition) {
-            return undefined;
+ 
+    tryGetVariable(tokens: Token[], range: vscode.Range): [Token, number]| undefined{
+        const referencedDefinitionIdx = tokens.findIndex(x => x.range.intersection(range));
+        if(referencedDefinitionIdx < 0) {
+            return;
         }
-        const tracerDefinitionIdx = tracerDefinition.tokens.findIndex(x => x.range.intersection(tracerDefinition.location.range));
-        if(tracerDefinitionIdx < 0) {
-            return undefined;
+        const referencedDefinitionToken = tokens[referencedDefinitionIdx];
+        if(referencedDefinitionToken.type !== TokenType.variable){
+            return;
         }
-        const traceDefToken = tracerDefinition.tokens[tracerDefinitionIdx];
+
+        return [referencedDefinitionToken, referencedDefinitionIdx];
+    }
+
+    tryGetSpanName(tokens: Token [], index: number): string | undefined{
+        const searchIndexLimit = index+10;
+        while(index < searchIndexLimit){
+            if(index >= tokens.length){
+                break;
+            }
+            if(tokens[index].type === TokenType.string){
+                return this.cleanText(tokens[index].text);
+            }
+            index++;
+        }
+       
 
     }
- 
+
+    /*
+    supported tracer name (instrumentation library)extraction
+    var tracerName = "tracer_name"
+    func Method(ctx context.Context){
+        tracer := otel.GetTracerProvider().Tracer(tracerName)
+        _, span := tracer.Start(ctx, "span_name")
+    }
+
+    func Method(ctx context.Context){
+        tracer := otel.GetTracerProvider().Tracer("tracer_name")
+        _, span := tracer.Start(ctx, "span_name")
+    }
+    */
+    async tryGetInstrumentationName(document: TextDocument,codeInspector: CodeInspector, symbolProvider: SymbolProvider, tokens: Token [], range: vscode.Range) : Promise<string | undefined>{
+        let tracerVariable = this.tryGetVariable(tokens, range);
+        if(tracerVariable === undefined){
+            return undefined;
+        }
+        let referencedDefinitionIdx = tracerVariable[1];
+        const searchIterationLimit = 10;
+        for (var i:number = 0; i < searchIterationLimit; i++) {
+            let currIndex = referencedDefinitionIdx+1+i;
+            if(currIndex >= tokens.length){
+                break;
+            }
+            if(tokens[currIndex].type === TokenType.function && tokens[currIndex].text ==="Tracer"){
+                const token = tokens[currIndex+1];
+                if(token.type === TokenType.string){
+                   return this.cleanText(token.text);
+                } else if(token.type === TokenType.variable){ //support tracer name from variable of type string
+                    const definition = await codeInspector.getTokensFromSymbolProvider(document,token.range.start,symbolProvider);
+                    if(definition !== undefined)
+                    {
+                        let tracerVariable = this.tryGetVariable(definition.tokens, definition.location.range);
+                        if(tracerVariable!== undefined){
+                            let stringValueIndex = tracerVariable[1]+1;
+                            if (stringValueIndex< definition.tokens.length && definition.tokens[stringValueIndex].type === TokenType.string){
+                                return this.cleanText(definition.tokens[stringValueIndex].text);
+                            }
+                        }
+                    }
+                }
+                return undefined;
+            }
+        }
+    }
+
+    /*
+    func NewUserController(service Service) *UserController {
+        return &UserController{
+            service: service,
+            tracer:  otel.Tracer("tracer_name"),
+        }
+    }
+    func (controller *UserController) Get(w http.ResponseWriter, req *http.Request) {
+        _, span := controller.tracer.Start(req.Context(), "span_name")
+        defer span.End()
+    }
+
+    func (u *userService) Get(ctx context.Context, id string) (User, error) {
+        tracer := otel.GetTracerProvider().Tracer("trace_name")
+        _, span := tracer.Start(ctx, "span_name")  
+        defer span.End()
+    }
+
+    //!!!!!not supported (cannot resolve span name)
+    func (u *userService) Get(ctx context.Context, id string) (User, error) {
+        tracer := otel.GetTracerProvider().Tracer("UserService")
+        _, span := tracer.Start(ctx, funcName(0))  
+        defer span.End()
+    }
+    */
     async extractSpans(
         document: TextDocument,
         symbolInfos: SymbolInfo[],
@@ -66,223 +120,90 @@ export class GoSpanExtractor implements ISpanExtractor {
     ): Promise<SpanInfo[]> {
         const results: SpanInfo[] = [];
 
-        var strippedText = document.getText().replace("\n","").replace(/\s+/g,"").replace(/"/g, '\'');
-        var mainDeclared = strippedText.indexOf("if__name__=='__main__'")>=0;
-
-        let idx: number = 2;
-        while (idx < tokens.length) {
-            let token = tokens[idx];
-            if(token.type === TokenType.function && token.text === "Start"){
-                
-                let _idx = idx-1;
-                let _token = tokens[_idx];
-                token.range.isSingleLine
-                while(_token.type !== TokenType.operator){
-                    
-                    _token = tokens[--_idx];
+        for(var symbol of symbolInfos){
+            Logger.info("Span discovering for function: "+symbol.displayName);
+            try {
+                const funcStartTokenIndex = tokens.findIndex(x => x.range.intersection(symbol.range));
+                let funcEndTokenIndex: number = tokens.length-1;
+                for (let index = funcStartTokenIndex+1; index < tokens.length; index++) {
+                    if(!tokens[index].range.intersection(symbol.range)){
+                        funcEndTokenIndex = index;
+                        break;
+                    }
                 }
 
-                const traceVarToken = tokens[idx-1];
-                if(traceVarToken.type === TokenType.variable)
-                {
-                    const tracerTokenPosition = traceVarToken.range.start;
-                    const tracerDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
-                    if(!tracerDefinition) {
-                        continue;
-                    }
-                    const tracerDefinitionIdx = tracerDefinition.tokens.findIndex(x => x.range.intersection(tracerDefinition.location.range));
-                    if(tracerDefinitionIdx < 0) {
-                        continue;
-                    }
-                    const traceDefToken = tracerDefinition.tokens[tracerDefinitionIdx];
-                    let results: any[]  = await vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider",document.uri, traceDefToken.range.start);
-                    if(!results?.length || !results[0].uri || !results[0].range){
-                        continue;
+                for (let index = funcStartTokenIndex; index < funcEndTokenIndex; index++) {
+                    let token = tokens[index];
+                
+                    if(token.type === TokenType.function && token.text === "Start"){
+                        const traceVarToken = tokens[index-1];
+                        if(traceVarToken.type === TokenType.variable)
+                        {
+                            const traceDefType = await this._codeInspector.getTypeFromSymbolProvider(document, traceVarToken.range.start, symbolProvider);
+                            if(traceDefType !== "Tracer") {
+                                continue;
+                            }
+                            let references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,traceVarToken.range.start);
+                            let instrumentationLibraries = new Set();
+                            for(let refLocation of references)
+                            {
+                                let _tokens: Token [];
+                                let _range: vscode.Range;
+                                let _document: TextDocument;
+                                if(refLocation.uri.fsPath !== document.uri.fsPath) { //defined in a different document
+                                    _document = await vscode.workspace.openTextDocument(refLocation.uri);
+                                    _tokens = await symbolProvider.getTokens(_document);
+                                }
+                                else{
+                                    _tokens = tokens;
+                                    _document = document;
+                                }
+                                _range = refLocation.range;
+                                const instrumentationName = await this.tryGetInstrumentationName(_document, this._codeInspector, symbolProvider, _tokens, _range);
+                                if(instrumentationName !== undefined){
+                                    instrumentationLibraries.add(instrumentationName);
+                                }
+                            }
+                            if(instrumentationLibraries.size === 0){
+                                continue;
+                            }
+
+                            if(instrumentationLibraries.size > 1){
+                                Logger.warn("ambiguous tracer name(instrumentation library) found: "+instrumentationLibraries.toString());
+                                continue;
+                            }
+                            const instrumentationLibrary = instrumentationLibraries.values().next().value;
+                        
+                            const spanName = this.tryGetSpanName(tokens, index+1);
+                            
+                            if(spanName === undefined){
+                                Logger.info("Span discovery failed, span name could not be resolved for tracer '"+instrumentationLibrary+"'");
+                                continue;
+                            }
+                            
+                            results.push(new SpanInfo(
+                                instrumentationLibrary + '$_$' + spanName,
+                                spanName,
+                                token.range,
+                                document.uri));
+
+                            Logger.info("* Span found: "+instrumentationLibrary+"/"+spanName);
+
+                        }
                     }
             
-                    const l = <vscode.Location>results[0];
-                    const d = await vscode.workspace.openTextDocument(l.uri);
-
-                    const tokens1 = await symbolProvider.getTokens(d, l.range);
-                    if(!tokens1.length){
-                        continue;
-                    }
-                    if(tokens1[0].type !== TokenType.type || tokens1[0].text !== "Tracer"){
-                        continue;
-                    }
-                    const operatorToken = tokens[idx-1];
-                    if(operatorToken.type !== TokenType.operator){
-                        continue;
-                    }
-                    const spanToken = tokens[idx-2];
-                    if(spanToken.type !== TokenType.variable){
-                        continue;
-                    }
-                    let references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,spanToken.range.start);
-                    // references = references.filter(x=>x.uri.fsPath!==document.uri.fsPath);
-                    // if (references.length>0){
-                    //     let referencedDocument = vscode.workspace.openTextDocument(references[0].uri);
-                    //     let text = (await referencedDocument).getText(references[0].range);
-                    //     console.log(text);
-
-                    // }
-                    console.log("");
-
                 }
             }
-            idx++;
+            catch (error){
+                Logger.error('Span discovery failed with error', error);
+            }
         }
-        return [];
-        // for(const [index, token] of tokens.entries()) {
-        //     if(token.type === TokenType.function && token.text === "Start"){
-                
-        //     }
-
-        //     if(token.type === TokenType.variable){
-        //         const tracerTokenPosition = token.range.start;
-        //         const tracerDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
-        //         if(!tracerDefinition) {
-        //             continue;
-        //         }
-        //         const tracerDefinitionIdx = tracerDefinition.tokens.findIndex(x => x.range.intersection(tracerDefinition.location.range));
-        //         if(tracerDefinitionIdx < 0) {
-        //             continue;
-        //         }
-        //     }
-        //     console.log('');
-            // if(index < 1) {
-            //     continue;
-            // }
-            
-            // const isMatch = this.isCallToStartSpan(token);
-            // if(!isMatch) {
-            //     continue;
-            // }
-                
-            // let lineText = document.getText(new vscode.Range(
-            //     token.range.start, 
-            //     new vscode.Position(token.range.end.line, 1000)
-            // ));
-            
-            // let match = lineText.match(/^start_as_current_span\(["'](.*?)["']/);
-            // if(!match) {
-            //     continue;
-            // }
-
-            // const spanName =  match[1];
-
-            // const tracerToken = tokens[index - 1];
-            // if(tracerToken.type !== TokenType.variable) {
-            //     continue;
-            // }
-
-            // const tracerTokenPosition = tracerToken.range.start;
-            // const tracerDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
-            // if(!tracerDefinition) {
-            //     continue;
-            // }
-
-            // const tracerDefinitionIdx = tracerDefinition.tokens.findIndex(x => x.range.intersection(tracerDefinition.location.range));
-            // if(tracerDefinitionIdx < 0) {
-            //     continue;
-            // }
-
-            // const traceModuleToken = tracerDefinition.tokens[tracerDefinitionIdx+1];
-            // const getTracerMethodToken = tracerDefinition.tokens[tracerDefinitionIdx+2];
-            // if(traceModuleToken.text != 'trace' || traceModuleToken.type != TokenType.module ||
-            //     getTracerMethodToken.text != 'get_tracer' || getTracerMethodToken.type != TokenType.function){
-            //     continue;
-            // }
-
-            // lineText = document.getText(new vscode.Range(
-            //     getTracerMethodToken.range.start, 
-            //     new vscode.Position(token.range.end.line, 1000)
-            // ));
-            // match = lineText.match(/^get_tracer\(["']?(.*?)["']?\)/);
-            // if(!match) {
-            //     continue;
-            // }
-            // const tracerName =  match[1];
-            
-            // let instLibraryOptions = []
-            // if  (tracerName === '__name__' && mainDeclared ){
-            //     instLibraryOptions.push('__main__');  
-
-            //     let fileName = await this.extractNameTypeTrace(tracerDefinition.document.fileName);
-            //     instLibraryOptions.push(fileName );
-            //     if (fileName.includes(".")){
-            //         let unrootedForm = fileName.split(".").slice(1).join(".");
-            //         instLibraryOptions.push(unrootedForm);
-            //     }
-            // } 
-            // else{
-            //     instLibraryOptions.push(tracerName);
-            // }
-            // //Add the unrooted form
-            // for (let i=0;i<instLibraryOptions.length;i++){
-
-            //     results.push(new SpanInfo(
-            //         instLibraryOptions[i] + '$_$' + spanName,
-            //         spanName,
-            //         token.range,
-            //         document.uri));
-            // }
-
-     //   }
-
         return results;
     }
 
 
-
-    private async extractNameTypeTrace(filePath: string) : Promise<string> {
-
-        const pythonFileSuffix = ".py";
-        const specialFolders = ["venv","site-packages"];
-
-        let folder = vscode.workspace.workspaceFolders?.filter(f=>filePath.startsWith(f.uri.path))
-            .map(f=>f.uri.path).firstOrDefault();
-
-        if (!folder){
-            folder = specialFolders.filter(x=>filePath.indexOf(x)>0).firstOrDefault();
-        }
-
-        if (folder){
-            let relativePath = filePath.substring(filePath.indexOf(folder)+ folder.length+1);
-            if (relativePath.endsWith(pythonFileSuffix)){
-                relativePath=relativePath.substring(0,relativePath.length-pythonFileSuffix.length);
-            }
-
-            relativePath=this.replaceAll(relativePath,"/",".");
-            relativePath=this.replaceAll(relativePath,"\\",".");
-            
-            return relativePath;
-        }
-  
-        return "";
-
-    }
-
-    private escapeRegExp(s: string) {
-        return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-    }
-    private replaceAll(str:string, find:string, replace:string) {
-        return str.replace(new RegExp(this.escapeRegExp(find), 'g'), replace);
-    }
-    
-
-    private isCallToStartSpan(token: Token) {
-        return token.type === TokenType.method && token.text === 'start_as_current_span';
-    }
-
-    private cleanSpanName(text: string): string {
+    private cleanText(text: string): string {
         return text.replace(/\"/g, '');
     }
 
-    private getStatementIndexes(tokens: Token[], cursorLocation: vscode.Location): { cursorIndex: integer, endIndex: integer } {
-        const cursorIndex = tokens.findIndex((token) => !!token.range.intersection(cursorLocation.range));
-        const getTracerTokenIndex = tokens.findIndex((token, index) => index > cursorIndex && token.type === TokenType.function && token.text === 'get_tracer');
-        const tracerNameTokenIndex = getTracerTokenIndex === -1 ? -1 : getTracerTokenIndex + 1;
-        return { cursorIndex, endIndex: tracerNameTokenIndex };
-    }
 }

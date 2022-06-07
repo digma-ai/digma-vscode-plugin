@@ -45,6 +45,48 @@ export class CodeInspector {
         return { ...definition, tokens };
     }
 
+    public async getTypeFromSymbolProvider(usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position,
+        symbolProvider: SymbolProvider): Promise<string | undefined>{
+            const definition = await this.getType(usageDocument, usagePosition);
+            if(!definition){
+                return;
+            }
+            
+            const tokens = await symbolProvider.getTokens(definition.document);
+
+
+            const tracerDefinitionIdx = tokens.findIndex(x => x.range.intersection(definition.location.range));
+            if(tracerDefinitionIdx < 0) {
+                return;
+            }
+            const traceDefToken = tokens[tracerDefinitionIdx];
+            if(traceDefToken.type === TokenType.type){
+                return traceDefToken.text;
+            }
+            return;       
+    }
+    private async getType(
+        usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position,
+    ): Promise<Definition | undefined> {
+        let results: any[]  = await vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider",usageDocument.uri, usagePosition);
+        if(!results?.length || !results[0].uri || !results[0].range){
+            return;
+        }
+
+        const location = <vscode.Location>results[0];
+        const document = await vscode.workspace.openTextDocument(location.uri);
+        if(!document){
+            return;
+        }
+
+        return {
+            document,
+            location,
+        };
+    }
+
     private async getDefinition(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
