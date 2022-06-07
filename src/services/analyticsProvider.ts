@@ -30,17 +30,17 @@ export enum EndpointType
     RPC,
 }
 
-export class EndpointScheme {
+export class EndpointSchema {
     public static readonly HTTP: string = "epHTTP:";
     public static readonly RPC: string = "epRPC:";
 
     // strips the scheme and returns the rest of the of name
     public static getShortRouteName(fullRouteName: string): string {
-        if (fullRouteName.startsWith(EndpointScheme.HTTP)) {
-            return fullRouteName.replace(EndpointScheme.HTTP, "");
+        if (fullRouteName.startsWith(EndpointSchema.HTTP)) {
+            return fullRouteName.replace(EndpointSchema.HTTP, "");
         }
-        if (fullRouteName.startsWith(EndpointScheme.RPC)) {
-            return fullRouteName.replace(EndpointScheme.RPC, "");
+        if (fullRouteName.startsWith(EndpointSchema.RPC)) {
+            return fullRouteName.replace(EndpointSchema.RPC, "");
         }
         // did not manage to find relevant Scheme, so returning value as is
         return fullRouteName;

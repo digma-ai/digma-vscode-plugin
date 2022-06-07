@@ -1,7 +1,7 @@
 import { IListViewItem, ListViewGroupItem } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
-import { EndpointType, EndpointScheme } from '../../../services/analyticsProvider';
+import { EndpointType, EndpointSchema } from '../../../services/analyticsProvider';
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { DecimalRounder } from "../../utils/valueFormatting";
 import { EditorHelper } from "../../../services/EditorHelper";
@@ -360,14 +360,14 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
 
 export function adjustHttpRouteIfNeeded(endpointInsight: EndpointInsight): void {
     const origValue = endpointInsight.route;
-    if (origValue.startsWith(EndpointScheme.HTTP)) {
+    if (origValue.startsWith(EndpointSchema.HTTP)) {
         return;
     }
-    if (origValue.startsWith(EndpointScheme.RPC)) {
+    if (origValue.startsWith(EndpointSchema.RPC)) {
         return;
     }
     // default behaviour, to be backword compatible, where did not have the scheme part of the route, so adding it as HTTP one
-    endpointInsight.route = EndpointScheme.HTTP + origValue;
+    endpointInsight.route = EndpointSchema.HTTP + origValue;
 }
 
 export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
@@ -376,7 +376,7 @@ export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
     }
 
     public getGroupHtml(itemsHtml: string): string {
-        const shortRouteName = EndpointScheme.getShortRouteName(this.route);
+        const shortRouteName = EndpointSchema.getShortRouteName(this.route);
         const parts = shortRouteName.split(' ');
         return /*html*/ `
         <div class="group-item">
