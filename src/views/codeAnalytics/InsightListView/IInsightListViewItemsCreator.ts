@@ -48,7 +48,6 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
                 const endpointInsight = coi as EndpointInsight;
                 adjustHttpRouteIfNeeded(endpointInsight);
             }
-            var aa = 8;
         });
     }
 
