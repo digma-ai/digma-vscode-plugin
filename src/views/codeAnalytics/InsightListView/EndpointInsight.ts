@@ -1,6 +1,7 @@
 import { IListViewItem, ListViewGroupItem } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { EndpointType, EndpointSchema } from '../../../services/analyticsProvider';
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { DecimalRounder } from "../../utils/valueFormatting";
 import { EditorHelper } from "../../../services/EditorHelper";
@@ -10,8 +11,12 @@ import { Uri } from "vscode";
 import path = require("path");
 import moment = require("moment");
 
-export interface LowUsageInsight extends CodeObjectInsight {
+
+export interface EndpointInsight extends CodeObjectInsight {
     route: string;
+}
+
+export interface LowUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
 
@@ -73,8 +78,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
 
 }
 
-export interface NormalUsageInsight extends CodeObjectInsight {
-    route: string;
+export interface NormalUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
 
@@ -108,8 +112,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
 
 }
 
-export interface HighUsageInsight extends CodeObjectInsight {
-    route: string;
+export interface HighUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
 
@@ -120,8 +123,7 @@ export interface Duration {
 }
 
 
-export interface SlowEndpointInsight extends CodeObjectInsight {
-    route: string;
+export interface SlowEndpointInsight extends EndpointInsight {
     endpointsMedian: Duration;
     endpointsMedianOfMedians: Duration;
     endpointsMedianOfP75: Duration;
@@ -182,9 +184,8 @@ export interface Percentile {
     fraction: number,
     maxDuration: Duration,
 }
-export interface SlowestSpansInsight extends CodeObjectInsight {
+export interface SlowestSpansInsight extends EndpointInsight {
     spans: SlowSpanInfo[];
-    route: string;
 }
 
 export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCreator {
@@ -357,7 +358,17 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
 }
 
 
-
+export function adjustHttpRouteIfNeeded(endpointInsight: EndpointInsight): void {
+    const origValue = endpointInsight.route;
+    if (origValue.startsWith(EndpointSchema.HTTP)) {
+        return;
+    }
+    if (origValue.startsWith(EndpointSchema.RPC)) {
+        return;
+    }
+    // default behaviour, to be backword compatible, where did not have the scheme part of the route, so adding it as HTTP one
+    endpointInsight.route = EndpointSchema.HTTP + origValue;
+}
 
 export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
     constructor(private route: string) {
@@ -365,13 +376,14 @@ export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
     }
 
     public getGroupHtml(itemsHtml: string): string {
-        const parts = this.route.split(' ');
+        const shortRouteName = EndpointSchema.getShortRouteName(this.route);
+        const parts = shortRouteName.split(' ');
         return /*html*/ `
         <div class="group-item">
             <span class="scope">REST: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
             <span class="uppercase">
-            <strong>HTTP </strong>${parts[0]}</span>
+            <strong>HTTP </strong>${parts[0]}&nbsp;</span>
             <span>${parts[1]}</span>
         </div>
         

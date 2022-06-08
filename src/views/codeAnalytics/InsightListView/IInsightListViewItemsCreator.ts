@@ -1,10 +1,12 @@
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
+import { EndpointInsight, adjustHttpRouteIfNeeded } from "./EndpointInsight";
 
 export interface CodeObjectInsight{
     codeObjectId: string,
     type: string
 }
+
 export interface IInsightListViewItemsCreator
 {
     create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight []): Promise<IListViewItemBase[]>;
@@ -23,7 +25,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
     }
 
     public async create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[]): Promise<IListViewItemBase[]> {
-
+        this.adjustToHttpIfNeeded(codeObjectInsight);
         const groupedByType = codeObjectInsight.groupBy(x => x.type);
         const items: IListViewItemBase [] = [];
         for(let type in groupedByType)
@@ -38,6 +40,15 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
             }
         }
         return items;
+    }
+
+    protected adjustToHttpIfNeeded(codeObjectInsights: CodeObjectInsight[]) {
+        codeObjectInsights.forEach(coi => {
+            if (coi.hasOwnProperty("route")) {
+                const endpointInsight = coi as EndpointInsight;
+                adjustHttpRouteIfNeeded(endpointInsight);
+            }
+        });
     }
 
 }
