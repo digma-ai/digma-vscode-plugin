@@ -151,7 +151,6 @@ export class SymbolProvider
         
         return [];
     }
-
     public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
         let tokes: Token[] = [];
         try {
@@ -188,7 +187,7 @@ export class SymbolProvider
             if(!semanticTokens) {
                 return tokes;
             }
-
+          
             let line = 0;
             let char = 0;
             for(let i = 0; i < semanticTokens.data.length; i += 5) {

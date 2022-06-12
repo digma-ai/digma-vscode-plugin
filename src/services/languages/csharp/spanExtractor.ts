@@ -34,7 +34,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
             }
 
             const activityTokenPosition = tokens[i].range.start;
-            const activityDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, activityTokenPosition, symbolProvider);
+            const activityDefinition = await this._codeInspector.getDefinitionWithTokens(document, activityTokenPosition, symbolProvider);
             if(!activityDefinition) {
                 continue;
             }

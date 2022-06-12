@@ -32,7 +32,7 @@ export class CodeInspector {
         return methodInfo;
     }
 
-    public async getTokensFromSymbolProvider(
+    public async getDefinitionWithTokens(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
         symbolProvider: SymbolProvider,
@@ -43,6 +43,48 @@ export class CodeInspector {
         
         const tokens = await symbolProvider.getTokens(definition.document);
         return { ...definition, tokens };
+    }
+
+    public async getTypeFromSymbolProvider(usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position,
+        symbolProvider: SymbolProvider): Promise<string | undefined>{
+            const definition = await this.getType(usageDocument, usagePosition);
+            if(!definition){
+                return;
+            }
+            
+            const tokens = await symbolProvider.getTokens(definition.document);
+
+
+            const traceDefToken = tokens.find(x => x.range.intersection(definition.location.range));
+            if(!traceDefToken) {
+                return;
+            }
+
+            if(traceDefToken.type === TokenType.type){
+                return traceDefToken.text;
+            }
+            return;       
+    }
+    private async getType(
+        usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position,
+    ): Promise<Definition | undefined> {
+        let results: any[]  = await vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider",usageDocument.uri, usagePosition);
+        if(!results?.length || !results[0].uri || !results[0].range){
+            return;
+        }
+
+        const location = <vscode.Location>results[0];
+        const document = await vscode.workspace.openTextDocument(location.uri);
+        if(!document){
+            return;
+        }
+
+        return {
+            document,
+            location,
+        };
     }
 
     private async getDefinition(
@@ -93,7 +135,7 @@ export class CodeInspector {
             return true;
         }
 
-        const parentInfo = await this.getTokensFromSymbolProvider(definition.document, parentToken.range.start, symbolProvider);
+        const parentInfo = await this.getDefinitionWithTokens(definition.document, parentToken.range.start, symbolProvider);
         if(!parentInfo) {
             return false;
         }
