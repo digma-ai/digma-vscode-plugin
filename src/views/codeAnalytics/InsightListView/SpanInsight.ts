@@ -166,7 +166,7 @@ export class SpanListViewGroupItem extends ListViewGroupItem
             <div class="group-item">
                 <span class="scope">Span: </span>
                 <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
-                <span>${this.span}</span>
+                <span class="left-ellipsis" >${this.span}</span>
             </div>
             ${itemsHtml}`;
        

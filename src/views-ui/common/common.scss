@@ -102,10 +102,15 @@ ul.tree{
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.left-ellipsis{
+.right-ellipsis{
     @extend .ellipsis;
     direction: rtl;
     unicode-bidi: plaintext;
+}
+.left-ellipsis{
+    @extend .ellipsis;
+    direction: rtl;
+    text-align: left;
 }
 
 .filter-tag {
