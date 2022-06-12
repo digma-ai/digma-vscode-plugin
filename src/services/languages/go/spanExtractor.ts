@@ -13,16 +13,11 @@ export class GoSpanExtractor implements ISpanExtractor {
 
  
     tryGetVariable(tokens: Token[], range: vscode.Range): [Token, number]| undefined{
-        const referencedDefinitionIdx = tokens.findIndex(x => x.range.intersection(range));
+        const referencedDefinitionIdx = tokens.findIndex(x => x.range.intersection(range) && x.type === TokenType.variable);
         if(referencedDefinitionIdx < 0) {
             return;
         }
-        const referencedDefinitionToken = tokens[referencedDefinitionIdx];
-        if(referencedDefinitionToken.type !== TokenType.variable){
-            return;
-        }
-
-        return [referencedDefinitionToken, referencedDefinitionIdx];
+        return [tokens[referencedDefinitionIdx], referencedDefinitionIdx];
     }
 
     tryGetSpanName(tokens: Token [], index: number): string | undefined{
@@ -70,7 +65,7 @@ export class GoSpanExtractor implements ISpanExtractor {
                 if(token.type === TokenType.string){
                    return this.cleanText(token.text);
                 } else if(token.type === TokenType.variable){ //support tracer name from variable of type string
-                    const definition = await codeInspector.getTokensFromSymbolProvider(document,token.range.start,symbolProvider);
+                    const definition = await codeInspector.getDefinitionWithTokens(document,token.range.start,symbolProvider);
                     if(definition !== undefined)
                     {
                         let tracerVariable = this.tryGetVariable(definition.tokens, definition.location.range);
@@ -134,63 +129,65 @@ export class GoSpanExtractor implements ISpanExtractor {
 
                 for (let index = funcStartTokenIndex; index < funcEndTokenIndex; index++) {
                     let token = tokens[index];
-                
-                    if(token.type === TokenType.function && token.text === "Start"){
-                        const traceVarToken = tokens[index-1];
-                        if(traceVarToken.type === TokenType.variable)
-                        {
-                            const traceDefType = await this._codeInspector.getTypeFromSymbolProvider(document, traceVarToken.range.start, symbolProvider);
-                            if(traceDefType !== "Tracer") {
-                                continue;
-                            }
-                            let references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,traceVarToken.range.start);
-                            let instrumentationLibraries = new Set();
-                            for(let refLocation of references)
-                            {
-                                let _tokens: Token [];
-                                let _range: vscode.Range;
-                                let _document: TextDocument;
-                                if(refLocation.uri.fsPath !== document.uri.fsPath) { //defined in a different document
-                                    _document = await vscode.workspace.openTextDocument(refLocation.uri);
-                                    _tokens = await symbolProvider.getTokens(_document);
-                                }
-                                else{
-                                    _tokens = tokens;
-                                    _document = document;
-                                }
-                                _range = refLocation.range;
-                                const instrumentationName = await this.tryGetInstrumentationName(_document, this._codeInspector, symbolProvider, _tokens, _range);
-                                if(instrumentationName !== undefined){
-                                    instrumentationLibraries.add(instrumentationName);
-                                }
-                            }
-                            if(instrumentationLibraries.size === 0){
-                                continue;
-                            }
-
-                            if(instrumentationLibraries.size > 1){
-                                Logger.warn("ambiguous tracer name(instrumentation library) found: "+instrumentationLibraries.toString());
-                                continue;
-                            }
-                            const instrumentationLibrary = instrumentationLibraries.values().next().value;
-                        
-                            const spanName = this.tryGetSpanName(tokens, index+1);
-                            
-                            if(spanName === undefined){
-                                Logger.info("Span discovery failed, span name could not be resolved for tracer '"+instrumentationLibrary+"'");
-                                continue;
-                            }
-                            
-                            results.push(new SpanInfo(
-                                instrumentationLibrary + '$_$' + spanName,
-                                spanName,
-                                token.range,
-                                document.uri));
-
-                            Logger.info("* Span found: "+instrumentationLibrary+"/"+spanName);
-
+                    if(token.type !== TokenType.function || token.text !== "Start"){
+                        continue;
+                    }
+                    const traceVarToken = tokens[index-1];
+                    if(traceVarToken.type !== TokenType.variable){
+                        continue;
+                    }
+                    const traceDefType = await this._codeInspector.getTypeFromSymbolProvider(document, traceVarToken.range.start, symbolProvider);
+                    if(traceDefType !== "Tracer") {
+                        continue;
+                    }
+                    let references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,traceVarToken.range.start);
+                    let instrumentationLibraries = new Set();
+                    for(let refLocation of references)
+                    {
+                        let _tokens: Token [];
+                        let _range: vscode.Range;
+                        let _document: TextDocument;
+                        if(refLocation.uri.fsPath !== document.uri.fsPath) { //defined in a different document
+                            _document = await vscode.workspace.openTextDocument(refLocation.uri);
+                            _tokens = await symbolProvider.getTokens(_document);
+                        }
+                        else{
+                            _tokens = tokens;
+                            _document = document;
+                        }
+                        _range = refLocation.range;
+                        const instrumentationName = await this.tryGetInstrumentationName(_document, this._codeInspector, symbolProvider, _tokens, _range);
+                        if(instrumentationName !== undefined){
+                            instrumentationLibraries.add(instrumentationName);
                         }
                     }
+                    if(instrumentationLibraries.size === 0){
+                        continue;
+                    }
+
+                    if(instrumentationLibraries.size > 1){
+                        Logger.warn("ambiguous tracer name(instrumentation library) found: "+instrumentationLibraries.toString());
+                        continue;
+                    }
+                    const instrumentationLibrary = instrumentationLibraries.values().next().value;
+                
+                    const spanName = this.tryGetSpanName(tokens, index+1);
+                    
+                    if(spanName === undefined){
+                        Logger.info("Span discovery failed, span name could not be resolved for tracer '"+instrumentationLibrary+"'");
+                        continue;
+                    }
+                    
+                    results.push(new SpanInfo(
+                        instrumentationLibrary + '$_$' + spanName,
+                        spanName,
+                        token.range,
+                        document.uri));
+
+                    Logger.info("* Span found: "+instrumentationLibrary+"/"+spanName);
+
+                
+            
             
                 }
             }

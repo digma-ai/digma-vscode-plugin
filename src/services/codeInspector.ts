@@ -32,7 +32,7 @@ export class CodeInspector {
         return methodInfo;
     }
 
-    public async getTokensFromSymbolProvider(
+    public async getDefinitionWithTokens(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
         symbolProvider: SymbolProvider,
@@ -56,11 +56,11 @@ export class CodeInspector {
             const tokens = await symbolProvider.getTokens(definition.document);
 
 
-            const tracerDefinitionIdx = tokens.findIndex(x => x.range.intersection(definition.location.range));
-            if(tracerDefinitionIdx < 0) {
+            const traceDefToken = tokens.find(x => x.range.intersection(definition.location.range));
+            if(!traceDefToken) {
                 return;
             }
-            const traceDefToken = tokens[tracerDefinitionIdx];
+
             if(traceDefToken.type === TokenType.type){
                 return traceDefToken.text;
             }
@@ -135,7 +135,7 @@ export class CodeInspector {
             return true;
         }
 
-        const parentInfo = await this.getTokensFromSymbolProvider(definition.document, parentToken.range.start, symbolProvider);
+        const parentInfo = await this.getDefinitionWithTokens(definition.document, parentToken.range.start, symbolProvider);
         if(!parentInfo) {
             return false;
         }

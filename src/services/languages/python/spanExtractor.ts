@@ -49,7 +49,7 @@ export class PythonSpanExtractor implements ISpanExtractor {
             }
 
             const tracerTokenPosition = tracerToken.range.start;
-            const tracerDefinition = await this._codeInspector.getTokensFromSymbolProvider(document, tracerTokenPosition, symbolProvider);
+            const tracerDefinition = await this._codeInspector.getDefinitionWithTokens(document, tracerTokenPosition, symbolProvider);
             if(!tracerDefinition) {
                 continue;
             }
