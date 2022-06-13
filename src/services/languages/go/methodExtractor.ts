@@ -4,41 +4,41 @@ import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
 import { IMethodExtractor, SymbolInfo } from "../extractors";
 import { Logger } from '../../logger';
 
-export class GoMethodExtractor implements IMethodExtractor{
+export class GoMethodExtractor implements IMethodExtractor {
     public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): Promise<SymbolInfo[]> {
-        const methodSymbols = docSymbols.filter(s => s.kind+1 === SymbolKind.Method || s.kind+1 === SymbolKind.Function); 
-        if(!methodSymbols.length) {
+        const methodSymbols = docSymbols.filter(s => s.kind + 1 === SymbolKind.Method || s.kind + 1 === SymbolKind.Function);
+        if (!methodSymbols.length) {
             return [];
         }
 
-        const modFiles = await (await vscode.workspace.findFiles('**/go.mod')).map( x => x.fsPath);
+        const modFiles = await (await vscode.workspace.findFiles('**/go.mod')).map(x => x.fsPath);
         const normDocPath = document.uri.fsPath;
         const modFile = modFiles.find(f => normDocPath.startsWith(path.dirname(f)));
-        if(!modFile){
-            Logger.warn(`Could not resolve mod file for '${document.uri.path}'`)
+        if (!modFile) {
+            Logger.warn(`Could not resolve mod file for '${document.uri.path}'`);
             return [];
         }
 
         const modFolder = path.dirname(modFile);
         const docFolder = path.dirname(normDocPath);
         let packageName = '';
-        if(modFolder === docFolder){
+        if (modFolder === docFolder) {
             const match = document.getText().match(/^package (.+)$/m);
-            if(!match){
-                Logger.warn(`Could not found packakge name in '${document.uri.path}'`)
+            if (!match) {
+                Logger.warn(`Could not found packakge name in '${document.uri.path}'`);
                 return [];
             }
-            packageName = match[1]; 
+            packageName = match[1];
         }
-        if(!packageName || packageName !== 'main'){
+        if (!packageName || packageName !== 'main') {
             const modDocument = await vscode.workspace.openTextDocument(modFile);
             const match = modDocument.getText().match(/^module (.+)$/m);
-            if(!match){
-                Logger.warn(`Could not found module name in '${modFile}'`)
+            if (!match) {
+                Logger.warn(`Could not found module name in '${modFile}'`);
                 return [];
             }
-            packageName = match[1] 
-            
+            packageName = match[1];
+
             if (modFolder !== docFolder) {
                 const relative = path.relative(modFolder, docFolder)
                     .replace('\\', '/'); // get rid of windows backslashes
@@ -57,10 +57,10 @@ export class GoMethodExtractor implements IMethodExtractor{
                     new vscode.Position(s.range.start.line, s.range.start.character),
                     new vscode.Position(s.range.end.line, s.range.end.character)
                 )
-            }
+            };
         });
 
         return methods;
     }
-    
+
 }
