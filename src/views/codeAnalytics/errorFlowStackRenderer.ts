@@ -285,7 +285,7 @@ export class ErrorFlowStackRenderer {
         return /*html*/`
             <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
                 <div class="line ${selectedClass} ${disabledClass}">
-                    <div class="right-ellipsis" title="${path}">${path}</div>
+                    <div class="left-ellipsis" title="${path}">${path}</div>
                     <div class="bottom-line">
                         ${linkTag}
                         <div class="number-cell">line ${frame.lineNumber}</div>

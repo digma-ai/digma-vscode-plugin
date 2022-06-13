@@ -41,7 +41,7 @@ export class HtmlHelper
         return /*html*/ `
             <span class="scope">Scope:</span>
             <span class="codicon codicon-symbol-method" title="Method"></span>
-            <span class="method-name right-ellipsis" title="${funcName}">${funcName}</span>`;
+            <span class="method-name left-ellipsis" title="${funcName}">${funcName}</span>`;
     }
 
     public static getInfoMessage(text: string): string
