@@ -37,8 +37,11 @@ export class GoMethodExtractor implements IMethodExtractor{
             }
             packageName = match[1] 
             
-            if(modFolder !== docFolder)
-                packageName += '/' + path.relative(modFolder, docFolder);
+            if (modFolder !== docFolder) {
+                const relative = path.relative(modFolder, docFolder)
+                    .replace('\\', '/'); // get rid of windows backslash
+                packageName += '/' + relative;
+            }
         }
 
         const methods: SymbolInfo[] = methodSymbols.map(s => {

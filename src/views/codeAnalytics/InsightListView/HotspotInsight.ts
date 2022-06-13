@@ -16,7 +16,7 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
 
     }
     public async create(scope: CodeObjectInfo, codeObjectsInsight: HotspotInsight []): Promise<IListViewItemBase []> {
-        let result =  codeObjectsInsight.filter(o=>o.score >=70)
+        let result =  codeObjectsInsight.filter(o=>o.score >= 65)
                 .map(o=>{
                     const html = `
                     <div class="list-item">

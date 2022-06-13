@@ -64,7 +64,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         for(let methodInfo of documentInfo.methods)
         {
             const score = documentInfo.summaries.get(MethodCodeObjectSummary, methodInfo.symbol.id)?.score ?? 0;
-            if(score >= 70)
+            if(score >= 65)
             {
                 codelens.push(new vscode.CodeLens(methodInfo.range, {
                     title:  'Error Hotspot',

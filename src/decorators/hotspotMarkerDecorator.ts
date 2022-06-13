@@ -63,7 +63,7 @@ export class HotspotMarkerDecorator implements vscode.Disposable
         for(let methodInfo of docInfo.methods)
         {
             const score = docInfo.summaries.get(MethodCodeObjectSummary, methodInfo.symbol.id)?.score ?? 0;
-            if(score < 70)
+            if(score < 65)
                 continue;
             
             const level = Math.floor((score/101)*this.LEVELS); // [0-100] => [0-9]
