@@ -4,7 +4,6 @@ import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
 import { IMethodExtractor, SymbolInfo } from "../extractors";
 import { Logger } from '../../logger';
 
-
 export class GoMethodExtractor implements IMethodExtractor{
     private async getModuleName(modFile:vscode.Uri): Promise<string| undefined>{
         const modDocument = await vscode.workspace.openTextDocument(modFile);
@@ -30,11 +29,11 @@ export class GoMethodExtractor implements IMethodExtractor{
         if(!methodSymbols.length){
             return [];
         }
-           
+            
         const modFiles = await vscode.workspace.findFiles('**/go.mod');
-        const modFile = modFiles.find(f => document.uri.path.startsWith(path.dirname(f.path)))
+        const modFile = modFiles.find(f => document.uri.path.startsWith(path.dirname(f.path)));
         if(!modFile){
-            Logger.warn(`Could not resolve mod file for '${document.uri.path}'`)
+            Logger.warn(`Could not resolve mod file for '${document.uri.path}'`);
             return [];
         }
 
@@ -42,21 +41,17 @@ export class GoMethodExtractor implements IMethodExtractor{
         if(!moduleName){
             return [];
         }
-
         const packageDefinitionName = this.getPackageDefinationName(document);
         if(!packageDefinitionName){
             return [];
         }
-
-
         const modFolder = path.dirname(modFile.path);
         const docFolder = path.dirname(document.uri.path);
 
-        let packagePath = `${moduleName}/${path.relative(modFolder, docFolder)}`;
+        let packagePath = `${moduleName}/${path.relative(modFolder, docFolder.replaceAll('\\', '/'))}`; // get rid of windows backslashes
         if(packageDefinitionName === "main"){
-            packagePath = `${moduleName}`;
+            packagePath = moduleName;
         }
-
         const methods: SymbolInfo[] = methodSymbols.map(s => {
             return {
                 id: packageDefinitionName === "main" ? packagePath + '$_$' + `main.${s.name}` : packagePath + '$_$' + s.name,
@@ -68,10 +63,10 @@ export class GoMethodExtractor implements IMethodExtractor{
                     new vscode.Position(s.range.start.line, s.range.start.character),
                     new vscode.Position(s.range.end.line, s.range.end.character)
                 )
-            }
+            };
         });
 
         return methods;
     }
-    
+
 }
