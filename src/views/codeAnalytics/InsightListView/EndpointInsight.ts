@@ -58,7 +58,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = new HttpEndpointListViewGroupItem(route);
+            const group = buildListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -93,7 +93,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = new HttpEndpointListViewGroupItem(route);
+            const group = buildListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -156,7 +156,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = new HttpEndpointListViewGroupItem(route);
+            const group = buildListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -283,7 +283,7 @@ P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${s
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = new HttpEndpointListViewGroupItem(route);
+            const group = buildListViewGroupItem(route);
             group.sortIndex = 10;
             const items = (await Promise.all(groupedByRoute[route].map(o => this.createListViewItem(o))));
             group.addItems(...items);
@@ -346,7 +346,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = new HttpEndpointListViewGroupItem(route);
+            const group = buildListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -370,6 +370,19 @@ export function adjustHttpRouteIfNeeded(endpointInsight: EndpointInsight): void 
     endpointInsight.route = EndpointSchema.HTTP + origValue;
 }
 
+function buildListViewGroupItem(fullEndpointName: string): ListViewGroupItem {
+
+    if (fullEndpointName.startsWith(EndpointSchema.HTTP)) {
+        return new HttpEndpointListViewGroupItem(fullEndpointName);
+    }
+    if (fullEndpointName.startsWith(EndpointSchema.RPC)) {
+        return new RpcEndpointListViewGroupItem(fullEndpointName);
+    }
+
+    // fallback to UnknownEndpointListViewGroupItem
+    return new UnknownEndpointListViewGroupItem(fullEndpointName);
+}
+
 export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
     constructor(private route: string) {
         super(`HTTP ${route}`, 10);
@@ -389,6 +402,47 @@ export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
         
         ${itemsHtml}`;
 
+    }
+
+}
+
+export class RpcEndpointListViewGroupItem extends ListViewGroupItem {
+
+    private endpointName;
+
+    constructor(fullEndpointName: string) {
+        super(fullEndpointName, 10);
+        this.endpointName = EndpointSchema.getShortRouteName(fullEndpointName);
+    }
+
+    public getGroupHtml(itemsHtml: string): string {
+        return /*html*/ `
+        <div class="group-item">
+            <span class="scope">RPC: </span>
+            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
+            <span>${this.endpointName}</span>
+        </div>
+        
+        ${itemsHtml}`;
+    }
+
+}
+
+export class UnknownEndpointListViewGroupItem extends ListViewGroupItem {
+
+    constructor(fullEndpointName: string) {
+        super(fullEndpointName, 10);
+    }
+
+    public getGroupHtml(itemsHtml: string): string {
+        return /*html*/ `
+        <div class="group-item">
+            <span class="scope">Unknown: </span>
+            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
+            <span>${this.groupId}</span>
+        </div>
+        
+        ${itemsHtml}`;
     }
 
 }
