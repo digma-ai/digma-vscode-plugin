@@ -48,7 +48,10 @@ export class GoMethodExtractor implements IMethodExtractor{
         const modFolder = path.dirname(modFile.path);
         const docFolder = path.dirname(document.uri.path);
 
-        let packagePath = `${moduleName}/${path.relative(modFolder, docFolder.replaceAll('\\', '/'))}`; // get rid of windows backslashes
+        const relative = path.relative(modFolder, docFolder)
+            .replaceAll('\\', '/'); // get rid of windows backslashes
+
+        let packagePath = moduleName + "/" + relative; 
         if(packageDefinitionName === "main"){
             packagePath = moduleName;
         }
