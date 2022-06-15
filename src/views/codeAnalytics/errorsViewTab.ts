@@ -206,7 +206,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
             for await (const sourceStack of sourceFlow.frameStacks) {
                 const frames: FrameViewModel[] = [];
-
+                let internalIndex = 0;
                 for await (const sourceFrame of sourceStack.frames) {
                     const {
                         spanName,
@@ -229,7 +229,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                                     
                     const frame: FrameViewModel = {
                         id: id++,
-                        stackIndex: 0,
+                        internalIndex: internalIndex++,
                         selected: false,
                         parameters,
                         spanName,

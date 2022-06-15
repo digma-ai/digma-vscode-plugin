@@ -19,7 +19,7 @@ export interface StackViewModel {
 
 export interface FrameViewModel extends ErrorFlowFrame {
     id: number;
-    stackIndex: number;
+    internalIndex: number;//frameIndex inside the stack
     selected: boolean;
     workspaceUri?: vscode.Uri;
     parameters: ParamStats[];
@@ -132,7 +132,7 @@ export class ErrorFlowStackRenderer {
     private getAffectedPathSectionHtml()
     {
         const errorService = this._viewModel?.summary?.serviceName ?? '';
-        const errorSpanNames = this._viewModel?.stacks.flatMap(s => s.frames).filter(f => f.stackIndex == 0).map(f => f.spanName) ?? [];
+        const errorSpanNames = this._viewModel?.stacks.flatMap(s => s.frames).filter(f => f.internalIndex == 0).map(f => f.spanName) ?? [];
 
         function getTree(affectedPath: AffectedPathViewModel, level: any): string
         {
@@ -241,12 +241,9 @@ export class ErrorFlowStackRenderer {
             for (const frame of frames ){
                 if (frame.spanName !== lastSpan){
                     stackHtml += `
-                    <div style="color: #4F62AD;" class="list ellipsis">
-                        <span>
-                            <span>${frame.spanName}</span> 
-                            <span style="color:#4F62AD;line-height:25px;margin-right:5px" class="codicon codicon-telescope"> 
-                            </span>
-                        </span>
+                    <div class="frame-span">
+                        <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
+                        <span class="left-ellipsis" title="${frame.spanName}">${frame.spanName}</span> 
                     </div>`;
 
                     lastSpan = frame.spanName;
@@ -272,22 +269,32 @@ export class ErrorFlowStackRenderer {
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
-
-        let exception_html = '<span style="color:#f14c4c;line-height:25px;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
-
-        let linkTag = frame.workspaceUri
+        const showExceptionIcon = frame.internalIndex===0;
+        let exceptionHtml = '<span style="color:#f14c4c;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
+        let executedCodeHtml = '';
+        if(frame.executedCode){
+            executedCodeHtml = frame.workspaceUri
             ? /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.executedCode}">${frame.executedCode}</vscode-link>`
             : /*html*/`<span class="link-cell look-like-link" title="${frame.executedCode}">${frame.executedCode}</span>`;
-        
-        if (frame.stackIndex===0){
-            linkTag=    exception_html+linkTag;
+            if (showExceptionIcon){
+                executedCodeHtml = exceptionHtml+executedCodeHtml;
+            }
+        }
+        let pathHtml = `<div class="left-ellipsis" title="${path}">${path}</div>`;
+        if(executedCodeHtml === ''){
+            if(frame.workspaceUri){
+                pathHtml = /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${path}">${path}</vscode-link>`;
+            }
+            if (showExceptionIcon){
+                pathHtml = `<div class="frame-code-path">${exceptionHtml}${pathHtml}</div>`;
+            }
         }
         return /*html*/`
             <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
                 <div class="line ${selectedClass} ${disabledClass}">
-                    <div class="left-ellipsis" title="${path}">${path}</div>
+                    ${pathHtml}
                     <div class="bottom-line">
-                        ${linkTag}
+                        ${executedCodeHtml}
                         <div class="number-cell">line ${frame.lineNumber}</div>
                     </div>
                 </div>
