@@ -45,16 +45,19 @@ export class GoMethodExtractor implements IMethodExtractor{
         if(!packageDefinitionName){
             return [];
         }
-        const modFolder = path.dirname(modFile.fsPath);
-        const docFolder = path.dirname(document.uri.fsPath);
+        let packagePath = moduleName;
 
-        const relative = path.relative(modFolder, docFolder)
-            .replaceAll('\\', '/'); // get rid of windows backslashes
+        if ( packageDefinitionName !== "main") {
+            const modFolder = path.dirname(modFile.fsPath);
+            const docFolder = path.dirname(document.uri.fsPath);
 
-        let packagePath = moduleName + "/" + relative; 
-        if(packageDefinitionName === "main"){
-            packagePath = moduleName;
+            if ( docFolder !== modFolder ) {
+                const relative = path.relative(modFolder, docFolder)
+                    .replaceAll('\\', '/'); // get rid of windows backslashes
+                packagePath = moduleName + "/" + relative;
+            }
         }
+
         const methods: SymbolInfo[] = methodSymbols.map(s => {
             return {
                 id: packageDefinitionName === "main" ? packagePath + '$_$' + `main.${s.name}` : packagePath + '$_$' + s.name,
