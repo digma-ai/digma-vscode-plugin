@@ -31,7 +31,7 @@ export class GoMethodExtractor implements IMethodExtractor{
         }
             
         const modFiles = await vscode.workspace.findFiles('**/go.mod');
-        const modFile = modFiles.find(f => document.uri.path.startsWith(path.dirname(f.path)));
+        const modFile = modFiles.find(f => document.uri.fsPath.startsWith(path.dirname(f.fsPath)));
         if(!modFile){
             Logger.warn(`Could not resolve mod file for '${document.uri.path}'`);
             return [];
@@ -45,13 +45,19 @@ export class GoMethodExtractor implements IMethodExtractor{
         if(!packageDefinitionName){
             return [];
         }
-        const modFolder = path.dirname(modFile.path);
-        const docFolder = path.dirname(document.uri.path);
+        let packagePath = moduleName;
 
-        let packagePath = `${moduleName}/${path.relative(modFolder, docFolder.replaceAll('\\', '/'))}`; // get rid of windows backslashes
-        if(packageDefinitionName === "main"){
-            packagePath = moduleName;
+        if ( packageDefinitionName !== "main") {
+            const modFolder = path.dirname(modFile.fsPath);
+            const docFolder = path.dirname(document.uri.fsPath);
+
+            if ( docFolder !== modFolder ) {
+                const relative = path.relative(modFolder, docFolder)
+                    .replaceAll('\\', '/'); // get rid of windows backslashes
+                packagePath = moduleName + "/" + relative;
+            }
         }
+
         const methods: SymbolInfo[] = methodSymbols.map(s => {
             return {
                 id: packageDefinitionName === "main" ? packagePath + '$_$' + `main.${s.name}` : packagePath + '$_$' + s.name,
