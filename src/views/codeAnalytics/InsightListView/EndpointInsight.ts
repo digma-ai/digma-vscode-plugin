@@ -58,7 +58,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = buildListViewGroupItem(route);
+            const group = buildEndpointListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -93,7 +93,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = buildListViewGroupItem(route);
+            const group = buildEndpointListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -156,7 +156,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = buildListViewGroupItem(route);
+            const group = buildEndpointListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -283,7 +283,7 @@ P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${s
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = buildListViewGroupItem(route);
+            const group = buildEndpointListViewGroupItem(route);
             group.sortIndex = 10;
             const items = (await Promise.all(groupedByRoute[route].map(o => this.createListViewItem(o))));
             group.addItems(...items);
@@ -346,7 +346,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
         const listViewItems: IListViewItem[] = [];
         for (let route in groupedByRoute) {
-            const group = buildListViewGroupItem(route);
+            const group = buildEndpointListViewGroupItem(route);
             group.sortIndex = 10;
             const items = groupedByRoute[route].map(o => this.createListViewItem(o));
             group.addItems(...items);
@@ -370,7 +370,7 @@ export function adjustHttpRouteIfNeeded(endpointInsight: EndpointInsight): void 
     endpointInsight.route = EndpointSchema.HTTP + origValue;
 }
 
-function buildListViewGroupItem(fullEndpointName: string): ListViewGroupItem {
+function buildEndpointListViewGroupItem(fullEndpointName: string): ListViewGroupItem {
 
     if (fullEndpointName.startsWith(EndpointSchema.HTTP)) {
         return new HttpEndpointListViewGroupItem(fullEndpointName);
