@@ -437,11 +437,11 @@ export class UnknownEndpointListViewGroupItem extends ListViewGroupItem {
     public getGroupHtml(itemsHtml: string): string {
         return /*html*/ `
         <div class="group-item">
-            <span class="scope">Unknown: </span>
+            <span class="scope">Unknown Endpoint: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
             <span>${this.groupId}</span>
         </div>
-        
+
         ${itemsHtml}`;
     }
 
