@@ -60,6 +60,9 @@ export class EditorHelper {
                         if (sourceDoc){
                             fileChanged = (txtLine.text.trim() !== sourceDoc.lineAt(lineNumber-1).text.trim());
                         }
+                        else{
+                            return;
+                        }
                     }
                     catch (exeption){
                         await vscode.window.showWarningMessage(
