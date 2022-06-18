@@ -374,11 +374,6 @@ class HtmlBuilder
         codeObject: CodeObjectInfo,
         viewModels?: ErrorFlowStackViewModel[],
     ): string{
-        const characteristic = error.characteristic
-            ? /*html*/`
-                <section class="error-characteristic">${error.characteristic}</section>
-            `
-            : '';
         return /*html*/`
         <div class="error-view">
             <div class="flex-row">
