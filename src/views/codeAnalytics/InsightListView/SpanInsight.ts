@@ -103,6 +103,7 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
         currentDuration: Duration,
         previousDuration: Duration
         changeTime: moment.Moment,
+        changeVerified: boolean,
     }[]
 }
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
@@ -124,16 +125,25 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     public createListViewItem(insight: SpanDurationsInsight) : IListViewItem
     {
         const percentileHtmls = []
+        insight.percentiles.sort((a,b) => a.percentile - b.percentile);
         for(const item of insight.percentiles){
             percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
             percentileHtmls.push(/*html*/ `<span>${item.currentDuration.value} ${item.currentDuration.unit}</span>`);
 
-            if (item.previousDuration && item.changeTime){
+            if (item.previousDuration && 
+                item.changeTime && 
+                Math.abs(item.currentDuration.raw-item.previousDuration.raw)/item.previousDuration.raw > 0.1){
                 let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped' : 'raised';
                 percentileHtmls.push(/*html*/ `<span class="change">${verb} from ${item.previousDuration.value} ${item.previousDuration.unit}, ${item.changeTime.fromNow()}</span>`);
             }
             else
                 percentileHtmls.push(/*html*/ `<span></span>`);
+
+            if(item.changeTime && item.changeVerified == false)
+                percentileHtmls.push(/*html*/ `<span>evaluating</span>`);
+            else
+                percentileHtmls.push(/*html*/ `<span></span>`);
+
         }
 
         const html = /*html*/ `
