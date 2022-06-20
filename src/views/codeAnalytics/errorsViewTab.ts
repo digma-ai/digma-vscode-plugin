@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetails, HttpError } from "../../services/analyticsProvider";
-import { WebviewChannel, WebViewProvider } from "../webViewUtils";
+import { AnalyticsProvider, CodeObjectError, CodeObjectErrorDetails, HttpError, UsageStatusResults } from "../../services/analyticsProvider";
+import { WebviewChannel, WebViewProvider, WebViewUris } from "../webViewUtils";
 import { CodeAnalyticsView, CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
@@ -13,6 +13,7 @@ import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 import { Settings } from "../../settings";
 import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";
 import { OverlayView } from "./overlayView";
+import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -34,7 +35,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _editorHelper: EditorHelper,
         private _errorFlowParamDecorator: ErrorFlowParameterDecorator,
         private _overlay: OverlayView,
-        private _webViewProvider: WebViewProvider) 
+        private _webViewProvider: WebViewProvider,
+        private _webViewUris: WebViewUris) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
@@ -109,8 +111,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         if(codeObject.id != this._viewedCodeObjectId)
         {
             let errors: CodeObjectError[] = [];
+            let errorsInEnv:UsageStatusResults|undefined;
             try
             {
+                errorsInEnv= await this._analyticsProvider.getUsageStatus([codeObject.id]);
                 errors = await this._analyticsProvider.getCodeObjectErrors(codeObject.id);
             }
             catch(e)
@@ -123,7 +127,12 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                 }
             }
 
-            const html = HtmlBuilder.buildErrorItems(codeObject, errors);
+            let html="";
+            if (errorsInEnv){
+                const usageHtml = new CodeObjectGroupEnvironments(this._webViewUris).getUsageHtml(undefined, undefined, errorsInEnv);
+                html+=usageHtml;
+            }
+            html += HtmlBuilder.buildErrorItems(codeObject, errors);
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId = codeObject.id;
         }
@@ -140,7 +149,6 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         };
 
         this._overlay.show(HtmlHelper.getLoadingMessage('Loading error view...'), this.errorOverlayId);
-
         const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
         const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
 
