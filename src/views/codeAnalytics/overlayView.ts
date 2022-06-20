@@ -1,8 +1,9 @@
 import * as vscode from "vscode";
-import { MethodCodeObjectSummary } from "../../services/analyticsProvider";
+import { AnalyticsProvider, MethodCodeObjectSummary } from "../../services/analyticsProvider";
 import { DocumentInfo } from "../../services/documentInfoProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { WebviewChannel } from "../webViewUtils";
+import { WebviewChannel, WebViewUris } from "../webViewUtils";
+import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { HtmlHelper } from "./common";
 
 export class OverlayView
@@ -12,7 +13,10 @@ export class OverlayView
 
     public isVisible: boolean = false;
     public overlayId: string| undefined = undefined;
-    constructor(private _channel: WebviewChannel){
+    constructor(
+        private _viewUris: WebViewUris,
+        private _analyticsProvider: AnalyticsProvider,
+        private _channel: WebviewChannel){
         this._channel.consume(UiMessage.Notify.GoToLine, this.onGoToLine.bind(this));
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
     }
@@ -40,8 +44,13 @@ export class OverlayView
         this.show(html, OverlayView.UnsupportedDocumentOverlayId);
     }
 
-    public showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
+    public async showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
         const links = [];
+
+        const codeObjects = docInfo.methods.flatMap(x=>[x.idWithType].concat(x.relatedCodeObjects.map(r=>r.idWithType)));
+        var usageStatuses =  await this._analyticsProvider.getUsageStatus(codeObjects);
+
+
         for(const method of docInfo.methods){
             const relatedSummaries = docInfo.summaries.all.filter(s => 
                 method.id === s.codeObjectId ||
@@ -49,12 +58,24 @@ export class OverlayView
             if(relatedSummaries.any(x => x.errorsCount > 0 || x.insightsCount > 0)){
                     links.push(/*html*/`<vscode-link class="codeobject-link" data-line="${method.range.start.line}">${method.displayName}</vscode-link>`);
             }
-        }    
 
-        const html = /*html*/ `
-            ${HtmlHelper.getInfoMessage("No code object was selected")}
-            <div>Try to place the caret on a method, or select one from following:</div>
+
+  
+        }    
+        let html=new CodeObjectGroupEnvironments(this._viewUris).getUsageHtml(undefined,undefined,usageStatuses);;
+        if (links.length>0){
+            html += /*html*/ `
+            ${HtmlHelper.getInfoMessage("Please select one of the following functions to see their data:")}
             <div class="links-list">${links.join("")}</div>`;
+        }
+        if (links.length===0){
+            html += /*html*/ `
+            ${HtmlHelper.getInfoMessage("No data was received for any code object in this file.")}
+            <div>Consider adding instrumentation or check your OTEL configuration</div>
+            <div class="links-list">${links.join("")}</div>`;
+        }
+
+
         this.show(html, OverlayView.UnsupportedDocumentOverlayId);
     }
     private onOverlayVisibilityChanged(e: UiMessage.Notify.OverlayVisibilityChanged)

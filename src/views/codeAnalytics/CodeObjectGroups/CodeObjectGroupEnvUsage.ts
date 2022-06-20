@@ -22,29 +22,49 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         }
     }
 
-    private getUsedEnvironmentHtml(item: string, type:string, usageResults: UsageStatusResults){
-        let usageItems = usageResults.codeObjectStatuses.filter(x=>x.type===type && x.name===item);
+    private filterByTypeAndName(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
+        let usageItems=usageResults.codeObjectStatuses;
+        if (item){
+            usageItems = usageItems.filter(x=>x.name===item);
+        }
+        if (type){
+            usageItems = usageItems.filter(x=>x.type===type);
+        }
+        return usageItems;
+    }
+
+    private getUsedEnvironmentHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
+        
+        let usageItems=this.filterByTypeAndName(item,type,usageResults);
+        let usageByEnv = usageItems.groupBy(x=>x.environment);
+        let environments = Object.keys(usageByEnv);
         let html = ``;
-        for (const item of usageItems){
+        for (const env of environments){
+            let items = usageByEnv[env]
+            let firstUpdateTimes = items.map(x=>x.firstRecordedTime).sort();
+            let lastUpdateTimes = items.map(x=>x.lastRecordedTime).sort().reverse();
+            
             html+=`
             <span class="codeobj-environment-usage" >
-                <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("used.png")}" width="8" height="8">
-                <span class="${this.getSelectedOrUnselectedTag(item.environment)}" data-env-name="${item.environment}">${item.environment}</span> 
+                <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("used.png")}" width="8" height="8" 
+                title="Last data received: ${lastUpdateTimes[0].fromNow()}\nFirst data received: ${firstUpdateTimes[0].fromNow()}">
+                <span class="${this.getSelectedOrUnselectedTag(env)}" data-env-name="${env}">${env}</span> 
             </span>`;
 
         }
         return html;
     }
 
-    private getUnusedEnvironmentHtml(item: string, type:string, usageResults: UsageStatusResults){
-        let usageItems = usageResults.codeObjectStatuses.filter(x=>x.type===type && x.name===item).map(x=>x.environment);
+    private getUnusedEnvironmentHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
+        let usageItems = this.filterByTypeAndName(item,type,usageResults).map(x=>x.environment);
         let html = ``;
 
         let unusedEnvs = usageResults.environmentStatuses.filter(x=>!usageItems.includes(x.name));
         for (const env of unusedEnvs){
             html+=`
             <span class="codeobj-environment-usage" >
-                <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("unused.png")}" width="8" height="8">
+                <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("unused.png")}" width="8" height="8"
+                title="Last data received from env: ${env.environmentLastRecordedTime.fromNow()}\nFirst data received: ${env.environmentFirstRecordedTime.fromNow()}">
                 <span class="${this.getSelectedOrUnselectedTag(env.name)}" data-env-name="${env.name}">${env.name}</span> 
              </span>`;
 
@@ -54,12 +74,22 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
 
     }
 
-    public getUsageHtml(item: string, type:string, usageResults: UsageStatusResults){
+    public getUsageHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
         
+        if (usageResults.environmentStatuses.length<=1){
+            return '';
+        }
+
+        if (usageResults.codeObjectStatuses.length===0){
+            return '';
+        }
+
         return `
         <div class="codeobj-environment-usage-group">
             ${this.getUsedEnvironmentHtml(item,type,usageResults)}
             ${this.getUnusedEnvironmentHtml(item,type,usageResults)}
         </div>`;
     }
+
+    
 }

@@ -1,7 +1,7 @@
-import { IListViewItem, ListViewItemsInGroup } from "../../ListView/IListViewItem";
+import { IListViewItem, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
-import { EndpointType, EndpointSchema, UsageStatusResults } from '../../../services/analyticsProvider';
+import { EndpointSchema, UsageStatusResults } from '../../../services/analyticsProvider';
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { DecimalRounder } from "../../utils/valueFormatting";
 import { EditorHelper } from "../../../services/EditorHelper";

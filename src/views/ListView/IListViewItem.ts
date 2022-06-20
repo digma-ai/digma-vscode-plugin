@@ -1,3 +1,5 @@
+import { UsageStatusResults } from "../../services/analyticsProvider";
+import { CodeObjectGroupEnvironments } from "../codeAnalytics/CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { IListGroupItemBase } from "./IListViewGroupItem";
 
 export function sort(items: IListViewItemBase []): IListViewItemBase [] 
@@ -23,11 +25,24 @@ export interface IItemsInGroup extends IListViewItemBase
     getItems() : IListViewItem [];
 }
 
-export class ListViewItemsInGroup implements IItemsInGroup
+export class InsightItemGroupRendererFactory {
+
+    public constructor( private emptyGroupItemtemplate: IListViewItemBase, private codeObjectEnvironments : CodeObjectGroupEnvironments,
+        private usageResults: UsageStatusResults){}
+
+    public getRenderer(group: IListGroupItemBase, sortIndex: number|undefined = undefined): InsightListGroupItemsRenderer{
+        return new InsightListGroupItemsRenderer(group,sortIndex,this.emptyGroupItemtemplate,this.codeObjectEnvironments,this.usageResults);
+
+    }
+}
+
+export class InsightListGroupItemsRenderer implements IItemsInGroup
 {
     private _items: IListViewItem [] = [];
 
-    constructor(public group: IListGroupItemBase, public sortIndex: number|undefined = undefined)
+    constructor(public group: IListGroupItemBase, public sortIndex: number|undefined = undefined,
+        private emptyGroupItemtemplate: IListViewItemBase, private codeObjectEnvironments : CodeObjectGroupEnvironments,
+        private usageResults: UsageStatusResults)
     {
         this.groupId=group.groupId;
     }
@@ -41,15 +56,21 @@ export class ListViewItemsInGroup implements IItemsInGroup
     }
     public getHtml(): string | undefined
     {
-        if (this._items.length === 0) {
-           return undefined;
+        let html='';
+
+        if (this._items.length>0){
+            html = sort(this._items)
+                    .map(o=>o.getHtml())
+                    .filter((o)=>o)
+                    .join("");
+                    
         }
-        const html = sort(this._items)
-            .map(o=>o.getHtml())
-            .filter((o)=>o)
-            .join("");
-            
-        return this.group.getHtml() + html;
+        else{
+            html+=this.emptyGroupItemtemplate.getHtml();
+        }
+
+        //+ this.codeObjectEnvironments.getUsageHtml(this.group.groupId, this.group.type, this.usageResults )
+        return this.group.getHtml()  + html;
     }
 }
 

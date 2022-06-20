@@ -1,10 +1,8 @@
 import moment = require("moment");
 import { UsageStatusResults } from "../../../services/analyticsProvider";
-import { Settings } from "../../../settings";
-import { IListViewItem, IListViewItemBase, ListViewItemsInGroup } from "../../ListView/IListViewItem";
+import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectInfo } from "../codeAnalyticsView";
-import { CodeObjectUsageStatus } from "../usageStatusInfo";
 import { Duration } from "./EndpointInsight";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 

@@ -1,26 +1,22 @@
 import { UsageStatusResults } from "../../services/analyticsProvider";
-import { GroupItem, IListGroupItemBase } from "./IListViewGroupItem";
-import { IItemsInGroup, IListViewItem, IListViewItemBase, ListViewItemsInGroup, sort } from "./IListViewItem";
+import { IListGroupItemBase } from "./IListViewGroupItem";
+import { IItemsInGroup, IListViewItem, IListViewItemBase, InsightItemGroupRendererFactory, InsightListGroupItemsRenderer, sort } from "./IListViewItem";
 
 export class ListViewRender
 {
  
     //private _preDefinedGroups: Map<string,IListViewGroupItem> = new Map<string,IListViewGroupItem>();
-    constructor(private _listViewItems: IListViewItemBase [], private _groupItems: IListGroupItemBase[])
+    constructor(private _listViewItems: IListViewItemBase [], private _groupItems: IListGroupItemBase[],
+        private emptyGroupItemTemplate: IListViewItemBase, private groupItemRendererFactory: InsightItemGroupRendererFactory)
     {
 
-    }
-
-    public addPreDefinedGroup(group: IItemsInGroup)
-    {
-      //  this._preDefinedGroups.set(group.groupId, group);
     }
 
     public getHtml(): string | undefined
     {
         const groupsMap = new Map<string,IItemsInGroup>();
         this._groupItems.forEach(item => {
-            groupsMap.set(item.groupId, new ListViewItemsInGroup(item,0));
+            groupsMap.set(item.groupId, this.groupItemRendererFactory.getRenderer(item));
             
         });
 
@@ -52,7 +48,7 @@ export class ListViewRender
             return sortedItems.map(o=>o.getHtml()).join("");
         }
         else{
-            return undefined;
+            return '';
         }
     
     }

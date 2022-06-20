@@ -9,7 +9,7 @@ export class SpanGroup implements ICodeObjectScopeGroupCreator{
 
     }
     async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
-        return new GroupItem(name, `
+        return new GroupItem(name,"Span", `
             <div class="group-item">
                 <span class="scope">Span: </span>
                 <span class="codicon codicon-telescope" title="OpenTelemetry"></span>

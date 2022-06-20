@@ -19,7 +19,7 @@ import { Logger } from "../../services/logger";
 import { Settings } from "../../settings";
 import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
 import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
-import { HttpEndpointgroup } from "./CodeObjectGroups/HttpEndpointGroup";
+import { EndpointGroup } from "./CodeObjectGroups/EndpointGroup";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -117,7 +117,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         };
 
         this._channel = new WebviewChannel();
-        this._overlay = new OverlayView(this._channel);
+        this._overlay = new OverlayView(this._webViewUris, this._analyticsProvider, this._channel);
 
         this._channel.consume(UiMessage.Notify.TabRefreshRequested, this.onTabRefreshRequested.bind(this));
         this._channel.consume(UiMessage.Notify.ChangeEnvironmentContext, this.onChangeEnvironmentRequested.bind(this));
@@ -141,11 +141,11 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
         const groupItemViewCreator = new CodeObjectScopeGroupCreator();
         groupItemViewCreator.add("Span", new SpanGroup());
-        groupItemViewCreator.add("Endpoint", new HttpEndpointgroup());
+        groupItemViewCreator.add("Endpoint", new EndpointGroup());
 
 
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider),
+            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
@@ -228,7 +228,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
         if(!methodInfo){
             if(this.canChangeOverlayOnCodeSelectionChanged()) {
-                this._overlay.showCodeSelectionNotFoundMessage(docInfo);
+                await this._overlay.showCodeSelectionNotFoundMessage(docInfo);
             }
             this._activeTab?.onDectivate();
             this._activeTab = undefined;
