@@ -147,7 +147,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris),
-            new UsagesViewTab(this._channel, this._analyticsProvider)
+            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider)
         ];
 
         this._disposables.concat(tabsList);

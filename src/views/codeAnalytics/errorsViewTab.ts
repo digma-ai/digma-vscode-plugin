@@ -64,6 +64,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     
     }
     onRefreshRequested(codeObject: CodeObjectInfo): void {
+        this._viewedCodeObjectId = undefined;
+        this.refreshList(codeObject);
     }
     dispose() {
         for (let dis of this._disposables)

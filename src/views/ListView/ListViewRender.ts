@@ -1,4 +1,3 @@
-import { UsageStatusResults } from "../../services/analyticsProvider";
 import { IListGroupItemBase } from "./IListViewGroupItem";
 import { IItemsInGroup, IListViewItem, IListViewItemBase, InsightItemGroupRendererFactory, InsightListGroupItemsRenderer, sort } from "./IListViewItem";
 
@@ -7,7 +6,7 @@ export class ListViewRender
  
     //private _preDefinedGroups: Map<string,IListViewGroupItem> = new Map<string,IListViewGroupItem>();
     constructor(private _listViewItems: IListViewItemBase [], private _groupItems: IListGroupItemBase[],
-        private emptyGroupItemTemplate: IListViewItemBase, private groupItemRendererFactory: InsightItemGroupRendererFactory)
+        private groupItemRendererFactory: InsightItemGroupRendererFactory)
     {
 
     }

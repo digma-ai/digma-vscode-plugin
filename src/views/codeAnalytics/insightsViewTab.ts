@@ -90,7 +90,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris);
             const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris), codeObjectGroupEnv, usageResults);
             
-            const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, new EmptyGroupItemTemplate(this._viewUris),groupRenderer).getHtml();
+            const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
         
             if(html)
             {

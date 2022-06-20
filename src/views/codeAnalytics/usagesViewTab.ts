@@ -1,5 +1,5 @@
 import { AnalyticsProvider } from "../../services/analyticsProvider";
-import { WebviewChannel } from "../webViewUtils";
+import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { ICodeAnalyticsViewTab } from "./common";
 
@@ -9,6 +9,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
 
     constructor(
         private _channel: WebviewChannel,
+        private _webViewUris: WebViewUris,
         private _analyticsProvider: AnalyticsProvider) {}
     
 
@@ -27,6 +28,19 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     public onDectivate(): void {}
 
     public getHtml(): string {
-        return "<section></section>";
+
+        return `
+        <div id="usageList" class="list">
+            <div class="list-item">
+                <div class="list-item-content-area">
+                    <div class="list-item-header"><strong>You caught us....</strong></div>
+                    <div class="list-item-content-description">This section isn't ready yet. We're hard at work adding some usage stats here. </div>
+                    </div>
+                    <div class="list-item-right-area">
+                     <img style="align-self:center;" src="${this._webViewUris.image("wip.png")}" width="32" height="32">
+                    </div>
+                </div>
+            </div>
+        </div>`;
     }
 }
