@@ -92,6 +92,15 @@ window.addEventListener("load", () =>
         }
     });
 
+    $(document).on("click", ".codeobj-environment-usage-label", function () {
+
+        const env = $(this).data("env-name");
+        publish(new UiMessage.Notify.ChangeEnvironmentContext(env));
+
+
+    });
+    
+
     $(document).on("click", ".error-name.link", function () {
         let errorSourceUID = $(this).data("error-source-uid");
         publish(new UiMessage.Get.ErrorDetails(errorSourceUID));
@@ -103,6 +112,7 @@ window.addEventListener("load", () =>
 
         publish(new UiMessage.Notify.GoToFileAndLine(codeUri,Number(line)));
     });
+
 
     $(document).on("click", ".error_frames_btn", function () {
         $(".error-raw").hide();

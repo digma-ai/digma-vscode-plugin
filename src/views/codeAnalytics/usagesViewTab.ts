@@ -10,6 +10,8 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider) {}
+    
+
     dispose() {
     }
 
@@ -19,6 +21,8 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     
     public onReset(): void{}
     public onActivate(codeObject: CodeObjectInfo): void {}
+    public onRefreshRequested(codeObject: CodeObjectInfo): void {}
+        
     public onUpdated(codeObject: CodeObjectInfo): void {}
     public onDectivate(): void {}
 

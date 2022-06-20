@@ -12,6 +12,7 @@ export interface ICodeAnalyticsViewTab extends Disposable
     onReset(): void;
     onActivate(codeObject: CodeObjectInfo): void ;
     onDectivate(): void ;
+    onRefreshRequested(codeObject: CodeObjectInfo):void;
     onUpdated(codeObject: CodeObjectInfo): void ;
 }
 

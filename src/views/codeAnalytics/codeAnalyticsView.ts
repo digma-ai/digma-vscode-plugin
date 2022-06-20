@@ -16,6 +16,10 @@ import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewI
 import { SpanDurationsListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
+import { Settings } from "../../settings";
+import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
+import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
+import { EndpointGroup } from "./CodeObjectGroups/EndpointGroup";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -113,7 +117,10 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         };
 
         this._channel = new WebviewChannel();
-        this._overlay = new OverlayView(this._channel);
+        this._overlay = new OverlayView(this._webViewUris, this._analyticsProvider, this._channel);
+
+        this._channel.consume(UiMessage.Notify.TabRefreshRequested, this.onTabRefreshRequested.bind(this));
+        this._channel.consume(UiMessage.Notify.ChangeEnvironmentContext, this.onChangeEnvironmentRequested.bind(this));
 
         this._channel.consume(UiMessage.Notify.TabChanged, this.onTabChangedEvent.bind(this));
         this._channel.consume(UiMessage.Notify.TabLoaded, this.onLoadEvent.bind(this));
@@ -123,8 +130,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         const listViewItemsCreator = new InsightListViewItemsCreator();
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
-        listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator());
-        listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator());
+        listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
+        listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
         const usageTemplate = new UsageViewItemsTemplate(this._webViewUris);
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
@@ -132,9 +139,14 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
+        const groupItemViewCreator = new CodeObjectScopeGroupCreator();
+        groupItemViewCreator.add("Span", new SpanGroup());
+        groupItemViewCreator.add("Endpoint", new EndpointGroup());
+
+
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris,listViewItemsCreator, _documentInfoProvider),
-            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider),
+            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
 
@@ -216,7 +228,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
         if(!methodInfo){
             if(this.canChangeOverlayOnCodeSelectionChanged()) {
-                this._overlay.showCodeSelectionNotFoundMessage(docInfo);
+                await this._overlay.showCodeSelectionNotFoundMessage(docInfo);
             }
             this._activeTab?.onDectivate();
             this._activeTab = undefined;
@@ -254,6 +266,25 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._currentCodeObject = codeObject;
     }
 
+    public async onTabRefreshRequested(event:UiMessage.Notify.TabRefreshRequested ){
+        if (this._activeTab && this._currentCodeObject){
+            
+            this._activeTab.onRefreshRequested(this._currentCodeObject);
+        }
+    }
+
+    public async onChangeEnvironmentRequested(event:UiMessage.Notify.ChangeEnvironmentContext ){
+        if (event.environment){
+           await Settings.environment.set(event.environment);
+        }
+        if (this._overlay.isVisible){
+            const editor = vscode.window.activeTextEditor;
+            if (editor){
+                this.getCodeObjectOrShowOverlay(editor.document,editor.selection.anchor);
+            }
+        }
+        this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
+    }
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)
     {
         if(event.viewId && this._currentCodeObject){

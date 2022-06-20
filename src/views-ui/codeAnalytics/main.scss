@@ -60,6 +60,27 @@ vscode-panel-view {
     font-size: var(--type-ramp-minus1-font-size);
 }
 
+.codeobj-environment-usage-group {
+    display: flex;
+    align-items: center;
+    margin-top: 0px;
+    margin-bottom: 6px;
+}
+
+.codeobj-environment-usage {
+    margin-right: 0.4em;
+    .codeobj-environment-usage-label {
+        font-size: var(--type-ramp-minus2-font-size);
+        opacity: 0.7;
+        cursor: pointer;
+    }
+    .codeobj-environment-usage-label-selected {
+        border-bottom: 1px solid rgb(78, 103, 228);
+        font-size: var(--type-ramp-minus2-font-size);
+        padding-bottom: 2px;
+    }
+}
+
 .insight-main-value {
     font-size: var(--type-ramp-minus1-font-size);
     text-align: center;
@@ -190,7 +211,7 @@ vscode-panel-view {
             &.disabled {
                 opacity: 0.4;
             }
-            .frame-code-path{
+            .frame-code-path {
                 display: flex;
             }
         }
@@ -199,9 +220,7 @@ vscode-panel-view {
             border-top-color: var(--vscode-tree-tableColumnsBorder);
             border-top-style: dashed;
         }
-        .path-label{
-
-        }
+        .path-label {}
     }
     .no-frames-msg {
         padding: 1em;
@@ -356,7 +375,6 @@ vscode-panel-view {
     display: flex;
     align-items: center;
     margin-top: 10px;
-    
     .scope {
         margin-right: 5px;
         opacity: 0.6;
@@ -386,18 +404,16 @@ vscode-panel-view {
     padding-right: 10px;
 }
 
-#view-insights{
-    .span-usages-insight{
-        .flow-row{
+#view-insights {
+    .span-usages-insight {
+        .flow-row {
             margin-bottom: 2px;
-        
-            .flow-percent{
+            .flow-percent {
                 margin-right: 5px;
             }
-            .flow-entry{
+            .flow-entry {
                 border-radius: 2px;
                 margin-bottom: 4px;
-
                 .flow-service {
                     opacity: 0.7;
                 }
@@ -407,25 +423,24 @@ vscode-panel-view {
             }
         }
     }
-    .span-durations-insight{
-        .percentiles-grid{
+    .span-durations-insight {
+        .percentiles-grid {
             display: grid;
             justify-content: start;
             grid-template-columns: auto auto 1fr auto;
             column-gap: 10px;
             row-gap: 5px;
         }
-        .change{
+        .change {
             opacity: 0.7;
         }
     }
-    .endpoint-bottleneck-insight{
+    .endpoint-bottleneck-insight {
         margin-top: 5px;
-
-        .span-name{
+        .span-name {
             margin-right: 5px;
         }
-        .span-description{
+        .span-description {
             opacity: 0.6;
         }
     }

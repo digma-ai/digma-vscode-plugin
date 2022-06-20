@@ -182,6 +182,26 @@ export interface ExecutedCodeSummary{
     codeLineNumber: number;
 }
 
+export interface UsageStatusResults {
+    codeObjectStatuses: CodeObjectUsageStatus[];
+    environmentStatuses: EnvironmentUsageStatus[];
+
+}
+
+export interface EnvironmentUsageStatus{
+    name: string;
+    environmentFirstRecordedTime:moment.Moment;
+    environmentLastRecordedTime:moment.Moment;
+}
+
+export interface CodeObjectUsageStatus{
+    environment: string;
+    type: string;
+    name: string;
+    codeObjectId: string;
+    lastRecordedTime: moment.Moment;
+    firstRecordedTime: moment.Moment;
+}
 export interface EndpointSummary{
     id: string;
     highUsage: boolean;
@@ -298,6 +318,18 @@ export class AnalyticsProvider
     }
 
  
+    public async getUsageStatus(codeObjectIds: string []): Promise<UsageStatusResults> 
+    {
+        
+        const response: UsageStatusResults = await this.send<any>(
+            'POST', 
+            `/CodeAnalytics/codeObjects/status`,
+            undefined,
+            {
+                codeObjectIds: codeObjectIds
+            });
+            return response;
+    }
 
     public async getInsights(codeObjectIds: string []): Promise<any []> 
     {

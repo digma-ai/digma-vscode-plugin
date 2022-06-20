@@ -1,51 +1,45 @@
-import { IListViewGroupItem, IListViewItem, IListViewItemBase, sort } from "./IListViewItem";
+import { UsageStatusResults } from "../../services/analyticsProvider";
+import { IListGroupItemBase } from "./IListViewGroupItem";
+import { IItemsInGroup, IListViewItem, IListViewItemBase, InsightItemGroupRendererFactory, InsightListGroupItemsRenderer, sort } from "./IListViewItem";
 
 export class ListViewRender
 {
  
     //private _preDefinedGroups: Map<string,IListViewGroupItem> = new Map<string,IListViewGroupItem>();
-    constructor(private _listViewItems: IListViewItemBase [])
+    constructor(private _listViewItems: IListViewItemBase [], private _groupItems: IListGroupItemBase[],
+        private emptyGroupItemTemplate: IListViewItemBase, private groupItemRendererFactory: InsightItemGroupRendererFactory)
     {
 
-    }
-
-    public addPreDefinedGroup(group: IListViewGroupItem)
-    {
-      //  this._preDefinedGroups.set(group.groupId, group);
     }
 
     public getHtml(): string | undefined
     {
-        const groupsMap = new Map<string,IListViewGroupItem>();
-        const grouplessItems : IListViewItem[] = [];
+        const groupsMap = new Map<string,IItemsInGroup>();
+        this._groupItems.forEach(item => {
+            groupsMap.set(item.groupId, this.groupItemRendererFactory.getRenderer(item));
+            
+        });
 
+        const grouplessItems : IListViewItem[] = [];
+        
         this._listViewItems.forEach(item=>{
-            if(this.isGroup(item)) {   
-                const group = <IListViewGroupItem>item;
-                if(!groupsMap.has(group.groupId)) {
-                    groupsMap.set(group.groupId, group);
+           
+            if(item.groupId !== undefined)
+            {
+                const group = groupsMap.get(item.groupId);
+                if(group)
+                {
+                    group.addItems(item);
                 }
-                else {
-                    groupsMap.get(group.groupId)?.addItems(...group.getItems());
+                else
+                {
+                    throw new Error(`no group with id ${item.groupId} found`);
                 }
             }
             else{
-                if(item.groupId !== undefined)
-                {
-                    const group = groupsMap.get(item.groupId);
-                    if(group)
-                    {
-                        group.addItems(item);
-                    }
-                    else
-                    {
-                        throw new Error(`no group with id ${item.groupId} found`);
-                    }
-                }
-                else{
-                    grouplessItems.push(item);
-                }
+                grouplessItems.push(item);
             }
+            
         });
         
         const sortedItems = sort(grouplessItems).concat(sort(Array.from(groupsMap.values())));
@@ -54,11 +48,11 @@ export class ListViewRender
             return sortedItems.map(o=>o.getHtml()).join("");
         }
         else{
-            return undefined;
+            return '';
         }
     
     }
     private isGroup(item: any):boolean {
-        return (item as IListViewGroupItem).getItems !== undefined; 
+        return (item as IItemsInGroup).getItems !== undefined; 
     }
 }

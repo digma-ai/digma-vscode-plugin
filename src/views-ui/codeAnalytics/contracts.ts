@@ -9,6 +9,15 @@ export namespace UiMessage
         export class TabChanged {
             constructor(public viewId?: string) {}
         }
+
+        export class TabRefreshRequested{
+            
+        }
+
+        export class ChangeEnvironmentContext{
+            constructor(public environment?: string) {}
+
+        }
         export class GoToLine{
             constructor(public line?: number){}
         }

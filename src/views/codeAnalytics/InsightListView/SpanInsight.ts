@@ -1,5 +1,7 @@
 import moment = require("moment");
-import { IListViewItem, IListViewItemBase, ListViewGroupItem } from "../../ListView/IListViewItem";
+import { UsageStatusResults } from "../../../services/analyticsProvider";
+import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
+import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { Duration } from "./EndpointInsight";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
@@ -23,19 +25,12 @@ export interface SpanUsagesInsight extends CodeObjectInsight
 }
 export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanUsagesInsight []): Promise<IListViewItemBase []>
+    public constructor(private _viewUris:WebViewUris){
+
+    }
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanUsagesInsight [], usageResults: UsageStatusResults): Promise<IListViewItemBase []>
     {
-        const groupedBySpan = codeObjectsInsight.groupBy(o => o.span);
-        const listViewItems: IListViewItem [] = [];
-        for(let route in groupedBySpan)
-        {
-            const group = new SpanListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = groupedBySpan[route].map(o=>this.createListViewItem(o));
-            group.addItems(...items);
-            listViewItems.push(group);
-        }
-        return listViewItems;
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
     public createListViewItem(insight: SpanUsagesInsight) : IListViewItem
@@ -91,7 +86,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
         return {
             getHtml: ()=> html, 
             sortIndex: 0, 
-            groupId: undefined
+            groupId: insight.span
         };
     }
 }
@@ -107,19 +102,13 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
     }[]
 }
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanDurationsInsight[]): Promise<IListViewItemBase []>
+    
+    public constructor(private _viewUris:WebViewUris ){
+
+    }
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanDurationsInsight[], usageResults: UsageStatusResults): Promise<IListViewItemBase []>
     {
-        const groupedBySpan = codeObjectsInsight.groupBy(o => o.span);
-        const listViewItems: IListViewItem [] = [];
-        for(let route in groupedBySpan)
-        {
-            const group = new SpanListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = groupedBySpan[route].map(o=>this.createListViewItem(o));
-            group.addItems(...items);
-            listViewItems.push(group);
-        }
-        return listViewItems;
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
     public createListViewItem(insight: SpanDurationsInsight) : IListViewItem
@@ -159,27 +148,7 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
         return {
             getHtml: ()=> html, 
             sortIndex: 0, 
-            groupId: undefined
+            groupId: insight.span
         };
     }
-}
-
-export class SpanListViewGroupItem extends ListViewGroupItem
-{
-    constructor(private span: string)
-    {
-        super(span, 10);
-    }
-
-    public getGroupHtml(itemsHtml: string): string {
-        return /*html*/ `
-            <div class="group-item">
-                <span class="scope">Span: </span>
-                <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
-                <span class="left-ellipsis" >${this.span}</span>
-            </div>
-            ${itemsHtml}`;
-       
-    }
-
 }
