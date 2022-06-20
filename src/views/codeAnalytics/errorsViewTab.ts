@@ -356,7 +356,7 @@ class HtmlBuilder
 {
     public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectError[]): string{
         if(!errors.length){
-            return HtmlHelper.getInfoMessage("No errors flow through this code object.");
+            return HtmlHelper.getInfoMessage("No errors recorded here yet.");
         }
         
         let html = '';
