@@ -61,6 +61,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         }));
     
     }
+    onRefreshRequested(codeObject: CodeObjectInfo): void {
+    }
     dispose() {
         for (let dis of this._disposables)
 		{

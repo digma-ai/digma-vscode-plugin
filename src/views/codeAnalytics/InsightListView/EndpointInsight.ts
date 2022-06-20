@@ -1,7 +1,7 @@
-import { IListViewItem, ListViewGroupItem } from "../../ListView/IListViewItem";
+import { IListViewItem, ListViewItemsInGroup } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
-import { EndpointType, EndpointSchema } from '../../../services/analyticsProvider';
+import { EndpointType, EndpointSchema, UsageStatusResults } from '../../../services/analyticsProvider';
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { DecimalRounder } from "../../utils/valueFormatting";
 import { EditorHelper } from "../../../services/EditorHelper";
@@ -20,6 +20,26 @@ export interface LowUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
 
+export interface SpanInfo {
+    instrumentationLibrary : string;
+    name: string;
+    displayName: string;
+    serviceName: string;
+}
+
+export interface SlowSpanInfo {
+    spanInfo: SpanInfo;
+    p50: Percentile;
+    p95: Percentile;
+    p99: Percentile;
+}
+export interface Percentile {
+    fraction: number,
+    maxDuration: Duration,
+}
+export interface SlowestSpansInsight extends EndpointInsight {
+    spans: SlowSpanInfo[];
+}
 export class UsageViewItemsTemplate {
 
     constructor(
@@ -54,24 +74,15 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
     ) {
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: LowUsageInsight[]): Promise<IListViewItem[]> {
-        const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
-        const listViewItems: IListViewItem[] = [];
-        for (let route in groupedByRoute) {
-            const group = buildEndpointListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = groupedByRoute[route].map(o => this.createListViewItem(o));
-            group.addItems(...items);
-            listViewItems.push(group);
-        }
-        return listViewItems;
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: LowUsageInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
     public createListViewItem(codeObjectsInsight: LowUsageInsight): IListViewItem {
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint low traffic", "Servicing a low number of requests", "gauge_low.png"),
             sortIndex: 0,
-            groupId: undefined
+            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
         };
     }
 
@@ -89,24 +100,15 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
     }
 
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: NormalUsageInsight[]): Promise<IListViewItem[]> {
-        const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
-        const listViewItems: IListViewItem[] = [];
-        for (let route in groupedByRoute) {
-            const group = buildEndpointListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = groupedByRoute[route].map(o => this.createListViewItem(o));
-            group.addItems(...items);
-            listViewItems.push(group);
-        }
-        return listViewItems;
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: NormalUsageInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
-    public createListViewItem(codeObjectsInsight: HighUsageInsight): IListViewItem {
+    public createListViewItem(codeObjectsInsight: NormalUsageInsight): IListViewItem {
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint normal level of traffic", "Servicing an average number of requests", "guage_normal.png"),
             sortIndex: 0,
-            groupId: undefined
+            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
         };
     }
 
@@ -148,45 +150,16 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint high traffic", "Servicing a high number of requests", "guage_high.png"),
             sortIndex: 0,
-            groupId: undefined
+            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
         };
     }
 
     public async create(scope: CodeObjectInfo, codeObjectsInsight: HighUsageInsight[]): Promise<IListViewItem[]> {
-        const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
-        const listViewItems: IListViewItem[] = [];
-        for (let route in groupedByRoute) {
-            const group = buildEndpointListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = groupedByRoute[route].map(o => this.createListViewItem(o));
-            group.addItems(...items);
-            listViewItems.push(group);
-        }
-        return listViewItems;
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
 }
 
-export interface SpanInfo {
-    instrumentationLibrary : string;
-    name: string;
-    displayName: string;
-    serviceName: string;
-}
-
-export interface SlowSpanInfo {
-    spanInfo: SpanInfo;
-    p50: Percentile;
-    p95: Percentile;
-    p99: Percentile;
-}
-export interface Percentile {
-    fraction: number,
-    maxDuration: Duration,
-}
-export interface SlowestSpansInsight extends EndpointInsight {
-    spans: SlowSpanInfo[];
-}
 
 export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCreator {
     constructor(
@@ -258,7 +231,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: undefined
+            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
         };
     }
 
@@ -279,17 +252,15 @@ Median: ${(span.p50.fraction*100).toFixed(0)}% ~${span.p50.maxDuration.value}${s
 P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${span.p95.maxDuration.unit}
 P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
     }
+    
     public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
-        const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
-        const listViewItems: IListViewItem[] = [];
-        for (let route in groupedByRoute) {
-            const group = buildEndpointListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = (await Promise.all(groupedByRoute[route].map(o => this.createListViewItem(o))));
-            group.addItems(...items);
-            listViewItems.push(group);
+        
+        let items:IListViewItem[] = [];
+        for (const insight of codeObjectsInsight){
+            items.push(await this.createListViewItem(insight));
+
         }
-        return listViewItems;
+        return items;
     }
 
 }
@@ -338,21 +309,12 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: undefined
+            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
         };
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowEndpointInsight[]): Promise<IListViewItem[]> {
-        const groupedByRoute = codeObjectsInsight.groupBy(o => o.route);
-        const listViewItems: IListViewItem[] = [];
-        for (let route in groupedByRoute) {
-            const group = buildEndpointListViewGroupItem(route);
-            group.sortIndex = 10;
-            const items = groupedByRoute[route].map(o => this.createListViewItem(o));
-            group.addItems(...items);
-            listViewItems.push(group);
-        }
-        return listViewItems;
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowEndpointInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
 }
@@ -370,79 +332,9 @@ export function adjustHttpRouteIfNeeded(endpointInsight: EndpointInsight): void 
     endpointInsight.route = EndpointSchema.HTTP + origValue;
 }
 
-function buildEndpointListViewGroupItem(fullEndpointName: string): ListViewGroupItem {
 
-    if (fullEndpointName.startsWith(EndpointSchema.HTTP)) {
-        return new HttpEndpointListViewGroupItem(fullEndpointName);
-    }
-    if (fullEndpointName.startsWith(EndpointSchema.RPC)) {
-        return new RpcEndpointListViewGroupItem(fullEndpointName);
-    }
 
-    // fallback to UnknownEndpointListViewGroupItem
-    return new UnknownEndpointListViewGroupItem(fullEndpointName);
-}
 
-export class HttpEndpointListViewGroupItem extends ListViewGroupItem {
-    constructor(private route: string) {
-        super(`HTTP ${route}`, 10);
-    }
 
-    public getGroupHtml(itemsHtml: string): string {
-        const shortRouteName = EndpointSchema.getShortRouteName(this.route);
-        const parts = shortRouteName.split(' ');
-        return /*html*/ `
-        <div class="group-item">
-            <span class="scope">REST: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span class="uppercase">
-            <strong>HTTP </strong>${parts[0]}&nbsp;</span>
-            <span>${parts[1]}</span>
-        </div>
-        
-        ${itemsHtml}`;
 
-    }
 
-}
-
-export class RpcEndpointListViewGroupItem extends ListViewGroupItem {
-
-    private endpointName;
-
-    constructor(fullEndpointName: string) {
-        super(fullEndpointName, 10);
-        this.endpointName = EndpointSchema.getShortRouteName(fullEndpointName);
-    }
-
-    public getGroupHtml(itemsHtml: string): string {
-        return /*html*/ `
-        <div class="group-item">
-            <span class="scope">RPC: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span>${this.endpointName}</span>
-        </div>
-        
-        ${itemsHtml}`;
-    }
-
-}
-
-export class UnknownEndpointListViewGroupItem extends ListViewGroupItem {
-
-    constructor(fullEndpointName: string) {
-        super(fullEndpointName, 10);
-    }
-
-    public getGroupHtml(itemsHtml: string): string {
-        return /*html*/ `
-        <div class="group-item">
-            <span class="scope">Unknown Endpoint: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span>${this.groupId}</span>
-        </div>
-
-        ${itemsHtml}`;
-    }
-
-}

@@ -16,6 +16,10 @@ import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewI
 import { SpanDurationsListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
+import { Settings } from "../../settings";
+import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
+import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
+import { HttpEndpointgroup } from "./CodeObjectGroups/HttpEndpointGroup";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -115,6 +119,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel = new WebviewChannel();
         this._overlay = new OverlayView(this._channel);
 
+        this._channel.consume(UiMessage.Notify.TabRefreshRequested, this.onTabRefreshRequested.bind(this));
+        this._channel.consume(UiMessage.Notify.ChangeEnvironmentContext, this.onChangeEnvironmentRequested.bind(this));
+
         this._channel.consume(UiMessage.Notify.TabChanged, this.onTabChangedEvent.bind(this));
         this._channel.consume(UiMessage.Notify.TabLoaded, this.onLoadEvent.bind(this));
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
@@ -123,8 +130,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         const listViewItemsCreator = new InsightListViewItemsCreator();
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
-        listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator());
-        listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator());
+        listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
+        listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
         const usageTemplate = new UsageViewItemsTemplate(this._webViewUris);
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
@@ -132,8 +139,13 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
+        const groupItemViewCreator = new CodeObjectScopeGroupCreator();
+        groupItemViewCreator.add("Span", new SpanGroup());
+        groupItemViewCreator.add("Endpoint", new HttpEndpointgroup());
+
+
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,this._webViewUris,listViewItemsCreator, _documentInfoProvider),
+            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider),
             new UsagesViewTab(this._channel, this._analyticsProvider)
         ];
@@ -254,6 +266,19 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._currentCodeObject = codeObject;
     }
 
+    public async onTabRefreshRequested(event:UiMessage.Notify.TabRefreshRequested ){
+        if (this._activeTab && this._currentCodeObject){
+            
+            this._activeTab.onRefreshRequested(this._currentCodeObject);
+        }
+    }
+
+    public async onChangeEnvironmentRequested(event:UiMessage.Notify.ChangeEnvironmentContext ){
+        if (event.environment){
+           await Settings.environment.set(event.environment);
+        }
+        this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
+    }
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)
     {
         if(event.viewId && this._currentCodeObject){

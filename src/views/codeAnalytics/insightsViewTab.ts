@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import {
     AnalyticsProvider,
     CodeObjectInsightHotSpotResponse,
+    UsageStatusResults,
 } from "../../services/analyticsProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
@@ -11,6 +12,9 @@ import { Logger } from "../../services/logger";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { ListViewRender } from "../ListView/ListViewRender";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
+import { IListGroupItemBase } from "../ListView/IListViewGroupItem";
+import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
 
 
 
@@ -20,9 +24,20 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     constructor(
         private _channel: WebviewChannel,
         private _analyticsProvider: AnalyticsProvider,
-        private viewUris: WebViewUris,
+        private _groupViewItemCreator: ICodeObjectScopeGroupCreator,
         private _listViewItemsCreator: IInsightListViewItemsCreator,
         private _documentInfoProvider: DocumentInfoProvider) { }
+    
+    
+    onRefreshRequested(codeObject: CodeObjectInfo): void {
+
+        if (codeObject){
+            this.refreshCodeObjectLabel(codeObject);
+            this.refreshListViewRequested(codeObject);
+
+        }
+
+    }
     
     dispose() { }
 
@@ -40,6 +55,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.updateSpanListView("");
         this.clearSpanLabel();
         let responseItems: any [] | undefined = undefined;
+        let usageResults: UsageStatusResults;
 
         const editor = vscode.window.activeTextEditor;
         if(!editor) {
@@ -55,6 +71,8 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         try
         {
             responseItems = await this._analyticsProvider.getInsights(codeObjectsIds);
+            usageResults = await this._analyticsProvider.getUsageStatus(codeObjectsIds);
+
         }
         catch(e)
         {
@@ -63,8 +81,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             return;
         }
         try{
-            const listViewItems = await this._listViewItemsCreator.create(codeObject, responseItems);
-            const html = new ListViewRender(listViewItems).getHtml();
+           
+            const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults);
+            const listViewItems = await this._listViewItemsCreator.create(codeObject, responseItems,usageResults);
+            const html = new ListViewRender(listViewItems, groupItems).getHtml();
             if(html)
             {
                 this.updateListView(html);

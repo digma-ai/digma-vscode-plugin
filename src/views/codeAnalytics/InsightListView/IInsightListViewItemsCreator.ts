@@ -1,3 +1,4 @@
+import { UsageStatusResults } from "../../../services/analyticsProvider";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { EndpointInsight, adjustHttpRouteIfNeeded } from "./EndpointInsight";
@@ -9,7 +10,7 @@ export interface CodeObjectInsight{
 
 export interface IInsightListViewItemsCreator
 {
-    create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight []): Promise<IListViewItemBase[]>;
+    create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight [], usageResults: UsageStatusResults): Promise<IListViewItemBase[]>;
 }
 
 
@@ -24,7 +25,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
 
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[]): Promise<IListViewItemBase[]> {
+    public async create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[], usageResults: UsageStatusResults): Promise<IListViewItemBase[]> {
         this.adjustToHttpIfNeeded(codeObjectInsight);
         const groupedByType = codeObjectInsight.groupBy(x => x.type);
         const items: IListViewItemBase [] = [];
@@ -33,7 +34,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
             const creator = this._creators.get(type);
             if(creator)
             {
-                items.push(...await creator.create(scope, groupedByType[type]));
+                items.push(...await creator.create(scope, groupedByType[type], usageResults));
             }
             else{
                 throw new Error(`codeobject of type ${type} is not supported`);

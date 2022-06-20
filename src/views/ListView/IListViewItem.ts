@@ -1,3 +1,5 @@
+import { IListGroupItemBase } from "./IListViewGroupItem";
+
 export function sort(items: IListViewItemBase []): IListViewItemBase [] 
 {
     return items.sort((a,b)=>(a.sortIndex === undefined ? 0: a.sortIndex) - (b.sortIndex === undefined ? 0: b.sortIndex));
@@ -14,21 +16,22 @@ export interface IListViewItem extends IListViewItemBase
 
 }
 
-export interface IListViewGroupItem extends IListViewItemBase
+export interface IItemsInGroup extends IListViewItemBase
 {
     groupId: string;
     addItems(...items: IListViewItem []): void;
     getItems() : IListViewItem [];
 }
 
-export abstract class ListViewGroupItem implements IListViewGroupItem
+export class ListViewItemsInGroup implements IItemsInGroup
 {
     private _items: IListViewItem [] = [];
 
-    constructor(public groupId: string, public sortIndex: number|undefined = undefined)
+    constructor(public group: IListGroupItemBase, public sortIndex: number|undefined = undefined)
     {
-
+        this.groupId=group.groupId;
     }
+    groupId: string;
     
     getItems(): IListViewItem[] {
         return this._items;
@@ -46,24 +49,7 @@ export abstract class ListViewGroupItem implements IListViewGroupItem
             .filter((o)=>o)
             .join("");
             
-        return this.getGroupHtml(html);
+        return this.group.getHtml() + html;
     }
-
-    public abstract getGroupHtml(itemsHtml: string): string;
 }
 
-export class DefaultListViewGroupItem extends ListViewGroupItem
-{
-    constructor(public groupId: string, private icon: string, private name: string)
-    {
-        super(groupId);
-    }
-    public getGroupHtml(itemsHtml: string): string {
-        return /*html*/ `
-            <div class="group-item">
-                ${this.name}
-            </div>
-            ${ itemsHtml}`;
-    }
-
-}
