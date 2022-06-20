@@ -277,6 +277,12 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         if (event.environment){
            await Settings.environment.set(event.environment);
         }
+        if (this._overlay.isVisible){
+            const editor = vscode.window.activeTextEditor;
+            if (editor){
+                this.getCodeObjectOrShowOverlay(editor.document,editor.selection.anchor);
+            }
+        }
         this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
     }
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)

@@ -82,7 +82,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint low traffic", "Servicing a low number of requests", "gauge_low.png"),
             sortIndex: 0,
-            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
+            groupId: codeObjectsInsight.route
         };
     }
 
@@ -108,7 +108,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint normal level of traffic", "Servicing an average number of requests", "guage_normal.png"),
             sortIndex: 0,
-            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
+            groupId: codeObjectsInsight.route
         };
     }
 
@@ -150,7 +150,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint high traffic", "Servicing a high number of requests", "guage_high.png"),
             sortIndex: 0,
-            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
+            groupId: codeObjectsInsight.route
         };
     }
 
@@ -231,7 +231,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
+            groupId: codeObjectsInsight.route
         };
     }
 
@@ -309,7 +309,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: EndpointSchema.getShortRouteName(codeObjectsInsight.route)
+            groupId: codeObjectsInsight.route
         };
     }
 
@@ -320,16 +320,21 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
 }
 
 
-export function adjustHttpRouteIfNeeded(endpointInsight: EndpointInsight): void {
-    const origValue = endpointInsight.route;
+export function adjustHttpRouteIfNeeded(route: string): string {
+    const origValue = route;
     if (origValue.startsWith(EndpointSchema.HTTP)) {
-        return;
+        return origValue;
     }
     if (origValue.startsWith(EndpointSchema.RPC)) {
-        return;
+        return origValue;
     }
     // default behaviour, to be backword compatible, where did not have the scheme part of the route, so adding it as HTTP one
-    endpointInsight.route = EndpointSchema.HTTP + origValue;
+    return EndpointSchema.HTTP + origValue;
+}
+
+export function adjustHttpInsightIfNeeded(endpointInsight: EndpointInsight): void {
+
+    endpointInsight.route = adjustHttpRouteIfNeeded(endpointInsight.route);
 }
 
 

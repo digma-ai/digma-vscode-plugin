@@ -8,6 +8,8 @@ import { HtmlHelper } from "./common";
 
 export class OverlayView
 {
+
+
     public static UnsupportedDocumentOverlayId = "UnsupportedDocument";
     public static CodeSelectionNotFoundOverlayId = "CodeSelectionNotFound";
 
@@ -43,6 +45,8 @@ export class OverlayView
         const html = HtmlHelper.getInfoMessage("Select a document containing code to see its insights");
         this.show(html, OverlayView.UnsupportedDocumentOverlayId);
     }
+
+  
 
     public async showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
         const links = [];

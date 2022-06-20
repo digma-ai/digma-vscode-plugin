@@ -1,7 +1,7 @@
 import { UsageStatusResults } from "../../../services/analyticsProvider";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { CodeObjectInfo } from "../codeAnalyticsView";
-import { EndpointInsight, adjustHttpRouteIfNeeded } from "./EndpointInsight";
+import { EndpointInsight, adjustHttpRouteIfNeeded, adjustHttpInsightIfNeeded } from "./EndpointInsight";
 
 export interface CodeObjectInsight{
     codeObjectId: string,
@@ -47,7 +47,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
         codeObjectInsights.forEach(coi => {
             if (coi.hasOwnProperty("route")) {
                 const endpointInsight = coi as EndpointInsight;
-                adjustHttpRouteIfNeeded(endpointInsight);
+                adjustHttpInsightIfNeeded(endpointInsight);
             }
         });
     }

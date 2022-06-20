@@ -1,6 +1,7 @@
 import { StringifyOptions } from "querystring";
 import { EndpointSchema } from "../../../services/analyticsProvider";
 import { GroupItem, IListGroupItemBase } from "../../ListView/IListViewGroupItem";
+import { adjustHttpRouteIfNeeded } from "../InsightListView/EndpointInsight";
 import { ICodeObjectScopeGroupCreator } from "./ICodeObjectScopeGroupCreator";
 
 
@@ -10,17 +11,30 @@ export class EndpointGroup implements ICodeObjectScopeGroupCreator{
         ){
 
     }
+
+    private getRoutePreix(route:string){
+        if (route.startsWith(EndpointSchema.HTTP)){
+            return 'HTTP';
+        }
+        else if (route.startsWith(EndpointSchema.RPC)){
+            return 'RPC';
+        }
+        else {
+            return 'UKNOWN';
+        }
+    }
     async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
 
+        const fullRoute = adjustHttpRouteIfNeeded(name);
         const shortRouteName = EndpointSchema.getShortRouteName(name);
         const parts = shortRouteName.split(' ');        
         
-        return new GroupItem(name, "Endpoint", `
+        return new GroupItem(fullRoute, "Endpoint", `
         <div class="group-item">
             <span class="scope">REST: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
             <span class="uppercase">
-            <strong>HTTP </strong>${parts[0]}&nbsp;</span>
+            <strong>${this.getRoutePreix(fullRoute)} </strong>${parts[0]}&nbsp;</span>
             <span>${parts[1]}</span>
         </div>
     `);
