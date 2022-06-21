@@ -74,6 +74,14 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         try
         {
             responseItems = await this._analyticsProvider.getInsights(codeObjectsIds);
+            //temp ugly workaround
+            var bottleneck = responseItems.find(x=>x.type ==='SlowestSpans');
+            var endpointBottlneck = responseItems.find(x=>x.type ==='SpanEndpointBottleneck');
+
+            if (bottleneck && endpointBottlneck){
+                responseItems=responseItems.filter(x=>x.type!=='SpanEndpointBottleneck');
+            }
+
             usageResults = await this._analyticsProvider.getUsageStatus(codeObjectsIds);
 
         }

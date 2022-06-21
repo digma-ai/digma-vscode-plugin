@@ -269,7 +269,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     }
 
     private getDescription(span: SlowEndpointInfo){
-        return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
+        return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request time (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
     }
 
     private getTooltip(span: SlowEndpointInfo){
