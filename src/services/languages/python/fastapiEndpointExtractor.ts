@@ -3,6 +3,7 @@ import { DocumentInfoProvider } from './../../documentInfoProvider';
 import { SymbolTree } from './../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
+import { EndpointSchema } from '../../analyticsProvider';
 
 export class FastapiEndpointExtractor implements IEndpointExtractor
 {
@@ -91,7 +92,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             for (let j=0;j<pathParts.length-1;j++){
                 let possibleRoot = pathParts[j];
                 results.push(new EndpointInfo(
-                    possibleRoot + '$_$' + method + ' ' + prefix + path,
+                    possibleRoot + '$_$' + EndpointSchema.HTTP + method.toUpperCase() + ' ' + prefix + path,
                     method, 
                     path,
                     relevantFunc.range,
