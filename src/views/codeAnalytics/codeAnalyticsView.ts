@@ -12,7 +12,7 @@ import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameter
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
-import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
+import { InsightListViewItemsCreator, UnknownInsightInsight } from "./InsightListView/IInsightListViewItemsCreator";
 import { SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
@@ -128,6 +128,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
 
         const listViewItemsCreator = new InsightListViewItemsCreator();
+        listViewItemsCreator.setUknownTemplate(new UnknownInsightInsight(this._webViewUris));
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
         listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
