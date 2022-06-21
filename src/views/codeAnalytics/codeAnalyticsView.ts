@@ -12,8 +12,8 @@ import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameter
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
-import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
-import { SpanDurationsListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
+import { InsightListViewItemsCreator, UnknownInsightInsight } from "./InsightListView/IInsightListViewItemsCreator";
+import { SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
 import { Settings } from "../../settings";
@@ -128,6 +128,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
 
         const listViewItemsCreator = new InsightListViewItemsCreator();
+        listViewItemsCreator.setUknownTemplate(new UnknownInsightInsight(this._webViewUris));
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator());
         listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
@@ -137,6 +138,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
+        listViewItemsCreator.add("SpanEndpointBottleneck", new SpanEndpointBottlenecksListViewItemsCreator(this._webViewUris,editorHelper,_documentInfoProvider,this._channel));
+
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
         const groupItemViewCreator = new CodeObjectScopeGroupCreator();

@@ -1,9 +1,14 @@
 import moment = require("moment");
+import { Uri } from "vscode";
+import { decimal } from "vscode-languageclient";
 import { UsageStatusResults } from "../../../services/analyticsProvider";
+import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
+import { EditorHelper } from "../../../services/EditorHelper";
+import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
-import { WebViewUris } from "../../webViewUtils";
+import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { CodeObjectInfo } from "../codeAnalyticsView";
-import { Duration } from "./EndpointInsight";
+import { Duration, Percentile } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 
 export interface SpanUsagesInsight extends CodeObjectInsight
@@ -101,6 +106,24 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
         changeVerified: boolean,
     }[]
 }
+
+export interface EndpointInfo {
+    route: string,
+    serviceName: string
+    instrumentationLibrary: string
+}
+export interface SlowEndpointInfo{
+    
+    endpointInfo: EndpointInfo,
+    p50: Percentile,
+    p95: Percentile,
+    p99: Percentile,
+
+}
+export interface SpandSlowEndpointsInsight extends CodeObjectInsight{
+    span: string,
+    slowEndpoints:SlowEndpointInfo[]
+}
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
     
     public constructor(private _viewUris:WebViewUris ){
@@ -152,3 +175,123 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
         };
     }
 }
+
+
+export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightListViewItemsCreator {
+    constructor(
+        private _viewUris: WebViewUris,
+        private _editorHelper: EditorHelper,
+        private _documentInfoProvider: DocumentInfoProvider,
+        private _channel: WebviewChannel,
+
+    ) {
+        this._channel.consume(UiMessage.Notify.GoToFileAndLine, e => this.goToFileAndLine(e.file!, e.line!));
+
+    }
+    private async goToFileAndLine(file: string , line: number ) {
+        let doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
+        this._editorHelper.openFileAndLine( doc,line );
+    }
+
+    private duration(duration: Duration) {
+        return `${duration.value} ${duration.unit}`;
+    }
+
+    private getAffectedP(ep: SlowEndpointInfo): string{
+        if(ep.p50.fraction > 0.4){
+            return "50%";
+        }
+        if (ep.p95.fraction>0.4){
+            return "5%";
+        }
+        if (ep.p99.fraction>0.4){
+            return "1%";
+        }
+
+        return "";
+
+    }
+    public async createListViewItem(codeObjectsInsight: SpandSlowEndpointsInsight): Promise<IListViewItem> {
+        
+        var endpoints = codeObjectsInsight.slowEndpoints;
+
+        var spansLocations = endpoints.map(ep=> 
+                                             { return {
+                                                slowspaninfo : ep, 
+                                                spanSearchResult : this._documentInfoProvider.searchForSpan({ instrumentationName : ep.endpointInfo.instrumentationLibrary.split(".").join( " "), spanName :ep.endpointInfo.route })
+                                                };
+                                             }); 
+        
+        let uriPromises = spansLocations.map(x=>x.spanSearchResult);
+        await Promise.all(uriPromises);
+
+        var items :string[] = [];
+                        
+        for (let i=0;i<spansLocations.length;i++){
+            let result = await spansLocations[i].spanSearchResult;
+            const slowSpan = spansLocations[i].slowspaninfo;
+
+            items.push(`
+                <div class="endpoint-bottleneck-insight" title="${this.getTooltip(slowSpan)}">
+                    <div class="span-name flow-row flex-row ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
+                    <span class="flow-entry ellipsis" title="${slowSpan.endpointInfo.serviceName}: ${slowSpan.endpointInfo.route}">
+                        <span class="flow-service">${slowSpan.endpointInfo.serviceName}:</span>
+                         <span class="flow-span">${slowSpan.endpointInfo.route}</span>
+                    </span>
+                    </div>
+                    <div class="span-description">${this.getDescription(slowSpan)}</div>
+                </div>`);
+        }
+
+        const html = `
+        <div class="list-item">
+            <div class="list-item-content-area">
+                <div class="list-item-header" title="Endpoints that this takes up more than 40% of their duration">
+                    <strong>Bottleneck</strong>
+                </div>
+                <div class="list-item-content-description">The following trace sources spend a significant portion here:</div>
+                <div>
+                    ${items.join('')}
+                </div>
+            </div>
+            <div class="list-item-right-area">
+                <img style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
+                <span class="insight-main-value" style="text-align:center;">Slow Point</span>
+
+            </div>
+        </div>`;
+
+        return {
+            getHtml: () => html,
+            sortIndex: 0,
+            groupId: codeObjectsInsight.span
+        };
+    }
+
+    private getDescription(span: SlowEndpointInfo){
+        return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
+    }
+
+    private getTooltip(span: SlowEndpointInfo){
+        //&#13;
+        return `${span.endpointInfo.route} 
+
+Percentage of time spent in span:
+Median: ${(span.p50.fraction*100).toFixed(0)}% ~${span.p50.maxDuration.value}${span.p50.maxDuration.unit}
+P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${span.p95.maxDuration.unit}
+P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
+    }
+    
+    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {
+        
+        let items:IListViewItem[] = [];
+        for (const insight of codeObjectsInsight){
+            items.push(await this.createListViewItem(insight));
+
+        }
+        return items;
+    }
+
+}
+
+
