@@ -262,6 +262,7 @@ export class SymbolProvider
             
 
         language.requiredExtensionLoaded = true;
+        await language.validateConfiguration();
         return true;
     }
 }

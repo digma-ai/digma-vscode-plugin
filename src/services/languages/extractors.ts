@@ -75,4 +75,5 @@ export interface ILanguageExtractor {
     get methodExtractors(): IMethodExtractor[];
     getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];
     getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
+    validateConfiguration():Promise<void>
 }

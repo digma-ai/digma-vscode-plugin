@@ -34,4 +34,8 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
             new CSharpSpanExtractor(codeInspector),
         ];
     }
+
+    public async validateConfiguration(): Promise<void>{
+        
+    }
 }
