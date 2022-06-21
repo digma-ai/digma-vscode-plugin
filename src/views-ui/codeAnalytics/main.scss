@@ -74,6 +74,9 @@ vscode-panel-view {
         opacity: 0.7;
         cursor: pointer;
     }
+    .codeobj-local-environment {
+        color: rgba(165, 62, 224, 0.863)
+    }
     .codeobj-environment-usage-label-selected {
         border-bottom: 1px solid rgb(78, 103, 228);
         font-size: var(--type-ramp-minus2-font-size);

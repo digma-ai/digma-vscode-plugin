@@ -1,6 +1,7 @@
 import { UsageStatusResults } from "../../../services/analyticsProvider";
 import { Settings } from "../../../settings";
 import { WebViewUris } from "../../webViewUtils";
+import * as os from 'os';
 
 export interface IRenderCodeObjectGroupEnvironments{
 
@@ -33,6 +34,14 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         return usageItems;
     }
 
+    private isEnvironmentLocal(environment:string){
+        return environment.toLowerCase().endsWith('[local]');
+    }
+
+    private isLocalEnvironmentMine(environment:string){
+        return environment.toLowerCase().startsWith(os.hostname());
+    }
+
     private getUsedEnvironmentHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
         
         let usageItems=this.filterByTypeAndName(item,type,usageResults);
@@ -40,7 +49,18 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         let environments = Object.keys(usageByEnv);
         let html = ``;
         for (const env of environments){
-            let items = usageByEnv[env]
+            let envDisplayName = env;
+            let envSpecialClass = ""
+
+            if (this.isEnvironmentLocal(env)){
+                envDisplayName="LOCAL";
+                envSpecialClass="codeobj-local-environment";
+                if (!this.isLocalEnvironmentMine(env)){
+                    continue;
+                }
+                
+            }
+            let items = usageByEnv[env];
             let firstUpdateTimes = items.map(x=>x.firstRecordedTime).sort();
             let lastUpdateTimes = items.map(x=>x.lastRecordedTime).sort().reverse();
             
@@ -48,7 +68,7 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
             <span class="codeobj-environment-usage" >
                 <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("used.png")}" width="8" height="8" 
                 title="Last data received: ${lastUpdateTimes[0].fromNow()}\nFirst data received: ${firstUpdateTimes[0].fromNow()}">
-                <span class="${this.getSelectedOrUnselectedTag(env)}" data-env-name="${env}">${env}</span> 
+                <span class="${this.getSelectedOrUnselectedTag(env)} ${envSpecialClass}" data-env-name="${env}">${envDisplayName}</span> 
             </span>`;
 
         }
@@ -76,10 +96,6 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
 
     public getUsageHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
         
-        if (usageResults.environmentStatuses.length<=1){
-            return '';
-        }
-
         if (usageResults.codeObjectStatuses.length===0){
             return '';
         }
