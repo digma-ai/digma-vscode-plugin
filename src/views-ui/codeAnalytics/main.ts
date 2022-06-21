@@ -99,6 +99,10 @@ window.addEventListener("load", () =>
 
 
     });
+
+    $(document).on("click", ".refresh-link", function () {
+        publish(new UiMessage.Notify.TabRefreshRequested());
+    });
     
 
     $(document).on("click", ".error-name.link", function () {

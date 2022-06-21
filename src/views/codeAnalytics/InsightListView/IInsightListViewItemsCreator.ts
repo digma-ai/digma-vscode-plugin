@@ -14,32 +14,6 @@ export interface IInsightListViewItemsCreator
     create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight [], usageResults: UsageStatusResults): Promise<IListViewItemBase[]>;
 }
 
-
-export class UnknownInsightInsight implements IListViewItemBase {
-    constructor(private viewUris: WebViewUris) {
-    }
-    sortIndex: number | undefined;
-    getHtml(): string | undefined {
-
-        return `
-        <div class="list-item">
-        <div class="list-item-content-area">
-            <div class="list-item-header"><strong>The Digma Plugin probably requires an update</strong></div>
-            <div class="list-item-content-description">We're getting wicked new insights but this plugin just ain't up to date. Please update the plugin via your vscode Settings.</div>
-        </div>
-        <div class="list-item-right-area">
-            <img style="align-self:center;" src="${this.viewUris.image("update-required.png")}" width="32" height="32">
-        </div>
-    </div>
-    `;
-    }
-    groupId: string | undefined;
-
-
-
-
-}
-
 export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
 {
     _creators = new Map<string, IInsightListViewItemsCreator>();

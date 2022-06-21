@@ -16,7 +16,7 @@ export class EmptyGroupItemTemplate implements IListViewItemBase {
             <div class="list-item-content-description">No data received yet about this code object from the selected environment: ${Settings.environment.value}</div>
         </div>
         <div class="list-item-right-area">
-            <img style="align-self:center;" src="${this.viewUris.image("no-data.png")}" width="32" height="32">
+            <img class="insight-main-image" style="align-self:center;" src="${this.viewUris.image("no-data.png")}" width="32" height="32">
         </div>
     </div>`;
 
