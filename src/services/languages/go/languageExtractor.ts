@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
+import { Logger } from '../../logger';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
 import { GoMethodExtractor } from './methodExtractor';
 import { GoSpanExtractor } from './spanExtractor';
@@ -32,5 +33,20 @@ export class GoLanguageExtractor implements ILanguageExtractor
         return [
             new GoSpanExtractor(codeInspector)
         ];
+    }
+    public async validateConfiguration(): Promise<void>{
+        const section:any = vscode.workspace.getConfiguration().get("gopls");
+        if(section !== undefined && section["ui.semanticTokens"]){
+            return;
+        }
+
+        const extension = vscode.extensions.getExtension(this.requiredExtensionId);
+        if(extension){
+            Logger.info(`adding gopls missing configuration: ui.semanticTokens=true`);
+            await vscode.workspace.getConfiguration().update("gopls", {"ui.semanticTokens": true});
+            Logger.info(`Starting activating "${extension.id}" extension`);
+            await extension.activate();
+            Logger.info(`Finished activating "${extension.id}" extension`);
+        }
     }
 }
