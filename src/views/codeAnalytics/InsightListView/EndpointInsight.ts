@@ -10,6 +10,7 @@ import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { Uri } from "vscode";
 import path = require("path");
 import moment = require("moment");
+import { Duration, Percentile } from "./CommonInsightObjects";
 
 
 export interface EndpointInsight extends CodeObjectInsight {
@@ -33,10 +34,7 @@ export interface SlowSpanInfo {
     p95: Percentile;
     p99: Percentile;
 }
-export interface Percentile {
-    fraction: number,
-    maxDuration: Duration,
-}
+
 export interface SlowestSpansInsight extends EndpointInsight {
     spans: SlowSpanInfo[];
 }
@@ -117,13 +115,6 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
 export interface HighUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
-
-export interface Duration {
-    value: number;
-    unit: string;
-    raw: number;
-}
-
 
 export interface SlowEndpointInsight extends EndpointInsight {
     endpointsMedian: Duration;

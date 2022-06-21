@@ -405,22 +405,20 @@ vscode-panel-view {
 }
 
 #view-insights {
-    .span-usages-insight {
-        .flow-row {
-            margin-bottom: 2px;
-            .flow-percent {
-                margin-right: 5px;
+    .flow-row {
+        margin-bottom: 2px;
+        .flow-percent {
+            margin-right: 5px;
+        }
+        .flow-entry {
+            border-radius: 2px;
+            margin-bottom: 4px;
+            .flow-service {
+                opacity: 0.7;
             }
-            .flow-entry {
-                border-radius: 2px;
-                margin-bottom: 4px;
-                .flow-service {
-                    opacity: 0.7;
-                }
-            }
-            .codicon {
-                margin: 0 3px
-            }
+        }
+        .codicon {
+            margin: 0 3px
         }
     }
     .span-durations-insight {
