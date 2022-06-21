@@ -7,6 +7,7 @@ import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
 import { EndpointInfo, SpanInfo, SymbolInfo, CodeObjectInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
+import { SymbolInformation } from 'vscode';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -47,7 +48,22 @@ export class DocumentInfoProvider implements vscode.Disposable
 
     public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanInfo|undefined>{
         const codeFileHint = instrumentationInfo.instrumentationName;
+        
         if (codeFileHint){
+
+            const regex = /(\(\*.*\).*)/;
+            //workaround for GO
+            let match = instrumentationInfo.fullName?.match(regex)?.firstOrDefault();
+            if (match){
+                match =match?.replace("(*","").replace(")","");
+                let codeLocations:SymbolInformation[] =  await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", match);
+                if (codeLocations){
+                    codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method);
+                    if (codeLocations.length===1){
+                        return new SpanInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, codeLocations[0].location.range, codeLocations[0].location.uri);
+                    }
+                }
+            }
 
             if (codeFileHint==='__main__'){
 
