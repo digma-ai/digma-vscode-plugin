@@ -60,8 +60,9 @@ export class GoMethodExtractor implements IMethodExtractor{
 
         const methods: SymbolInfo[] = methodSymbols.map(s => {
             // "AuthController.Error" => "AuthController.Error"
+            // "(*AuthController).Error" => "(*AuthController).Error"
             // "(AuthController).Error" => "AuthController.Error"
-            let name = s.name.replace(/\((.+)\)\.(.+)/, "$1.$2")
+            let name = s.name.replace(/\(([^*]+)\)\.(.+)/, "$1.$2")
             return {
                 id: packageDefinitionName === "main" ? packagePath + '$_$' + `main.${name}` : packagePath + '$_$' + name,
                 name: name,
