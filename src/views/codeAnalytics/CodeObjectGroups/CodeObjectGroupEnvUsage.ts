@@ -1,6 +1,7 @@
-import { UsageStatusResults } from "../../../services/analyticsProvider";
+import { CodeObjectUsageStatus, UsageStatusResults } from "../../../services/analyticsProvider";
 import { Settings } from "../../../settings";
 import { WebViewUris } from "../../webViewUtils";
+import * as os from 'os';
 
 export interface IRenderCodeObjectGroupEnvironments{
 
@@ -33,23 +34,45 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         return usageItems;
     }
 
+    private isEnvironmentLocal(environment:string){
+        return environment.toLowerCase().endsWith('[local]');
+    }
+
+    private isLocalEnvironmentMine(environment:string){
+        return environment.toLowerCase().startsWith(os.hostname());
+    }
+
+    private getEnvironmentHtml(envName: string, envDisplayName: string, envClass: string, codeObjectStatuses:  CodeObjectUsageStatus[] ){
+        let firstUpdateTimes = codeObjectStatuses.map(x=>x.firstRecordedTime).sort().firstOrDefault();
+        let lastUpdateTimes = codeObjectStatuses.map(x=>x.lastRecordedTime).sort().reverse().firstOrDefault();
+        return `
+        <span class="codeobj-environment-usage" >
+            <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("used.png")}" width="8" height="8" 
+            title="Last data received: ${lastUpdateTimes?.fromNow()}\nFirst data received: ${firstUpdateTimes?.fromNow()}">
+            <span class="${this.getSelectedOrUnselectedTag(envName)} ${envClass}" data-env-name="${envName}">${envDisplayName}</span> 
+        </span>`;
+    }
+
     private getUsedEnvironmentHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
         
         let usageItems=this.filterByTypeAndName(item,type,usageResults);
         let usageByEnv = usageItems.groupBy(x=>x.environment);
         let environments = Object.keys(usageByEnv);
+        let localEnvironment = environments.filter(x=>this.isLocalEnvironmentMine(x)).firstOrDefault();
         let html = ``;
-        for (const env of environments){
-            let items = usageByEnv[env]
-            let firstUpdateTimes = items.map(x=>x.firstRecordedTime).sort();
-            let lastUpdateTimes = items.map(x=>x.lastRecordedTime).sort().reverse();
-            
-            html+=`
-            <span class="codeobj-environment-usage" >
-                <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("used.png")}" width="8" height="8" 
-                title="Last data received: ${lastUpdateTimes[0].fromNow()}\nFirst data received: ${firstUpdateTimes[0].fromNow()}">
-                <span class="${this.getSelectedOrUnselectedTag(env)}" data-env-name="${env}">${env}</span> 
-            </span>`;
+
+        if (localEnvironment){
+            const envSpecialClass="codeobj-local-environment";
+            let items = usageByEnv[localEnvironment];
+            html+=this.getEnvironmentHtml(localEnvironment, "LOCAL",envSpecialClass,items);
+        }
+  
+        for (const env of environments.sort()){
+            if (this.isEnvironmentLocal(env)){
+                continue;    
+            }
+            let items = usageByEnv[env];
+            html+=this.getEnvironmentHtml(env,env, "",items);
 
         }
         return html;

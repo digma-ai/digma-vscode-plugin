@@ -57,7 +57,7 @@ export class UsageViewItemsTemplate {
                 <div class="list-item-content-description">${description}</div>
             </div>
             <div class="list-item-right-area">
-                <img style="align-self:center;" src="${this.viewUris.image(image)}" width="32" height="32">
+                <img class="insight-main-image" style="align-self:center;" src="${this.viewUris.image(image)}" width="32" height="32">
                 <span class="insight-main-value" title="Maximum of ${value} requests per minute">${value}/min</span>
             </div>
         </div>
@@ -213,7 +213,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
                 </div>
             </div>
             <div class="list-item-right-area">
-                <img style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
+                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
                 <span class="insight-main-value" style="text-align:center;">Slow Spans</span>
 
             </div>
@@ -281,7 +281,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         
             </div>
             <div class="list-item-right-area">
-            <img style="align-self:center;" src="${this.viewUris.image("slow.png")}" width="32" height="32">
+            <img class="insight-main-image" style="align-self:center;" src="${this.viewUris.image("slow.png")}" width="32" height="32">
             <span class="insight-main-value">${this.duration(codeObjectsInsight.median)}</span>
         </div>
         </div>`;

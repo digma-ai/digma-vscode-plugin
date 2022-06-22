@@ -35,4 +35,6 @@ export class PythonLanguageExtractor implements ILanguageExtractor
             new PythonSpanExtractor(codeInspector)
         ];
     }
+    public async validateConfiguration(): Promise<void>{
+    }
 }

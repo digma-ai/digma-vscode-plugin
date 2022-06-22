@@ -37,7 +37,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
                     <div class="list-item-content-description">This section isn't ready yet. We're hard at work adding some usage stats here. </div>
                     </div>
                     <div class="list-item-right-area">
-                     <img style="align-self:center;" src="${this._webViewUris.image("wip.png")}" width="32" height="32">
+                     <img class="insight-main-image" style="align-self:center;" src="${this._webViewUris.image("wip.png")}" width="32" height="32">
                     </div>
                 </div>
             </div>
