@@ -58,7 +58,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 match =match?.replace("(*","").replace(")","");
                 let codeLocations:SymbolInformation[] =  await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", match);
                 if (codeLocations){
-                    codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method);
+                    codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method && x.name===match);
                     if (codeLocations.length===1){
                         return new SpanInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, codeLocations[0].location.range, codeLocations[0].location.uri);
                     }
