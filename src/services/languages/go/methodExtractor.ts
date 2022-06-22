@@ -59,10 +59,14 @@ export class GoMethodExtractor implements IMethodExtractor{
         }
 
         const methods: SymbolInfo[] = methodSymbols.map(s => {
+            // "AuthController.Error" => "AuthController.Error"
+            // "(*AuthController).Error" => "(*AuthController).Error"
+            // "(AuthController).Error" => "AuthController.Error"
+            let name = s.name.replace(/\(([^*]+)\)\.(.+)/, "$1.$2")
             return {
-                id: packageDefinitionName === "main" ? packagePath + '$_$' + `main.${s.name}` : packagePath + '$_$' + s.name,
-                name: s.name,
-                displayName: packagePath.split('/').lastOrDefault() + '.' + s.name,
+                id: packageDefinitionName === "main" ? packagePath + '$_$' + `main.${name}` : packagePath + '$_$' + name,
+                name: name,
+                displayName: packagePath.split('/').lastOrDefault() + '.' + name,
                 documentUri: document.uri,
                 codeLocation: packagePath,
                 range: new vscode.Range(
