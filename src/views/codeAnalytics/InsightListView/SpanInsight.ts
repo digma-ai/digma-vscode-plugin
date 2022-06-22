@@ -255,7 +255,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
                 </div>
             </div>
             <div class="list-item-right-area">
-                <img style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
+                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
                 <span class="insight-main-value" style="text-align:center;">Slow Point</span>
 
             </div>

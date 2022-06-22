@@ -12,7 +12,7 @@ import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameter
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
-import { InsightListViewItemsCreator, UnknownInsightInsight } from "./InsightListView/IInsightListViewItemsCreator";
+import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
@@ -20,6 +20,7 @@ import { Settings } from "../../settings";
 import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
 import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
 import { EndpointGroup } from "./CodeObjectGroups/EndpointGroup";
+import { UnknownInsightInsight } from "./AdminInsights/adminInsights";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {

@@ -32,7 +32,7 @@ export class ListViewRender
                 }
                 else
                 {
-                    throw new Error(`no group with id ${item.groupId} found`);
+                    console.warn(`Found insight with unidenfifed groupd Id ${item.groupId}`);
                 }
             }
             else{

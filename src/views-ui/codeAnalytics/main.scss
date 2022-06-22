@@ -92,6 +92,9 @@ vscode-panel-view {
     flex-direction: column;
     margin: 3px;
     justify-content: flex-start;
+    .insight-main-image {
+        min-width: 32px;
+    }
 }
 
 .score-box {

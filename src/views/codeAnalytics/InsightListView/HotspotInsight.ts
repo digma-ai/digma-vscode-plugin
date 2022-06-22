@@ -25,7 +25,7 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
                             <div class="list-item-content-description">Major errors occur or propogate through this function. </div>
                             </div>
                             <div class="list-item-right-area">
-                            <img style="align-self:center;" src="${this.viewUris.image("target.png")}" width="32" height="32">
+                            <img class="insight-main-image" style="align-self:center;" src="${this.viewUris.image("target.png")}" width="32" height="32">
                             <span class="insight-main-value" title="Error hostpot">Hotspot</span>
                             </div>
                         </div>

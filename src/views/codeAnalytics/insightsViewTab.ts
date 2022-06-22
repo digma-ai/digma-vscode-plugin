@@ -17,6 +17,9 @@ import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDisc
 import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
 import { InsightItemGroupRendererFactory, InsightListGroupItemsRenderer } from "../ListView/IListViewItem";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
+import { FetchError } from "node-fetch";
+import { CannotConnectToDigmaInsight } from "./AdminInsights/adminInsights";
+import { Settings } from "../../settings";
 
 
 
@@ -87,9 +90,24 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         catch(e)
         {
-            Logger.error(`Failed to get codeObjects insights`, e);
-            this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
+            let fetchError = e as FetchError;
+            //connection issue
+            if (fetchError && fetchError.code && fetchError.code==='ECONNREFUSED'){
+                let html ='<div id="insightList" class="list">';
+                html +=new CannotConnectToDigmaInsight(this._viewUris,Settings.url.value).getHtml();
+                html+=`</div>`;
+                this.updateListView(html);
+
+            }
+            else{
+
+                Logger.error(`Failed to get codeObjects insights`, e);
+                this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
+
+            }
+
             return;
+
         }
         try{
            
