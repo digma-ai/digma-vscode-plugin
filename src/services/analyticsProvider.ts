@@ -331,6 +331,19 @@ export class AnalyticsProvider
             return response;
     }
 
+    public async getGlobalInsights(environment: string): Promise<any []> 
+    {
+        
+        const response: any [] = await this.send<any>(
+            'POST', 
+            `/CodeAnalytics/insights`,
+            undefined,
+            {
+                environment: Settings.environment.value
+            });
+            return response;
+    }
+
     public async getInsights(codeObjectIds: string []): Promise<any []> 
     {
         

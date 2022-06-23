@@ -33,7 +33,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
     public constructor(private _viewUris:WebViewUris){
 
     }
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanUsagesInsight [], usageResults: UsageStatusResults): Promise<IListViewItemBase []>
+    public async create( codeObjectsInsight: SpanUsagesInsight []): Promise<IListViewItemBase []>
     {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
@@ -129,7 +129,7 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     public constructor(private _viewUris:WebViewUris ){
 
     }
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanDurationsInsight[], usageResults: UsageStatusResults): Promise<IListViewItemBase []>
+    public async create( codeObjectsInsight: SpanDurationsInsight[]): Promise<IListViewItemBase []>
     {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
@@ -282,7 +282,7 @@ P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${s
 P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
     }
     
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {
         
         let items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){

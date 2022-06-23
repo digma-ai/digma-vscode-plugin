@@ -44,6 +44,10 @@ vscode-panel-view {
     overflow: auto;
 }
 
+.list-item-summary-header {
+    background: var(--list-active-selection-background);
+}
+
 .list-item-content-area>div {
     margin: 2px;
     font-size: var(--type-ramp-minus1-font-size);

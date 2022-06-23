@@ -72,7 +72,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
     ) {
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: LowUsageInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: LowUsageInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
@@ -98,7 +98,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
     }
 
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: NormalUsageInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: NormalUsageInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
@@ -145,7 +145,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         };
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: HighUsageInsight[]): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: HighUsageInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
@@ -244,7 +244,7 @@ P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${s
 P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
     }
     
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
         
         let items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
@@ -304,7 +304,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         };
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowEndpointInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: SlowEndpointInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 

@@ -158,7 +158,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         const stackViewModel = viewModels.firstOrDefault();
         this._stackViewModel = stackViewModel;
         this._stackViewModels = viewModels;
-        let html = HtmlBuilder.buildErrorDetails(errorDetails, codeObject, viewModels);
+        let html = HtmlBuilder.buildErrorDetails(errorDetails,  viewModels);
         this._overlay.show(html, this.errorOverlayId);
         this.navigateErrorFlow();
         this.updateEditorDecorations(stackViewModel);
@@ -365,7 +365,7 @@ class HtmlBuilder
             <div class="list-item">
                 <div class="list-item-content-area">
                     <div class="list-item-header flex-v-center">
-                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid)}
+                        ${HtmlHelper.getErrorName( error.name, error.sourceCodeObjectId, error.uid)}
                     </div>
                     <div class="error-characteristic">${error.characteristic}</div>
                     <div class="flex-row">
@@ -383,7 +383,6 @@ class HtmlBuilder
 
     public static buildErrorDetails(
         error: CodeObjectErrorDetails,
-        codeObject: CodeObjectInfo,
         viewModels?: ErrorFlowStackViewModel[],
     ): string{
         return /*html*/`
@@ -394,7 +393,7 @@ class HtmlBuilder
                 </vscode-button>
                 <span class="flex-stretch flex-v-center error-title">
                     <div>
-                        ${HtmlHelper.getErrorName(codeObject, error.name, error.sourceCodeObjectId, error.uid, false)}
+                        ${HtmlHelper.getErrorName( error.name, error.sourceCodeObjectId, error.uid, false)}
                     </div>
                 </span>
                 ${HtmlHelper.getScoreBoxHtml(error?.scoreInfo.score, HtmlBuilder.buildScoreTooltip(error))}

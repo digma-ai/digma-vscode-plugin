@@ -72,7 +72,6 @@ export class HtmlHelper
     }
 
     public static getErrorName(
-        selectedCodeObject: CodeObjectInfo,
         errorType: string,
         errorSourceCodeObjectId: string,
         errorSourceUID: string,
@@ -83,12 +82,10 @@ export class HtmlHelper
             <span
                 class="error-name ${link ? 'link' : '' } ellipsis"
                 data-error-source-uid="${errorSourceUID}">${errorType}</span>
-            ${HtmlHelper.getSourceCodeObject(selectedCodeObject, errorSourceCodeObjectId)}
+            ${HtmlHelper.getSourceCodeObject( errorSourceCodeObjectId)}
         `;
     }
-    private static getSourceCodeObject(selectedCodeObject: CodeObjectInfo, errorSourceCodeObjectId: string){
-        if(selectedCodeObject.id === errorSourceCodeObjectId)
-            return /*html*/`<span class="error-from">from me</span>`;
+    private static getSourceCodeObject( errorSourceCodeObjectId: string){
 
         return /*html*/`<span class="error-from">from</span>
                         <span class="error-source ellipsis">${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}</span>`;

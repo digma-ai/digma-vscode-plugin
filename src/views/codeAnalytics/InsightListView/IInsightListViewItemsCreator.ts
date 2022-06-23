@@ -4,14 +4,18 @@ import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectInfo } from "../codeAnalyticsView";
 import { EndpointInsight, adjustHttpRouteIfNeeded, adjustHttpInsightIfNeeded } from "./EndpointInsight";
 
-export interface CodeObjectInsight{
+export interface CodeObjectInsight extends Insight{
     codeObjectId: string,
+}
+
+export interface Insight {
     type: string
+
 }
 
 export interface IInsightListViewItemsCreator
 {
-    create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight [], usageResults: UsageStatusResults): Promise<IListViewItemBase[]>;
+    create( codeObjectInsight: Insight []): Promise<IListViewItemBase[]>;
 }
 
 export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
@@ -29,7 +33,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
         this._uknownTemplate = item;
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectInsight: CodeObjectInsight[], usageResults: UsageStatusResults): Promise<IListViewItemBase[]> {
+    public async create( codeObjectInsight: CodeObjectInsight[]): Promise<IListViewItemBase[]> {
         this.adjustToHttpIfNeeded(codeObjectInsight);
         const groupedByType = codeObjectInsight.groupBy(x => x.type);
         const items: IListViewItemBase [] = [];
@@ -38,7 +42,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
             const creator = this._creators.get(type);
             if(creator)
             {
-                items.push(...await creator.create(scope, groupedByType[type], usageResults));
+                items.push(...await creator.create( groupedByType[type]));
             }
             else{
                 if (this._uknownTemplate){

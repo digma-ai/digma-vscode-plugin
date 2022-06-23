@@ -18,11 +18,11 @@ export interface ErrorsInsight extends CodeObjectInsight {
 
 
 export class ErrorsListViewItemsCreator implements IInsightListViewItemsCreator {
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: ErrorsInsight[]): Promise<IListViewItemBase[]> {
+    public async create( codeObjectsInsight: ErrorsInsight[]): Promise<IListViewItemBase[]> {
         let codeObjectInsight = codeObjectsInsight.single();
         let errorsHtml: string[] = [];
         codeObjectInsight.topErrors.forEach((err) => {
-            errorsHtml.push(`<div>${HtmlHelper.getErrorName(scope, err.errorType, err.sourceCodeObjectId, err.uid)}</div>`);
+            errorsHtml.push(`<div>${HtmlHelper.getErrorName( err.errorType, err.sourceCodeObjectId, err.uid)}</div>`);
         });
 
         const html = `

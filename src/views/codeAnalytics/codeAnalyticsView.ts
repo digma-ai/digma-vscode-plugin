@@ -21,6 +21,7 @@ import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScope
 import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
 import { EndpointGroup } from "./CodeObjectGroups/EndpointGroup";
 import { UnknownInsightInsight } from "./AdminInsights/adminInsights";
+import { TopErrorsInsight } from "./InsightListView/TopErrorsInsight";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -140,18 +141,20 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("SpanEndpointBottleneck", new SpanEndpointBottlenecksListViewItemsCreator(this._webViewUris,editorHelper,_documentInfoProvider,this._channel));
-
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
         const groupItemViewCreator = new CodeObjectScopeGroupCreator();
         groupItemViewCreator.add("Span", new SpanGroup());
         groupItemViewCreator.add("Endpoint", new EndpointGroup());
+        
+        const globalInsightItemrCreator = new InsightListViewItemsCreator();
+        globalInsightItemrCreator.add("TopErrorFlows", new TopErrorsInsight());
 
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris),
-            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider)
+            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider, globalInsightItemrCreator)
         ];
 
         this._disposables.concat(tabsList);
