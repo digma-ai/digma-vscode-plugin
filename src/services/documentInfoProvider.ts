@@ -49,25 +49,30 @@ export class DocumentInfoProvider implements vscode.Disposable
     public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanInfo|undefined>{
         const codeFileHint = instrumentationInfo.instrumentationName;
         
-        if (codeFileHint){
+        if (codeFileHint ){
+            
+            if (vscode.window.activeTextEditor?.document.fileName.toLocaleLowerCase().endsWith(".go")){
 
-            const regex = /(\(\*.*\).*)/;
-            //workaround for GO
-            let match = instrumentationInfo.fullName?.match(regex)?.firstOrDefault();
-            if (match){
-                match =match?.replace("(*","").replace(")","");
-                let codeLocations:SymbolInformation[] =  await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", match);
-                if (codeLocations){
-                    codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method && x.name===match);
-                    if (codeLocations.length===1){
-                        return new SpanInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, codeLocations[0].location.range, codeLocations[0].location.uri);
+            //TODO: change to use document info we alrady scanned 
+                let regex = /(\(\*?.*\).*)/;
+                //workaround for GO
+                let match = instrumentationInfo.fullName?.match(regex)?.firstOrDefault();
+                if (match){
+                    match =match?.replace("(*","").replace(")","");
+                    let codeLocations:SymbolInformation[] =  await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", match);
+                    if (codeLocations){
+                        codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method && x.name===match);
+                        if (codeLocations.length===1){
+                            return new SpanInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, codeLocations[0].location.range, codeLocations[0].location.uri);
+                        }
                     }
                 }
             }
 
+
             if (codeFileHint==='__main__'){
 
-                let doc = vscode.window.activeTextEditor?.document
+                let doc = vscode.window.activeTextEditor?.document;
                 if (doc){
                     const docInfo = await this.getDocumentInfo(doc);
                     if (docInfo){
