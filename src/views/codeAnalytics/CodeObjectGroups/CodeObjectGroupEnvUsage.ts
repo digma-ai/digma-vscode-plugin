@@ -1,7 +1,8 @@
-import { CodeObjectUsageStatus, UsageStatusResults } from "../../../services/analyticsProvider";
+import { CodeObjectUsageStatus, EnvironmentUsageStatus, UsageStatusResults } from "../../../services/analyticsProvider";
 import { Settings } from "../../../settings";
 import { WebViewUris } from "../../webViewUtils";
 import * as os from 'os';
+import moment = require("moment");
 
 export interface IRenderCodeObjectGroupEnvironments{
 
@@ -42,18 +43,40 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         return environment.toLowerCase().startsWith(os.hostname());
     }
 
-    private getEnvironmentHtml(envName: string, envDisplayName: string, envClass: string, codeObjectStatuses:  CodeObjectUsageStatus[] ){
-        let firstUpdateTimes = codeObjectStatuses.map(x=>x.firstRecordedTime).sort().firstOrDefault();
-        let lastUpdateTimes = codeObjectStatuses.map(x=>x.lastRecordedTime).sort().reverse().firstOrDefault();
+    private getEnvironmentHtml(envName: string, envDisplayName: string, isLocal: boolean, 
+                               isused:boolean,
+                               codeObjectStatuses:  CodeObjectUsageStatus[], 
+                               environmentStatus: EnvironmentUsageStatus ){
+        
+        let firstUpdateTime = "";
+        let lastUpdateTime ="";
+
+        if (isLocal){
+            firstUpdateTime = environmentStatus.environmentFirstRecordedTime.fromNow();
+            lastUpdateTime = environmentStatus.environmentLastRecordedTime.fromNow();
+            
+        }
+        else{
+            firstUpdateTime = codeObjectStatuses.map(x=>x.firstRecordedTime).sort().firstOrDefault()?.fromNow();
+            lastUpdateTime = codeObjectStatuses.map(x=>x.lastRecordedTime).sort().reverse().firstOrDefault()?.fromNow();
+            
+        }
+  
+        let envClass:string="";
+        if (isLocal){
+            envClass="codeobj-local-environment";
+        }
+
+        const image = isused ? 'used.png' : 'unused.png';
         return `
         <span class="codeobj-environment-usage" >
-            <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("used.png")}" width="8" height="8" 
-            title="Last data received: ${lastUpdateTimes?.fromNow()}\nFirst data received: ${firstUpdateTimes?.fromNow()}">
+            <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image(image)}" width="8" height="8" 
+            title="Last data received: ${lastUpdateTime}\nFirst data received: ${firstUpdateTime}">
             <span class="${this.getSelectedOrUnselectedTag(envName)} ${envClass}" data-env-name="${envName}">${envDisplayName}</span> 
         </span>`;
     }
 
-    private getUsedEnvironmentHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
+    private getUsedEnvironmentsHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
         
         let usageItems=this.filterByTypeAndName(item,type,usageResults);
         let usageByEnv = usageItems.groupBy(x=>x.environment);
@@ -62,44 +85,53 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         let html = ``;
 
         if (localEnvironment){
-            const envSpecialClass="codeobj-local-environment";
+            let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===localEnvironment).single();
             let items = usageByEnv[localEnvironment];
-            html+=this.getEnvironmentHtml(localEnvironment, "LOCAL",envSpecialClass,items);
+            html+=this.getEnvironmentHtml(localEnvironment, "LOCAL",true,true,items,environmentUsage);
         }
   
         for (const env of environments.sort()){
             if (this.isEnvironmentLocal(env)){
                 continue;    
             }
+            let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===env).single();
             let items = usageByEnv[env];
-            html+=this.getEnvironmentHtml(env,env, "",items);
+            html+=this.getEnvironmentHtml(env,env, false, true,items,environmentUsage);
 
         }
         return html;
     }
 
-    private getUnusedEnvironmentHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
-        let usageItems = this.filterByTypeAndName(item,type,usageResults).map(x=>x.environment);
-        let html = ``;
+    private getUnusedEnvironmentsHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
+        let usedEnvironments = this.filterByTypeAndName(item,type,usageResults).map(x=>x.environment);
+        let unusedEnvs = usageResults.environmentStatuses.filter(x=>!usedEnvironments.includes(x.name));
 
-        let unusedEnvs = usageResults.environmentStatuses.filter(x=>!usageItems.includes(x.name));
-        for (const env of unusedEnvs){
-            html+=`
-            <span class="codeobj-environment-usage" >
-                <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image("unused.png")}" width="8" height="8"
-                title="Last data received from env: ${env.environmentLastRecordedTime.fromNow()}\nFirst data received: ${env.environmentFirstRecordedTime.fromNow()}">
-                <span class="${this.getSelectedOrUnselectedTag(env.name)}" data-env-name="${env.name}">${env.name}</span> 
-             </span>`;
+        let html = ``;
+        let localEnvironment = unusedEnvs.filter(x=>this.isLocalEnvironmentMine(x.name)).firstOrDefault();
+
+        
+        if (localEnvironment){
+            let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===localEnvironment.name).single();
+            html+=this.getEnvironmentHtml(localEnvironment.name, "LOCAL",true,false,[],environmentUsage);
+        }
+  
+        for (const env of unusedEnvs.sort()){
+            if (this.isEnvironmentLocal(env.name)){
+                continue;    
+            }
+            let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===env.name).single();
+            html+=this.getEnvironmentHtml(env.name,env.name,false, false,[],environmentUsage);
 
         }
         return html;
-
+        
+       
 
     }
 
     public getUsageHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){
         
-        if (usageResults.environmentStatuses.length<=1){
+        if (usageResults.environmentStatuses.length<1){
             return '';
         }
 
@@ -109,8 +141,8 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
 
         return `
         <div class="codeobj-environment-usage-group">
-            ${this.getUsedEnvironmentHtml(item,type,usageResults)}
-            ${this.getUnusedEnvironmentHtml(item,type,usageResults)}
+            ${this.getUsedEnvironmentsHtml(item,type,usageResults)}
+            ${this.getUnusedEnvironmentsHtml(item,type,usageResults)}
         </div>`;
     }
 
