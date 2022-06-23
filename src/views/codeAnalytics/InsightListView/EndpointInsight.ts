@@ -179,7 +179,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         var spansLocations = spans.map(span=> 
                                              { return {
                                                 slowspaninfo : span, 
-                                                spanSearchResult : this._documentInfoProvider.searchForSpan({ instrumentationName : span.spanInfo.instrumentationLibrary.split(".").join( " "), spanName :span.spanInfo.name })
+                                                spanSearchResult : this._documentInfoProvider.searchForSpan({ instrumentationName : span.spanInfo.instrumentationLibrary.split(".").join( " "), spanName :span.spanInfo.name, fullName:span.spanInfo.name })
                                                 };
                                              }); 
         

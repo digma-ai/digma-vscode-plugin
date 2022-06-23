@@ -19,6 +19,7 @@ export interface EditorInfo {
 export interface InstrumentationInfo {
     instrumentationName?: string;
     spanName?: string;
+    fullName?: string
 }
 
 export class EditorHelper {
