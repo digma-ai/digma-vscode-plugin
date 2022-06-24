@@ -37,6 +37,14 @@ vscode-panel-view {
     width: 100%;
 }
 
+.summary-list-item {
+    display: flex;
+    background: var(--vscode-list-hoverBackground);
+    border-radius: 2px;
+    width: 100%;
+    padding-bottom: 0.2em;
+}
+
 .list-item-content-area {
     display: flex;
     flex-direction: column;
@@ -44,8 +52,12 @@ vscode-panel-view {
     overflow: auto;
 }
 
-.list-item-summary-header {
+.summary-list-item-header {
     background: var(--list-active-selection-background);
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    font-size: var(--type-ramp-minus1-font-size);
+    padding-left: 0.5em;
 }
 
 .list-item-content-area>div {
@@ -69,6 +81,15 @@ vscode-panel-view {
     align-items: center;
     margin-top: 0px;
     margin-bottom: 6px;
+    width: 100%;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.error-characteristic-tag {
+    margin-left: auto;
+    background: var(--input-background);
+    font-weight: bold;
 }
 
 .codeobj-environment-usage {
