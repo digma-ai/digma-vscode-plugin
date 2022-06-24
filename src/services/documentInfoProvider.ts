@@ -8,12 +8,32 @@ import { Dictionary, Future } from './utils';
 import { EndpointInfo, SpanInfo, SymbolInfo, CodeObjectInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
+import { Settings } from '../settings';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
     private _disposables: vscode.Disposable[] = [];
-    private _documents: Dictionary<string, DocumentInfoContainer> = {};
+    private _documentsByEnv: Dictionary<string, Dictionary<string, DocumentInfoContainer>> = {};
     private _timer;
+
+    private ensureDocDictionaryForEnv(){
+        let envDictionary = this._documentsByEnv[Settings.environment.value];
+        if (!envDictionary){
+            this._documentsByEnv[Settings.environment.value]={};
+        }
+    }
+    get _documents(): Dictionary<string, DocumentInfoContainer> {
+        
+        this.ensureDocDictionaryForEnv();
+        return this._documentsByEnv[Settings.environment.value];
+    }
+
+    set _documents(value: Dictionary<string, DocumentInfoContainer>){
+        this.ensureDocDictionaryForEnv();
+        this._documentsByEnv[Settings.environment.value]=value;
+
+    }
+
 
     constructor( 
         public analyticsProvider: AnalyticsProvider,

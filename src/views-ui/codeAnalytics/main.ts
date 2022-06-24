@@ -136,7 +136,7 @@ window.addEventListener("load", () =>
         $(".error-raw").show();
     });
 
-    overlay.on("click", ".codeobject-link", function(){
+    $(document).on("click", ".codeobject-link", function(){
         const line = $(this).data("line");
         publish(new UiMessage.Notify.GoToLine(parseInt(line)));
     });

@@ -4,6 +4,7 @@ import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { InsightItemGroupRendererFactory, sort } from "../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
+import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { ICodeAnalyticsViewTab } from "./common";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 
@@ -38,8 +39,11 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     }
     public async refreshListViewRequested() {
         let insights = await this._analyticsProvider.getGlobalInsights(Settings.environment.value);
+        let usageResults = await this._analyticsProvider.getUsageStatus([]);
         const listViewItems = await this._listItemCreator.create( insights);
-        const html = sort(listViewItems)
+        const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris);
+        let html = codeObjectGroupEnv.getJustEnvironmentsHtml(usageResults);
+        html += sort(listViewItems)
             .map(o=>o.getHtml())
             .filter((o)=>o)
             .join("");

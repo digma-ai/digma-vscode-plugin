@@ -16,6 +16,7 @@ import { OverlayView } from "./overlayView";
 import { ErrorsHtmlBuilder } from "../errors/ErrorsHtmlBuilder";
 
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
+import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -38,7 +39,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _errorFlowParamDecorator: ErrorFlowParameterDecorator,
         private _overlay: OverlayView,
         private _webViewProvider: WebViewProvider,
-        private _webViewUris: WebViewUris) 
+        private _webViewUris: WebViewUris,
+        private _noCodeObjectMessage: NoCodeObjectMessage) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
@@ -112,6 +114,23 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     }
     private async refreshList(codeObject: CodeObjectInfo) 
     {
+        if (!codeObject || !codeObject.id) {
+            const editor = vscode.window.activeTextEditor;
+            if(!editor) {
+                return;
+            }
+            const document = editor.document;
+
+            let docInfo = await this._documentInfoProvider.getDocumentInfo(document);
+            if (!docInfo){
+                return;
+            }
+            let html = await this._noCodeObjectMessage.showCodeSelectionNotFoundMessage(docInfo);
+            this._channel.publish(new UiMessage.Set.ErrorsList(html));
+            this._viewedCodeObjectId=undefined;
+            return;
+        }
+
         if(codeObject.id != this._viewedCodeObjectId)
         {
             let errors: CodeObjectErrorResponse[] = [];

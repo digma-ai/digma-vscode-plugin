@@ -43,25 +43,35 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         return environment.toLowerCase().startsWith(os.hostname());
     }
 
+    public getJustEnvironmentsHtml(usageResults: UsageStatusResults): string{
+        let html='<div class="codeobj-environment-usage-group">';
+        let localEnvironment = usageResults.environmentStatuses
+            .filter(x=>this.isLocalEnvironmentMine(x.name)).firstOrDefault();
+
+        html+=this.getEnvironmentHtml(localEnvironment.name, "LOCAL",true,true,
+            localEnvironment.environmentFirstRecordedTime,localEnvironment.environmentLastRecordedTime);
+
+        for (let env of usageResults.environmentStatuses){
+
+            if (this.isLocalEnvironmentMine(env.name)){
+                continue;
+            }
+            html+=this.getEnvironmentHtml(env.name, env.name,true,true,
+                env.environmentFirstRecordedTime,env.environmentLastRecordedTime);
+        }
+        html+='</div>';
+
+        return html;
+    }
+
     private getEnvironmentHtml(envName: string, envDisplayName: string, isLocal: boolean, 
                                isused:boolean,
-                               codeObjectStatuses:  CodeObjectUsageStatus[], 
-                               environmentStatus: EnvironmentUsageStatus ){
+                               firstUpdateTime: moment.Moment,
+                               lastUpdateTime:moment.Moment ){
         
-        let firstUpdateTime = "";
-        let lastUpdateTime ="";
+        let firstUpdateTimeString =firstUpdateTime.fromNow();
+        let lastUpdateTimeString =lastUpdateTime.fromNow();
 
-        if (isLocal){
-            firstUpdateTime = environmentStatus.environmentFirstRecordedTime.fromNow();
-            lastUpdateTime = environmentStatus.environmentLastRecordedTime.fromNow();
-            
-        }
-        else{
-            firstUpdateTime = codeObjectStatuses.map(x=>x.firstRecordedTime).sort().firstOrDefault()?.fromNow();
-            lastUpdateTime = codeObjectStatuses.map(x=>x.lastRecordedTime).sort().reverse().firstOrDefault()?.fromNow();
-            
-        }
-  
         let envClass:string="";
         if (isLocal){
             envClass="codeobj-local-environment";
@@ -71,7 +81,7 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         return `
         <span class="codeobj-environment-usage" >
             <img style="align-self:center;vertical-align:baseline" src="${this._viewUris.image(image)}" width="8" height="8" 
-            title="Last data received: ${lastUpdateTime}\nFirst data received: ${firstUpdateTime}">
+            title="Last data received: ${lastUpdateTimeString}\nFirst data received: ${firstUpdateTimeString}">
             <span class="${this.getSelectedOrUnselectedTag(envName)} ${envClass}" data-env-name="${envName}">${envDisplayName}</span> 
         </span>`;
     }
@@ -85,18 +95,27 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         let html = ``;
 
         if (localEnvironment){
-            let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===localEnvironment).single();
             let items = usageByEnv[localEnvironment];
-            html+=this.getEnvironmentHtml(localEnvironment, "LOCAL",true,true,items,environmentUsage);
+
+            let firstUpdateTime = items.map(x=>x.firstRecordedTime).sort().firstOrDefault();
+            let lastUpdateTime = items.map(x=>x.lastRecordedTime).sort().reverse().firstOrDefault();
+                
+            html+=this.getEnvironmentHtml(localEnvironment, "LOCAL",true,true, 
+                firstUpdateTime, lastUpdateTime);
         }
   
         for (const env of environments.sort()){
             if (this.isEnvironmentLocal(env)){
                 continue;    
             }
-            let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===env).single();
             let items = usageByEnv[env];
-            html+=this.getEnvironmentHtml(env,env, false, true,items,environmentUsage);
+
+            let firstUpdateTime = items.map(x=>x.firstRecordedTime).sort().firstOrDefault();
+            let lastUpdateTime = items.map(x=>x.lastRecordedTime).sort().reverse().firstOrDefault();
+           
+            html+=this.getEnvironmentHtml(env,env, false, true,
+                    firstUpdateTime,
+                    lastUpdateTime);
 
         }
         return html;
@@ -107,12 +126,15 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         let unusedEnvs = usageResults.environmentStatuses.filter(x=>!usedEnvironments.includes(x.name));
 
         let html = ``;
-        let localEnvironment = unusedEnvs.filter(x=>this.isLocalEnvironmentMine(x.name)).firstOrDefault();
-
+        let localEnvironment = unusedEnvs.filter(x=>this.isLocalEnvironmentMine(x.name)).firstOrDefault();      
         
         if (localEnvironment){
+
             let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===localEnvironment.name).single();
-            html+=this.getEnvironmentHtml(localEnvironment.name, "LOCAL",true,false,[],environmentUsage);
+
+            html+=this.getEnvironmentHtml(localEnvironment.name, "LOCAL",true,false,
+                environmentUsage.environmentFirstRecordedTime, 
+                environmentUsage.environmentLastRecordedTime);
         }
   
         for (const env of unusedEnvs.sort()){
@@ -120,13 +142,13 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
                 continue;    
             }
             let environmentUsage = usageResults.environmentStatuses.filter(x=>x.name===env.name).single();
-            html+=this.getEnvironmentHtml(env.name,env.name,false, false,[],environmentUsage);
+            html+=this.getEnvironmentHtml(env.name,env.name,false, false,
+                environmentUsage.environmentFirstRecordedTime, 
+                environmentUsage.environmentLastRecordedTime);
 
         }
         return html;
-        
-       
-
+         
     }
 
     public getUsageHtml(item: string|undefined, type:string|undefined, usageResults: UsageStatusResults){

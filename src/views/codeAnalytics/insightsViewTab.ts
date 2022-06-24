@@ -20,6 +20,7 @@ import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupE
 import { FetchError } from "node-fetch";
 import { CannotConnectToDigmaInsight } from "./AdminInsights/adminInsights";
 import { Settings } from "../../settings";
+import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 
 
 
@@ -32,16 +33,16 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _groupViewItemCreator: ICodeObjectScopeGroupCreator,
         private _listViewItemsCreator: IInsightListViewItemsCreator,
         private _documentInfoProvider: DocumentInfoProvider,
-        private _viewUris: WebViewUris) { }
+        private _viewUris: WebViewUris,
+        private _noCodeObjectsMessage: NoCodeObjectMessage) { }
     
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
 
-        if (codeObject){
             this.refreshCodeObjectLabel(codeObject);
             this.refreshListViewRequested(codeObject);
 
-        }
+        
 
     }
     
@@ -52,11 +53,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     get viewId(): string { return "view-insights"; }
 
     private async refreshListViewRequested(codeObject: CodeObjectInfo) {
-        if (!codeObject) {
-            this.updateListView("");
-            this.updateSpanListView("");
-            return;
-        }
+
         this.updateListView(HtmlHelper.getLoadingMessage("Loading insights..."));
         this.updateSpanListView("");
         this.clearSpanLabel();
@@ -69,6 +66,13 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
         if(!docInfo) {
+            return;
+        }
+        if (!codeObject || !codeObject.id) {
+            let html = await this._noCodeObjectsMessage.showCodeSelectionNotFoundMessage(docInfo);
+            this.updateListView(html);
+            this.updateSpanListView("");
+            this._viewedCodeObjectId=undefined;
             return;
         }
         const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
@@ -139,7 +143,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     public onActivate(codeObject: CodeObjectInfo): void {
-        if (codeObject.id != this._viewedCodeObjectId) {
+        if (!codeObject || !codeObject.id||codeObject.id != this._viewedCodeObjectId) {
             this.refreshCodeObjectLabel(codeObject);
             this.refreshListViewRequested(codeObject);
 
@@ -147,7 +151,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     public onUpdated(codeObject: CodeObjectInfo): void {
-        if (codeObject.id != this._viewedCodeObjectId) {
+        if (!codeObject || !codeObject.id|| (codeObject.id !== this._viewedCodeObjectId)) {
             this.refreshCodeObjectLabel(codeObject);
             this.refreshListViewRequested(codeObject);
         }
