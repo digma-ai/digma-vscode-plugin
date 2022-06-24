@@ -21,6 +21,7 @@ import { FetchError } from "node-fetch";
 import { CannotConnectToDigmaInsight } from "./AdminInsights/adminInsights";
 import { Settings } from "../../settings";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
+import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 
 
 
@@ -94,22 +95,9 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         catch(e)
         {
-            let fetchError = e as FetchError;
-            //connection issue
-            if (fetchError && fetchError.code && fetchError.code==='ECONNREFUSED'){
-                let html ='<div id="insightList" class="list">';
-                html +=new CannotConnectToDigmaInsight(this._viewUris,Settings.url.value).getHtml();
-                html+=`</div>`;
-                this.updateListView(html);
 
-            }
-            else{
-
-                Logger.error(`Failed to get codeObjects insights`, e);
-                this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
-
-            }
-
+            let html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(e);
+            this.updateListView(html);
             return;
 
         }

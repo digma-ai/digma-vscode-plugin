@@ -17,6 +17,7 @@ import { ErrorsHtmlBuilder } from "../errors/ErrorsHtmlBuilder";
 
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
+import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -131,7 +132,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             return;
         }
 
-        if(codeObject.id != this._viewedCodeObjectId)
+        if(codeObject.id !== this._viewedCodeObjectId)
         {
             let errors: CodeObjectErrorResponse[] = [];
             let errorsInEnv:UsageStatusResults|undefined;
@@ -148,6 +149,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                     this._channel.publish(new UiMessage.Set.ErrorsList(html));
                     return;
                 }
+
+                let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(e);
+                this._channel.publish(new UiMessage.Set.ErrorsList(html));
+                return;
             }
 
             let html="";

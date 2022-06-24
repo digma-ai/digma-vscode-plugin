@@ -1,11 +1,15 @@
-import { AnalyticsProvider } from "../../services/analyticsProvider";
+import { FetchError } from "node-fetch";
+import { AnalyticsProvider, HttpError, UsageStatusResults } from "../../services/analyticsProvider";
+import { Logger } from "../../services/logger";
 import { Settings } from "../../settings";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { InsightItemGroupRendererFactory, sort } from "../ListView/IListViewItem";
+import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
+import { CannotConnectToDigmaInsight } from "./AdminInsights/adminInsights";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
-import { ICodeAnalyticsViewTab } from "./common";
+import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 
 export class UsagesViewTab implements ICodeAnalyticsViewTab 
@@ -38,8 +42,18 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     
     }
     public async refreshListViewRequested() {
-        let insights = await this._analyticsProvider.getGlobalInsights(Settings.environment.value);
-        let usageResults = await this._analyticsProvider.getUsageStatus([]);
+        let insights: any [] | undefined = undefined;
+        let usageResults: UsageStatusResults;
+        try{
+            insights = await this._analyticsProvider.getGlobalInsights(Settings.environment.value);
+            usageResults = await this._analyticsProvider.getUsageStatus([]);
+        }
+        catch(e){
+            let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(e);
+            this.updateListView(html);
+            return;
+        }
+        
         const listViewItems = await this._listItemCreator.create( insights);
         const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris);
         let html = codeObjectGroupEnv.getJustEnvironmentsHtml(usageResults);

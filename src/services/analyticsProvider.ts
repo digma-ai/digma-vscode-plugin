@@ -354,7 +354,7 @@ export class AnalyticsProvider
         
         const response: any [] = await this.send<any>(
             'POST', 
-            `/CodeAnalytics/insights`,
+            `/CodeAnalytics/insights2`,
             undefined,
             {
                 environment: Settings.environment.value
