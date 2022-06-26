@@ -2,13 +2,14 @@ import { CodeObjectError } from "../../../services/analyticsProvider";
 import { ErrorsHtmlBuilder } from "../../errors/ErrorsHtmlBuilder";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { HtmlHelper } from "../common";
+import { GlobalInsightListTemplate } from "./Common/GlobalInsightList";
 import { IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
 
 export interface TopErrorFlowsInsight extends Insight{
     errors : CodeObjectError[] 
 }
 
-export class TopErrorsInsight implements IInsightListViewItemsCreator {
+export class TopErrorsInsightCreator implements IInsightListViewItemsCreator {
     public async create( codeObjectsInsight: TopErrorFlowsInsight[]): Promise<IListViewItemBase[]> {
         let codeObjectInsight = codeObjectsInsight.single();
         let errorsHtml: string[] = [];
@@ -31,16 +32,8 @@ export class TopErrorsInsight implements IInsightListViewItemsCreator {
             errorsHtml.push(html);
         });
 
-        const html = `
-            <div class="summary-list-item-header"><strong>New and Trending Errors</strong></div>
-            <div class="summary-list-item">
-                <div class="list-item-content-area">
-                    <div class="small-spacer"></div>
-                    <div class="list">
-                    ${errorsHtml.join("")}
-                    </div>
-                </div>
-            </div>`;
+        const html = new GlobalInsightListTemplate().getInsightTemplate("New and Trending Errors", errorsHtml);
+        
         return [{ getHtml: () => html, sortIndex: 1, groupId: undefined }];
     }
 

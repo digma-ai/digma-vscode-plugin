@@ -21,8 +21,9 @@ import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScope
 import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
 import { EndpointGroup } from "./CodeObjectGroups/EndpointGroup";
 import { UnknownInsightInsight } from "./AdminInsights/adminInsights";
-import { TopErrorsInsight } from "./InsightListView/TopErrorsInsight";
+import { TopErrorsInsightCreator } from "./InsightListView/TopErrorsInsight";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
+import { SpanDurationChangesInsightCreator } from "./InsightListView/SpanDurationChangesInsight";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -149,7 +150,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         groupItemViewCreator.add("Endpoint", new EndpointGroup());
         
         const globalInsightItemrCreator = new InsightListViewItemsCreator();
-        globalInsightItemrCreator.add("TopErrorFlows", new TopErrorsInsight());
+        globalInsightItemrCreator.add("TopErrorFlows", new TopErrorsInsightCreator());
+        globalInsightItemrCreator.add("SpanDurationChange", new SpanDurationChangesInsightCreator(this._webViewUris, this._documentInfoProvider));
+
 
         let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris);
 

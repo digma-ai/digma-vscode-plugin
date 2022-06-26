@@ -59,6 +59,9 @@ vscode-panel-view {
     font-size: var(--type-ramp-minus1-font-size);
     padding-left: 0.5em;
     margin-top: 0.5em;
+    &:not(:first-child) {
+        margin-top: 1em;
+    }
 }
 
 .list-item-content-area>div {
