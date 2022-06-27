@@ -7,6 +7,7 @@ import { Dictionary, momentJsDateParser } from "./utils";
 import moment = require("moment");
 import { integer } from "vscode-languageclient";
 import * as os from 'os';
+import { stringify } from "querystring";
 
 
 export enum Impact 
@@ -473,12 +474,19 @@ export class AnalyticsProvider
                 url += `${key}=${encodeURIComponent(queryParams[key])}&`;
         }
 
+        
+        const requestHeaders: any = {'Content-Type': 'application/json'};
+        if(Settings.token.value !== undefined && Settings.token.value.trim() !== ""){
+            requestHeaders['Authorization'] = `Token ${Settings.token.value}`;
+        }
+
+
         let response = await fetch(
             url, 
             {
                 agent: agent,
                 method: method, 
-                headers: {'Content-Type': 'application/json' },
+                headers: requestHeaders,
                 body: body ? JSON.stringify(body) : undefined, 
             });
         
@@ -486,9 +494,9 @@ export class AnalyticsProvider
         {
             const txt = await response.text();
             throw new HttpError(response.status, response.statusText, txt);
-        }
+        } 
         return <TResponse>JSON.parse(await response.text(), momentJsDateParser);
-    }
+    } 
 }
 
 export class HttpError extends Error {

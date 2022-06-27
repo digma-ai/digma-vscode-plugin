@@ -42,4 +42,7 @@ export class Settings
     public static readonly hideFramesOutsideWorkspace = new SettingsKey('hideFramesOutsideWorkspace', true);
 
     public static readonly sourceControl = new SettingsKey('sourceControl', SourceControlType.None);
+   
+    public static readonly token = new SettingsKey('token', '');
+
 }
