@@ -1,5 +1,4 @@
-import { IListViewItem, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
-import { CodeObjectInfo } from "../codeAnalyticsView";
+import { IListViewItem } from "../../ListView/IListViewItem";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { EndpointSchema, UsageStatusResults } from '../../../services/analyticsProvider';
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
@@ -10,7 +9,8 @@ import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { Uri } from "vscode";
 import path = require("path");
 import moment = require("moment");
-import { Duration, Percentile } from "./CommonInsightObjects";
+import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
+import { SpanSearch } from "./Common/SpanSearch";
 
 
 export interface EndpointInsight extends CodeObjectInsight {
@@ -21,12 +21,6 @@ export interface LowUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
 
-export interface SpanInfo {
-    instrumentationLibrary : string;
-    name: string;
-    displayName: string;
-    serviceName: string;
-}
 
 export interface SlowSpanInfo {
     spanInfo: SpanInfo;
@@ -176,21 +170,14 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         
         var spans = codeObjectsInsight.spans;
 
-        var spansLocations = spans.map(span=> 
-                                             { return {
-                                                slowspaninfo : span, 
-                                                spanSearchResult : this._documentInfoProvider.searchForSpan({ instrumentationName : span.spanInfo.instrumentationLibrary.split(".").join( " "), spanName :span.spanInfo.name, fullName:span.spanInfo.name })
-                                                };
-                                             }); 
-        
-        let uriPromises = spansLocations.map(x=>x.spanSearchResult);
-        await Promise.all(uriPromises);
+        var spansLocations = await new SpanSearch(this._documentInfoProvider).searchForSpans(spans.map(x=>x.spanInfo));
 
         var items :string[] = [];
                         
         for (let i=0;i<spansLocations.length;i++){
-            let result = await spansLocations[i].spanSearchResult;
-            const slowSpan = spansLocations[i].slowspaninfo;
+
+            let result = spansLocations[i];
+            const slowSpan = spans[i];
 
             items.push(`
                 <div class="endpoint-bottleneck-insight" title="${this.getTooltip(slowSpan)}">

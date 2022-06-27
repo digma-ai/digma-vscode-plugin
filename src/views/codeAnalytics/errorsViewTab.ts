@@ -8,7 +8,7 @@ import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import moment = require('moment');
-import { ErrorFlowStackRenderer, ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
+import { ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 import { Settings } from "../../settings";
 import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";

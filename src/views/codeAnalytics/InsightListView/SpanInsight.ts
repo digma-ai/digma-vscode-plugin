@@ -1,14 +1,11 @@
 import moment = require("moment");
 import { Uri } from "vscode";
-import { decimal } from "vscode-languageclient";
-import { UsageStatusResults } from "../../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
-import { CodeObjectInfo } from "../codeAnalyticsView";
-import { Duration, Percentile } from "./CommonInsightObjects";
+import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 
@@ -98,7 +95,8 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
 }
 
 export interface SpanDurationsInsight extends CodeObjectInsight{
-    span: string,
+    span: SpanInfo,
+    codeObjectId: string,
     percentiles: {
         percentile: number,
         currentDuration: Duration,
@@ -122,7 +120,7 @@ export interface SlowEndpointInfo{
 
 }
 export interface SpandSlowEndpointsInsight extends CodeObjectInsight{
-    span: string,
+    span: SpanInfo,
     slowEndpoints:SlowEndpointInfo[]
 }
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
@@ -144,7 +142,7 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
         return {
             getHtml: ()=> renderer.spanDurationItemHtml(insight), 
             sortIndex: 0, 
-            groupId: insight.span
+            groupId: insight.span.name
         };
     }
 }
@@ -237,7 +235,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: codeObjectsInsight.span
+            groupId: codeObjectsInsight.span.name
         };
     }
 

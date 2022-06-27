@@ -30,7 +30,7 @@ export class EndpointInfo implements CodeObjectInfo{
         return 'endpoint:'+this.id;
     }
 }
-export class SpanInfo implements CodeObjectInfo{
+export class SpanLocationInfo implements CodeObjectInfo{
     constructor(
         public id: string,
         public name: string,
@@ -65,7 +65,7 @@ export interface ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-    ): Promise<SpanInfo[]>;
+    ): Promise<SpanLocationInfo[]>;
 }
 
 export interface ILanguageExtractor {

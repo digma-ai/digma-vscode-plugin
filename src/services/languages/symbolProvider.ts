@@ -4,7 +4,7 @@ import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EndpointInfo, ILanguageExtractor, SpanInfo, SymbolInfo } from './extractors';
+import { EndpointInfo, ILanguageExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
 import { Token, TokenType } from './tokens';
 
 export function trendToCodIcon(trend: number): string 
@@ -111,7 +111,7 @@ export class SymbolProvider
         document: vscode.TextDocument,
         symbolInfos: SymbolInfo[],
         tokens: Token[],
-    ):  Promise<SpanInfo[]> {
+    ):  Promise<SpanLocationInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage) {
             return [];

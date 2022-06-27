@@ -3,7 +3,7 @@ import * as path from 'path';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInspector } from '../../codeInspector';
-import { ISpanExtractor, SpanInfo, SymbolInfo } from '../extractors';
+import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
 
@@ -15,8 +15,8 @@ export class PythonSpanExtractor implements ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-    ): Promise<SpanInfo[]> {
-        const results: SpanInfo[] = [];
+    ): Promise<SpanLocationInfo[]> {
+        const results: SpanLocationInfo[] = [];
 
         var strippedText = document.getText().replace("\n","").replace(/\s+/g,"").replace(/"/g, '\'');
         var mainDeclared = strippedText.indexOf("if__name__=='__main__'")>=0;
@@ -94,7 +94,7 @@ export class PythonSpanExtractor implements ISpanExtractor {
             //Add the unrooted form
             for (let i=0;i<instLibraryOptions.length;i++){
 
-                results.push(new SpanInfo(
+                results.push(new SpanLocationInfo(
                     instLibraryOptions[i] + '$_$' + spanName,
                     spanName,
                     token.range,

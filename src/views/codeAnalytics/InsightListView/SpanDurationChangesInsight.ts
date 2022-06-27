@@ -2,6 +2,7 @@ import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
 import { GlobalInsightListTemplate } from "./Common/GlobalInsightList";
+import { SpanSearch } from "./Common/SpanSearch";
 import { IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 import { SpanDurationsInsight } from "./SpanInsight";
@@ -18,9 +19,13 @@ export class SpanDurationChangesInsightCreator implements IInsightListViewItemsC
     public async create( codeObjectsInsight: SpanDurationChangesInsight[]): Promise<IListViewItemBase[]> {
         let codeObjectInsight = codeObjectsInsight.single();
         let spanDurationHtml: string[] = [];
-        
         let renderer = new SpanItemHtmlRendering(this._viewUris);
-        await codeObjectInsight.spanDurationChanges.forEach( async (spanChange) => {
+        let spanSearch = new SpanSearch(this._documentInfoProvider);
+        const spans = codeObjectInsight.spanDurationChanges.map(x=>x.span);
+        const spanLocations = await spanSearch.searchForSpans(spans
+            .filter(x=>x));
+
+        await codeObjectInsight.spanDurationChanges.forEach( async (spanChange,index) => {
 
             let changedPercentiles = spanChange.percentiles.filter(x=>x.changeTime && x.previousDuration).firstOrDefault();
             let detailsHtml ="";
@@ -39,12 +44,12 @@ export class SpanDurationChangesInsightCreator implements IInsightListViewItemsC
                                                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
                                                     ${renderer.getBestUnit(changedPercentiles.previousDuration, changedPercentiles.currentDuration)}, ${changedPercentiles.changeTime.fromNow()}</span>`);
             
-
+                const result = spanLocations[index];
                 let html = ` 
                 <div class="summary-list-item">
                     <div class="list-item-content-area">
-                        <div class="list-item-header flex-v-center">
-                            ${spanChange.span}
+                        <div class="list-item-header span-name flex-v-center ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
+                            ${spanChange.span.name}
                             ${unverified}
                         </div>
                         <div class="flex-row">

@@ -12,14 +12,10 @@ import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListView
 import { ListViewRender } from "../ListView/ListViewRender";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
-import { IListGroupItemBase } from "../ListView/IListViewGroupItem";
 import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
 import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
 import { InsightItemGroupRendererFactory, InsightListGroupItemsRenderer } from "../ListView/IListViewItem";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
-import { FetchError } from "node-fetch";
-import { CannotConnectToDigmaInsight } from "./AdminInsights/adminInsights";
-import { Settings } from "../../settings";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 

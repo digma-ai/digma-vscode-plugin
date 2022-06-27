@@ -5,7 +5,7 @@ import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SpanInfo, SymbolInfo, CodeObjectInfo } from './languages/extractors';
+import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { Settings } from '../settings';
@@ -66,11 +66,13 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
-    public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanInfo|undefined>{
+
+    public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanLocationInfo|undefined>{
         const codeFileHint = instrumentationInfo.instrumentationName;
         
         if (codeFileHint ){
             
+            //try to find code object by span name
             if (vscode.window.activeTextEditor?.document.fileName.toLocaleLowerCase().endsWith(".go")){
 
             //TODO: change to use document info we alrady scanned 
@@ -83,11 +85,14 @@ export class DocumentInfoProvider implements vscode.Disposable
                     if (codeLocations){
                         codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method && x.name===match);
                         if (codeLocations.length===1){
-                            return new SpanInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, codeLocations[0].location.range, codeLocations[0].location.uri);
+                            return new SpanLocationInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, codeLocations[0].location.range, codeLocations[0].location.uri);
                         }
                     }
                 }
             }
+
+            //try to find code object by instrumentation name
+
 
 
             if (codeFileHint==='__main__'){
@@ -209,7 +214,7 @@ export class DocumentInfoProvider implements vscode.Disposable
         document: vscode.TextDocument,
         symbols: SymbolInfo[],
         tokens: Token[], 
-        spans: SpanInfo[],
+        spans: SpanLocationInfo[],
         endpoints: EndpointInfo[],
     ): MethodInfo[] {
         let methods: MethodInfo[] = [];
@@ -329,7 +334,7 @@ export interface DocumentInfo
     lines: LineInfo[];
     tokens: Token[];
     endpoints: EndpointInfo[];
-    spans: SpanInfo[];
+    spans: SpanLocationInfo[];
     uri: vscode.Uri;
 }
 export class CodeObjectSummaryAccessor{
