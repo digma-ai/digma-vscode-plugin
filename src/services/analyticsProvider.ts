@@ -216,7 +216,7 @@ export interface CodeObjectInsightHotSpotResponse
 }
 
 
-export interface CodeObjectError{
+export interface CodeObjectErrorResponse{
     uid: string;
     name: string;
     scoreInfo: ScoreInfo;
@@ -226,6 +226,24 @@ export interface CodeObjectError{
     endsHere: boolean;
     firstOccurenceTime: moment.Moment;
     lastOccurenceTime: moment.Moment;
+}
+
+export interface CodeObjectError{
+    uid: string;
+    name: string;
+    sourceCodeObjectId: string;
+    characteristic: string;
+    startsHere: boolean;
+    endsHere: boolean;
+    firstOccurenceTime: moment.Moment;
+    lastOccurenceTime: moment.Moment;
+    dayAvg:integer;
+    handledLocally:boolean;
+    score: integer;
+    scoreMovingAvg: integer;
+    scoreRecency:integer;
+    scoreTrendSlope: integer;
+    scoreUnhandled: integer;
 }
 
 export interface ScoreInfo
@@ -270,7 +288,7 @@ export interface DetailedErrorInfo {
     lastInstanceCommitId: string;
 }
 
-export interface CodeObjectErrorDetails extends CodeObjectError{
+export interface CodeObjectErrorDetails extends CodeObjectErrorResponse{
     dayAvg: number;
     originServices: OriginService[]
     errors: DetailedErrorInfo[],
@@ -303,9 +321,9 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectError[]>
+    public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectErrorResponse[]>
     {
-        const response = await this.send<CodeObjectError[]>(
+        const response = await this.send<CodeObjectErrorResponse[]>(
             'GET', 
             `/CodeAnalytics/codeObjects/errors`, 
             {
@@ -327,6 +345,19 @@ export class AnalyticsProvider
             undefined,
             {
                 codeObjectIds: codeObjectIds
+            });
+            return response;
+    }
+
+    public async getGlobalInsights(environment: string): Promise<any []> 
+    {
+        
+        const response: any [] = await this.send<any>(
+            'POST', 
+            `/CodeAnalytics/insights`,
+            undefined,
+            {
+                environment: Settings.environment.value
             });
             return response;
     }

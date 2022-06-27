@@ -59,6 +59,10 @@ export namespace UiMessage
             constructor(public htmlContent?: string) {}
         }
 
+        export class GlobalInsightsList {
+            constructor(public htmlContent?: string) {}
+        }
+
         export class SpanList {
             constructor(public htmlContent?: string) {}
         }

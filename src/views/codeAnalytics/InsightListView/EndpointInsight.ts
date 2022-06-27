@@ -1,5 +1,4 @@
-import { IListViewItem, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
-import { CodeObjectInfo } from "../codeAnalyticsView";
+import { IListViewItem } from "../../ListView/IListViewItem";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { EndpointSchema, UsageStatusResults } from '../../../services/analyticsProvider';
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
@@ -10,7 +9,8 @@ import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { Uri } from "vscode";
 import path = require("path");
 import moment = require("moment");
-import { Duration, Percentile } from "./CommonInsightObjects";
+import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
+import { SpanSearch } from "./Common/SpanSearch";
 
 
 export interface EndpointInsight extends CodeObjectInsight {
@@ -21,12 +21,6 @@ export interface LowUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
 
-export interface SpanInfo {
-    instrumentationLibrary : string;
-    name: string;
-    displayName: string;
-    serviceName: string;
-}
 
 export interface SlowSpanInfo {
     spanInfo: SpanInfo;
@@ -72,7 +66,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
     ) {
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: LowUsageInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: LowUsageInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
@@ -98,7 +92,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
     }
 
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: NormalUsageInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: NormalUsageInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
@@ -145,7 +139,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         };
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: HighUsageInsight[]): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: HighUsageInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
@@ -176,21 +170,14 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         
         var spans = codeObjectsInsight.spans;
 
-        var spansLocations = spans.map(span=> 
-                                             { return {
-                                                slowspaninfo : span, 
-                                                spanSearchResult : this._documentInfoProvider.searchForSpan({ instrumentationName : span.spanInfo.instrumentationLibrary.split(".").join( " "), spanName :span.spanInfo.name, fullName:span.spanInfo.name })
-                                                };
-                                             }); 
-        
-        let uriPromises = spansLocations.map(x=>x.spanSearchResult);
-        await Promise.all(uriPromises);
+        var spansLocations = await new SpanSearch(this._documentInfoProvider).searchForSpans(spans.map(x=>x.spanInfo));
 
         var items :string[] = [];
                         
         for (let i=0;i<spansLocations.length;i++){
-            let result = await spansLocations[i].spanSearchResult;
-            const slowSpan = spansLocations[i].slowspaninfo;
+
+            let result = spansLocations[i];
+            const slowSpan = spans[i];
 
             items.push(`
                 <div class="endpoint-bottleneck-insight" title="${this.getTooltip(slowSpan)}">
@@ -244,7 +231,7 @@ P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${s
 P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
     }
     
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
         
         let items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
@@ -304,7 +291,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         };
     }
 
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SlowEndpointInsight[], usageResults: UsageStatusResults): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: SlowEndpointInsight[]): Promise<IListViewItem[]> {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 

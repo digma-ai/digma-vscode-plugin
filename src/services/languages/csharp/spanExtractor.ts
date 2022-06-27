@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInspector } from '../../codeInspector';
-import { ISpanExtractor, SpanInfo, SymbolInfo } from "../extractors";
+import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from "../extractors";
 import { Token, TokenType } from '../tokens';
 import { SymbolProvider } from './../symbolProvider';
 
@@ -14,8 +14,8 @@ export class CSharpSpanExtractor implements ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-    ): Promise<SpanInfo[]> {
-        const results: SpanInfo[] = [];
+    ): Promise<SpanLocationInfo[]> {
+        const results: SpanLocationInfo[] = [];
         for(let i = 0; i < tokens.length - 3; i++) {
             const isMatch = this.isCallToStartActivity(tokens, i);
             if(!isMatch) {
@@ -52,7 +52,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
             const instrumentationLibrary = this.cleanSpanName(activityDefinitionToken.text);
             const spanName = this.cleanSpanName(spanNameToken.text);
 
-            results.push(new SpanInfo(
+            results.push(new SpanLocationInfo(
                 instrumentationLibrary + '$_$' + spanName,
                 spanName,
                 spanNameToken.range,

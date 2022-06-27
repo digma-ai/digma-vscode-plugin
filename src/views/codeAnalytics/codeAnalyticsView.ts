@@ -7,7 +7,7 @@ import { ICodeAnalyticsViewTab } from "./common";
 import { ErrorsViewTab } from "./errorsViewTab";
 import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
-import { UsagesViewTab } from "./usagesViewTab";
+import { UsagesViewTab } from "./summaryViewTab";
 import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
@@ -21,6 +21,9 @@ import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScope
 import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
 import { EndpointGroup } from "./CodeObjectGroups/EndpointGroup";
 import { UnknownInsightInsight } from "./AdminInsights/adminInsights";
+import { TopErrorsInsightCreator } from "./InsightListView/TopErrorsInsight";
+import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
+import { SpanDurationChangesInsightCreator } from "./InsightListView/SpanDurationChangesInsight";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -140,18 +143,23 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("SpanEndpointBottleneck", new SpanEndpointBottlenecksListViewItemsCreator(this._webViewUris,editorHelper,_documentInfoProvider,this._channel));
-
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
         const groupItemViewCreator = new CodeObjectScopeGroupCreator();
         groupItemViewCreator.add("Span", new SpanGroup());
         groupItemViewCreator.add("Endpoint", new EndpointGroup());
+        
+        const globalInsightItemrCreator = new InsightListViewItemsCreator();
+        globalInsightItemrCreator.add("TopErrorFlows", new TopErrorsInsightCreator());
+        globalInsightItemrCreator.add("SpanDurationChange", new SpanDurationChangesInsightCreator(this._webViewUris, this._documentInfoProvider));
 
+
+        let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris);
 
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris),
-            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris),
-            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider)
+            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris,noCodeObjectMessage),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris,noCodeObjectMessage),
+            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider, globalInsightItemrCreator)
         ];
 
         this._disposables.concat(tabsList);
@@ -181,6 +189,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		document: vscode.TextDocument,
 		position: vscode.Position
 	) {
+
         const codeObject = await this.getCodeObjectOrShowOverlay(document, position);
         if(codeObject) { 
             if(!this._activeTab){
@@ -230,14 +239,14 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         }
         
 		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
-        if(!methodInfo){
-            if(this.canChangeOverlayOnCodeSelectionChanged()) {
-                await this._overlay.showCodeSelectionNotFoundMessage(docInfo);
-            }
-            this._activeTab?.onDectivate();
-            this._activeTab = undefined;
-            return;
-        }
+        // if(!methodInfo){
+        //     if(this.canChangeOverlayOnCodeSelectionChanged()) {
+        //         await this._overlay.showCodeSelectionNotFoundMessage(docInfo);
+        //     }
+        //     this._activeTab?.onDectivate();
+        //     this._activeTab = undefined;
+        //     return;
+        // }
 
 		const codeObject = <CodeObjectInfo>{ 
             id: methodInfo?.symbol.id, 
@@ -291,6 +300,14 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     }
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)
     {
+        //if we're moving away from 'summary' we need to refresh the code object
+        // if (this._activeTab?.viewId==="view-global-insights"){
+        //     const editor = vscode.window.activeTextEditor;
+        //     if (editor){
+        //         this._currentCodeObject = await this.getCodeObjectOrShowOverlay(editor.document,editor.selection.anchor);
+        //     }
+        // }
+
         if(event.viewId && this._currentCodeObject){
             this._activeTab?.onDectivate();
             this._activeTab = this._tabs.get(event.viewId)!;

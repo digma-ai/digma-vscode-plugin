@@ -12,14 +12,12 @@ import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListView
 import { ListViewRender } from "../ListView/ListViewRender";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
-import { IListGroupItemBase } from "../ListView/IListViewGroupItem";
 import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
 import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
 import { InsightItemGroupRendererFactory, InsightListGroupItemsRenderer } from "../ListView/IListViewItem";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
-import { FetchError } from "node-fetch";
-import { CannotConnectToDigmaInsight } from "./AdminInsights/adminInsights";
-import { Settings } from "../../settings";
+import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
+import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 
 
 
@@ -32,16 +30,16 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _groupViewItemCreator: ICodeObjectScopeGroupCreator,
         private _listViewItemsCreator: IInsightListViewItemsCreator,
         private _documentInfoProvider: DocumentInfoProvider,
-        private _viewUris: WebViewUris) { }
+        private _viewUris: WebViewUris,
+        private _noCodeObjectsMessage: NoCodeObjectMessage) { }
     
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
 
-        if (codeObject){
             this.refreshCodeObjectLabel(codeObject);
             this.refreshListViewRequested(codeObject);
 
-        }
+        
 
     }
     
@@ -52,11 +50,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     get viewId(): string { return "view-insights"; }
 
     private async refreshListViewRequested(codeObject: CodeObjectInfo) {
-        if (!codeObject) {
-            this.updateListView("");
-            this.updateSpanListView("");
-            return;
-        }
+
         this.updateListView(HtmlHelper.getLoadingMessage("Loading insights..."));
         this.updateSpanListView("");
         this.clearSpanLabel();
@@ -69,6 +63,13 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
         if(!docInfo) {
+            return;
+        }
+        if (!codeObject || !codeObject.id) {
+            let html = await this._noCodeObjectsMessage.showCodeSelectionNotFoundMessage(docInfo);
+            this.updateListView(html);
+            this.updateSpanListView("");
+            this._viewedCodeObjectId=undefined;
             return;
         }
         const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
@@ -90,29 +91,16 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         catch(e)
         {
-            let fetchError = e as FetchError;
-            //connection issue
-            if (fetchError && fetchError.code && fetchError.code==='ECONNREFUSED'){
-                let html ='<div id="insightList" class="list">';
-                html +=new CannotConnectToDigmaInsight(this._viewUris,Settings.url.value).getHtml();
-                html+=`</div>`;
-                this.updateListView(html);
 
-            }
-            else{
-
-                Logger.error(`Failed to get codeObjects insights`, e);
-                this.updateListView(HtmlHelper.getErrorMessage("Failed to fetch insights from Digma server.\nSee Output window from more info."));
-
-            }
-
+            let html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(e);
+            this.updateListView(html);
             return;
 
         }
         try{
            
             const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults);
-            const listViewItems = await this._listViewItemsCreator.create(codeObject, responseItems,usageResults);
+            const listViewItems = await this._listViewItemsCreator.create( responseItems);
             const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris);
             const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris), codeObjectGroupEnv, usageResults);
             
@@ -139,7 +127,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     public onActivate(codeObject: CodeObjectInfo): void {
-        if (codeObject.id != this._viewedCodeObjectId) {
+        if (!codeObject || !codeObject.id||codeObject.id != this._viewedCodeObjectId) {
             this.refreshCodeObjectLabel(codeObject);
             this.refreshListViewRequested(codeObject);
 
@@ -147,7 +135,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     public onUpdated(codeObject: CodeObjectInfo): void {
-        if (codeObject.id != this._viewedCodeObjectId) {
+        if (!codeObject || !codeObject.id|| (codeObject.id !== this._viewedCodeObjectId)) {
             this.refreshCodeObjectLabel(codeObject);
             this.refreshListViewRequested(codeObject);
         }

@@ -28,6 +28,7 @@ window.addEventListener("load", () =>
     const overlay = $("#view-overlay");
     const tabsContainer = $("#view-tabs");
     const insightsTab = $("#view-insights");
+    const globalInsightsTab = $("#view-global-insights");
     const errorsTab = $("#view-errors");
 
     consume(UiMessage.Set.Overlay, e => {
@@ -58,8 +59,15 @@ window.addEventListener("load", () =>
     });
     
     consume(UiMessage.Set.InsightsList, (event) => {
+
         if (event.htmlContent !== undefined) {
             insightsTab.find("#insightList").html(event.htmlContent);
+        }
+    });
+
+    consume(UiMessage.Set.GlobalInsightsList, (event) => {
+        if (event.htmlContent !== undefined) {
+            globalInsightsTab.find("#insightList").html(event.htmlContent);
         }
     });
 
@@ -128,7 +136,7 @@ window.addEventListener("load", () =>
         $(".error-raw").show();
     });
 
-    overlay.on("click", ".codeobject-link", function(){
+    $(document).on("click", ".codeobject-link", function(){
         const line = $(this).data("line");
         publish(new UiMessage.Notify.GoToLine(parseInt(line)));
     });

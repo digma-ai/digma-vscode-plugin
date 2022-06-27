@@ -9,3 +9,11 @@ export interface Duration {
     unit: string;
     raw: number;
 }
+
+export interface SpanInfo {
+    instrumentationLibrary : string;
+    name: string;
+    displayName: string;
+    serviceName: string;
+    codeObjectId: string;
+}

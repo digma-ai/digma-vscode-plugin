@@ -7,9 +7,9 @@ import { EditorHelper } from "../../../services/EditorHelper";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
-import { CodeObjectInfo } from "../codeAnalyticsView";
-import { Duration, Percentile } from "./CommonInsightObjects";
+import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 
 export interface SpanUsagesInsight extends CodeObjectInsight
 {
@@ -33,7 +33,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
     public constructor(private _viewUris:WebViewUris){
 
     }
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanUsagesInsight [], usageResults: UsageStatusResults): Promise<IListViewItemBase []>
+    public async create( codeObjectsInsight: SpanUsagesInsight []): Promise<IListViewItemBase []>
     {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
@@ -97,7 +97,8 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
 }
 
 export interface SpanDurationsInsight extends CodeObjectInsight{
-    span: string,
+    span: SpanInfo,
+    codeObjectId: string,
     percentiles: {
         percentile: number,
         currentDuration: Duration,
@@ -121,7 +122,7 @@ export interface SlowEndpointInfo{
 
 }
 export interface SpandSlowEndpointsInsight extends CodeObjectInsight{
-    span: string,
+    span: SpanInfo,
     slowEndpoints:SlowEndpointInfo[]
 }
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
@@ -129,49 +130,21 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     public constructor(private _viewUris:WebViewUris ){
 
     }
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpanDurationsInsight[], usageResults: UsageStatusResults): Promise<IListViewItemBase []>
+    public async create( codeObjectsInsight: SpanDurationsInsight[]): Promise<IListViewItemBase []>
     {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
     }
 
+
     public createListViewItem(insight: SpanDurationsInsight) : IListViewItem
     {
-        const percentileHtmls = []
-        insight.percentiles.sort((a,b) => a.percentile - b.percentile);
-        for(const item of insight.percentiles){
-            percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
-            percentileHtmls.push(/*html*/ `<span>${item.currentDuration.value} ${item.currentDuration.unit}</span>`);
 
-            if (item.previousDuration && 
-                item.changeTime && 
-                Math.abs(item.currentDuration.raw-item.previousDuration.raw)/item.previousDuration.raw > 0.1){
-                let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped' : 'raised';
-                percentileHtmls.push(/*html*/ `<span class="change">${verb} from ${item.previousDuration.value} ${item.previousDuration.unit}, ${item.changeTime.fromNow()}</span>`);
-            }
-            else
-                percentileHtmls.push(/*html*/ `<span></span>`);
-
-            if(item.changeTime && item.changeVerified == false)
-                percentileHtmls.push(/*html*/ `<span>evaluating</span>`);
-            else
-                percentileHtmls.push(/*html*/ `<span></span>`);
-
-        }
-
-        const html = /*html*/ `
-            <div class="list-item span-durations-insight">
-                <div class="list-item-content-area">
-                    <div class="list-item-header"><strong>Duration</strong></div>
-                    <div class="percentiles-grid">
-                        ${percentileHtmls.join('')}
-                    </div>
-                </div>
-            </div>`;
+        let renderer = new SpanItemHtmlRendering(this._viewUris);
 
         return {
-            getHtml: ()=> html, 
+            getHtml: ()=> renderer.spanDurationItemHtml(insight), 
             sortIndex: 0, 
-            groupId: insight.span
+            groupId: insight.span.name
         };
     }
 }
@@ -265,7 +238,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: codeObjectsInsight.span
+            groupId: codeObjectsInsight.span.name
         };
     }
 
@@ -283,7 +256,7 @@ P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${s
 P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
     }
     
-    public async create(scope: CodeObjectInfo, codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {
+    public async create( codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {
         
         let items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
