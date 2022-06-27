@@ -1,5 +1,7 @@
 import moment = require("moment");
 import { Uri } from "vscode";
+import { decimal } from "vscode-languageclient";
+import { EndpointSchema, UsageStatusResults } from "../../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
@@ -201,13 +203,14 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
         for (let i=0;i<spansLocations.length;i++){
             let result = await spansLocations[i].spanSearchResult;
             const slowSpan = spansLocations[i].slowspaninfo;
+            const shortRouteName = EndpointSchema.getShortRouteName(slowSpan.endpointInfo.route); 
 
             items.push(`
                 <div class="endpoint-bottleneck-insight" title="${this.getTooltip(slowSpan)}">
                     <div class="span-name flow-row flex-row ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
                     <span class="flow-entry ellipsis" title="${slowSpan.endpointInfo.serviceName}: ${slowSpan.endpointInfo.route}">
                         <span class="flow-service">${slowSpan.endpointInfo.serviceName}:</span>
-                         <span class="flow-span">${slowSpan.endpointInfo.route}</span>
+                         <span class="flow-span">${shortRouteName}</span>
                     </span>
                     </div>
                     <div class="span-description">${this.getDescription(slowSpan)}</div>
