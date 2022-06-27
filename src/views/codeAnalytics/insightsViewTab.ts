@@ -56,27 +56,26 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.clearSpanLabel();
         let responseItems: any [] | undefined = undefined;
         let usageResults: UsageStatusResults;
-
-        const editor = vscode.window.activeTextEditor;
-        if(!editor) {
-            return;
-        }
-        const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
-        if(!docInfo) {
-            return;
-        }
-        if (!codeObject || !codeObject.id) {
-            let html = await this._noCodeObjectsMessage.showCodeSelectionNotFoundMessage(docInfo);
-            this.updateListView(html);
-            this.updateSpanListView("");
-            this._viewedCodeObjectId=undefined;
-            return;
-        }
-        const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
-        const codeObjectsIds = [methodInfo.idWithType]
-            .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
-        try
-        {
+        try {
+            const editor = vscode.window.activeTextEditor;
+            if(!editor) {
+                return;
+            }
+            const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
+            if(!docInfo) {
+                return;
+            }
+            if (!codeObject || !codeObject.id) {
+                let html = await this._noCodeObjectsMessage.showCodeSelectionNotFoundMessage(docInfo);
+                this.updateListView(html);
+                this.updateSpanListView("");
+                this._viewedCodeObjectId=undefined;
+                return;
+            }
+            const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
+            const codeObjectsIds = [methodInfo.idWithType]
+                .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
+            
             responseItems = await this._analyticsProvider.getInsights(codeObjectsIds);
             //temp ugly workaround
             var bottleneck = responseItems.find(x=>x.type ==='SlowestSpans');

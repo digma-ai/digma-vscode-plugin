@@ -118,6 +118,9 @@
                         "None",
                         "Git"
                     ]
+                },
+                "digma.token": {
+                    "type": "string"
                 }
             }
         }
