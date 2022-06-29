@@ -60,7 +60,7 @@ export interface ErrorFlowFrame{
     moduleLogicalPath: string;
     moduleName: string;
     functionName: string;
-    functionArgumentTypes: string[];
+    functionParameterTypes: string[];
     lineNumber: number;
     executedCode: string;
     codeObjectId: string;
@@ -266,7 +266,7 @@ export interface OriginService {
 export interface Frame {
     moduleName: string;
     functionName: string;
-    functionArgumentTypes: string[];
+    functionParameterTypes: string[];
     lineNumber: number;
     executedCode: string;
     codeObjectId: string;
