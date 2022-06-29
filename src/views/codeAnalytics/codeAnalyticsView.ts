@@ -24,6 +24,8 @@ import { UnknownInsightInsight } from "./AdminInsights/adminInsights";
 import { TopErrorsInsightCreator } from "./InsightListView/TopErrorsInsight";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { SpanDurationChangesInsightCreator } from "./InsightListView/SpanDurationChangesInsight";
+import { Console } from "console";
+import { HistogramPanel } from "./Histogram/histogramPanel";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -88,7 +90,6 @@ export interface CodeObjectInfo {
 class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Disposable
 {  
  
-
 	private _view?: vscode.WebviewView;
 	private _webViewUris: WebViewUris;
 	private _channel: WebviewChannel;
@@ -130,6 +131,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel.consume(UiMessage.Notify.TabLoaded, this.onLoadEvent.bind(this));
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
 
+        this._channel.consume(UiMessage.Notify.OpenHistogramPanel, this.onOpenHistogramRequested.bind(this));
+
+
 
         const listViewItemsCreator = new InsightListViewItemsCreator();
         listViewItemsCreator.setUknownTemplate(new UnknownInsightInsight(this._webViewUris));
@@ -155,7 +159,6 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
 
         let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris);
-
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris,noCodeObjectMessage),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris,noCodeObjectMessage),
@@ -183,6 +186,25 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
                 await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
             }
         }
+    }
+
+    private async onOpenHistogramRequested(e: UiMessage.Notify.OpenHistogramPanel)
+    {
+        let options: vscode.WebviewOptions = {
+            enableScripts: true,
+            localResourceRoots: undefined
+        };
+        const panel = vscode.window.createWebviewPanel(
+            'histogramData', // Identifies the type of the webview. Used internally
+            'Span Histogram', // Title of the panel displayed to the user
+            vscode.ViewColumn.One,
+            options // Webview options. More on these later.
+          );
+        
+        const histogram = new HistogramPanel(this._analyticsProvider);
+        await histogram.loadData(e.span!,e.instrumentationLibrary!,"");
+        panel.webview.html=histogram.getHtml();
+        
     }
 
     public async onCodeSelectionChanged(

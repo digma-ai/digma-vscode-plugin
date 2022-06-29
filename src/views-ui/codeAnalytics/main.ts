@@ -58,6 +58,13 @@ window.addEventListener("load", () =>
         $(".stack-nav-next").toggleClass("disabled", !stackInfo?.canNavigateToNext);
     });
     
+    consume(UiMessage.Set.HistogramPanel, (event) => {
+
+        if (event.htmlContent !== undefined) {
+            insightsTab.find("#graph").html(event.htmlContent);
+        }
+    });
+
     consume(UiMessage.Set.InsightsList, (event) => {
 
         if (event.htmlContent !== undefined) {
@@ -124,6 +131,14 @@ window.addEventListener("load", () =>
 
         publish(new UiMessage.Notify.GoToFileAndLine(codeUri,Number(line)));
     });
+
+    $(document).on("click", ".histogram-link", function () {
+        const spanName = $(this).data("span-name");
+        const spanInstrumentationLibrary = $(this).data("span-instrumentationlib");
+
+        publish(new UiMessage.Notify.OpenHistogramPanel(spanName,spanInstrumentationLibrary));
+    });
+   
 
 
     $(document).on("click", ".error_frames_btn", function () {

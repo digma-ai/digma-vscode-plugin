@@ -60,6 +60,11 @@ export class SpanItemHtmlRendering{
                     <div class="percentiles-grid">
                         ${percentileHtmls.join('')}
                     </div>
+                    <div class="list-item-right-area">
+                      <div class="insight-main-value histogram-link link" data-span-name=${insight.span.name} data-span-instrumentationlib=${insight.span.instrumentationLibrary}>
+                      Histogram
+                      </div>     
+                    </div>     
                 </div>
             </div>`;
         return html;

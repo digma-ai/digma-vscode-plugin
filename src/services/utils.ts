@@ -144,7 +144,7 @@ export function momentJsDateParser(key: string, value: any): any
 {
     if (typeof value === 'string' && reISO.test(value)) 
     {
-        return moment(value);
+        return moment.utc(value);
     }
     return value;
 };
