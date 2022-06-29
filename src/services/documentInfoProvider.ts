@@ -234,8 +234,13 @@ export class DocumentInfoProvider implements vscode.Disposable
             );
             methods.push(method);
 
+            var prevToken: Token = tokens.firstOrDefault(); // dummy assignment
+
             const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
             for(let token of methodTokens) {
+                if (token.type === TokenType.punctuation) {
+                    continue;
+                }
                 const name = token.text;// document.getText(token.range);
 
                 if(
@@ -247,12 +252,16 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
 
                 if(token.type === TokenType.parameter) {
-                    if(method.parameters.any(p => p.name === name)) {
-                        continue;
-                    }
+                    // prevToken is the parameter type (the token.type is 'plainKeyword'... expected it to be 'typeParameter' but...)
+                    const paramType = prevToken.text;
 
-                    method.parameters.push({ name, range: token.range, token });
+                    if(method.parameters.any(p => p.name === name)) {
+                        // do nothing
+                    } else {
+                        method.parameters.push({ name, type: paramType, range: token.range, token });
+                    }
                 }
+                prevToken = token;
             }
         }
 
@@ -381,7 +390,8 @@ export class MethodInfo implements CodeObjectInfo
 
 export interface ParameterInfo
 {
-    name: string;
-    range: vscode.Range;
-    token: Token;
+    name: string; // parameter name
+    type: string; // parameter type (value for example: String, Int32, ConnectOption)
+    range: vscode.Range; // of the name
+    token: Token; // of the name
 }
