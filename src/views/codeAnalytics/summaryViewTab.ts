@@ -46,7 +46,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         let usageResults: UsageStatusResults;
         try{
             insights = await this._analyticsProvider.getGlobalInsights(Settings.environment.value);
-            usageResults = await this._analyticsProvider.getUsageStatus([]);
+            usageResults = await this._analyticsProvider.getUsageStatus([]);//todo shay why empty call?
         }
         catch(e){
             let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(e);

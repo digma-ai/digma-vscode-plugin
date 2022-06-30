@@ -88,7 +88,7 @@ export class HtmlHelper
     private static getSourceCodeObject( errorSourceCodeObjectId: string){
 
         return /*html*/`<span class="error-from">from</span>
-                        <span class="error-source ellipsis">${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}</span>`;
+                        <span class="error-source left-ellipsis">${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}</span>`;
     }
 
     private static extractErrorSourceCodeObjectName(errorSourceCodeObjectId: string) {

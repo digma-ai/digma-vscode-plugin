@@ -98,7 +98,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         try{
            
-            const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults);
+            const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults.codeObjectStatuses);
             const listViewItems = await this._listViewItemsCreator.create( responseItems);
             const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris);
             const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris), codeObjectGroupEnv, usageResults);
