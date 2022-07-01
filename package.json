@@ -24,8 +24,7 @@
         "Continuous Delivery",
         "DevOps"
     ],
-    "badges": [
-        {
+    "badges": [{
             "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
             "description": "Star Digma on Github",
             "href": "bit.ly/36LyUcr"
@@ -72,8 +71,7 @@
     "main": "./out/extension.js",
     "contributes": {
         "views": {
-            "digma": [
-                {
+            "digma": [{
                     "type": "webview",
                     "id": "context",
                     "name": "Context"
@@ -86,13 +84,11 @@
             ]
         },
         "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "digma",
-                    "title": "Digma",
-                    "icon": "icon.png"
-                }
-            ]
+            "activitybar": [{
+                "id": "digma",
+                "title": "Digma",
+                "icon": "icon.png"
+            }]
         },
         "configuration": {
             "properties": {
@@ -130,7 +126,7 @@
         "@vscode/codicons": "0.0.20",
         "@vscode/webview-ui-toolkit": "^0.8.5",
         "https": "^1.0.0",
-        "moment": "^2.29.1",
+        "moment": "^2.29.3",
         "node-fetch": "^2.6.6",
         "vscode-languageclient": "^7.0.0"
     },

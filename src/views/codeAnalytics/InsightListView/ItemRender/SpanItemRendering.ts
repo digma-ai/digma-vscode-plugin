@@ -29,7 +29,9 @@ export class SpanItemHtmlRendering{
     
     public spanDurationItemHtml(insight: SpanDurationsInsight): string{
         
-        const percentileHtmls = []
+        const percentileHtmls = [];
+        const changeHtml = [];
+
         insight.percentiles.sort((a,b) => a.percentile - b.percentile);
         for(const item of insight.percentiles){
             percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
@@ -38,10 +40,20 @@ export class SpanItemHtmlRendering{
             if (item.previousDuration && 
                 item.changeTime && 
                 Math.abs(item.currentDuration.raw-item.previousDuration.raw)/item.previousDuration.raw > 0.1){
-                let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
-                percentileHtmls.push(/*html*/ `<span class="change"> 
-                                                    <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
-                                                    ${this.getBestUnit(item.previousDuration, item.currentDuration)}, ${item.changeTime.fromNow()}</span>`);
+                    
+                    let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
+
+                    percentileHtmls.push(/*html*/ `
+                        <div class="flex-row">
+                            <span class="change"> 
+                                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
+                                ${this.getBestUnit(item.previousDuration, item.currentDuration)}, ${item.changeTime.fromNow()}
+                            </span>
+                        </div>`);
+        
+                // percentileHtmls.push(/*html*/ `<span class="change"> 
+                //                                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
+                //                                     ${this.getBestUnit(item.previousDuration, item.currentDuration)}, ${item.changeTime.fromNow()}</span>`);
             }
             else
                 percentileHtmls.push(/*html*/ `<span></span>`);
@@ -53,6 +65,7 @@ export class SpanItemHtmlRendering{
 
         }
 
+
         const html = /*html*/ `
             <div class="list-item span-durations-insight">
                 <div class="list-item-content-area">
@@ -60,10 +73,12 @@ export class SpanItemHtmlRendering{
                     <div class="percentiles-grid">
                         ${percentileHtmls.join('')}
                     </div>
-                    <div class="list-item-right-area">
-                      <div class="insight-main-value histogram-link link" data-span-name=${insight.span.name} data-span-instrumentationlib=${insight.span.instrumentationLibrary}>
+                </div>     
+
+                <div class="list-item-right-area">
+                    <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("histogram.png")}" width="32" height="32">
+                    <div class="insight-main-value histogram-link link" data-span-name=${insight.span.name} data-span-instrumentationlib=${insight.span.instrumentationLibrary}>
                       Histogram
-                      </div>     
                     </div>     
                 </div>
             </div>`;
