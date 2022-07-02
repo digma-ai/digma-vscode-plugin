@@ -119,7 +119,9 @@ vscode-panel-view {
     width: 50px;
     display: flex;
     flex-direction: column;
-    margin: 3px;
+    margin-right: 3px;
+    margin-left: 3px;
+    margin-top: 3px;
     justify-content: flex-start;
     .insight-main-image {
         min-width: 32px;

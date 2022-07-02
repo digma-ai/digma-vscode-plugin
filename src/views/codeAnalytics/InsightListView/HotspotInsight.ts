@@ -1,3 +1,4 @@
+import { CodeObjectId } from "../../../services/codeObject";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectInfo } from "../codeAnalyticsView";
@@ -31,7 +32,11 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
                         </div>
                     </div>
                     `;
-            return {getHtml: ()=>html, sortIndex: 0, groupId: undefined};
+                    let groupId = undefined;
+                    if(CodeObjectId.isSpan(o.codeObjectId)){
+                        groupId = o.codeObjectId.split('$_$')[1]; //span name
+                    }
+            return {getHtml: ()=>html, sortIndex: 0, groupId: groupId};
         });
         return result;
     }
