@@ -491,11 +491,17 @@ export class AnalyticsProvider
     }
 
 
+    private createSslAgent(): https.Agent {
+        // when NODE_TLS_REJECT_UNAUTHORIZED = 0, it allows allows insecure http 
+        process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
+        return new https.Agent({rejectUnauthorized: false});
+    }
+
     private async send<TResponse>(method: string, relativePath: string, queryParams?: Dictionary<string, any>, body?: any): Promise<TResponse>
     {
         let url = vscode.Uri.joinPath(vscode.Uri.parse(Settings.url.value), relativePath).toString();
         const agent = url.startsWith('https')
-            ? new https.Agent({rejectUnauthorized: false })
+            ? this.createSslAgent()
             : undefined;
 
         if(queryParams)
