@@ -166,22 +166,12 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                 this._channel.publish(new UiMessage.Set.ErrorsList(html));
                 return;
             }
-
-            //let html="";
-            // if (usageResults){
-            //     const usageHtml = new CodeObjectGroupEnvironments(this._webViewUris).getUsageHtml(undefined, undefined, usageResults);
-            //     html+=usageHtml;
-            // }
             var codeObjectStatuses =usageResults.codeObjectStatuses.filter(o=>o.type === "Span");
             const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(codeObjectStatuses);
             const listViewItems = ErrorsHtmlBuilder.createListViewItem(errors);
             const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris);
             const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._webViewUris), codeObjectGroupEnv, usageResults);
             const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
-
-          
-
-           // html += ErrorsHtmlBuilder.buildErrorItems(codeObject, errors);
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId = codeObject.id;
         }
