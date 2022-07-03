@@ -221,6 +221,7 @@ export interface CodeObjectErrorResponse{
     uid: string;
     name: string;
     scoreInfo: ScoreInfo;
+    codeObjectId: string;
     sourceCodeObjectId: string;
     characteristic: string;
     startsHere: boolean;
@@ -322,15 +323,15 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getCodeObjectErrors(codeObjectId: string): Promise<CodeObjectErrorResponse[]>
+    public async getCodeObjectsErrors(codeObjectIds: string []): Promise<CodeObjectErrorResponse[]>
     {
+        let params : [string, any][] = [["environment",Settings.environment.value]];
+        codeObjectIds.forEach(o=> params.push(["codeObjectId",o]));
+
         const response = await this.send<CodeObjectErrorResponse[]>(
             'GET', 
-            `/CodeAnalytics/codeObjects/errors`, 
-            {
-                codeObjectId: codeObjectId,
-                environment: Settings.environment.value
-            }, 
+            `/CodeAnalytics/codeObjects/errors`,
+            params, 
             undefined);
             
         return response;
@@ -399,19 +400,20 @@ export class AnalyticsProvider
     {
         try
         {
-            let queryParams: Dictionary<string, any> = {};
-            queryParams['environment'] = Settings.environment.value;
-            
-            if(sort)
-                queryParams['sort'] = sort;
+            let params : [string, any][] = [["environment",Settings.environment.value]];
 
-            if(filterByCodeObjectId)
-                queryParams['codeObjectId'] = filterByCodeObjectId;
+            if(sort){
+                params.push(["sort",sort]);
+            }
+
+            if(filterByCodeObjectId){
+                params.push(["codeObjectId",filterByCodeObjectId]);
+            }
 
             const response = await this.send<CodeObjectErrorFlowsResponse>(
                 'GET', 
                 `/CodeAnalytics/errorFlows`, 
-                queryParams);
+                params);
 
             return response.errorFlows;
         }
@@ -458,15 +460,12 @@ export class AnalyticsProvider
         }
         return;
     }
-
-
     private createSslAgent(): https.Agent {
         // when NODE_TLS_REJECT_UNAUTHORIZED = 0, it allows allows insecure http 
         process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
         return new https.Agent({rejectUnauthorized: false});
     }
-
-    private async send<TResponse>(method: string, relativePath: string, queryParams?: Dictionary<string, any>, body?: any): Promise<TResponse>
+    private async send<TResponse>(method: string, relativePath: string, queryParams?: [string, any][], body?: any): Promise<TResponse>
     {
         let url = vscode.Uri.joinPath(vscode.Uri.parse(Settings.url.value), relativePath).toString();
         const agent = url.startsWith('https')
@@ -476,11 +475,11 @@ export class AnalyticsProvider
         if(queryParams)
         {
             url += '?';
-            for(let key in queryParams)
-                url += `${key}=${encodeURIComponent(queryParams[key])}&`;
-        }
+            queryParams.forEach(val=>{
+                url += `${val[0]}=${encodeURIComponent(val[1])}&`;
 
-        
+            });
+        }
         const requestHeaders: any = {'Content-Type': 'application/json'};
         if(Settings.token.value !== undefined && Settings.token.value.trim() !== ""){
             requestHeaders['Authorization'] = `Token ${Settings.token.value}`;

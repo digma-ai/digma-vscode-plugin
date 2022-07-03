@@ -1,4 +1,4 @@
-import { UsageStatusResults } from "../../../services/analyticsProvider";
+import { CodeObjectUsageStatus, UsageStatusResults } from "../../../services/analyticsProvider";
 import { IListGroupItemBase } from "../../ListView/IListViewGroupItem";
 import { ICodeObjectScopeGroupCreator } from "./ICodeObjectScopeGroupCreator";
 
@@ -6,10 +6,10 @@ export class CodeObjectGroupDiscovery{
 
     public constructor(private _groupViewItemCreator: ICodeObjectScopeGroupCreator){}
 
-    public async getGroups(usageResults: UsageStatusResults): Promise<IListGroupItemBase[]>{
+    public async getGroups(codeObjectUsagesStatus:  CodeObjectUsageStatus[]): Promise<IListGroupItemBase[]>{
 
         const groupItems: IListGroupItemBase[] = [];
-        const statusesByType =usageResults.codeObjectStatuses.groupBy(x=>x.type);
+        const statusesByType =codeObjectUsagesStatus.groupBy(x=>x.type);
         const types = Object.keys(statusesByType);
         for (const type of types){
             const constObjectsData = statusesByType[type].map(x=>x.name);

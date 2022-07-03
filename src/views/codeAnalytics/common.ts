@@ -80,7 +80,7 @@ export class HtmlHelper
     {
         return /*html*/ `
             <span
-                class="error-name ${link ? 'link' : '' } ellipsis"
+                class="error-name ${link ? 'link' : '' } ellipsis-left"
                 data-error-source-uid="${errorSourceUID}">${errorType}</span>
             ${HtmlHelper.getSourceCodeObject( errorSourceCodeObjectId)}
         `;
@@ -88,7 +88,7 @@ export class HtmlHelper
     private static getSourceCodeObject( errorSourceCodeObjectId: string){
 
         return /*html*/`<span class="error-from">from</span>
-                        <span class="error-source ellipsis">${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}</span>`;
+                        <span class="error-source left-ellipsis">${this.extractErrorSourceCodeObjectName(errorSourceCodeObjectId)}</span>`;
     }
 
     private static extractErrorSourceCodeObjectName(errorSourceCodeObjectId: string) {
