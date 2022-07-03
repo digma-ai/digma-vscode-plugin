@@ -326,7 +326,7 @@ export class AnalyticsProvider
     public async getCodeObjectsErrors(codeObjectIds: string []): Promise<CodeObjectErrorResponse[]>
     {
         let params : [string, any][] = [["environment",Settings.environment.value]];
-        codeObjectIds.forEach(o=> params.push(["codeObjectIds",o]));
+        codeObjectIds.forEach(o=> params.push(["codeObjectId",o]));
 
         const response = await this.send<CodeObjectErrorResponse[]>(
             'GET', 
