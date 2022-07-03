@@ -1,36 +1,43 @@
 import { CodeObjectErrorResponse, CodeObjectErrorDetails, CodeObjectError } from "../../services/analyticsProvider";
+import { CodeObjectId } from "../../services/codeObject";
 import { Settings } from "../../settings";
 import { CodeObjectInfo } from "../codeAnalytics/codeAnalyticsView";
 import { HtmlHelper } from "../codeAnalytics/common";
 import { ErrorFlowStackViewModel, StackViewModel, ErrorFlowStackRenderer } from "../codeAnalytics/errorFlowStackRenderer";
+import { IListViewItem } from "../ListView/IListViewItem";
 
 export class ErrorsHtmlBuilder
 {
-    public static buildErrorItems(codeObject: CodeObjectInfo, errors: CodeObjectErrorResponse[]): string{
-        if(!errors.length){
-            return HtmlHelper.getInfoMessage("No errors recorded here yet.");
-        }
-        
-        let html = '';
+    public static createListViewItem(errors: CodeObjectErrorResponse []) : IListViewItem [] {
+        const items: IListViewItem [] = [];
         for(let error of errors){
-            html += /*html*/`
+            const html = /*html*/ `
             <div class="list-item">
-                <div class="list-item-content-area">
-                    <div class="list-item-header flex-v-center">
-                        ${HtmlHelper.getErrorName( error.name, error.sourceCodeObjectId, error.uid)}
+                    <div class="list-item-content-area">
+                        <div class="list-item-header flex-v-center">
+                            ${HtmlHelper.getErrorName( error.name, error.sourceCodeObjectId, error.uid)}
+                        </div>
+                        <div class="error-characteristic">${error.characteristic}</div>
+                        <div class="flex-row">
+                            ${ErrorsHtmlBuilder.getErrorStartEndTime(error)}
+                        </div>
+                    </div> 
+                    <div class="list-item-right-area">
+                        ${HtmlHelper.getScoreBoxHtml(error.scoreInfo.score, ErrorsHtmlBuilder.buildScoreTooltip(error))}
+                        ${this.getErrorIcons(error)}
                     </div>
-                    <div class="error-characteristic">${error.characteristic}</div>
-                    <div class="flex-row">
-                        ${ErrorsHtmlBuilder.getErrorStartEndTime(error)}
-                    </div>
-                </div> 
-                <div class="list-item-right-area">
-                    ${HtmlHelper.getScoreBoxHtml(error.scoreInfo.score, ErrorsHtmlBuilder.buildScoreTooltip(error))}
-                    ${ErrorsHtmlBuilder.getErrorIcons(error)}
-                </div>
-            </div>`;
+                </div>`;
+            let groupId = undefined;
+            if(CodeObjectId.isSpan(error.codeObjectId)){
+                groupId = error.codeObjectId.split('$_$')[1]; //span name
+            }
+            items.push ({
+                getHtml: ()=> html, 
+                sortIndex: 0, 
+                groupId: groupId});
+
         }
-        return html;
+        return items;
     }
 
     public static buildErrorDetails(
@@ -127,10 +134,8 @@ export class ErrorsHtmlBuilder
         return html;
     }
 
-    private static getFlowStacksHtml(
-        viewModels?: ErrorFlowStackViewModel[],
-    ): string {
-        if(!viewModels || viewModels.length === 0) {
+    private static getFlowStacksHtml(viewModels?: ErrorFlowStackViewModel[]): string {
+        if(!viewModels || viewModels.length === 0){
             return '';
         }
 

@@ -18,6 +18,12 @@ import { ErrorsHtmlBuilder } from "../errors/ErrorsHtmlBuilder";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
+import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
+import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
+import { IListViewItem, InsightItemGroupRendererFactory } from "../ListView/IListViewItem";
+import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
+import { ListViewRender } from "../ListView/ListViewRender";
+import { CodeObjectId, CodeObjectType } from "../../services/codeObject";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -41,7 +47,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _overlay: OverlayView,
         private _webViewProvider: WebViewProvider,
         private _webViewUris: WebViewUris,
-        private _noCodeObjectMessage: NoCodeObjectMessage) 
+        private _noCodeObjectMessage: NoCodeObjectMessage,
+        private _groupViewItemCreator: ICodeObjectScopeGroupCreator,) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
@@ -115,17 +122,18 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     }
     private async refreshList(codeObject: CodeObjectInfo) 
     {
+        const editor = vscode.window.activeTextEditor;
+        if(!editor) {
+            return;
+        }
+        const document = editor.document;
+        let docInfo = await this._documentInfoProvider.getDocumentInfo(document);
+        if (!docInfo){
+            return;
+        }
+        
         if (!codeObject || !codeObject.id) {
-            const editor = vscode.window.activeTextEditor;
-            if(!editor) {
-                return;
-            }
-            const document = editor.document;
-
-            let docInfo = await this._documentInfoProvider.getDocumentInfo(document);
-            if (!docInfo){
-                return;
-            }
+            
             let html = await this._noCodeObjectMessage.showCodeSelectionNotFoundMessage(docInfo);
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId=undefined;
@@ -134,16 +142,20 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
         if(codeObject.id !== this._viewedCodeObjectId)
         {
+            const methodInfo = docInfo.methods.single(x => x.id === codeObject.id);
+            const codeObjectsIds = [methodInfo.idWithType]
+                .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
+
             let errors: CodeObjectErrorResponse[] = [];
-            let errorsInEnv:UsageStatusResults|undefined;
+            let usageResults:UsageStatusResults|undefined;
             try
             {
-                errorsInEnv= await this._analyticsProvider.getUsageStatus([codeObject.id]);
-                errors = await this._analyticsProvider.getCodeObjectErrors(codeObject.id);
+                usageResults= await this._analyticsProvider.getUsageStatus(codeObjectsIds);//shayk todo update this one as well
+                errors = await this._analyticsProvider.getCodeObjectsErrors(codeObjectsIds);
             }
             catch(e)
             {
-                if(!(e instanceof HttpError) || e.status != 404){
+                if(!(e instanceof HttpError) || e.status !== 404){
                     Logger.error(`Failed to get codeObject ${codeObject.id} errors`, e);
                     const html = HtmlHelper.getErrorMessage("Failed to fetch errors from Digma server.\nSee Output window from more info.");
                     this._channel.publish(new UiMessage.Set.ErrorsList(html));
@@ -154,17 +166,19 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                 this._channel.publish(new UiMessage.Set.ErrorsList(html));
                 return;
             }
-
-            let html="";
-            if (errorsInEnv){
-                const usageHtml = new CodeObjectGroupEnvironments(this._webViewUris).getUsageHtml(undefined, undefined, errorsInEnv);
-                html+=usageHtml;
-            }
-            html += ErrorsHtmlBuilder.buildErrorItems(codeObject, errors);
+            var codeObjectStatuses =usageResults.codeObjectStatuses.filter(o=>o.type === "Span");
+            const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(codeObjectStatuses);
+            const listViewItems = ErrorsHtmlBuilder.createListViewItem(errors);
+            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris);
+            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._webViewUris), codeObjectGroupEnv, usageResults);
+            const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId = codeObject.id;
         }
     }
+
+    
+
     
     private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
         if(!e.errorSourceUID) {
@@ -202,8 +216,9 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         if(!stackViewModel) {
             return;
         }
-        const stackViewModels = this._stackViewModels;
+        const stackViewModels = this._stackViewModels?.filter(o=>o.stacks.length > 0);
         if(!stackViewModels || stackViewModels.length === 0) {
+            this._channel.publish(new UiMessage.Set.StackDetails(""));
             return;
         }
 
