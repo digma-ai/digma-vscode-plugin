@@ -370,7 +370,7 @@ export class AnalyticsProvider
         
         const response: SpanHistogramData = await this.send<any>(
             'POST', 
-            `/CodeAnalytics/codeObjects/span_histogram`,
+            `/CodeAnalytics/codeObjects/stats/span_histogram`,
             undefined,
             {
                 environment: environment,
