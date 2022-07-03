@@ -135,7 +135,7 @@ export class ErrorsHtmlBuilder
     }
 
     private static getFlowStacksHtml(viewModels?: ErrorFlowStackViewModel[]): string {
-        if(!viewModels || viewModels.length === 0){// ||  viewModels?.all(o=>o.stacks.length === 0)) {
+        if(!viewModels || viewModels.length === 0){
             return '';
         }
 
