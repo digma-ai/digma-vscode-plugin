@@ -72,16 +72,10 @@
     "contributes": {
         "views": {
             "digma": [{
-                    "type": "webview",
-                    "id": "context",
-                    "name": "Context"
-                },
-                {
-                    "type": "webview",
-                    "id": "codeAnalytics",
-                    "name": "CodeAnalytics"
-                }
-            ]
+                "type": "webview",
+                "id": "codeAnalytics",
+                "name": "CodeAnalytics"
+            }]
         },
         "viewsContainers": {
             "activitybar": [{
