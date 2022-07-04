@@ -1,6 +1,6 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AnalyticsProvider, CodeObjectSummary, MethodCodeObjectSummary } from './analyticsProvider';
+import { AnalyticsProvider, CodeObjectSummary, EndpointCodeObjectSummary, EndpointSchema, MethodCodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
@@ -169,14 +169,39 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens, symbolTrees, this);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
-                const methodInfos = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
-                const summaries = new CodeObjectSummaryAccessor(
-                    await this.analyticsProvider.getSummaries(
-                        methodInfos.map(s => s.idWithType)
-                            .concat(endpoints.map(e => e.idWithType))
-                            .concat(spans.map(s => s.idWithType))
-                    )
+                let methodInfos = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
+                const summariesResult = await this.analyticsProvider.getSummaries(
+                    methodInfos.map(s => s.idWithType)
+                        .concat(endpoints.map(e => e.idWithType))
+                        .concat(spans.map(s => s.idWithType))
                 );
+
+                //Get endpoints discovered via server that don't exist in document info
+                const endPointsDiscoveredViaServer = summariesResult.filter(x=>x.type==='EndpointSummary')
+                    .filter(x=>!endpoints.any(e=>e.id===x.codeObjectId));
+
+                for ( const endpoint of endPointsDiscoveredViaServer){
+                    const endPointSummary = endpoint as EndpointCodeObjectSummary;
+                    const shortRouteName = EndpointSchema.getShortRouteName(endPointSummary.route);
+                    const parts = shortRouteName.split(' '); 
+                    if (endPointSummary){
+                        const relatedMethod = symbolInfos.filter(x=>x.id===endpoint.codeObjectId).firstOrDefault();
+                        if (relatedMethod){
+                            endpoints.push(new EndpointInfo(
+                                endpoint.codeObjectId,
+                                parts[0],
+                                endPointSummary.route,
+                                relatedMethod.range
+                                ,relatedMethod.documentUri));
+    
+                        }
+                    }
+                }
+
+                const newMethodInfos = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
+                methodInfos=newMethodInfos;
+                const summaries = new CodeObjectSummaryAccessor(summariesResult);
+          
                 const lines = this.createLineInfos(doc, summaries, methodInfos);
                 latestVersionInfo.value = {
                     summaries,

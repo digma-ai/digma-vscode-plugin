@@ -166,6 +166,7 @@ export class EndpointCodeObjectSummary implements CodeObjectSummary
     highUsage: boolean = false;
     lowUsage: boolean = false;
     maxCallsIn1Min: integer = 0;
+    route: string='';
 }
 export class SpanCodeObjectSummary implements CodeObjectSummary
 {
