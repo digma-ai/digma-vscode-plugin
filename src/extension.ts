@@ -4,7 +4,6 @@ import { AnalyticsProvider} from './services/analyticsProvider';
 import { SymbolProvider } from './services/languages/symbolProvider';
 import { PythonLanguageExtractor } from "./services/languages/python/languageExtractor";
 import { CSharpLanguageExtractor } from './services/languages/csharp/languageExtractor';
-import { ContextView } from './views/contextView';
 import { Settings } from './settings';
 import { SourceControl, Git } from './services/sourceControl';
 import { DocumentInfoProvider } from './services/documentInfoProvider';
@@ -41,7 +40,7 @@ export async function activate(context: vscode.ExtensionContext)
         }
     }
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
-    context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
+    //context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInspector));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);

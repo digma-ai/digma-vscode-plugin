@@ -5,9 +5,10 @@ import { Settings } from "../settings";
 import { Logger } from "./logger";
 import { Dictionary, momentJsDateParser } from "./utils";
 import moment = require("moment");
-import { integer } from "vscode-languageclient";
+import { decimal, integer } from "vscode-languageclient";
 import * as os from 'os';
 import { stringify } from "querystring";
+import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
 
 
 export enum Impact 
@@ -189,6 +190,30 @@ export interface UsageStatusResults {
 
 }
 
+export interface DurationRecord{
+    duration:decimal;
+    time: moment.Moment;
+}
+export interface SpanDurationData{
+    spanInfo: SpanInfo;
+    p95Durations: DurationRecord[];
+    p99Durations: DurationRecord[];
+    p75Durations: DurationRecord[];
+    p50Durations: DurationRecord[];
+
+}
+
+export interface PercentileDuration extends DurationRecord{
+    percentile:decimal;
+    isChange:boolean;
+    direction:integer;
+    isVerified:boolean;
+}
+export interface SpanHistogramData{
+    spanInfo: SpanInfo;
+    percentileDurations: PercentileDuration[];
+}
+
 export interface EnvironmentUsageStatus{
     name: string;
     environmentFirstRecordedTime:moment.Moment;
@@ -350,6 +375,41 @@ export class AnalyticsProvider
             });
             return response;
     }
+
+    public async getSpanDurations(spanName: string, instrumentationLib: string,
+        codeObjectId: string, environment:string): Promise<SpanDurationData> 
+    {
+        
+        const response: SpanDurationData = await this.send<any>(
+            'POST', 
+            `/CodeAnalytics/codeObjects/stats/span_durations`,
+            undefined,
+            {
+                environment: environment,
+                spanName: spanName,
+                instrumentationLibrary: instrumentationLib,
+                codeObjectId: codeObjectId
+            });
+            return response;
+    }
+
+    public async getSpanHistogramData(spanName: string, instrumentationLib: string,
+        codeObjectId: string, environment:string): Promise<SpanHistogramData> 
+    {
+        
+        const response: SpanHistogramData = await this.send<any>(
+            'POST', 
+            `/CodeAnalytics/codeObjects/stats/span_histogram`,
+            undefined,
+            {
+                environment: environment,
+                spanName: spanName,
+                instrumentationLibrary: instrumentationLib,
+                codeObjectId: codeObjectId
+            });
+            return response;
+    }
+
 
     public async getGlobalInsights(environment: string): Promise<any []> 
     {

@@ -1,3 +1,4 @@
+import { decimal } from "vscode-languageclient"
 
 export namespace UiMessage
 {
@@ -28,6 +29,10 @@ export namespace UiMessage
         export class GoToFileAndLine {
             constructor(public file?: string, public line?:number){}
         }
+
+        export class OpenHistogramPanel {
+            constructor(public span?: string, public instrumentationLibrary?:string){}
+        }
         export class OpenRawTrace {
             constructor(public content?: string) {}
         }
@@ -57,6 +62,11 @@ export namespace UiMessage
     {
         export class InsightsList {
             constructor(public htmlContent?: string) {}
+        }
+
+        export class HistogramPanel{
+            constructor(public data?: decimal[]) {}
+
         }
 
         export class GlobalInsightsList {

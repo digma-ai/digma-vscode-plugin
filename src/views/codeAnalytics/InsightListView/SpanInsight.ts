@@ -166,24 +166,6 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
         this._editorHelper.openFileAndLine( doc,line );
     }
 
-    private duration(duration: Duration) {
-        return `${duration.value} ${duration.unit}`;
-    }
-
-    private getAffectedP(ep: SlowEndpointInfo): string{
-        if(ep.p50.fraction > 0.4){
-            return "50%";
-        }
-        if (ep.p95.fraction>0.4){
-            return "5%";
-        }
-        if (ep.p99.fraction>0.4){
-            return "1%";
-        }
-
-        return "";
-
-    }
     public async createListViewItem(codeObjectsInsight: SpandSlowEndpointsInsight): Promise<IListViewItem> {
         
         var endpoints = codeObjectsInsight.slowEndpoints;
