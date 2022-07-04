@@ -1,92 +1,118 @@
+import { stringify } from "querystring";
 import { AnalyticsProvider, DurationRecord } from "../../../services/analyticsProvider";
 import { Settings } from "../../../settings";
+import { SpanInfo } from "../InsightListView/CommonInsightObjects";
 
 export class HistogramPanel {
 
-    jsArrayP50: string;
-    jsArrayP95: string;
+
 
     constructor(private _analyticsProvider: AnalyticsProvider){
-        this.jsArrayP50="";
-        this.jsArrayP95="";
 
     }
     
-    private durationRecordToJS(durationRecord: DurationRecord[]):string{
+    private durationRecordToJS(durationRecord: DurationRecord):string{
 
-        const firstRecord = durationRecord.firstOrDefault();
         let date='';
-        if (firstRecord){
-            const r=firstRecord.time;
-            const d = new Date(r.toISOString());
-            date+=`new Date(${r.year()}, ${r.month()}, ${d.getDate()}, ${r.hours()}, ${r.minutes()},${r.seconds()}, ${r.milliseconds()})`;
-            let durations = durationRecord.map(x=>(x.duration/1000000000).toPrecision(2).toString()).join(",");
-            return `[${date} ,${durations}] `;
-        }
-        return '';
+        const r=durationRecord.time;
+        const d = new Date(r.toISOString());
+        date+=`[new Date(]${r.year()}, ${r.month()}, ${d.getDate()}, ${r.hours()}, ${r.minutes()},${r.seconds()},${r.milliseconds()})`;
+        let durations = (durationRecord.duration/1000000).toPrecision(2).toString();
+        return `{x: ${date},y: ${durations}}`;
+        
 
     }
-    public async loadData(spanName: string, instrumentationLibrary: string, 
-        codeObjectId: string){
 
-        const histogramData = await this._analyticsProvider.getSpanHistogram(spanName, instrumentationLibrary,
+    private getXAxisData(durationRecords: DurationRecord[]):string{
+        var dateStrings = durationRecords.map(x=>x.time).map(d=>{
+            return `'${d.format('YYYY-MM-DD HH:mm:SS')}'`;
+        }).join(",");
+        return `[${dateStrings}]`;
+    }
+
+    private getYAxisData(durationRecords: DurationRecord[]):string{
+        const durations = durationRecords.map(x=>x.duration)
+            .map(d=>(d/1000000).toPrecision(2).toString()).join(",");
+        return `[${durations}]`;
+    }
+
+    public async getHtml(spanName: string, instrumentationLibrary: string, 
+        codeObjectId: string):Promise<string>{
+
+        
+        const histogramData = await this._analyticsProvider.getSpanHistogramData(spanName, instrumentationLibrary,
             codeObjectId, Settings.environment.value);
         
-        let verySmallNumbers = histogramData.p50Durations.filter(x=>x.duration>1000);
-        let rows:string[]=[];
-        for (let i=0; i< histogramData.p50Durations.length; i++ ){
+        let dataByPercentile = histogramData.percentileDurations.groupBy(x=>x.percentile);
+        let percentiles = Object.keys(dataByPercentile);
+        let dataSources: string[] = [];
 
-            rows.push(this.durationRecordToJS([histogramData.p50Durations[i],histogramData.p95Durations[i]]));
+        for (const percentile of percentiles){
+            let p = parseFloat(percentile);
+            let percentileData = dataByPercentile[p];
+
+            const xValues = this.getXAxisData(percentileData);
+            const yValues = this.getYAxisData(percentileData);
+
+            dataSources.push(`
+                    {
+                        type: "scatter",
+                        name: 'P${(p*100).toString()}',
+                        x: ${xValues},
+                        y: ${yValues},
+                        line: {color: '#7F7F7F'}
+                    }
+            `);
         }
 
-        this.jsArrayP50=rows.join(",");
+        const data = `[${dataSources.join(",")}]`;
 
-        //this.jsArrayP95= histogramData.p95Durations.map(x=>this.durationRecordToJS(x)).join(",");
-
-    }
-    public getHtml():string{
+        
         const html =  `
         <head>
-            <script src="https://www.gstatic.com/charts/loader.js"></script>
-            <script>
-            google.charts.load('current', {packages: ['corechart', 'line']});
-            google.charts.setOnLoadCallback(drawChart);
-
-                function drawChart() {
-                // Define the   chart to be drawn.
-                var data = new google.visualization.DataTable();
-                data.addColumn('date', 'Time(s)');
-                data.addColumn('number', 'P50');
-                data.addColumn('number', 'P95');
-
-
-                data.addRows([
-                    ${this.jsArrayP50}
-                ]);
-
-                var options = {
-                    hAxis: {
-                      title: 'Time'
+        <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+        <!-- Load plotly.js into the DOM -->
+        <script src='https://cdn.plot.ly/plotly-2.12.1.min.js'></script>
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>            <script>
+            window.onload = function () {
+                  var layout = {
+                    plot_bgcolor: 'black',
+                    paper_bgcolor: 'black',
+                    font: {
+                        color: 'white'
+                      },
+                    title: {
+                        text:'${spanName}',
+                        
+                        xref: 'paper',
+                        x: 0.05,
+                      },
+                    showlegend: true,
+                   
+                    xaxis: {
+                        title: {
+                          text: 'Time',
+                         
+                        }
                     },
-                    vAxis: {
-                      title: 'Duration (seconds)'
-                    },
-                    colors: ['#AB0D06', '#007329'],
-                    trendlines: {
-                      0: {type: 'exponential', color: '#333', opacity: 1},
-                      0: {type: 'linear', color: '#111', opacity: .3}
+                    yaxis: {
+                        title: {
+                          text: 'Duration (milliseconds)',
+                          
+                        }
                     }
-                  };
 
-                // Instantiate and draw the chart.
-                var chart = new google.visualization.ScatterChart(document.getElementById('myPieChart'));
-                chart.draw(data, options);
+                  };
+                  
+                  Plotly.newPlot('chartContainer', ${data}, layout);
+                  
+                
                 }
             </script>
             </head>
             <body>
             <!-- Identify where the chart should be drawn. -->
-            <div id="myPieChart"/>
+            <div id="chartContainer"></div>
             </body>
 
         `;

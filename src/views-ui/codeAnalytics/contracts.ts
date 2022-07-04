@@ -1,3 +1,4 @@
+import { decimal } from "vscode-languageclient"
 
 export namespace UiMessage
 {
@@ -64,7 +65,7 @@ export namespace UiMessage
         }
 
         export class HistogramPanel{
-            constructor(public htmlContent?: string) {}
+            constructor(public data?: decimal[]) {}
 
         }
 

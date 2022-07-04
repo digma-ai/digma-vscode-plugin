@@ -460,7 +460,7 @@ vscode-panel-view {
         .percentiles-grid {
             display: grid;
             justify-content: start;
-            grid-template-columns: auto auto auto 1fr auto;
+            grid-template-columns: auto auto 1fr auto;
             column-gap: 10px;
             row-gap: 5px;
         }

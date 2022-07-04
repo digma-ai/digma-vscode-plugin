@@ -202,8 +202,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
           );
         
         const histogram = new HistogramPanel(this._analyticsProvider);
-        await histogram.loadData(e.span!,e.instrumentationLibrary!,"");
-        panel.webview.html=histogram.getHtml();
+        panel.webview.html=await histogram.getHtml(e.span!,e.instrumentationLibrary!,"");
         
     }
 

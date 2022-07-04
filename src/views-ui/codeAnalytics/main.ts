@@ -58,12 +58,6 @@ window.addEventListener("load", () =>
         $(".stack-nav-next").toggleClass("disabled", !stackInfo?.canNavigateToNext);
     });
     
-    consume(UiMessage.Set.HistogramPanel, (event) => {
-
-        if (event.htmlContent !== undefined) {
-            insightsTab.find("#graph").html(event.htmlContent);
-        }
-    });
 
     consume(UiMessage.Set.InsightsList, (event) => {
 

@@ -194,13 +194,23 @@ export interface DurationRecord{
     duration:decimal;
     time: moment.Moment;
 }
-export interface SpanHistogramData{
+export interface SpanDurationData{
     spanInfo: SpanInfo;
     p95Durations: DurationRecord[];
     p99Durations: DurationRecord[];
     p75Durations: DurationRecord[];
     p50Durations: DurationRecord[];
 
+}
+
+export interface PercentileDuration extends DurationRecord{
+    percentile:decimal;
+    isChange:boolean;
+    isVerified:boolean;
+}
+export interface SpanHistogramData{
+    spanInfo: SpanInfo;
+    percentileDurations: PercentileDuration[];
 }
 
 export interface EnvironmentUsageStatus{
@@ -365,7 +375,24 @@ export class AnalyticsProvider
             return response;
     }
 
-    public async getSpanHistogram(spanName: string, instrumentationLib: string,
+    public async getSpanDurations(spanName: string, instrumentationLib: string,
+        codeObjectId: string, environment:string): Promise<SpanDurationData> 
+    {
+        
+        const response: SpanDurationData = await this.send<any>(
+            'POST', 
+            `/CodeAnalytics/codeObjects/stats/span_durations`,
+            undefined,
+            {
+                environment: environment,
+                spanName: spanName,
+                instrumentationLibrary: instrumentationLib,
+                codeObjectId: codeObjectId
+            });
+            return response;
+    }
+
+    public async getSpanHistogramData(spanName: string, instrumentationLib: string,
         codeObjectId: string, environment:string): Promise<SpanHistogramData> 
     {
         
@@ -381,6 +408,7 @@ export class AnalyticsProvider
             });
             return response;
     }
+
 
     public async getGlobalInsights(environment: string): Promise<any []> 
     {
