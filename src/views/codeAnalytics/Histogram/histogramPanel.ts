@@ -1,5 +1,5 @@
 import { stringify } from "querystring";
-import { AnalyticsProvider, DurationRecord } from "../../../services/analyticsProvider";
+import { AnalyticsProvider, DurationRecord, PercentileDuration } from "../../../services/analyticsProvider";
 import { Settings } from "../../../settings";
 import { SpanInfo } from "../InsightListView/CommonInsightObjects";
 
@@ -36,6 +36,57 @@ export class HistogramPanel {
         return `[${durations}]`;
     }
 
+    private getSymbol(durationRecords: PercentileDuration[]):string{
+        const text = durationRecords.map(x=>{
+                if (x.isChange){
+                    if (x.direction>0){
+                        return `'arrow-up'`;
+                    }
+                    else{
+                        return  `'arrow-down'`;
+                    }
+                }
+                else{
+                    return `'circle'`;
+                }
+            }).join(",");
+        return `[${text}]`;
+    }
+
+    private getColor(durationRecords: PercentileDuration[]):string{
+        const text = durationRecords.map(x=>{
+                if (x.isChange){
+                    if (x.direction>0){
+                        return `'rgb(238,57,46)'`;
+                    }
+                    else{
+                        return  `'rgb(102,194,165)'`;
+                    }
+                }
+                else{
+                    return `'rgb(255,255,255)'`;
+                }
+            }).join(",");
+        return `[${text}]`;
+    }
+
+    private getSize(durationRecords: PercentileDuration[]):string{
+        const text = durationRecords.map(x=>{
+                if (x.isChange){
+                    if (x.direction>0){
+                        return `15`;
+                    }
+                    else{
+                        return  `15`;
+                    }
+                }
+                else{
+                    return `9`;
+                }
+            }).join(",");
+        return `[${text}]`;
+    }
+
     public async getHtml(spanName: string, instrumentationLibrary: string, 
         codeObjectId: string):Promise<string>{
 
@@ -53,6 +104,12 @@ export class HistogramPanel {
 
             const xValues = this.getXAxisData(percentileData);
             const yValues = this.getYAxisData(percentileData);
+    
+            const icons = this.getSymbol(percentileData);
+
+            const colors = this.getColor(percentileData);
+
+            const size = this.getSize(percentileData);
 
             dataSources.push(`
                     {
@@ -60,7 +117,12 @@ export class HistogramPanel {
                         name: 'P${(p*100).toString()}',
                         x: ${xValues},
                         y: ${yValues},
-                        line: {color: '#7F7F7F'}
+                        line: {color: '#7F7F7F'},
+                        marker : {
+                            color: ${colors},
+                            symbol: ${icons},
+                            size: ${size}
+                        }
                     }
             `);
         }
@@ -74,6 +136,7 @@ export class HistogramPanel {
         <!-- Load plotly.js into the DOM -->
         <script src='https://cdn.plot.ly/plotly-2.12.1.min.js'></script>
         <script src='https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js'></script>            <script>
+          
             window.onload = function () {
                   var layout = {
                     plot_bgcolor: 'black',

@@ -206,6 +206,7 @@ export interface SpanDurationData{
 export interface PercentileDuration extends DurationRecord{
     percentile:decimal;
     isChange:boolean;
+    direction:integer;
     isVerified:boolean;
 }
 export interface SpanHistogramData{
