@@ -11,14 +11,14 @@ export class SpanItemHtmlRendering{
 
     public getBestUnit(previousDuration: Duration, currentDuration: Duration ){
         let change = moment.duration(Math.abs(previousDuration.raw-currentDuration.raw)/1000000,"ms");
-        if (change.seconds()<60 && change.seconds()>1){
-             return `${change.seconds()} sec`;
+        if (change.seconds()<60 && change.seconds()>=1){
+             return `${change.seconds().toPrecision(1)} sec`;
         }
         if (change.milliseconds()<1000 && change.milliseconds()>1){
-         return `${change.milliseconds()} ms`; 
+         return `${change.milliseconds()*1000} ms`; 
         }
         if (change.minutes()<60 && change.minutes()>1){
-         return `${change.minutes()} min`; 
+         return `${change.minutes().toPrecision(2)} min`; 
         }
         else{
          return change.humanize();
@@ -40,6 +40,8 @@ export class SpanItemHtmlRendering{
             </div>
         </div>`;
     }
+
+
     public spanDurationItemHtml(insight: SpanDurationsInsight): string{
         
         const percentileHtmls = [];
@@ -48,13 +50,16 @@ export class SpanItemHtmlRendering{
            return this.getStillCalculatingHtml();
         }
         insight.percentiles.sort((a,b) => a.percentile - b.percentile);
+        //todo move to file settings
+        const tolerationConstant = 10000;
         for(const item of insight.percentiles){
             percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
             percentileHtmls.push(/*html*/ `<span>${item.currentDuration.value} ${item.currentDuration.unit}</span>`);
-
+            const rawDiff= Math.abs(item.currentDuration.raw-item.previousDuration.raw);
+            const changeMeaningfulEnough = rawDiff/item.previousDuration.raw > 0.1 && rawDiff>tolerationConstant;
             if (item.previousDuration && 
                 item.changeTime && 
-                Math.abs(item.currentDuration.raw-item.previousDuration.raw)/item.previousDuration.raw > 0.1){
+                changeMeaningfulEnough ){
                     
                     let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
 
@@ -73,7 +78,7 @@ export class SpanItemHtmlRendering{
             else
                 percentileHtmls.push(/*html*/ `<span></span>`);
 
-            if(item.changeTime && item.changeVerified == false)
+            if(item.changeTime && changeMeaningfulEnough && item.changeVerified === false)
                 percentileHtmls.push(/*html*/ `<span title="This change is still being validated and is based on initial data.">Evaluating</span>`);
             else
                 percentileHtmls.push(/*html*/ `<span></span>`);
