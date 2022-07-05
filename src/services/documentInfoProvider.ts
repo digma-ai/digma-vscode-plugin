@@ -182,9 +182,11 @@ export class DocumentInfoProvider implements vscode.Disposable
 
                 for ( const endpoint of endPointsDiscoveredViaServer){
                     const endPointSummary = endpoint as EndpointCodeObjectSummary;
-                    const shortRouteName = EndpointSchema.getShortRouteName(endPointSummary.route);
-                    const parts = shortRouteName.split(' '); 
-                    if (endPointSummary){
+ 
+                    if (endPointSummary && endPointSummary.route){
+                        const shortRouteName = EndpointSchema.getShortRouteName(endPointSummary.route);
+                        const parts = shortRouteName.split(' ');
+                        
                         const relatedMethod = symbolInfos.filter(x=>x.id===endpoint.codeObjectId).firstOrDefault();
                         if (relatedMethod){
                             endpoints.push(new EndpointInfo(
