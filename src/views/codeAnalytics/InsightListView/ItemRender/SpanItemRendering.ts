@@ -27,11 +27,26 @@ export class SpanItemHtmlRendering{
      }
     
     
+    private getStillCalculatingHtml():string{
+        return   /*html*/ `
+        <div class="list-item span-durations-insight">
+            <div class="list-item-content-area">
+                <div class="list-item-header"><strong>Duration</strong></div>
+                <div class="list-item-content-description">Waiting for more data.</div>
+            </div>     
+
+            <div class="list-item-right-area">
+                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("waiting-data.png")}" width="32" height="32">
+            </div>
+        </div>`;
+    }
     public spanDurationItemHtml(insight: SpanDurationsInsight): string{
         
         const percentileHtmls = [];
         const changeHtml = [];
-
+        if (insight.percentiles.length===0){
+           return this.getStillCalculatingHtml();
+        }
         insight.percentiles.sort((a,b) => a.percentile - b.percentile);
         for(const item of insight.percentiles){
             percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
