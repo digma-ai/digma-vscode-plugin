@@ -12,13 +12,13 @@ export class SpanItemHtmlRendering{
     public getBestUnit(previousDuration: Duration, currentDuration: Duration ){
         let change = moment.duration(Math.abs(previousDuration.raw-currentDuration.raw)/1000000,"ms");
         if (change.seconds()<60 && change.seconds()>=1){
-             return `${change.seconds().toPrecision(1)} sec`;
+             return `${change.seconds().toFixed(1)} sec`;
         }
         if (change.milliseconds()<1000 && change.milliseconds()>1){
-         return `${change.milliseconds()*1000} ms`; 
+         return `${change.milliseconds().toFixed(1)} ms`; 
         }
         if (change.minutes()<60 && change.minutes()>1){
-         return `${change.minutes().toPrecision(2)} min`; 
+         return `${change.minutes().toFixed(2)} min`; 
         }
         else{
          return change.humanize();
