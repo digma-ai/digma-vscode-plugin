@@ -52,15 +52,18 @@ export class SpanItemHtmlRendering{
         insight.percentiles.sort((a,b) => a.percentile - b.percentile);
         //todo move to file settings
         const tolerationConstant = 10000;
+
         for(const item of insight.percentiles){
+            let changeMeaningfulEnough = false;
             percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
             percentileHtmls.push(/*html*/ `<span>${item.currentDuration.value} ${item.currentDuration.unit}</span>`);
-            const rawDiff= Math.abs(item.currentDuration.raw-item.previousDuration.raw);
-            const changeMeaningfulEnough = rawDiff/item.previousDuration.raw > 0.1 && rawDiff>tolerationConstant;
             if (item.previousDuration && 
                 item.changeTime && 
                 changeMeaningfulEnough ){
                     
+                    const rawDiff= Math.abs(item.currentDuration.raw-item.previousDuration.raw);
+                    changeMeaningfulEnough = rawDiff/item.previousDuration.raw > 0.1 && rawDiff>tolerationConstant;
+        
                     let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
 
                     percentileHtmls.push(/*html*/ `
