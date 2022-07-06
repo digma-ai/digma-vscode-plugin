@@ -58,21 +58,22 @@ export class SpanItemHtmlRendering{
             percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
             percentileHtmls.push(/*html*/ `<span>${item.currentDuration.value} ${item.currentDuration.unit}</span>`);
             if (item.previousDuration && 
-                item.changeTime && 
-                changeMeaningfulEnough ){
+                item.changeTime ){
                     
                     const rawDiff= Math.abs(item.currentDuration.raw-item.previousDuration.raw);
                     changeMeaningfulEnough = rawDiff/item.previousDuration.raw > 0.1 && rawDiff>tolerationConstant;
-        
-                    let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
+                    if (changeMeaningfulEnough){
+                        let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
 
-                    percentileHtmls.push(/*html*/ `
-                        <div class="flex-row">
-                            <span class="change"> 
-                                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
-                                ${this.getBestUnit(item.previousDuration, item.currentDuration)}, ${item.changeTime.fromNow()}
-                            </span>
-                        </div>`);
+                        percentileHtmls.push(/*html*/ `
+                            <div class="flex-row">
+                                <span class="change"> 
+                                    <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
+                                    ${this.getBestUnit(item.previousDuration, item.currentDuration)}, ${item.changeTime.fromNow()}
+                                </span>
+                            </div>`);
+                    }
+ 
         
                 // percentileHtmls.push(/*html*/ `<span class="change"> 
                 //                                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
