@@ -150,7 +150,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             let usageResults:UsageStatusResults|undefined;
             try
             {
-                usageResults= await this._analyticsProvider.getUsageStatus(codeObjectsIds);//shayk todo update this one as well
+                usageResults= await this._analyticsProvider.getUsageStatus(codeObjectsIds, ["Error"]);
                 errors = await this._analyticsProvider.getCodeObjectsErrors(codeObjectsIds);
             }
             catch(e)

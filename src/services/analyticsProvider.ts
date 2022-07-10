@@ -364,7 +364,7 @@ export class AnalyticsProvider
     }
 
  
-    public async getUsageStatus(codeObjectIds: string []): Promise<UsageStatusResults> 
+    public async getUsageStatus(codeObjectIds: string [], filterByInsightProviders: string[]| undefined= undefined): Promise<UsageStatusResults> 
     {
         
         const response: UsageStatusResults = await this.send<any>(
@@ -372,7 +372,8 @@ export class AnalyticsProvider
             `/CodeAnalytics/codeObjects/status`,
             undefined,
             {
-                codeObjectIds: codeObjectIds
+                codeObjectIds: codeObjectIds,
+                filterByInsightProviders:filterByInsightProviders
             });
             return response;
     }
