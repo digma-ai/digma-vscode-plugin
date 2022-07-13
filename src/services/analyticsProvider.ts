@@ -546,7 +546,10 @@ export class AnalyticsProvider
         if(Settings.token.value !== undefined && Settings.token.value.trim() !== ""){
             requestHeaders['Authorization'] = `Token ${Settings.token.value}`;
         }
-
+        let customHeaderMatch = new RegExp(`^ *([^ ]+) *: *(.+[^ ]) *$`).exec(Settings.customHeader.value ?? '');
+        if(customHeaderMatch){
+            requestHeaders[customHeaderMatch[1]] = customHeaderMatch[2];
+        }
 
         let response = await fetch(
             url, 
