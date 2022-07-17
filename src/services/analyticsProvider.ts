@@ -30,11 +30,13 @@ export enum EndpointType
 {
     HTTP,
     RPC,
+    CONSUMER
 }
 
 export class EndpointSchema {
     public static readonly HTTP: string = "epHTTP:";
     public static readonly RPC: string = "epRPC:";
+    public static readonly CONSUMER: string = "epConsumer:";
 
     // strips the scheme and returns the rest of the of name
     public static getShortRouteName(fullRouteName: string): string {
@@ -43,6 +45,9 @@ export class EndpointSchema {
         }
         if (fullRouteName.startsWith(EndpointSchema.RPC)) {
             return fullRouteName.replace(EndpointSchema.RPC, "");
+        }
+        if (fullRouteName.startsWith(EndpointSchema.CONSUMER)) {
+            return fullRouteName.replace(EndpointSchema.CONSUMER, "");
         }
         // did not manage to find relevant Scheme, so returning value as is
         return fullRouteName;

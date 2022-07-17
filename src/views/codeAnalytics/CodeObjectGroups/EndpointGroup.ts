@@ -19,10 +19,21 @@ export class EndpointGroup implements ICodeObjectScopeGroupCreator{
         else if (route.startsWith(EndpointSchema.RPC)){
             return 'RPC';
         }
+        else if (route.startsWith(EndpointSchema.CONSUMER)){
+            return '';
+        }
         else {
             return 'UKNOWN';
         }
     }
+
+    private getLabel(route:string){
+        if (route.startsWith(EndpointSchema.CONSUMER)){
+            return 'Consumer';
+        }
+        return 'Rest';
+    }
+    
     async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
 
         const fullRoute = adjustHttpRouteIfNeeded(name);
@@ -31,7 +42,7 @@ export class EndpointGroup implements ICodeObjectScopeGroupCreator{
         
         return new GroupItem(fullRoute, "Endpoint", `
         <div class="group-item">
-            <span class="scope">REST: </span>
+            <span class="scope">${this.getLabel(fullRoute)}: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
             <span class="uppercase">
             <strong>${this.getRoutePreix(fullRoute)} </strong>${parts[0]}&nbsp;</span>
@@ -83,7 +94,24 @@ export class RPCEndpointgroup implements ICodeObjectScopeGroupCreator{
         </div>
     `);
     }
+  
+}
 
+export class ConsumerEndpointgroup implements ICodeObjectScopeGroupCreator{
+
+    public constructor(
+        ){
+
+    }
+    async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
+        return new GroupItem(name,"Endpoint", `
+            <div class="group-item">
+            <span class="scope">Consumer: </span>
+            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
+            <span>${name}</span>
+        </div>
+    `);
+    }
   
 }
 
