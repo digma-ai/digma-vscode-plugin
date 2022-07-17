@@ -4,6 +4,10 @@ import { Token, TokenType } from "./tokens";
 
 
 export class BasicParametersExtractor implements IParametersExtractor {
+    
+    public needToAddParametersToCodeObjectId(): boolean {
+        return false;
+    }
 
     public async extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]> {
         var params: ParameterInfo[] = new Array();

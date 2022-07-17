@@ -276,9 +276,26 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
             }
             method.parameters = await parametersExtractor.extractParameters(symbol.name, methodTokens);
+
+            if (parametersExtractor.needToAddParametersToCodeObjectId()) {
+                this.modifyMethodCodeObjectId(method);
+            }
         }
 
         return methods;
+    }
+
+    protected modifyMethodCodeObjectId(method: MethodInfo) {
+        if (method.id.endsWith(")")) {
+            return;
+        }
+
+        if (method.parameters.length > 0) {
+            const argsPart: string = "("
+                + method.parameters.map(x => x.type).join(',')
+                + ")";
+            method.id = method.id + argsPart;
+        }
     }
 
     public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummaryAccessor, methods: MethodInfo[]): LineInfo[]

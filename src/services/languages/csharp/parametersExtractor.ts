@@ -5,6 +5,10 @@ import { Token, TokenType } from '../tokens';
 
 
 export class CSharpParametersExtractor implements IParametersExtractor {
+    
+    public needToAddParametersToCodeObjectId(): boolean {
+        return true;
+    }
 
     public async extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]> {
         var params: ParameterInfo[] = new Array();
