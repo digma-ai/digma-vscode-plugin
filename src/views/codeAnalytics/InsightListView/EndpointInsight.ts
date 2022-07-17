@@ -162,10 +162,6 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         this._editorHelper.openFileAndLine( doc,line );
     }
 
-    private duration(duration: Duration) {
-        return `${duration.value} ${duration.unit}`;
-    }
-
     public async createListViewItem(codeObjectsInsight: SlowestSpansInsight): Promise<IListViewItem> {
         
         var spans = codeObjectsInsight.spans;

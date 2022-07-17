@@ -1,4 +1,6 @@
 import moment = require("moment");
+import { decimal } from "vscode-languageclient";
+import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
 import { SpanDurationsInsight } from "../SpanInsight";
@@ -53,9 +55,20 @@ export class SpanItemHtmlRendering{
         //todo move to file settings
         const tolerationConstant = 10000;
 
+        let traceIds: string[] = [];
+        let traceLabels: string[] = [];
+
         for(const item of insight.percentiles){
+            
+            const percentileName= `P${item.percentile*100}`;
+
+            if (item.traceIds){
+                traceIds.push(item.traceIds.firstOrDefault());
+                traceLabels.push(percentileName);
+            }
+  
             let changeMeaningfulEnough = false;
-            percentileHtmls.push(/*html*/ `<span>P${item.percentile*100}</span>`);
+            percentileHtmls.push(/*html*/ `<span>${percentileName}</span>`);
             percentileHtmls.push(/*html*/ `<span>${item.currentDuration.value} ${item.currentDuration.unit}</span>`);
             if (item.previousDuration && 
                 item.changeTime ){
@@ -89,7 +102,23 @@ export class SpanItemHtmlRendering{
 
         }
 
+        let traceHtml = ``;
+        if (Settings.jaegerAddress.value){
 
+
+
+            const traceLabelsAtt = `data-trace-label="${traceLabels.join(",")}"`;
+            const traceIdAtt = `data-trace-id="${traceIds.join(",")}"`;
+
+
+            traceHtml=`
+            <span style="padding-left: 10px;" class="trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span}" 
+                ${traceLabelsAtt} ${traceIdAtt} >
+            Compare
+            </span> 
+            `;
+
+        }
         const html = /*html*/ `
             <div class="list-item span-durations-insight">
                 <div class="list-item-content-area">
@@ -103,7 +132,8 @@ export class SpanItemHtmlRendering{
                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("histogram.png")}" width="32" height="32">
                     <div class="insight-main-value histogram-link link" data-span-name=${insight.span.name} data-span-instrumentationlib=${insight.span.instrumentationLibrary}>
                       Histogram
-                    </div>     
+                    </div>
+                    ${traceHtml}   
                 </div>
             </div>`;
         return html;

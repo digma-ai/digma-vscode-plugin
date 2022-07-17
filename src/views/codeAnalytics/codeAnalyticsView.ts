@@ -26,6 +26,7 @@ import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { SpanDurationChangesInsightCreator } from "./InsightListView/SpanDurationChangesInsight";
 import { Console } from "console";
 import { HistogramPanel } from "./Histogram/histogramPanel";
+import { TracePanel } from "./Traces/tracePanel";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -132,6 +133,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
 
         this._channel.consume(UiMessage.Notify.OpenHistogramPanel, this.onOpenHistogramRequested.bind(this));
+        this._channel.consume(UiMessage.Notify.OpenTracePanel, this.onOpenTracePanel.bind(this));
 
 
 
@@ -186,6 +188,33 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
                 await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
             }
         }
+    }
+
+
+    private async onOpenTracePanel(e: UiMessage.Notify.OpenTracePanel)
+    {
+        if (e.traceIds && Object.keys(e.traceIds).length>0 && e.span && e.jaegerAddress){
+
+            let options: vscode.WebviewOptions = {
+                enableScripts: true,
+                localResourceRoots: undefined,
+                enableForms: true,
+                enableCommandUris: true
+            };
+            const panel = vscode.window.createWebviewPanel(
+                'traceData', // Identifies the type of the webview. Used internally
+                `Trace`, // Title of the panel displayed to the user
+                vscode.ViewColumn.One,
+                options // Webview options. More on these later.
+              );
+            
+            const tracePanel = new TracePanel(this._channel);
+            panel.webview.html=await tracePanel.getHtml(e.traceIds,[], e.span, e.jaegerAddress);
+            //tracePanel.loadData(e.traceId, e.jaegerAddress);
+
+        }
+   
+        
     }
 
     private async onOpenHistogramRequested(e: UiMessage.Notify.OpenHistogramPanel)

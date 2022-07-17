@@ -4,6 +4,7 @@ import { decimal } from "vscode-languageclient";
 import { EndpointSchema, UsageStatusResults } from "../../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
+import { Settings } from "../../../settings";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
@@ -15,6 +16,7 @@ export interface SpanUsagesInsight extends CodeObjectInsight
 {
     span: string,
     flows:{
+        sampleTraceIds:string[],
         percentage: Number,
         firstService:{
             service: string,
@@ -69,6 +71,15 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="ellipsis" title="${flow.lastServiceSpan}">${flow.lastServiceSpan}</span>`;
 
+            let traceHtml = ``;
+            if (Settings.jaegerAddress.value){
+                traceHtml=`
+                <span style="padding-left: 10px;" class="trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span}" data-trace-id="${flow.sampleTraceIds?.firstOrDefault()}" >
+                Trace
+                </span> 
+                `;
+
+            }
             return /*html*/`<div class="flow-row flex-row">
                 <span class="flow-percent">${flow.percentage.toFixed(1)}%</span>
                 <span class="flex-row flex-wrap ellipsis">
@@ -76,8 +87,9 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     ${intermediateSpanHtml}
                     ${lastServiceHtml}        
                     ${lastServiceSpanHtml}
+                    ${traceHtml}
                 </span>
-            </div>`
+            </div>`;
         });
 
         const html = /*html*/ `
@@ -105,6 +117,7 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
         previousDuration: Duration
         changeTime: moment.Moment,
         changeVerified: boolean,
+        traceIds: string[]
     }[]
 }
 
@@ -225,6 +238,10 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     }
 
     private getDescription(span: SlowEndpointInfo){
+        if (span.p95){
+            return `Up to ~${(span.p95.fraction*100.0).toFixed(3)}% of the entire request time (${span.p95.maxDuration.value}${span.p95.maxDuration.unit}).`;
+
+        }
         return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request time (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
     }
 
