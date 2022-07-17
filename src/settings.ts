@@ -48,4 +48,6 @@ export class Settings
    
     public static readonly token = new SettingsKey('token', '');
 
+    public static readonly customHeader = new SettingsKey('customHeader', '');
+
 }
