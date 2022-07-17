@@ -275,7 +275,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     method.nameRange = token.range;
                 }
             }
-            method.parameters = await parametersExtractor.extractParameters(methodTokens);
+            method.parameters = await parametersExtractor.extractParameters(symbol.name, methodTokens);
         }
 
         return methods;

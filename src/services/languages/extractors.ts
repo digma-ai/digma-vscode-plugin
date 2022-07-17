@@ -50,6 +50,7 @@ export interface IMethodExtractor {
 
 export interface IParametersExtractor {
     extractParameters(
+        methodName: string,
         methodTokens: Token[]
     ) : Promise<ParameterInfo[]>
 }

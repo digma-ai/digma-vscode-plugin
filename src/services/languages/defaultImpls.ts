@@ -5,7 +5,7 @@ import { Token, TokenType } from "./tokens";
 
 export class BasicParametersExtractor implements IParametersExtractor {
 
-    public async extractParameters(methodTokens: Token[]): Promise<ParameterInfo[]> {
+    public async extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]> {
         var params: ParameterInfo[] = new Array();
 
         for (let token of methodTokens) {

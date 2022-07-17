@@ -6,7 +6,7 @@ import { Token, TokenType } from '../tokens';
 
 export class CSharpParametersExtractor implements IParametersExtractor {
 
-    public async extractParameters(methodTokens: Token[]): Promise<ParameterInfo[]> {
+    public async extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]> {
         var params: ParameterInfo[] = new Array();
 
         var firstParameter: boolean = true;
@@ -134,7 +134,7 @@ export class TypeParsingState {
     }
 
     public withinSomeScope(): boolean {
-        return this.withinArray 
+        return this.withinArray
             || this.withinAttribute
             || this.withinGenerics()
             ;
