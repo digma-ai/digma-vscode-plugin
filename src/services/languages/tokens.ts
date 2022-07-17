@@ -37,6 +37,7 @@ export enum TokenType {
     plainKeyword = 'plainKeyword',
     namespace = 'namespace',
     keyword = 'keyword',
+    struct = 'struct',
     type = 'type'
 }
 

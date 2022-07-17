@@ -55,8 +55,9 @@ export class CSharpParametersExtractor implements IParametersExtractor {
             if (token.type === TokenType.plainKeyword
                 || token.type === TokenType.interface
                 || token.type === TokenType.class
+                || token.type === TokenType.struct
             ) {
-                if (state.withinArray || state.genericsCount > 0) {
+                if (state.withinSomeScope() || state.genericsCount > 0) {
                     // skip
                 } else {
                     state.addPlainKeyword(txt);
@@ -76,12 +77,16 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     // handle/skip attributes
                     if (state.hasTypeStrAlready()) {
                         state.withinArray = true;
+                    } else {
+                        state.withinAttribute = true;
                     }
                 }
                 if (txt === "]") {
                     // handle/skip attributes
                     if (state.hasTypeStrAlready()) {
                         state.withinArray = false;
+                    } else {
+                        state.withinAttribute = false;
                     }
                 }
                 if (txt === "<") {
@@ -112,6 +117,7 @@ export class CSharpParametersExtractor implements IParametersExtractor {
 
 export class TypeParsingState {
     withinArray: boolean = false;
+    withinAttribute: boolean = false; // Dotnet Attribute is equivalent to Java Annotation
     genericsLevel: integer = 0;
     genericsCount: integer = 0;
 
@@ -124,7 +130,14 @@ export class TypeParsingState {
     }
 
     public withinGenerics(): boolean {
-        return this.genericsCount > 0;
+        return this.genericsLevel > 0;
+    }
+
+    public withinSomeScope(): boolean {
+        return this.withinArray 
+            || this.withinAttribute
+            || this.withinGenerics()
+            ;
     }
 
     public increaseGenericsCountIfNeeded() {
@@ -146,6 +159,7 @@ export class TypeParsingState {
 
     public reset() {
         this.withinArray = false;
+        this.withinAttribute = false;
         this.genericsLevel = 0;
         this.genericsCount = 0;
         this.kindStr = "";
