@@ -9,11 +9,24 @@ export class CSharpParametersExtractor implements IParametersExtractor {
     public async extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]> {
         var params: ParameterInfo[] = new Array();
 
+        // skip the method attributes, etc...
+        var methodNameIx = methodTokens.length;
+        for (let ix = 0; ix < methodTokens.length; ix++) {
+            const token = methodTokens[ix];
+            if ((token.type === TokenType.method
+                || token.type === TokenType.function
+                || token.type === TokenType.member
+            ) && token.text === methodName) {
+                methodNameIx = ix;
+                break;
+            }
+        }
+
         var firstParameter: boolean = true;
         var parameterStartIx: integer = -1;
 
-        for (let ix = 0; ix < methodTokens.length; ix++) {
-            let token = methodTokens[ix];
+        for (let ix = methodNameIx + 1; ix < methodTokens.length; ix++) {
+            const token = methodTokens[ix];
             if (token.type === TokenType.punctuation) {
                 if (token.text === "(") {
                     if (firstParameter) {
