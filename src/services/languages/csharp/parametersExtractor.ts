@@ -86,16 +86,16 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     // this is the first parameter ending
                 }
                 if (txt === ",") {
-                    state.increaseGenericsCountIfNeeded();
-                    if (state.withinArray) {
-                        // continue
+                    if (!state.withinBrackets) {
+                        state.increaseGenericsCountIfNeeded();
                     }
+                    state.handleMultiDimArrayIfNeeded();
                 }
                 if (txt === "[") {
                     if (!state.withinGenerics()) {
                         // handle/skip attributes
                         if (state.hasTypeStrAlready()) {
-                            state.withinArray = true;
+                            state.arrayBegin();
                         } else {
                             state.withinAttribute = true;
                         }
@@ -105,7 +105,7 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     if (!state.withinGenerics()) {
                         // handle/skip attributes
                         if (state.hasTypeStrAlready()) {
-                            state.withinArray = false;
+                            state.arrayEnd();
                         } else {
                             state.withinAttribute = false;
                         }
@@ -146,10 +146,22 @@ export class TypeParsingState {
     withinAttribute: boolean = false; // Dotnet Attribute is equivalent to Java Annotation
     genericsLevel: integer = 0;
     genericsCount: integer = 0;
+    multiDimensionalArrayDelimiterCount: integer = 0;
 
     kindStr: string = "";
     typeNameStr: string = "";
+    arraysPart: string[] = new Array;
 
+    public reset() {
+        this.withinArray = false;
+        this.withinAttribute = false;
+        this.genericsLevel = 0;
+        this.genericsCount = 0;
+        this.multiDimensionalArrayDelimiterCount = 0;
+        this.kindStr = "";
+        this.typeNameStr = "";
+        this.arraysPart = new Array;
+    }
 
     constructor() {
         this.reset();
@@ -176,6 +188,34 @@ export class TypeParsingState {
         }
     }
 
+    public handleMultiDimArrayIfNeeded() {
+        if (this.withinArray) {
+            this.multiDimensionalArrayDelimiterCount++;
+        }
+    }
+
+    public arrayBegin() {
+        this.withinArray = true;
+        this.multiDimensionalArrayDelimiterCount = 0;
+    }
+
+    // multi dimension array encoding using semi-colon (;) instead of comma (,).
+    // the reason is that comma is used to separate between parameters themselves
+    static readonly MULTI_DIMENSIONAL_ARRAY_DELIMITER: string = ";";
+
+    public arrayEnd() {
+        var singleArrayPart: string = "[]";
+        if (this.multiDimensionalArrayDelimiterCount > 0) {
+            singleArrayPart = "["
+                + TypeParsingState.MULTI_DIMENSIONAL_ARRAY_DELIMITER.repeat(this.multiDimensionalArrayDelimiterCount)
+                + "]";
+        }
+        this.arraysPart.push(singleArrayPart)
+
+        this.withinArray = false;
+        this.multiDimensionalArrayDelimiterCount = 0;
+    }
+
     public hasTypeStrAlready(): boolean {
         return this.typeNameStr !== "";
     }
@@ -185,15 +225,6 @@ export class TypeParsingState {
             this.kindStr = this.typeNameStr;
         }
         this.typeNameStr = value;
-    }
-
-    public reset() {
-        this.withinArray = false;
-        this.withinAttribute = false;
-        this.genericsLevel = 0;
-        this.genericsCount = 0;
-        this.kindStr = "";
-        this.typeNameStr = "";
     }
 
     public typeNameShortOnly(): string {
@@ -225,8 +256,14 @@ export class TypeParsingState {
     }
 
     public arraysPartIfNeeded(): string {
-        //TODO impl
-        return "";
+        if (this.arraysPart.length < 1) {
+            return "";
+        }
+        // reversing the array - since thats how dotnet refers it.
+        // for example, when parameter is written as long[,,][,,,][][,] 
+        // the actual is reveresed and looks like    long[,][][,,,][,,]
+        const localArraysPart: string[] = this.arraysPart.slice(); // make a local copy since reverse method changes the array itself
+        return localArraysPart.reverse().join("");
     }
 
     public evalType(): string {
