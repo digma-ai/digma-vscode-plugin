@@ -27,11 +27,10 @@ export interface IItemsInGroup extends IListViewItemBase
 
 export class InsightItemGroupRendererFactory {
 
-    public constructor( private emptyGroupItemtemplate: IListViewItemBase, private codeObjectEnvironments : CodeObjectGroupEnvironments,
-        private usageResults: UsageStatusResults){}
+    public constructor( private emptyGroupItemtemplate: IListViewItemBase|undefined){}
 
     public getRenderer(group: IListGroupItemBase, sortIndex: number|undefined = undefined): InsightListGroupItemsRenderer{
-        return new InsightListGroupItemsRenderer(group,sortIndex,this.emptyGroupItemtemplate,this.codeObjectEnvironments,this.usageResults);
+        return new InsightListGroupItemsRenderer(group,sortIndex,this.emptyGroupItemtemplate);
 
     }
 }
@@ -41,8 +40,7 @@ export class InsightListGroupItemsRenderer implements IItemsInGroup
     private _items: IListViewItem [] = [];
 
     constructor(public group: IListGroupItemBase, public sortIndex: number|undefined = undefined,
-        private emptyGroupItemtemplate: IListViewItemBase, private codeObjectEnvironments : CodeObjectGroupEnvironments,
-        private usageResults: UsageStatusResults)
+        private emptyGroupItemtemplate: IListViewItemBase|undefined)
     {
         this.groupId=group.groupId;
     }
@@ -63,14 +61,16 @@ export class InsightListGroupItemsRenderer implements IItemsInGroup
                     .map(o=>o.getHtml())
                     .filter((o)=>o)
                     .join("");
-                    
+            return this.group.getHtml()  + html;
+
         }
-        else{
+        else if (this.emptyGroupItemtemplate){
             html+=this.emptyGroupItemtemplate.getHtml();
+            return this.group.getHtml()  + html;
         }
+        return html;
 
         //+ this.codeObjectEnvironments.getUsageHtml(this.group.groupId, this.group.type, this.usageResults )
-        return this.group.getHtml()  + html;
     }
 }
 

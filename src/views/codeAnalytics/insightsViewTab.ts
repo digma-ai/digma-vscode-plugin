@@ -18,6 +18,8 @@ import { InsightItemGroupRendererFactory, InsightListGroupItemsRenderer } from "
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
+import { WorkspaceState } from "../../state";
+import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
 
 
 
@@ -31,7 +33,9 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _listViewItemsCreator: IInsightListViewItemsCreator,
         private _documentInfoProvider: DocumentInfoProvider,
         private _viewUris: WebViewUris,
-        private _noCodeObjectsMessage: NoCodeObjectMessage) { }
+        private _noCodeObjectsMessage: NoCodeObjectMessage,
+        private _workspaceState: WorkspaceState,
+        private _noEnvironmentSelectedMessage: NoEnvironmentSelectedMessage) { }
     
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
@@ -72,6 +76,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 this._viewedCodeObjectId=undefined;
                 return;
             }
+            
             const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
             const codeObjectsIds = [methodInfo.idWithType]
                 .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
@@ -86,6 +91,14 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             }
 
             usageResults = await this._analyticsProvider.getUsageStatus(codeObjectsIds);
+            if (!this._workspaceState.environment && 
+                (usageResults.codeObjectStatuses.length>0 || usageResults.environmentStatuses.length>0) ){
+                    let html = await this._noEnvironmentSelectedMessage.showNoEnvironmentSelectedMessage(usageResults);
+                    this.updateListView(html);
+                    this.updateSpanListView("");
+                    this._viewedCodeObjectId=undefined;
+                    return;
+            }
 
         }
         catch(e)
@@ -98,10 +111,12 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         try{
            
-            const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults.codeObjectStatuses);
+            let groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults.codeObjectStatuses);
+            groupItems = groupItems.filter((item,index)=> groupItems.findIndex(x=>x.groupId===item.groupId) === index);
+          
             const listViewItems = await this._listViewItemsCreator.create( responseItems);
-            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris);
-            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris), codeObjectGroupEnv, usageResults);
+            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris, this._workspaceState);
+            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris,this._workspaceState));
             
             const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
         
