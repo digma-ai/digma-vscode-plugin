@@ -17,6 +17,7 @@ export enum TokenType {
     interface = 'interface',
     enum = 'enum',
     enumMember = 'enumMember',
+    delegate = 'delegate',
     typeParameter = 'typeParameter',
     function = 'function',
     method = 'method',

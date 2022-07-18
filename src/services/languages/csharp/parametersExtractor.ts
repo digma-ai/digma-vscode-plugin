@@ -69,10 +69,11 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                 return this.buildParamInfo(state, token);
                 //break;
             }
-            if (token.type === TokenType.plainKeyword
-                || token.type === TokenType.interface
-                || token.type === TokenType.class
-                || token.type === TokenType.struct
+            if (token.type === TokenType.plainKeyword // for example int, long, string
+                || token.type === TokenType.interface // for example IList, ICollection
+                || token.type === TokenType.class     // for example 
+                || token.type === TokenType.struct    // for example Int32 (int), Int64 (long)
+                || token.type === TokenType.delegate  // for example Func<>
             ) {
                 if (state.withinSomeScope() || state.genericsCount > 0) {
                     // skip
