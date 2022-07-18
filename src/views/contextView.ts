@@ -3,6 +3,7 @@ import * as os from 'os';
 import { WebViewUris } from "./webViewUtils";
 import { Settings } from '../settings';
 import { AnalyticsProvider } from '../services/analyticsProvider';
+import { WorkspaceState } from '../state';
 
 
 export class ContextView implements vscode.Disposable
@@ -12,9 +13,10 @@ export class ContextView implements vscode.Disposable
     private _provider: ContextViewProvider;
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
+    constructor(analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri,
+                workspaceState: WorkspaceState) 
     {
-        this._provider = new ContextViewProvider(analyticsProvider, extensionUri);
+        this._provider = new ContextViewProvider(analyticsProvider, extensionUri, workspaceState);
         this._disposables.push(vscode.window.registerWebviewViewProvider(ContextView.viewId, this._provider));
     }
 
@@ -33,12 +35,14 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
     private _disposables: vscode.Disposable[] = [];
     private _webViewUris: WebViewUris;
 
-    constructor(private _analyticsProvider: AnalyticsProvider, extensionUri: vscode.Uri) 
+    constructor(private _analyticsProvider: AnalyticsProvider, 
+                        extensionUri: vscode.Uri,
+                        private _workspaceState: WorkspaceState) 
     {
         this._webViewUris = new WebViewUris(extensionUri, "context", ()=>this._view!.webview);
         vscode.workspace.onDidChangeConfiguration(async (event: vscode.ConfigurationChangeEvent) => {
-            if(this._view && event.affectsConfiguration(Settings.environment.key)){
-                this._view.webview.html = await this.getHtml(Settings.environment.value);
+            if(this._view && event.affectsConfiguration(_workspaceState.environmentKey)){
+                this._view.webview.html = await this.getHtml(_workspaceState.environment);
             }
         }, this._disposables);
     }
@@ -59,7 +63,7 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
                         await this.reloadHtml();
                         break;
                     case "setEnv":
-                        await Settings.environment.set(message.env);
+                        await this._workspaceState.setEnvironment(message.env);
                         break;
                 }
             },
@@ -71,7 +75,7 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 
     private async reloadHtml()
     {
-        this._view!.webview.html = await this.getHtml(Settings.environment.value);
+        this._view!.webview.html = await this.getHtml(this._workspaceState.environment);
     }
 
     private async getHtml(selectedEnv: string) : Promise<string> 

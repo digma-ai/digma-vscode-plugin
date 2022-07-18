@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider, MethodCodeObjectSummary } from "../../services/analyticsProvider";
 import { DocumentInfo } from "../../services/documentInfoProvider";
+import { WorkspaceState } from "../../state";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
@@ -18,7 +19,8 @@ export class OverlayView
     constructor(
         private _viewUris: WebViewUris,
         private _analyticsProvider: AnalyticsProvider,
-        private _channel: WebviewChannel){
+        private _channel: WebviewChannel,
+        private _workspaceState: WorkspaceState){
         this._channel.consume(UiMessage.Notify.GoToLine, this.onGoToLine.bind(this));
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
     }
@@ -66,7 +68,7 @@ export class OverlayView
 
   
         }    
-        let html=new CodeObjectGroupEnvironments(this._viewUris).getUsageHtml(undefined,undefined,usageStatuses);;
+        let html=new CodeObjectGroupEnvironments(this._viewUris, this._workspaceState).getUsageHtml(undefined,undefined,usageStatuses);;
         if (links.length>0){
             html += /*html*/ `
             ${HtmlHelper.getInfoMessage("Please select one of the following functions to see their data:")}

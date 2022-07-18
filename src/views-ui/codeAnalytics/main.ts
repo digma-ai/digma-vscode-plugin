@@ -28,6 +28,8 @@ window.addEventListener("load", () =>
     const overlay = $("#view-overlay");
     const tabsContainer = $("#view-tabs");
     const insightsTab = $("#view-insights");
+    const tacePanel = $("#view-trace-panel");
+
     const globalInsightsTab = $("#view-global-insights");
     const errorsTab = $("#view-errors");
 
@@ -65,6 +67,8 @@ window.addEventListener("load", () =>
             insightsTab.find("#insightList").html(event.htmlContent);
         }
     });
+
+    
 
     consume(UiMessage.Set.GlobalInsightsList, (event) => {
         if (event.htmlContent !== undefined) {
@@ -132,7 +136,35 @@ window.addEventListener("load", () =>
 
         publish(new UiMessage.Notify.OpenHistogramPanel(spanName,spanInstrumentationLibrary));
     });
-   
+
+    $(document).on("click", ".trace-link", function () {
+        const traceIds = $(this).data("trace-id").split(",");
+        const traceLabels = $(this).data("trace-label")?.split(",");
+        
+        const span = $(this).data("span-name");
+        const jaeger = $(this).data("jaeger-address");
+
+        publish(new UiMessage.Notify.OpenTracePanel(traceIds,traceLabels,span, jaeger));
+    });
+      
+    consume(UiMessage.Set.TracePanel, (event) => {
+
+
+        if (event.url !== undefined) {
+
+            fetch(event.url, { mode: 'cors'}).then(async response=>{
+                switch (response.status) {
+                    // status "OK"
+                    case 200:
+                        tacePanel.find("#trace-jaeger-content").html(await response.text());
+                    // status "Not Found"
+                    case 404:
+                        throw response;
+                }
+            });
+            
+        }
+    });
 
 
     $(document).on("click", ".error_frames_btn", function () {

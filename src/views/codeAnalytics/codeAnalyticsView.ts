@@ -26,6 +26,9 @@ import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { SpanDurationChangesInsightCreator } from "./InsightListView/SpanDurationChangesInsight";
 import { Console } from "console";
 import { HistogramPanel } from "./Histogram/histogramPanel";
+import { TracePanel } from "./Traces/tracePanel";
+import { WorkspaceState } from "../../state";
+import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -43,6 +46,9 @@ export class CodeAnalyticsView implements vscode.Disposable
 		documentInfoProvider: DocumentInfoProvider,
 		extensionUri: vscode.Uri,
         editorHelper: EditorHelper,
+        workspaceState:WorkspaceState,
+
+
 	) {
 
         let errorFlowParamDecorator = new ErrorFlowParameterDecorator(documentInfoProvider);
@@ -52,7 +58,8 @@ export class CodeAnalyticsView implements vscode.Disposable
 			analyticsProvider, 
             documentInfoProvider,
             editorHelper,
-            errorFlowParamDecorator
+            errorFlowParamDecorator,
+            workspaceState
 		);
         this.extensionUrl = extensionUri;
 		this._disposables = [
@@ -105,7 +112,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		private _analyticsProvider: AnalyticsProvider,
         private _documentInfoProvider: DocumentInfoProvider,
         editorHelper: EditorHelper,
-        errorFlowParamDecorator: ErrorFlowParameterDecorator
+        errorFlowParamDecorator: ErrorFlowParameterDecorator,
+        private _workspaceState:WorkspaceState
 	) {
 
 
@@ -122,7 +130,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         };
 
         this._channel = new WebviewChannel();
-        this._overlay = new OverlayView(this._webViewUris, this._analyticsProvider, this._channel);
+        this._overlay = new OverlayView(this._webViewUris, this._analyticsProvider, this._channel,this._workspaceState);
 
         this._channel.consume(UiMessage.Notify.TabRefreshRequested, this.onTabRefreshRequested.bind(this));
         this._channel.consume(UiMessage.Notify.ChangeEnvironmentContext, this.onChangeEnvironmentRequested.bind(this));
@@ -132,6 +140,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel.consume(UiMessage.Notify.OverlayVisibilityChanged, this.onOverlayVisibilityChanged.bind(this));
 
         this._channel.consume(UiMessage.Notify.OpenHistogramPanel, this.onOpenHistogramRequested.bind(this));
+        this._channel.consume(UiMessage.Notify.OpenTracePanel, this.onOpenTracePanel.bind(this));
 
 
 
@@ -158,11 +167,13 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         globalInsightItemrCreator.add("SpanDurationChange", new SpanDurationChangesInsightCreator(this._webViewUris, this._documentInfoProvider));
 
 
-        let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris);
+        let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
+        let noEnvironmentSelectedMessage = new NoEnvironmentSelectedMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
+
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris,noCodeObjectMessage),
-            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris,noCodeObjectMessage, groupItemViewCreator),
-            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider, globalInsightItemrCreator)
+            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris,noCodeObjectMessage, this._workspaceState, noEnvironmentSelectedMessage),
+            new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris,noCodeObjectMessage, groupItemViewCreator, this._workspaceState),
+            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider, globalInsightItemrCreator, this._workspaceState)
         ];
 
         this._disposables.concat(tabsList);
@@ -188,6 +199,33 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         }
     }
 
+
+    private async onOpenTracePanel(e: UiMessage.Notify.OpenTracePanel)
+    {
+        if (e.traceIds && Object.keys(e.traceIds).length>0 && e.span && e.jaegerAddress){
+
+            let options: vscode.WebviewOptions = {
+                enableScripts: true,
+                localResourceRoots: undefined,
+                enableForms: true,
+                enableCommandUris: true
+            };
+            const panel = vscode.window.createWebviewPanel(
+                'traceData', // Identifies the type of the webview. Used internally
+                `${e.span}`, // Title of the panel displayed to the user
+                vscode.ViewColumn.One,
+                options // Webview options. More on these later.
+              );
+            
+            const tracePanel = new TracePanel(this._channel);
+            panel.webview.html=await tracePanel.getHtml(e.traceIds,e.traceLabels, e.span, e.jaegerAddress);
+            //tracePanel.loadData(e.traceId, e.jaegerAddress);
+
+        }
+   
+        
+    }
+
     private async onOpenHistogramRequested(e: UiMessage.Notify.OpenHistogramPanel)
     {
         let options: vscode.WebviewOptions = {
@@ -201,7 +239,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             options // Webview options. More on these later.
           );
         
-        const histogram = new HistogramPanel(this._analyticsProvider);
+        const histogram = new HistogramPanel(this._analyticsProvider, this._workspaceState);
         panel.webview.html=await histogram.getHtml(e.span!,e.instrumentationLibrary!,"");
         
     }
@@ -309,7 +347,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
     public async onChangeEnvironmentRequested(event:UiMessage.Notify.ChangeEnvironmentContext ){
         if (event.environment){
-           await Settings.environment.set(event.environment);
+           await this._workspaceState.setEnvironment(event.environment);
         }
         if (this._overlay.isVisible){
             const editor = vscode.window.activeTextEditor;

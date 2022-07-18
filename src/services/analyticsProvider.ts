@@ -9,6 +9,7 @@ import { decimal, integer } from "vscode-languageclient";
 import * as os from 'os';
 import { stringify } from "querystring";
 import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
+import { WorkspaceState } from "../state";
 
 
 export enum Impact 
@@ -324,6 +325,9 @@ export interface CodeObjectErrorDetails extends CodeObjectErrorResponse{
 
 export class AnalyticsProvider
 {
+    public constructor(private state: WorkspaceState){
+
+    }
     public async getEnvironments() : Promise<string[]> 
     {
         try
@@ -351,7 +355,7 @@ export class AnalyticsProvider
 
     public async getCodeObjectsErrors(codeObjectIds: string []): Promise<CodeObjectErrorResponse[]>
     {
-        let params : [string, any][] = [["environment",Settings.environment.value]];
+        let params : [string, any][] = [["environment",this.state.environment]];
         codeObjectIds.forEach(o=> params.push(["codeObjectId",o]));
 
         const response = await this.send<CodeObjectErrorResponse[]>(
@@ -421,7 +425,7 @@ export class AnalyticsProvider
             `/CodeAnalytics/insights`,
             undefined,
             {
-                environment: Settings.environment.value
+                environment: this.state.environment
             });
             return response;
     }
@@ -435,7 +439,7 @@ export class AnalyticsProvider
             undefined,
             {
                 codeObjectIds: codeObjectIds,
-                environment: Settings.environment.value
+                environment: this.state.environment
             });
             return response;
     }
@@ -448,7 +452,7 @@ export class AnalyticsProvider
                 'POST', 
                 `/CodeAnalytics/summary`, 
                 undefined, 
-                {codeObjectIds: symbolsIdentifiers, environment: Settings.environment.value});
+                {codeObjectIds: symbolsIdentifiers, environment: this.state.environment});
 
             return response;
         }
@@ -462,7 +466,7 @@ export class AnalyticsProvider
     {
         try
         {
-            let params : [string, any][] = [["environment",Settings.environment.value]];
+            let params : [string, any][] = [["environment",this.state.environment]];
 
             if(sort){
                 params.push(["sort",sort]);
@@ -494,7 +498,7 @@ export class AnalyticsProvider
                 'POST',
                 `/CodeAnalytics/errorFlow`, 
                 undefined,
-                {id: errorFlowId, environment: Settings.environment.value});
+                {id: errorFlowId, environment: this.state.environment});
 
             return response;
         }
