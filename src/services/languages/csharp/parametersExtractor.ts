@@ -86,7 +86,7 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     // this is the first parameter ending
                 }
                 if (txt === ",") {
-                    if (!state.withinBrackets) {
+                    if (!state.withinBrackets()) {
                         state.increaseGenericsCountIfNeeded();
                     }
                     state.handleMultiDimArrayIfNeeded();
