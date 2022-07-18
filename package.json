@@ -94,9 +94,7 @@
                     "type": "string",
                     "default": "https://localhost:5051"
                 },
-                "digma.environment": {
-                    "type": "string"
-                },
+
                 "digma.jaegerAddress": {
                     "type": "string"
                 },
