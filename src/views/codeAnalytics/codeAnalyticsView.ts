@@ -308,7 +308,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         // }
 
 		const codeObject = <CodeObjectInfo>{ 
-            id: methodInfo?.id, 
+            id: methodInfo?.symbol.id, 
             methodName: methodInfo?.displayName
         };
         return codeObject;

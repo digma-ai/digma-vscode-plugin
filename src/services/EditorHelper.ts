@@ -80,7 +80,7 @@ export class EditorHelper {
                 {
                     const docInfo = await this._documentInfoProvider.getDocumentInfo(doc);
                     const methodInfos = docInfo?.methods || [];
-                    if(methodInfos.all(m => m.name != editorInfo.functionName))
+                    if(methodInfos.all(m => m.symbol.name != editorInfo.functionName))
                     {
                         doc = await this.askAndOpenFromSourceControl(editorInfo);
                     }

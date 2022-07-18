@@ -50,7 +50,7 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
 
         for(let methodInfo of docInfo.methods)
         {
-            const frame = frames.firstOrDefault(f => f.codeObjectId == methodInfo.id);
+            const frame = frames.firstOrDefault(f => f.codeObjectId == methodInfo.symbol.id);
             if(!frame)
                 continue;
             

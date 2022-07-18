@@ -46,7 +46,7 @@ export class ErrorsLineDecorator implements vscode.Disposable
         if(!docInfo)
             return;
         
-        const method = docInfo.methods.firstOrDefault(m => m.id == codeObjectId);
+        const method = docInfo.methods.firstOrDefault(m => m.symbol.id == codeObjectId);
         if(!method)
             return;
         

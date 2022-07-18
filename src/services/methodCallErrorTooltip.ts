@@ -81,7 +81,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
 
     private async getMethodMarkdown(methodInfo: MethodInfo): Promise<vscode.MarkdownString | undefined>
     {
-        const errors = await this._documentInfoProvider.analyticsProvider.getCodeObjectsErrors([methodInfo.id]);
+        const errors = await this._documentInfoProvider.analyticsProvider.getCodeObjectsErrors([methodInfo.symbol.id]);
         if(!errors?.length)
             return;
         
@@ -92,7 +92,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
             markdown.appendMarkdown(`- \`${error.name}\``);
             markdown.appendMarkdown(` \u00B7 <span style="color:#cca700;"><i>${error.characteristic}</i></span>`);
             const command = MethodCallErrorTooltip.Commands.ShowErrorView;
-            const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: error.uid}));
+            const args = encodeURIComponent(JSON.stringify({codeObjectId: methodInfo.symbol.id, codeObjectDisplayName: methodInfo.displayName, errorFlowId: error.uid}));
             markdown.appendMarkdown(` \u00B7 [$(link-external)](command:${command}?${args} "Show in side panel") `);
             markdown.appendText('\n');
         }
