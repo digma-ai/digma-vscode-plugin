@@ -218,7 +218,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
               );
             
             const tracePanel = new TracePanel(this._channel);
-            panel.webview.html=await tracePanel.getHtml(e.traceIds,[], e.span, e.jaegerAddress);
+            panel.webview.html=await tracePanel.getHtml(e.traceIds,e.traceLabels, e.span, e.jaegerAddress);
             //tracePanel.loadData(e.traceId, e.jaegerAddress);
 
         }

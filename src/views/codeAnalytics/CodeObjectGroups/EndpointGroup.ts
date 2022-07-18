@@ -29,7 +29,7 @@ export class EndpointGroup implements ICodeObjectScopeGroupCreator{
         const shortRouteName = EndpointSchema.getShortRouteName(name);
         const parts = shortRouteName.split(' ');        
         
-        return new GroupItem(fullRoute, "Endpoint", `
+        return new GroupItem(fullRoute.replace("ep","").replace(":", " "), "Endpoint", `
         <div class="group-item">
             <span class="scope">REST: </span>
             <span class="codicon codicon-symbol-interface" title="Endpoint"></span>

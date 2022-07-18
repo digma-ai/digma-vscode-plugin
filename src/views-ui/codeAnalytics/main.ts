@@ -139,10 +139,12 @@ window.addEventListener("load", () =>
 
     $(document).on("click", ".trace-link", function () {
         const traceIds = $(this).data("trace-id").split(",");
+        const traceLabels = $(this).data("trace-label")?.split(",");
+        
         const span = $(this).data("span-name");
         const jaeger = $(this).data("jaeger-address");
 
-        publish(new UiMessage.Notify.OpenTracePanel(traceIds,span, jaeger));
+        publish(new UiMessage.Notify.OpenTracePanel(traceIds,traceLabels,span, jaeger));
     });
       
     consume(UiMessage.Set.TracePanel, (event) => {

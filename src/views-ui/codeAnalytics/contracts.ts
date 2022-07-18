@@ -35,7 +35,7 @@ export namespace UiMessage
         }
 
         export class OpenTracePanel {
-            constructor(public traceIds?: string[], public span?:string, public jaegerAddress?:string){}
+            constructor(public traceIds?: string[], public traceLabels?:string[],  public span?:string, public jaegerAddress?:string){}
         }
         export class OpenRawTrace {
             constructor(public content?: string) {}

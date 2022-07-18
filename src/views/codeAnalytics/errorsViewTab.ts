@@ -172,7 +172,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(codeObjectStatuses);
             const listViewItems = ErrorsHtmlBuilder.createListViewItem(errors);
             const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris, this._workspaceState);
-            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._webViewUris, this._workspaceState), codeObjectGroupEnv, usageResults);
+            const groupRenderer = new InsightItemGroupRendererFactory(undefined);
             const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId = codeObject.id;

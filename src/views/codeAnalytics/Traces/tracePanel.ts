@@ -21,7 +21,7 @@ export class TracePanel {
 
     }
     
-    public async getHtml(traceIds: string[], traceIdLabels :string[], span:string, jaegerAddress:string):Promise<string>{
+    public async getHtml(traceIds: string[], traceIdLabels :string[]|undefined, span:string, jaegerAddress:string):Promise<string>{
 
 
         // const traceHtmlResponse = await fetch(`${jaegerAddress}/trace/${traceId}?uiEmbed=v0`);
@@ -47,7 +47,7 @@ export class TracePanel {
 
         }
 
-        else if (traceIds.length===2){
+        else if (traceIds.length===2 && traceIdLabels!=null){
             
             const trace1  = traceIds[0].toLocaleLowerCase();
             const trace2  = traceIds[1].toLocaleLowerCase();
@@ -56,6 +56,9 @@ export class TracePanel {
             html =`
             <body>
             <h1>Trace: ${span}</h1>
+            
+            <h3>Comparing: A sample ${traceIdLabels[0]} trace  with a ${traceIdLabels[1]} trace</h3>
+            <br></br>
             <iframe style="width:100%; height:500px;"src="${src}" title="Trace" ></iframe>
             </body>`;
         }
