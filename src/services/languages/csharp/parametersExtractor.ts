@@ -5,7 +5,7 @@ import { Token, TokenType } from '../tokens';
 
 
 export class CSharpParametersExtractor implements IParametersExtractor {
-    
+
     public needToAddParametersToCodeObjectId(): boolean {
         return true;
     }
@@ -92,27 +92,35 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     }
                 }
                 if (txt === "[") {
-                    // handle/skip attributes
-                    if (state.hasTypeStrAlready()) {
-                        state.withinArray = true;
-                    } else {
-                        state.withinAttribute = true;
+                    if (!state.withinGenerics()) {
+                        // handle/skip attributes
+                        if (state.hasTypeStrAlready()) {
+                            state.withinArray = true;
+                        } else {
+                            state.withinAttribute = true;
+                        }
                     }
                 }
                 if (txt === "]") {
-                    // handle/skip attributes
-                    if (state.hasTypeStrAlready()) {
-                        state.withinArray = false;
-                    } else {
-                        state.withinAttribute = false;
+                    if (!state.withinGenerics()) {
+                        // handle/skip attributes
+                        if (state.hasTypeStrAlready()) {
+                            state.withinArray = false;
+                        } else {
+                            state.withinAttribute = false;
+                        }
                     }
                 }
                 if (txt === "<") {
-                    state.genericsLevel++;
-                    state.increaseGenericsCountIfNeeded();
+                    if (!state.withinBrackets()) {
+                        state.genericsLevel++;
+                        state.increaseGenericsCountIfNeeded();
+                    }
                 }
                 if (txt === ">") {
-                    state.genericsLevel--;
+                    if (!state.withinBrackets()) {
+                        state.genericsLevel--;
+                    }
                 }
             }
         }
@@ -151,9 +159,13 @@ export class TypeParsingState {
         return this.genericsLevel > 0;
     }
 
-    public withinSomeScope(): boolean {
+    public withinBrackets(): boolean {
         return this.withinArray
-            || this.withinAttribute
+            || this.withinAttribute;
+    }
+
+    public withinSomeScope(): boolean {
+        return this.withinBrackets()
             || this.withinGenerics()
             ;
     }
