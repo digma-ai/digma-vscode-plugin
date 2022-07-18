@@ -4,8 +4,9 @@ import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EndpointInfo, ILanguageExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
+import { EndpointInfo, ILanguageExtractor, IParametersExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
 import { Token, TokenType } from './tokens';
+import { BasicParametersExtractor } from './defaultImpls';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -87,6 +88,14 @@ export class SymbolProvider
         return symbolTree;
     }
         
+    public async getParametersExtractor(document: vscode.TextDocument): Promise<IParametersExtractor> {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        if(!supportedLanguage) {
+            return new BasicParametersExtractor();
+        }
+        return supportedLanguage.parametersExtractor;
+    }
+
     public async getEndpoints(
         document: vscode.TextDocument,
         symbolInfos: SymbolInfo[],

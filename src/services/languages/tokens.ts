@@ -17,6 +17,7 @@ export enum TokenType {
     interface = 'interface',
     enum = 'enum',
     enumMember = 'enumMember',
+    delegate = 'delegate',
     typeParameter = 'typeParameter',
     function = 'function',
     method = 'method',
@@ -37,6 +38,7 @@ export enum TokenType {
     plainKeyword = 'plainKeyword',
     namespace = 'namespace',
     keyword = 'keyword',
+    struct = 'struct',
     type = 'type'
 }
 

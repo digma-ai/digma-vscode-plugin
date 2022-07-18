@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
 import { Logger } from '../../logger';
-import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
+import { BasicParametersExtractor } from '../defaultImpls';
+import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
 import { GoMethodExtractor } from './methodExtractor';
 import { GoSpanExtractor } from './spanExtractor';
 
@@ -23,6 +24,10 @@ export class GoLanguageExtractor implements ILanguageExtractor
         return [
             new GoMethodExtractor()
         ];
+    }
+
+    public get parametersExtractor(): IParametersExtractor {
+        return new BasicParametersExtractor();
     }
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
