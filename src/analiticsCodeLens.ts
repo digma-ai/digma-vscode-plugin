@@ -63,7 +63,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
-            const score = documentInfo.summaries.get(MethodCodeObjectSummary, methodInfo.symbol.id)?.score ?? 0;
+            const score = documentInfo.summaries.get(MethodCodeObjectSummary, methodInfo.id)?.score ?? 0;
             if(score >= 70)
             {
                 codelens.push(new vscode.CodeLens(methodInfo.range, {

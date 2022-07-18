@@ -344,7 +344,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         }
 
         const codeObject = <CodeObjectInfo>{ 
-            id: methodInfo.symbol.id, 
+            id: methodInfo.id, 
             methodName: methodInfo.displayName 
         };
         return codeObject;

@@ -256,7 +256,6 @@ export class DocumentInfoProvider implements vscode.Disposable
                 symbol.displayName,
                 symbol.range,
                 [],
-                symbol,
                 ([] as CodeObjectInfo[])
                     .concat(spans.filter(s => s.range.intersection(symbol.range)))
                     .concat(endpoints.filter(e => e.range.intersection(symbol.range)))
@@ -303,7 +302,7 @@ export class DocumentInfoProvider implements vscode.Disposable
         const lineInfos: LineInfo[] = [];
         for(let method of methods)
         {
-            const codeObjectSummary = codeObjectSummaries.get(MethodCodeObjectSummary, method.symbol.id);
+            const codeObjectSummary = codeObjectSummaries.get(MethodCodeObjectSummary, method.id);
             if(!codeObjectSummary)
                 continue;
 
@@ -411,7 +410,6 @@ export class MethodInfo implements CodeObjectInfo
         public displayName: string,
         public range: vscode.Range,
         public parameters: ParameterInfo[],
-        public symbol: SymbolInfo,
         public relatedCodeObjects: CodeObjectInfo[]){}
     get idWithType(): string {
         return 'method:'+this.id;
