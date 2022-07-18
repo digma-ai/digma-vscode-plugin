@@ -296,7 +296,10 @@ export class DocumentInfoProvider implements vscode.Disposable
             const argsPart: string = "("
                 + method.parameters.map(x => x.type).join(',')
                 + ")";
-            method.id = method.id + argsPart;
+
+            const newId = method.id + argsPart;
+            method.id = newId;
+            method.symbol.id = newId;
         }
     }
 
