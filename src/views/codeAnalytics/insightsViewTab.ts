@@ -19,6 +19,7 @@ import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupE
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 import { WorkspaceState } from "../../state";
+import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
 
 
 
@@ -33,7 +34,8 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _documentInfoProvider: DocumentInfoProvider,
         private _viewUris: WebViewUris,
         private _noCodeObjectsMessage: NoCodeObjectMessage,
-        private _workspaceState: WorkspaceState) { }
+        private _workspaceState: WorkspaceState,
+        private _noEnvironmentSelectedMessage: NoEnvironmentSelectedMessage) { }
     
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
@@ -74,6 +76,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 this._viewedCodeObjectId=undefined;
                 return;
             }
+            
             const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
             const codeObjectsIds = [methodInfo.idWithType]
                 .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
@@ -88,6 +91,14 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             }
 
             usageResults = await this._analyticsProvider.getUsageStatus(codeObjectsIds);
+            if (!this._workspaceState.environment && 
+                (usageResults.codeObjectStatuses.length>0 || usageResults.environmentStatuses.length>0) ){
+                    let html = await this._noEnvironmentSelectedMessage.showNoEnvironmentSelectedMessage(usageResults);
+                    this.updateListView(html);
+                    this.updateSpanListView("");
+                    this._viewedCodeObjectId=undefined;
+                    return;
+            }
 
         }
         catch(e)

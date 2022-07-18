@@ -28,6 +28,7 @@ import { Console } from "console";
 import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { WorkspaceState } from "../../state";
+import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -167,8 +168,10 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
 
         let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
+        let noEnvironmentSelectedMessage = new NoEnvironmentSelectedMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
+
         const tabsList = [
-            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris,noCodeObjectMessage, this._workspaceState),
+            new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris,noCodeObjectMessage, this._workspaceState, noEnvironmentSelectedMessage),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris,noCodeObjectMessage, groupItemViewCreator, this._workspaceState),
             new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider, globalInsightItemrCreator, this._workspaceState)
         ];

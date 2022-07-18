@@ -1,4 +1,4 @@
-import { CodeObjectUsageStatus, EnvironmentUsageStatus, UsageStatusResults } from "../../../services/analyticsProvider";
+import { AnalyticsProvider, CodeObjectUsageStatus, EnvironmentUsageStatus, UsageStatusResults } from "../../../services/analyticsProvider";
 import { Settings } from "../../../settings";
 import { WebViewUris } from "../../webViewUtils";
 import * as os from 'os';

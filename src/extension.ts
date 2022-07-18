@@ -42,6 +42,7 @@ export async function activate(context: vscode.ExtensionContext)
             workspaceState.setEnvironment(firstEnv);
         }
     }
+    
     context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
     //context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInspector));
