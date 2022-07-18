@@ -1,5 +1,6 @@
 import { AnalyticsProvider } from "../../../services/analyticsProvider";
 import { DocumentInfo } from "../../../services/documentInfoProvider";
+import { WorkspaceState } from "../../../state";
 import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectGroupEnvironments } from "../CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { HtmlHelper } from "../common";
@@ -8,7 +9,8 @@ import { OverlayView } from "../overlayView";
 export class NoCodeObjectMessage{
 
     constructor(private _analyticsProvider: AnalyticsProvider,
-                private _viewUris: WebViewUris){
+                private _viewUris: WebViewUris,
+                private _workspaceState: WorkspaceState){
 
     }
     public async showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
@@ -27,7 +29,7 @@ export class NoCodeObjectMessage{
             }
   
         }    
-        let html=new CodeObjectGroupEnvironments(this._viewUris).getUsageHtml(undefined,undefined,usageStatuses);;
+        let html=new CodeObjectGroupEnvironments(this._viewUris, this._workspaceState).getUsageHtml(undefined,undefined,usageStatuses);;
         if (links.length>0){
             html += /*html*/ `
             ${HtmlHelper.getInfoMessage("No function is currently selected. Please select one of the following functions to see their data:")}

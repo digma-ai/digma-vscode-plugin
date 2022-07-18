@@ -24,6 +24,7 @@ import { IListViewItem, InsightItemGroupRendererFactory } from "../ListView/ILis
 import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
 import { ListViewRender } from "../ListView/ListViewRender";
 import { CodeObjectId, CodeObjectType } from "../../services/codeObject";
+import { WorkspaceState } from "../../state";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {
@@ -48,7 +49,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         private _webViewProvider: WebViewProvider,
         private _webViewUris: WebViewUris,
         private _noCodeObjectMessage: NoCodeObjectMessage,
-        private _groupViewItemCreator: ICodeObjectScopeGroupCreator,) 
+        private _groupViewItemCreator: ICodeObjectScopeGroupCreator,
+        private _workspaceState: WorkspaceState) 
     {
         this._channel.consume(UiMessage.Get.ErrorDetails, e => this.onShowErrorDetailsEvent(e));
         this._channel.consume(UiMessage.Notify.GoToLineByFrameId, e => this.goToFileAndLineById(e.frameId));
@@ -169,8 +171,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             var codeObjectStatuses =usageResults.codeObjectStatuses.filter(o=>o.type === "Span");
             const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(codeObjectStatuses);
             const listViewItems = ErrorsHtmlBuilder.createListViewItem(errors);
-            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris);
-            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._webViewUris), codeObjectGroupEnv, usageResults);
+            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris, this._workspaceState);
+            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._webViewUris, this._workspaceState), codeObjectGroupEnv, usageResults);
             const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId = codeObject.id;

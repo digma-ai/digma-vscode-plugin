@@ -18,6 +18,7 @@ import { InsightItemGroupRendererFactory, InsightListGroupItemsRenderer } from "
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
+import { WorkspaceState } from "../../state";
 
 
 
@@ -31,7 +32,8 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _listViewItemsCreator: IInsightListViewItemsCreator,
         private _documentInfoProvider: DocumentInfoProvider,
         private _viewUris: WebViewUris,
-        private _noCodeObjectsMessage: NoCodeObjectMessage) { }
+        private _noCodeObjectsMessage: NoCodeObjectMessage,
+        private _workspaceState: WorkspaceState) { }
     
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
@@ -100,8 +102,8 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
            
             const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults.codeObjectStatuses);
             const listViewItems = await this._listViewItemsCreator.create( responseItems);
-            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris);
-            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris), codeObjectGroupEnv, usageResults);
+            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris, this._workspaceState);
+            const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris,this._workspaceState), codeObjectGroupEnv, usageResults);
             
             const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
         

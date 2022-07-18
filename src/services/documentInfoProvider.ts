@@ -9,6 +9,7 @@ import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObj
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { Settings } from '../settings';
+import { WorkspaceState } from '../state';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -17,27 +18,28 @@ export class DocumentInfoProvider implements vscode.Disposable
     private _timer;
 
     private ensureDocDictionaryForEnv(){
-        let envDictionary = this._documentsByEnv[Settings.environment.value];
+        let envDictionary = this._documentsByEnv[this.workspaceState.environment];
         if (!envDictionary){
-            this._documentsByEnv[Settings.environment.value]={};
+            this._documentsByEnv[this.workspaceState.environment]={};
         }
     }
     get _documents(): Dictionary<string, DocumentInfoContainer> {
         
         this.ensureDocDictionaryForEnv();
-        return this._documentsByEnv[Settings.environment.value];
+        return this._documentsByEnv[this.workspaceState.environment];
     }
 
     set _documents(value: Dictionary<string, DocumentInfoContainer>){
         this.ensureDocDictionaryForEnv();
-        this._documentsByEnv[Settings.environment.value]=value;
+        this._documentsByEnv[this.workspaceState.environment]=value;
 
     }
 
 
     constructor( 
         public analyticsProvider: AnalyticsProvider,
-        public symbolProvider: SymbolProvider) 
+        public symbolProvider: SymbolProvider,
+        private workspaceState: WorkspaceState) 
     {
         this._disposables.push(vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
 

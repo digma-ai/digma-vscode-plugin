@@ -3,6 +3,7 @@ import { Settings } from "../../../settings";
 import { WebViewUris } from "../../webViewUtils";
 import * as os from 'os';
 import moment = require("moment");
+import { WorkspaceState } from "../../../state";
 
 export interface IRenderCodeObjectGroupEnvironments{
 
@@ -12,12 +13,13 @@ export interface IRenderCodeObjectGroupEnvironments{
 
 export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnvironments{
 
-    public constructor(private _viewUris: WebViewUris){
+    public constructor(private _viewUris: WebViewUris,
+        private _workspaceState: WorkspaceState){
 
     }
 
     private getSelectedOrUnselectedTag(environment: string){
-        if (environment===Settings.environment.value){
+        if (environment===this._workspaceState.environment){
             return "codeobj-environment-usage-label-selected";
         }else{
             return "codeobj-environment-usage-label";

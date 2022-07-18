@@ -46,10 +46,13 @@ export class TracePanel {
             </body>`;
 
         }
+
         else if (traceIds.length===2){
             
+            const trace1  = traceIds[0].toLocaleLowerCase();
+            const trace2  = traceIds[1].toLocaleLowerCase();
 
-            const src = `${jaegerAddress}/trace/${traceIds[0]}...${traceIds[1]}?cohort=${traceIds[0]}&cohort=${traceIds[1]}&uiEmbed=v0`;
+            const src = `${jaegerAddress}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}&uiEmbed=v0`;
             html =`
             <body>
             <h1>Trace: ${span}</h1>

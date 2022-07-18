@@ -1,15 +1,14 @@
-import { FetchError } from "node-fetch";
 import { AnalyticsProvider, HttpError, UsageStatusResults } from "../../services/analyticsProvider";
 import { Logger } from "../../services/logger";
 import { Settings } from "../../settings";
+import { WorkspaceState } from "../../state";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { InsightItemGroupRendererFactory, sort } from "../ListView/IListViewItem";
+import { sort } from "../ListView/IListViewItem";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
-import { CannotConnectToDigmaInsight } from "./AdminInsights/adminInsights";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
-import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
+import { ICodeAnalyticsViewTab } from "./common";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 
 export class UsagesViewTab implements ICodeAnalyticsViewTab 
@@ -20,7 +19,8 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         private _channel: WebviewChannel,
         private _webViewUris: WebViewUris,
         private _analyticsProvider: AnalyticsProvider,
-        private _listItemCreator: IInsightListViewItemsCreator) {}
+        private _listItemCreator: IInsightListViewItemsCreator,
+        private _workspaceState: WorkspaceState) {}
     
 
     dispose() {
@@ -45,7 +45,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         let insights: any [] | undefined = undefined;
         let usageResults: UsageStatusResults;
         try{
-            insights = await this._analyticsProvider.getGlobalInsights(Settings.environment.value);
+            insights = await this._analyticsProvider.getGlobalInsights(this._workspaceState.environment);
             usageResults = await this._analyticsProvider.getUsageStatus([]);
         }
         catch(e){
@@ -55,7 +55,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         }
         
         const listViewItems = await this._listItemCreator.create( insights);
-        const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris);
+        const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris,this._workspaceState);
         let html = codeObjectGroupEnv.getJustEnvironmentsHtml(usageResults);
         html += sort(listViewItems)
             .map(o=>o.getHtml())

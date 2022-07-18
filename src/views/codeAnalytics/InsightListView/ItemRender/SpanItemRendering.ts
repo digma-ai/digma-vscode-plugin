@@ -47,7 +47,6 @@ export class SpanItemHtmlRendering{
     public spanDurationItemHtml(insight: SpanDurationsInsight): string{
         
         const percentileHtmls = [];
-        const changeHtml = [];
         if (insight.percentiles.length===0){
            return this.getStillCalculatingHtml();
         }
@@ -105,11 +104,8 @@ export class SpanItemHtmlRendering{
         let traceHtml = ``;
         if (Settings.jaegerAddress.value){
 
-
-
             const traceLabelsAtt = `data-trace-label="${traceLabels.join(",")}"`;
             const traceIdAtt = `data-trace-id="${traceIds.join(",")}"`;
-
 
             traceHtml=`
             <span style="padding-left: 10px;" class="trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span}" 
