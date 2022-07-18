@@ -212,7 +212,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             };
             const panel = vscode.window.createWebviewPanel(
                 'traceData', // Identifies the type of the webview. Used internally
-                `Trace`, // Title of the panel displayed to the user
+                `${e.span}`, // Title of the panel displayed to the user
                 vscode.ViewColumn.One,
                 options // Webview options. More on these later.
               );

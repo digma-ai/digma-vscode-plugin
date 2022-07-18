@@ -41,7 +41,7 @@ export class TracePanel {
             const traceId = traceIds[0];
             html =`
             <body>
-            <h1>Trace: ${span}</h1>
+            <h1>Trace:</h1>
             <iframe style="width:100%; height:500px;"src="${jaegerAddress}/trace/${traceId}?uiEmbed=v0" title="Trace" ></iframe>
             </body>`;
 
@@ -54,9 +54,7 @@ export class TracePanel {
 
             const src = `${jaegerAddress}/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}&uiEmbed=v0`;
             html =`
-            <body>
-            <h1>Trace: ${span}</h1>
-            
+            <body>            
             <h3>Comparing: A sample ${traceIdLabels[0]} trace  with a ${traceIdLabels[1]} trace</h3>
             <br></br>
             <iframe style="width:100%; height:500px;"src="${src}" title="Trace" ></iframe>
