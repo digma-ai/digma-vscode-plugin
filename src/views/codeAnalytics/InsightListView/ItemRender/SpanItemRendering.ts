@@ -108,7 +108,7 @@ export class SpanItemHtmlRendering{
             const traceIdAtt = `data-trace-id="${traceIds.join(",")}"`;
 
             traceHtml=`
-            <span style="padding-left: 10px;" class="trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span}" 
+            <span  class="insight-main-value trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span}" 
                 ${traceLabelsAtt} ${traceIdAtt} >
             Compare
             </span> 
