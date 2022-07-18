@@ -86,12 +86,14 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     // this is the first parameter ending
                 }
                 if (txt === ",") {
-                    if (!state.withinBrackets()) {
+                    if (!state.withinBrackets) {
                         state.increaseGenericsCountIfNeeded();
                     }
                     state.handleMultiDimArrayIfNeeded();
                 }
                 if (txt === "[") {
+                    state.withinBrackets = true;
+
                     if (!state.withinGenerics()) {
                         // handle/skip attributes
                         if (state.hasTypeStrAlready()) {
@@ -102,6 +104,8 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     }
                 }
                 if (txt === "]") {
+                    state.withinBrackets = false;
+
                     if (!state.withinGenerics()) {
                         // handle/skip attributes
                         if (state.hasTypeStrAlready()) {
@@ -112,13 +116,13 @@ export class CSharpParametersExtractor implements IParametersExtractor {
                     }
                 }
                 if (txt === "<") {
-                    if (!state.withinBrackets()) {
+                    if (!state.withinBrackets) {
                         state.genericsLevel++;
                         state.increaseGenericsCountIfNeeded();
                     }
                 }
                 if (txt === ">") {
-                    if (!state.withinBrackets()) {
+                    if (!state.withinBrackets) {
                         state.genericsLevel--;
                     }
                 }
@@ -144,6 +148,7 @@ export class CSharpParametersExtractor implements IParametersExtractor {
 export class TypeParsingState {
     withinArray: boolean = false;
     withinAttribute: boolean = false; // Dotnet Attribute is equivalent to Java Annotation
+    withinBrackets: boolean = false; // any kind of bracket (array, attribute, or other)
     genericsLevel: integer = 0;
     genericsCount: integer = 0;
     multiDimensionalArrayDelimiterCount: integer = 0;
@@ -155,6 +160,7 @@ export class TypeParsingState {
     public reset() {
         this.withinArray = false;
         this.withinAttribute = false;
+        this.withinBrackets = false;
         this.genericsLevel = 0;
         this.genericsCount = 0;
         this.multiDimensionalArrayDelimiterCount = 0;
@@ -171,15 +177,9 @@ export class TypeParsingState {
         return this.genericsLevel > 0;
     }
 
-    public withinBrackets(): boolean {
-        return this.withinArray
-            || this.withinAttribute;
-    }
-
     public withinSomeScope(): boolean {
-        return this.withinBrackets()
-            || this.withinGenerics()
-            ;
+        return this.withinBrackets
+            || this.withinGenerics();
     }
 
     public increaseGenericsCountIfNeeded() {
