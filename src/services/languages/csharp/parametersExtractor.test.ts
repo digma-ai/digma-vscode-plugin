@@ -1,6 +1,7 @@
 // You can import and use all API from the 'vscode' module
 // as well as import your extension to test it
 import * as vscode from 'vscode';
+import { integer } from "vscode-languageclient";
 import { expect } from 'chai';
 
 import { CSharpParametersExtractor } from './parametersExtractor';
@@ -30,6 +31,15 @@ function createToken(text: string, type: TokenType): Token {
     };
 }
 
+function punctuation(text: string): Token {
+    return createToken(text, TokenType.punctuation);
+}
+
+function assertParameterInfo(actual: ParameterInfo[], position: integer, expectedName: string, expectedType: string) {
+    expect(actual[position].name, "paramter[" + position + "].name").to.equal(expectedName);
+    expect(actual[position].type, "paramter[" + position + "].type").to.equal(expectedType);
+}
+
 
 suite('CSharpSpanExtractor', () => {
     vscode.window.showInformationMessage('Start all tests.');
@@ -46,49 +56,78 @@ suite('CSharpSpanExtractor', () => {
         suite('when there are no tokens', () => {
             const tokens: Token[] = [];
 
-            test('should return zero paramInfos', async () => {
+            test('should return zero parameterInfos', async () => {
                 const paramInfos = await extractor.extractParameters("whatever", tokens);
 
                 expect(paramInfos).to.have.lengthOf(0);
             });
         });
 
-        suite('when method has no params', () => {
+        suite('when method has no parameters', () => {
             const methodName = "Abcd";
             const tokens: Token[] = [
                 createToken("public", TokenType.plainKeyword),
                 createToken("void", TokenType.plainKeyword),
                 createToken(methodName, TokenType.member),
-                createToken("(", TokenType.punctuation),
-                createToken(")", TokenType.punctuation),
+                punctuation("("),
+                punctuation(")"),
             ];
 
-            test('should return zero paramInfos', async () => {
+            test('should return zero parameterInfos', async () => {
                 const paramInfos = await extractor.extractParameters(methodName, tokens);
 
                 expect(paramInfos).to.have.lengthOf(0);
             });
         });
 
-        suite('when method has one param', () => {
+        suite('when method has one primitive parameter', () => {
             const methodName = "Abcd";
             const tokens: Token[] = [
                 createToken("public", TokenType.plainKeyword),
                 createToken("void", TokenType.plainKeyword),
                 createToken(methodName, TokenType.member),
-                createToken("(", TokenType.punctuation),
+                punctuation("("),
                 createToken("int", TokenType.plainKeyword),
                 createToken("size", TokenType.parameter),
-                createToken(")", TokenType.punctuation),
+                punctuation(")"),
             ];
 
-            test('should return one paramInfo', async () => {
+            test('should return one parameterInfo', async () => {
                 const paramInfos = await extractor.extractParameters(methodName, tokens);
 
                 expect(paramInfos).to.have.lengthOf(1);
-                const param1 = paramInfos[0];
-                expect(param1.name).to.equal("size");
-                expect(param1.type).to.equal("Int32");
+                assertParameterInfo(paramInfos, 0, "size", "Int32");
+            });
+        });
+
+        suite('two parameters (string[] someValues, out bool someBool)', () => {
+            const methodName = "Abcd";
+            const tokens: Token[] = [
+                createToken("public", TokenType.plainKeyword),
+                createToken("void", TokenType.plainKeyword),
+                createToken(methodName, TokenType.member),
+                punctuation("("),
+                //
+                createToken("string", TokenType.plainKeyword),
+                punctuation("["),
+                punctuation("]"),
+                createToken("someValues", TokenType.parameter),
+                //
+                punctuation(","),
+                //
+                createToken("out", TokenType.plainKeyword),
+                createToken("bool", TokenType.plainKeyword),
+                createToken("someBool", TokenType.parameter),
+                //
+                punctuation(")"),
+            ];
+
+            test('should return two parameterInfo', async () => {
+                const paramInfos = await extractor.extractParameters(methodName, tokens);
+
+                expect(paramInfos).to.have.lengthOf(2);
+                assertParameterInfo(paramInfos, 0, "someValues", "String[]");
+                assertParameterInfo(paramInfos, 1, "someBool", "Boolean&");
             });
         });
 
