@@ -131,6 +131,83 @@ suite('CSharpSpanExtractor', () => {
             });
         });
 
+        suite('two parameters (ref long ref2Long, IDictionary<int, string[,]> dictInt2StringMultiDimArray)', () => {
+            const methodName = "Abcd";
+            const tokens: Token[] = [
+                createToken("public", TokenType.plainKeyword),
+                createToken("void", TokenType.plainKeyword),
+                createToken(methodName, TokenType.member),
+                punctuation("("),
+                //
+                createToken("ref", TokenType.plainKeyword),
+                createToken("long", TokenType.plainKeyword),
+                createToken("ref2Long", TokenType.parameter),
+                //
+                punctuation(","),
+                //
+                createToken("IDictionary", TokenType.interface),
+                punctuation("<"),
+                createToken("int", TokenType.plainKeyword),
+                punctuation(","),
+                createToken("string", TokenType.plainKeyword),
+                punctuation("["), punctuation(","), punctuation("]"),
+                punctuation(">"),
+                createToken("dictInt2StringMultiDimArray", TokenType.parameter),
+                //
+                punctuation(")"),
+            ];
+
+            test('should return two parameterInfo', async () => {
+                const paramInfos = await extractor.extractParameters(methodName, tokens);
+
+                expect(paramInfos).to.have.lengthOf(2);
+                assertParameterInfo(paramInfos, 0, "ref2Long", "Int64&");
+                assertParameterInfo(paramInfos, 1, "dictInt2StringMultiDimArray", "IDictionary`2");
+            });
+        });
+
+        suite('two parameters (IList<SomeClass<string>> listOfClassWithGenerics, int[,,][][,][] multiDimArray)', () => {
+            const methodName = "Abcd";
+            const tokens: Token[] = [
+                createToken("public", TokenType.plainKeyword),
+                createToken("void", TokenType.plainKeyword),
+                createToken(methodName, TokenType.member),
+                punctuation("("),
+                //
+                createToken("IList", TokenType.interface),
+                punctuation("<"),
+                createToken("SomeClass", TokenType.class),
+                punctuation("<"),
+                createToken("string", TokenType.plainKeyword),
+                punctuation(">"),
+                punctuation(">"),
+                createToken("listOfClassWithGenerics", TokenType.parameter),
+                //
+                punctuation(","),
+                //
+                createToken("int", TokenType.plainKeyword),
+                punctuation("["), punctuation(","), punctuation(","), punctuation("]"),
+                punctuation("["), punctuation("]"),
+                punctuation("["), punctuation(","), punctuation("]"),
+                punctuation("["), punctuation("]"),
+                createToken("multiDimArray", TokenType.parameter),
+                //
+                punctuation(")"),
+            ];
+
+            test('should return two parameterInfo', async () => {
+                const paramInfos = await extractor.extractParameters(methodName, tokens);
+
+                expect(paramInfos).to.have.lengthOf(2);
+                assertParameterInfo(paramInfos, 0, "listOfClassWithGenerics", "IList`1");
+                // few comments: 
+                //  1. we encode the commas as semi colons since comma already used as delimiter between the parameters
+                //  2. dotnet/csharp internals: the actual type order of bracket groups is reversed. 
+                //     in this case: [,,][][,][] turns into [][;][][;;]
+                assertParameterInfo(paramInfos, 1, "multiDimArray", "Int32[][;][][;;]");
+            });
+        });
+
     }); // end of #extractParameters
 
 });
