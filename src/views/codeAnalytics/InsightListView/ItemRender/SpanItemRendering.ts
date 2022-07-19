@@ -85,6 +85,10 @@ export class SpanItemHtmlRendering{
                                 </span>
                             </div>`);
                     }
+                    else{
+                        percentileHtmls.push(/*html*/ `<span></span>`);
+
+                    }
  
         
                 // percentileHtmls.push(/*html*/ `<span class="change"> 
