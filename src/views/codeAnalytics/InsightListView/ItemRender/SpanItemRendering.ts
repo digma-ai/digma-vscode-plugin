@@ -85,6 +85,10 @@ export class SpanItemHtmlRendering{
                                 </span>
                             </div>`);
                     }
+                    else{
+                        percentileHtmls.push(/*html*/ `<span></span>`);
+
+                    }
  
         
                 // percentileHtmls.push(/*html*/ `<span class="change"> 
@@ -126,7 +130,7 @@ export class SpanItemHtmlRendering{
 
                 <div class="list-item-right-area">
                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("histogram.png")}" width="32" height="32">
-                    <div class="insight-main-value histogram-link link" data-span-name=${insight.span.name} data-span-instrumentationlib=${insight.span.instrumentationLibrary}>
+                    <div class="insight-main-value histogram-link link" data-span-name="${insight.span.name}" data-span-instrumentationlib="${insight.span.instrumentationLibrary}">
                       Histogram
                     </div>
                     ${traceHtml}   
