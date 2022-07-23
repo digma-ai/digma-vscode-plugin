@@ -65,7 +65,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 		this._disposables = [
 			vscode.window.registerWebviewViewProvider(
 				CodeAnalyticsView.viewId,
-				this._provider
+				this._provider, {webviewOptions: {retainContextWhenHidden: true}}
 			),
 			vscode.window.onDidChangeTextEditorSelection(
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
