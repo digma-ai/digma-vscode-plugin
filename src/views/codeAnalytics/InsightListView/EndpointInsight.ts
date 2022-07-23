@@ -11,6 +11,8 @@ import path = require("path");
 import moment = require("moment");
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { SpanSearch } from "./Common/SpanSearch";
+import { decimal, integer } from "vscode-languageclient";
+import { Settings } from "../../../settings";
 
 
 export interface EndpointInsight extends CodeObjectInsight {
@@ -29,6 +31,18 @@ export interface SlowSpanInfo {
     p99: Percentile;
 }
 
+export interface HighlyOccurringSpanInfo {
+    occurrences: number;
+    spanInfo: SpanInfo;
+    spanKind: string;
+    traceId: string;
+    duration: Duration;
+    fraction: decimal;
+}
+
+export interface EPNPlusSpansInsight extends EndpointInsight {
+    spans: HighlyOccurringSpanInfo[];
+}
 export interface SlowestSpansInsight extends EndpointInsight {
     spans: SlowSpanInfo[];
 }
@@ -238,6 +252,120 @@ P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${s
     }
 
 }
+
+export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCreator {
+    constructor(
+        private _viewUris: WebViewUris,
+        private _editorHelper: EditorHelper,
+        private _documentInfoProvider: DocumentInfoProvider,
+        private _channel: WebviewChannel,
+
+    ) {
+        this._channel.consume(UiMessage.Notify.GoToFileAndLine, e => this.goToFileAndLine(e.file!, e.line!));
+
+    }
+    private async goToFileAndLine(file: string , line: number ) {
+        let doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
+        this._editorHelper.openFileAndLine( doc,line );
+    }
+
+    public async createListViewItem(codeObjectsInsight: EPNPlusSpansInsight): Promise<IListViewItem> {
+        
+        var spans = codeObjectsInsight.spans;
+
+        var spansLocations = await new SpanSearch(this._documentInfoProvider).searchForSpans(spans.map(x=>x.spanInfo));
+
+        var items :string[] = [];
+                        
+        for (let i=0;i<spansLocations.length;i++){
+
+            let result = spansLocations[i];
+            const slowSpan = spans[i];
+
+            items.push(`
+                <div class="endpoint-bottleneck-insight" >
+                    <div class="span-name flex-row ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
+                        <span class="left-ellipsis">${slowSpan.spanInfo.displayName}</span>
+                    </div>
+                </div>`);
+        }
+
+        let traceHtml='';
+        if (Settings.jaegerAddress.value){
+                traceHtml=`
+                
+                <span  class="insight-main-value trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${codeObjectsInsight.route}" data-trace-id="${codeObjectsInsight.spans.firstOrDefault()?.traceId}" >
+                Trace
+                </span> 
+                `;
+
+        }
+
+        let fractionSt='';
+        const fraction =codeObjectsInsight.spans.firstOrDefault()?.fraction;
+        if (fraction<0.01){
+            fractionSt="minimal";
+        }
+        else{
+            fractionSt=`${fraction.toPrecision(1)} of request` ;
+        }
+        let statsHtml = `
+        <div style="margin-top:0.5em" class="flex-row">
+                            
+            <span class="error-property flex-stretch">
+                <span class="label">Impact</span>
+                <span>${fractionSt}</span>
+            </span>
+            <span class="error-property flex-stretch">
+                <span class="label">Duration</span>
+                <span>${codeObjectsInsight.spans.firstOrDefault().duration.value} ${codeObjectsInsight.spans.firstOrDefault().duration.unit}</span>
+            </span>
+            </div>
+        `;
+        
+
+
+        const html = `
+        <div class="list-item">
+            <div class="list-item-content-area">
+                <div class="list-item-header" title="Repeating select query pattern suggests N-Plus-One">
+                    <strong>Suspected N-Plus-1</strong>
+                </div>
+                <div class="list-item-content-description">Check the following locations:</div>
+                <div>
+                    ${items.join('')}
+                </div>
+                ${statsHtml}
+
+            </div>
+            <div class="list-item-right-area">
+                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("sql.png")}" width="32" height="32">
+                ${traceHtml}
+            </div>
+        </div>`;
+
+        return {
+            getHtml: () => html,
+            sortIndex: 0,
+            groupId: codeObjectsInsight.route.replace("ep","").replace(":", " ")
+        };
+    }
+
+   
+    public async create( codeObjectsInsight: EPNPlusSpansInsight[]): Promise<IListViewItem[]> {
+        
+        let items:IListViewItem[] = [];
+        for (const insight of codeObjectsInsight){
+            items.push(await this.createListViewItem(insight));
+
+        }
+        return items;
+    }
+
+}
+
+
+
 
 export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCreator {
     constructor(private viewUris: WebViewUris

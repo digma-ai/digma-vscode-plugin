@@ -13,8 +13,8 @@ import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
 import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
-import { SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
-import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
+import { NPlusSpansListViewItemsCreator, SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
+import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, EPNPlusSpansListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
 import { Settings } from "../../settings";
 import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
@@ -29,6 +29,8 @@ import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
+
+
 
 export class CodeAnalyticsView implements vscode.Disposable 
 {
@@ -65,8 +67,11 @@ export class CodeAnalyticsView implements vscode.Disposable
 		this._disposables = [
 			vscode.window.registerWebviewViewProvider(
 				CodeAnalyticsView.viewId,
-				this._provider
+				this._provider, {webviewOptions: {retainContextWhenHidden: true}}
+                
 			),
+
+        
 			vscode.window.onDidChangeTextEditorSelection(
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
                     if(e.textEditor.document.languageId !== 'Log')
@@ -78,6 +83,7 @@ export class CodeAnalyticsView implements vscode.Disposable
             }),
             errorFlowParamDecorator
         ];
+
 
 	}
 
@@ -94,6 +100,7 @@ export interface CodeObjectInfo {
 	id: string,
 	methodName: string
 }
+
 class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Disposable
 {  
  
@@ -120,11 +127,14 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		this._webViewUris = new WebViewUris(
 			extensionUri,
 			"codeAnalytics",
-			() => this._view!.webview
+			() => {
+                return this._view!.webview;
+            }
 		);
 
         this._webviewViewProvider = {
             get: ()=>{
+
                 return this._view;
             }
         };
@@ -155,6 +165,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
+        listViewItemsCreator.add("EndpointSpaNPlusOne", new EPNPlusSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
+        listViewItemsCreator.add("SpaNPlusOne", new NPlusSpansListViewItemsCreator(this._webViewUris));
+
         listViewItemsCreator.add("SpanEndpointBottleneck", new SpanEndpointBottlenecksListViewItemsCreator(this._webViewUris,editorHelper,_documentInfoProvider,this._channel));
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
@@ -182,7 +195,6 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._tabs.set(tab.tabId, tab);
         this._lastActivedTab = tabsList[0];
 	}
-   
 
     dispose() {
         this._disposables.forEach((v,k)=> v.dispose());
@@ -266,6 +278,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         }
         this._currentCodeObject = codeObject;
     }
+
     private canChangeOverlayOnCodeSelectionChanged() : boolean
     {
         return !this._overlay.isVisible || 
@@ -336,6 +349,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._overlay.hide();
         }
         this._currentCodeObject = codeObject;
+
     }
 
     public async onTabRefreshRequested(event:UiMessage.Notify.TabRefreshRequested ){
@@ -344,6 +358,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._activeTab.onRefreshRequested(this._currentCodeObject);
         }
     }
+
+
 
     public async onChangeEnvironmentRequested(event:UiMessage.Notify.ChangeEnvironmentContext ){
         if (event.environment){
@@ -376,6 +392,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         }
     }
 
+    
 	public async resolveWebviewView(
 		webviewView: vscode.WebviewView,
 		context: vscode.WebviewViewResolveContext<unknown>,

@@ -111,6 +111,13 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
 export interface SpanDurationsInsight extends CodeObjectInsight{
     span: SpanInfo,
     codeObjectId: string,
+    periodicPercentiles:{
+        currentDuration :Duration,
+        percentile :number,
+        period :string,
+        previousDuration: Duration | undefined,
+        sampleTraces :string[]
+    }[]
     percentiles: {
         percentile: number,
         currentDuration: Duration,
@@ -267,4 +274,86 @@ P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${s
 
 }
 
+export interface NPlusSpansInsight extends CodeObjectInsight {
+    traceId: string;
+    span: SpanInfo;
+    message: string;
+    occurrences: number;
+    duration: Duration;
+}
+
+export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCreator {
+    constructor(
+        private _viewUris: WebViewUris
+
+    ) {
+
+    }
+
+    public async createListViewItem(codeObjectsInsight: NPlusSpansInsight): Promise<IListViewItem> {
+           
+        let traceHtml ='';
+        if (Settings.jaegerAddress.value){
+            traceHtml=`
+            
+            <span  class="insight-main-value trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${codeObjectsInsight.span.name}" data-trace-id="${codeObjectsInsight.traceId}" >
+            Trace
+            </span> 
+            `;
+
+         }
+
+        let statsHtml = `
+        <div style="margin-top:0.5em" class="flex-row">
+                            
+            <span class="error-property flex-stretch">
+                <span class="label">Repeats</span>
+                <span>${codeObjectsInsight.occurrences} (median)</span>
+            </span>
+            <span class="error-property flex-stretch">
+                <span class="label">Duration</span>
+                <span>${codeObjectsInsight.duration.value} ${codeObjectsInsight.duration.unit}</span>
+            </span>
+            </div>
+        `;
+        
+        const html = `
+        <div class="list-item">
+            <div class="list-item-content-area">
+                <div class="list-item-header" title="Repeating select query pattern suggests N-Plus-One">
+                    <strong>Suspected N-Plus-1</strong>
+                </div>
+                <div class="list-item-content-description">Check the following SELECT statement</div>
+                <div>
+                    ${codeObjectsInsight.message}
+                </div>
+                ${statsHtml}                            
+      
+            </div>
+            <div class="list-item-right-area">
+                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("sql.png")}" width="32" height="32">
+                ${traceHtml}
+
+            </div>
+        </div>`;
+
+        return {
+            getHtml: () => html,
+            sortIndex: 0,
+            groupId: codeObjectsInsight.span.name
+        };
+    }
+
+   
+    public async create( codeObjectsInsight: NPlusSpansInsight[]): Promise<IListViewItem[]> {
+        
+        let items:IListViewItem[] = [];
+        for (const insight of codeObjectsInsight){
+            items.push(await this.createListViewItem(insight));
+
+        }
+        return items;
+    }
+
+}
 

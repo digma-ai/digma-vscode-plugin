@@ -439,6 +439,10 @@ vscode-panel-view {
     padding-right: 10px;
 }
 
+.refresh-button {
+    margin-left: auto;
+}
+
 #view-insights {
     .flow-row {
         margin-bottom: 2px;
@@ -461,6 +465,13 @@ vscode-panel-view {
             display: grid;
             justify-content: start;
             grid-template-columns: auto auto auto 1fr;
+            column-gap: 10px;
+            row-gap: 5px;
+        }
+        .periodic-percentiles-grid {
+            display: grid;
+            justify-content: start;
+            grid-template-columns: auto auto auto auto 1fr;
             column-gap: 10px;
             row-gap: 5px;
         }
