@@ -5,10 +5,11 @@ import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo } from './languages/extractors';
+import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { Settings } from '../settings';
+import { WorkspaceState } from '../state';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -17,27 +18,28 @@ export class DocumentInfoProvider implements vscode.Disposable
     private _timer;
 
     private ensureDocDictionaryForEnv(){
-        let envDictionary = this._documentsByEnv[Settings.environment.value];
+        let envDictionary = this._documentsByEnv[this.workspaceState.environment];
         if (!envDictionary){
-            this._documentsByEnv[Settings.environment.value]={};
+            this._documentsByEnv[this.workspaceState.environment]={};
         }
     }
     get _documents(): Dictionary<string, DocumentInfoContainer> {
         
         this.ensureDocDictionaryForEnv();
-        return this._documentsByEnv[Settings.environment.value];
+        return this._documentsByEnv[this.workspaceState.environment];
     }
 
     set _documents(value: Dictionary<string, DocumentInfoContainer>){
         this.ensureDocDictionaryForEnv();
-        this._documentsByEnv[Settings.environment.value]=value;
+        this._documentsByEnv[this.workspaceState.environment]=value;
 
     }
 
 
     constructor( 
         public analyticsProvider: AnalyticsProvider,
-        public symbolProvider: SymbolProvider) 
+        public symbolProvider: SymbolProvider,
+        private workspaceState: WorkspaceState) 
     {
         this._disposables.push(vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
 
@@ -169,7 +171,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const tokens = await this.symbolProvider.getTokens(doc);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens, symbolTrees, this);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
-                let methodInfos = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
+                const paramsExtractor = await this.symbolProvider.getParametersExtractor(doc);
+                let methodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 const summariesResult = await this.analyticsProvider.getSummaries(
                     methodInfos.map(s => s.idWithType)
                         .concat(endpoints.map(e => e.idWithType))
@@ -200,7 +203,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     }
                 }
 
-                const newMethodInfos = this.createMethodInfos(doc, symbolInfos, tokens, spans, endpoints);
+                const newMethodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 methodInfos=newMethodInfos;
                 const summaries = new CodeObjectSummaryAccessor(summariesResult);
           
@@ -237,13 +240,14 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
  
-    private createMethodInfos(
+    private async createMethodInfos(
         document: vscode.TextDocument,
+        parametersExtractor: IParametersExtractor,
         symbols: SymbolInfo[],
         tokens: Token[], 
         spans: SpanLocationInfo[],
         endpoints: EndpointInfo[],
-    ): MethodInfo[] {
+    ): Promise<MethodInfo[]> {
         let methods: MethodInfo[] = [];
 
         for(let symbol of symbols) {
@@ -264,7 +268,7 @@ export class DocumentInfoProvider implements vscode.Disposable
             const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
             for(let token of methodTokens) {
                 const name = token.text;// document.getText(token.range);
-
+  
                 if(
                     (token.type === TokenType.method || token.type === TokenType.function || token.type === TokenType.member)
                     && !method.nameRange
@@ -272,18 +276,31 @@ export class DocumentInfoProvider implements vscode.Disposable
                 ) {
                     method.nameRange = token.range;
                 }
+            }
+            method.parameters = await parametersExtractor.extractParameters(symbol.name, methodTokens);
 
-                if(token.type === TokenType.parameter) {
-                    if(method.parameters.any(p => p.name === name)) {
-                        continue;
-                    }
-
-                    method.parameters.push({ name, range: token.range, token });
-                }
+            if (parametersExtractor.needToAddParametersToCodeObjectId()) {
+                this.modifyMethodCodeObjectId(method);
             }
         }
 
         return methods;
+    }
+
+    protected modifyMethodCodeObjectId(method: MethodInfo) {
+        if (method.id.endsWith(")")) {
+            return;
+        }
+
+        if (method.parameters.length > 0) {
+            const argsPart: string = "("
+                + method.parameters.map(x => x.type).join(',')
+                + ")";
+
+            const newId = method.id + argsPart;
+            method.id = newId;
+            method.symbol.id = newId;
+        }
     }
 
     public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummaryAccessor, methods: MethodInfo[]): LineInfo[]
@@ -411,4 +428,5 @@ export interface ParameterInfo
     name: string;
     range: vscode.Range;
     token: Token;
+    type: string; // as used in stack trace
 }

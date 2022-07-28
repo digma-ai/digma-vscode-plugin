@@ -31,7 +31,7 @@ There are many types of possible code objects, this is where the platform is ext
   - ✅ Functions/methods 	
   - ✅ REST endpoints 
   - ✅	OTEL Spans	
-  - 🏗 GRPC endpoints (WIP)	
+  - ✅ GRPC endpoints (WIP)	
   - RabbitMQ event classes
   - Kafka producer
   - Classes/modules

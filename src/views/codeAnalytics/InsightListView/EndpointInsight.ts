@@ -74,7 +74,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint low traffic", "Servicing a low number of requests", "gauge_low.png"),
             sortIndex: 0,
-            groupId: codeObjectsInsight.route
+            groupId: codeObjectsInsight.route.replace("ep","").replace(":", " ")
         };
     }
 
@@ -100,7 +100,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint normal level of traffic", "Servicing an average number of requests", "guage_normal.png"),
             sortIndex: 0,
-            groupId: codeObjectsInsight.route
+            groupId: codeObjectsInsight.route.replace("ep","").replace(":", " ")
         };
     }
 
@@ -135,7 +135,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
         return {
             getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint high traffic", "Servicing a high number of requests", "guage_high.png"),
             sortIndex: 0,
-            groupId: codeObjectsInsight.route
+            groupId: codeObjectsInsight.route.replace("ep","").replace(":", " ")
         };
     }
 
@@ -160,10 +160,6 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
     private async goToFileAndLine(file: string , line: number ) {
         let doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
         this._editorHelper.openFileAndLine( doc,line );
-    }
-
-    private duration(duration: Duration) {
-        return `${duration.value} ${duration.unit}`;
     }
 
     public async createListViewItem(codeObjectsInsight: SlowestSpansInsight): Promise<IListViewItem> {
@@ -209,7 +205,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: codeObjectsInsight.route
+            groupId: codeObjectsInsight.route.replace("ep","").replace(":", " ")
         };
     }
 
@@ -287,7 +283,7 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         return {
             getHtml: () => html,
             sortIndex: 0,
-            groupId: codeObjectsInsight.route
+            groupId: codeObjectsInsight.route.replace("ep","").replace(":", " ")
         };
     }
 

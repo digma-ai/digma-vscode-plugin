@@ -1,27 +1,18 @@
 import { stringify } from "querystring";
 import { AnalyticsProvider, DurationRecord, PercentileDuration } from "../../../services/analyticsProvider";
 import { Settings } from "../../../settings";
+import { WorkspaceState } from "../../../state";
 import { SpanInfo } from "../InsightListView/CommonInsightObjects";
 
 export class HistogramPanel {
 
 
 
-    constructor(private _analyticsProvider: AnalyticsProvider){
+    constructor(private _analyticsProvider: AnalyticsProvider,
+        private _workspaceState: WorkspaceState){
 
     }
-    
-    private durationRecordToJS(durationRecord: DurationRecord):string{
 
-        let date='';
-        const r=durationRecord.time;
-        const d = new Date(r.toISOString());
-        date+=`[new Date(]${r.year()}, ${r.month()}, ${d.getDate()}, ${r.hours()}, ${r.minutes()},${r.seconds()},${r.milliseconds()})`;
-        let durations = (durationRecord.duration/1000000).toPrecision(2).toString();
-        return `{x: ${date},y: ${durations}}`;
-        
-
-    }
 
     private getXAxisData(durationRecords: DurationRecord[]):string{
         var dateStrings = durationRecords.map(x=>x.time).map(d=>{
@@ -92,7 +83,7 @@ export class HistogramPanel {
 
         
         const histogramData = await this._analyticsProvider.getSpanHistogramData(spanName, instrumentationLibrary,
-            codeObjectId, Settings.environment.value);
+            codeObjectId, this._workspaceState.environment);
         
         let dataByPercentile = histogramData.percentileDurations.groupBy(x=>x.percentile);
         let percentiles = Object.keys(dataByPercentile);

@@ -31,18 +31,24 @@ export class SettingsKey<T>
     } 
 }
 
+
 export class Settings 
 {
     public static readonly url = new SettingsKey('url', '');
 
     public static readonly enableCodeLens = new SettingsKey('enableCodeLens', true);
 
-    public static readonly environment = new SettingsKey('environment', '');
+    // public static readonly environment = new SettingsKey('environment', '');
+
+    public static readonly jaegerAddress = new SettingsKey('jaegerAddress', '');
+
 
     public static readonly hideFramesOutsideWorkspace = new SettingsKey('hideFramesOutsideWorkspace', true);
 
     public static readonly sourceControl = new SettingsKey('sourceControl', SourceControlType.None);
    
     public static readonly token = new SettingsKey('token', '');
+
+    public static readonly customHeader = new SettingsKey('customHeader', '');
 
 }

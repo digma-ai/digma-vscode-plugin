@@ -3,8 +3,8 @@ import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
 import { IMethodExtractor, SymbolInfo } from "../extractors";
 
 
-export class CSharpMethodExtractor implements IMethodExtractor
-{
+export class CSharpMethodExtractor implements IMethodExtractor {
+
     public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): Promise<SymbolInfo[]> {
         const symbolInfos = this.extractFunctions(document.uri, document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
@@ -48,8 +48,7 @@ export class CSharpMethodExtractor implements IMethodExtractor
                 });
             }
 
-            if (sym.children)
-            {
+            if (sym.children) {
                 symbolInfos = symbolInfos.concat(this.extractFunctions(uri, filePath, sym.name, sym.children));
             }
         }

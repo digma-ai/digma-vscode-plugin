@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
-import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, ISpanExtractor } from '../extractors';
+import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
 import { CSharpMethodExtractor } from './methodExtractor';
+import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
 // import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor';
 
@@ -21,6 +22,10 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
         return [
             new CSharpMethodExtractor()
         ];
+    }
+
+    public get parametersExtractor(): IParametersExtractor {
+        return new CSharpParametersExtractor();
     }
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {

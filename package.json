@@ -2,7 +2,7 @@
     "name": "digma",
     "displayName": "Digma Continuous Feedback",
     "description": "Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
-    "version": "0.5.32",
+    "version": "0.5.35",
     "publisher": "digma",
     "icon": "digma.png",
     "engines": {
@@ -99,7 +99,7 @@
                     "type": "string",
                     "default": "https://localhost:5051"
                 },
-                "digma.environment": {
+                "digma.jaegerAddress": {
                     "type": "string"
                 },
                 "digma.hideFramesOutsideWorkspace": {
@@ -116,6 +116,10 @@
                 },
                 "digma.token": {
                     "type": "string"
+                },
+                "digma.customHeader": {
+                    "type": "string",
+                    "description": "Specify a custom header to requests sent to Digma server. Useful in case Digma is deployed behind an ingress component, and need be routed (Example: \"Host:digma.loremipsum.com\")."
                 }
             }
         }

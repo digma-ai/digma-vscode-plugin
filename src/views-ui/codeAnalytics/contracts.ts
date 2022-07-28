@@ -33,6 +33,10 @@ export namespace UiMessage
         export class OpenHistogramPanel {
             constructor(public span?: string, public instrumentationLibrary?:string){}
         }
+
+        export class OpenTracePanel {
+            constructor(public traceIds?: string[], public traceLabels?:string[],  public span?:string, public jaegerAddress?:string){}
+        }
         export class OpenRawTrace {
             constructor(public content?: string) {}
         }
@@ -64,9 +68,8 @@ export namespace UiMessage
             constructor(public htmlContent?: string) {}
         }
 
-        export class HistogramPanel{
-            constructor(public data?: decimal[]) {}
-
+        export class TracePanel {
+            constructor(public url?: string) {}
         }
 
         export class GlobalInsightsList {
