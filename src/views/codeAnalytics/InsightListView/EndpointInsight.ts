@@ -33,8 +33,8 @@ export interface SlowSpanInfo {
 
 export interface HighlyOccurringSpanInfo {
     occurrences: number;
-    spanInfo: SpanInfo;
-    spanKind: string;
+    internalSpan: SpanInfo;
+    clientSpan: SpanInfo;
     traceId: string;
     duration: Duration;
     fraction: decimal;
@@ -271,13 +271,13 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
 
     public async createListViewItem(codeObjectsInsight: EPNPlusSpansInsight): Promise<IListViewItem> {
         
-        var spans = codeObjectsInsight.spans;
+        var spans = codeObjectsInsight.spans.filter(x=>x.internalSpan);
 
-        var spansLocations = await new SpanSearch(this._documentInfoProvider).searchForSpans(spans.map(x=>x.spanInfo));
+        var spansLocations = await new SpanSearch(this._documentInfoProvider).searchForSpans(spans.map(x=>x.internalSpan));
 
         var items :string[] = [];
                         
-        for (let i=0;i<spansLocations.length;i++){
+        for (let i=0;i<spansLocations.length;i++){  
 
             let result = spansLocations[i];
             const slowSpan = spans[i];
@@ -285,7 +285,7 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
             items.push(`
                 <div class="endpoint-bottleneck-insight" >
                     <div class="span-name flex-row ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
-                        <span class="left-ellipsis">${slowSpan.spanInfo.displayName}</span>
+                        <span class="left-ellipsis">${slowSpan.internalSpan.displayName}</span>
                     </div>
                 </div>`);
         }
