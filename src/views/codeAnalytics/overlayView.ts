@@ -1,3 +1,4 @@
+import { Console } from "console";
 import * as vscode from "vscode";
 import { AnalyticsProvider, MethodCodeObjectSummary } from "../../services/analyticsProvider";
 import { DocumentInfo } from "../../services/documentInfoProvider";

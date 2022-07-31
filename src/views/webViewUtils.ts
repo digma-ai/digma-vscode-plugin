@@ -143,7 +143,6 @@ export class WebviewChannel implements vscode.Disposable
 
     public publishByType(message: any, messageType: string)
     {
-       
         this._webview?.postMessage(<IMessage>{
             type: messageType,
             data: message
@@ -152,7 +151,6 @@ export class WebviewChannel implements vscode.Disposable
 
     public publish<T extends object>(message: T)
     {
-       
         this._webview?.postMessage(<IMessage>{
             type: message.constructor.name,
             data: message

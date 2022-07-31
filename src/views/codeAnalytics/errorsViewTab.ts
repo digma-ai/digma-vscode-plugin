@@ -119,7 +119,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     }    
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 
     {
-        let html = HtmlHelper.getCodeObjectLabel(codeObject.methodName);
+        let html = HtmlHelper.getCodeObjectLabel(this._webViewUris, codeObject.methodName);
         this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
     private async refreshList(codeObject: CodeObjectInfo) 
@@ -168,10 +168,19 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                 this._channel.publish(new UiMessage.Set.ErrorsList(html));
                 return;
             }
+
+            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris, this._workspaceState);
+
+            if (errors.length==0){
+                let html =codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults);
+                html += `${HtmlHelper.getInfoMessage("Great news! No errors recorded here yet. Fingers crossed...")}`;
+                this._channel.publish(new UiMessage.Set.ErrorsList(html));
+
+                return;
+            }
             var codeObjectStatuses =usageResults.codeObjectStatuses.filter(o=>o.type === "Span");
             const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(codeObjectStatuses);
             const listViewItems = ErrorsHtmlBuilder.createListViewItem(errors);
-            const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris, this._workspaceState);
             const groupRenderer = new InsightItemGroupRendererFactory(undefined);
             const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
             this._channel.publish(new UiMessage.Set.ErrorsList(html));

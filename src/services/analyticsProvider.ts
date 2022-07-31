@@ -166,6 +166,8 @@ export class EndpointCodeObjectSummary implements CodeObjectSummary
     errorsCount: integer = 0;
     highUsage: boolean = false;
     lowUsage: boolean = false;
+    slow: boolean = false;
+
     maxCallsIn1Min: integer = 0;
     route: string='';
 }

@@ -44,6 +44,10 @@ export class SpanItemHtmlRendering{
     }
 
 
+    private findByPercentileAndPeriod(insight: SpanDurationsInsight, percentile: number, period:string){
+
+        return insight.periodicPercentiles.filter(x=>x.percentile===percentile && period===period).firstOrDefault()?.currentDuration.value;
+    }
     public spanDurationItemHtml(insight: SpanDurationsInsight): string{
         
         const percentileHtmls = [];
@@ -105,6 +109,30 @@ export class SpanItemHtmlRendering{
 
         }
 
+        insight.periodicPercentiles
+        let newHtml = `
+        <div class="periodic-percentiles-grid">
+        <div class="grid-header"></div>
+        <div class="grid-header">Recent</div>
+        <div class="grid-header">Yesterday</div>
+        <div class="grid-header">Prev Week</div>
+        <div class="grid-header">Prev Month</div>
+        <span>P50</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.5,"day")}</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.5,"day")}</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.5,"week")}</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.5,"month")}</span>
+        <span>P95</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.95,"day")}</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.95,"day")}</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.95,"week")}</span>
+        <span>${this.findByPercentileAndPeriod(insight,0.95,"month")}</span>
+
+
+
+        </div>
+        `;
+
         let traceHtml = ``;
         if (Settings.jaegerAddress.value){
 
@@ -125,7 +153,7 @@ export class SpanItemHtmlRendering{
                     <div class="list-item-header"><strong>Duration</strong></div>
                     <div class="percentiles-grid">
                         ${percentileHtmls.join('')}
-                    </div>
+                    </div>                    
                 </div>     
 
                 <div class="list-item-right-area">

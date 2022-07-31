@@ -1,4 +1,5 @@
 import { Disposable } from "vscode";
+import { WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "./codeAnalyticsView";
 
 
@@ -19,7 +20,7 @@ export interface ICodeAnalyticsViewTab extends Disposable
 
 export class HtmlHelper
 {
-    public static getScoreBoxHtml(score?: number, tooltip?: string): string {
+    public static getScoreBoxHtml( score?: number, tooltip?: string): string {
         return `<div class="score-box ${HtmlHelper.getScoreColorClass(score)}" title="${tooltip}">${score ?? ''}</div>`;
     }
     private static getScoreColorClass(score?: number): string {
@@ -37,12 +38,15 @@ export class HtmlHelper
         return "";
     }
 
-    public static getCodeObjectLabel(funcName: string): string 
+    public static getCodeObjectLabel( viewUris:WebViewUris, funcName: string): string 
     {
         return /*html*/ `
-            <span class="scope">Scope:</span>
+
             <span class="codicon codicon-symbol-method" title="Method"></span>
-            <span class="method-name left-ellipsis" title="${funcName}">${funcName}</span>`;
+            <span class="method-name left-ellipsis" title="${funcName}">${funcName}</span>
+            <img class="refresh-button" title="Refresh" style="align-self:center;" width="16" height="16" src="${viewUris.image("refresh.png")}" >
+
+            `;
     }
 
     public static getInfoMessage(text: string): string

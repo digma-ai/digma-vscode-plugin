@@ -108,7 +108,6 @@ export class HistogramPanel {
                         name: 'P${(p*100).toString()}',
                         x: ${xValues},
                         y: ${yValues},
-                        line: {color: '#7F7F7F'},
                         marker : {
                             color: ${colors},
                             symbol: ${icons},

@@ -86,6 +86,18 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                         arguments: [methodInfo]
                     }));
                 }
+
+                if(summary?.slow)
+                {
+                    codelens.push(new vscode.CodeLens(endpoint!.range, {
+                        title:  "Slow Endpoint",
+                        tooltip: `Slow endpoint found`,
+                        command: CodelensProvider.clickCommand,
+                        arguments: [methodInfo]
+                    }));
+                }
+
+                
             }
             
         }

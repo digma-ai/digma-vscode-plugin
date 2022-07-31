@@ -24,8 +24,7 @@
         "Continuous Delivery",
         "DevOps"
     ],
-    "badges": [
-        {
+    "badges": [{
             "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
             "description": "Star Digma on Github",
             "href": "bit.ly/36LyUcr"
@@ -67,27 +66,24 @@
         "Debuggers"
     ],
     "activationEvents": [
-        "onStartupFinished"
+        "onStartupFinished",
+        "onWebviewPanel:codeAnalytics"
     ],
     "main": "./out/extension.js",
     "contributes": {
         "views": {
-            "digma": [
-                {
-                    "type": "webview",
-                    "id": "codeAnalytics",
-                    "name": "CodeAnalytics"
-                }
-            ]
+            "digma": [{
+                "type": "webview",
+                "id": "codeAnalytics",
+                "name": "CodeAnalytics"
+            }]
         },
         "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "digma",
-                    "title": "Digma",
-                    "icon": "icon.png"
-                }
-            ]
+            "activitybar": [{
+                "id": "digma",
+                "title": "Digma",
+                "icon": "icon.png"
+            }]
         },
         "configuration": {
             "properties": {
@@ -165,5 +161,11 @@
         "mocha": "^9.1.3",
         "node-sass": "^7.0.1",
         "typescript": "^4.4.4"
+    },
+    "__metadata": {
+        "id": "2e214876-5bea-4ee6-8026-222de5313d92",
+        "publisherDisplayName": "Digma",
+        "publisherId": "caa21fe0-eb8b-43fd-9197-ae8fb8b1b5df",
+        "isPreReleaseVersion": false
     }
 }

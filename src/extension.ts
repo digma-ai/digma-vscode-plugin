@@ -54,6 +54,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
 
+    
 }
 
 // this method is called when your extension is deactivated
