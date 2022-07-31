@@ -277,7 +277,7 @@ P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${s
 export interface NPlusSpansInsight extends CodeObjectInsight {
     traceId: string;
     span: SpanInfo;
-    message: string;
+    clientSpanName: string;
     occurrences: number;
     duration: Duration;
 }
@@ -325,7 +325,7 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
                 </div>
                 <div class="list-item-content-description">Check the following SELECT statement</div>
                 <div>
-                    ${codeObjectsInsight.message}
+                    ${codeObjectsInsight.clientSpanName}
                 </div>
                 ${statsHtml}                            
       
