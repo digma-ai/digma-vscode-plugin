@@ -1,8 +1,5 @@
-import { stringify } from "querystring";
-import { AnalyticsProvider, DurationRecord, PercentileDuration } from "../../../services/analyticsProvider";
-import { Settings } from "../../../settings";
-import { WorkspaceState } from "../../../state";
-import { SpanInfo } from "../InsightListView/CommonInsightObjects";
+import {AnalyticsProvider, DurationRecord, PercentileDuration} from "../../../services/analyticsProvider";
+import {WorkspaceState} from "../../../state";
 
 export class HistogramPanel {
 
@@ -78,7 +75,17 @@ export class HistogramPanel {
         return `[${text}]`;
     }
 
-    public async getHtml(spanName: string, instrumentationLibrary: string, 
+    public async getHtml(spanName: string, instrumentationLibrary: string,
+        codeObjectId: string):Promise<string>{
+
+        const html = await this._analyticsProvider.getHtmlGraphForSpanPercentiles(spanName, instrumentationLibrary,
+            codeObjectId, this._workspaceState.environment);
+
+        return html;
+    }
+
+
+    public async getHtml__OLD(spanName: string, instrumentationLibrary: string,
         codeObjectId: string):Promise<string>{
 
         
