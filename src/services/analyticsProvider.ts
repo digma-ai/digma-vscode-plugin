@@ -7,7 +7,6 @@ import { Dictionary, momentJsDateParser } from "./utils";
 import moment = require("moment");
 import { decimal, integer } from "vscode-languageclient";
 import * as os from 'os';
-import { stringify } from "querystring";
 import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
 import { WorkspaceState } from "../state";
 
@@ -27,8 +26,8 @@ export enum ErrorFlowsSortBy
     NewOrTrending = "NewOrTrending",
 }
 
-export enum EndpointType
-{
+export enum EndpointType {
+    UNKNOWN,
     HTTP,
     RPC,
 }
@@ -49,6 +48,15 @@ export class EndpointSchema {
         return fullRouteName;
     }
 
+    public static getEndpointType(fullRouteName: string): EndpointType {
+        if (fullRouteName.startsWith(EndpointSchema.HTTP)) {
+            return EndpointType.HTTP
+        }
+        if (fullRouteName.startsWith(EndpointSchema.RPC)) {
+            return EndpointType.RPC
+        }
+        return EndpointType.UNKNOWN
+    }
 }
 
 export interface ParamStats
