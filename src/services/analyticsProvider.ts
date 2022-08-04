@@ -392,40 +392,6 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getSpanDurations(spanName: string, instrumentationLib: string,
-                                  codeObjectId: string, environment: string): Promise<SpanDurationData>
-    {
-
-        const response: SpanDurationData = await this.send<any>(
-            'POST',
-            `/CodeAnalytics/codeObjects/stats/span_durations`,
-            undefined,
-            {
-                environment: environment,
-                spanName: spanName,
-                instrumentationLibrary: instrumentationLib,
-                codeObjectId: codeObjectId
-            });
-        return response;
-    }
-
-    public async getSpanHistogramData(spanName: string, instrumentationLib: string,
-                                      codeObjectId: string, environment: string): Promise<SpanHistogramData>
-    {
-
-        const response: SpanHistogramData = await this.send<any>(
-            'POST',
-            `/CodeAnalytics/codeObjects/stats/span_histogram`,
-            undefined,
-            {
-                environment: environment,
-                spanName: spanName,
-                instrumentationLibrary: instrumentationLib,
-                codeObjectId: codeObjectId
-            });
-        return response;
-    }
-
     public async getHtmlGraphForSpanPercentiles(spanName: string, instrumentationLib: string, codeObjectId: string, environment: string): Promise<string>
     {
         const response: string = await this.sendAndResponseBodyAsString(
