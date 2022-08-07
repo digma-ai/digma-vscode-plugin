@@ -16,13 +16,15 @@ import { CodeInspector } from './services/codeInspector';
 import { VsCodeDebugInstrumentation } from './instrumentation/vscodeInstrumentation';
 import { GoLanguageExtractor } from './services/languages/go/languageExtractor';
 import { WorkspaceState } from './state';
+import { JSLanguageExtractor } from './services/languages/javascript/languageExtractor';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
     const supportedLanguages = [
         new PythonLanguageExtractor(),
         new CSharpLanguageExtractor(),
-        new GoLanguageExtractor()
+        new GoLanguageExtractor(),
+        new JSLanguageExtractor(),
     ];
     const supportedSourceControls = [
         new Git()
