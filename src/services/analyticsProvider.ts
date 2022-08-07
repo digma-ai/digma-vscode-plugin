@@ -7,7 +7,6 @@ import { Dictionary, momentJsDateParser } from "./utils";
 import moment = require("moment");
 import { decimal, integer } from "vscode-languageclient";
 import * as os from 'os';
-import { stringify } from "querystring";
 import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
 import { WorkspaceState } from "../state";
 
@@ -27,8 +26,8 @@ export enum ErrorFlowsSortBy
     NewOrTrending = "NewOrTrending",
 }
 
-export enum EndpointType
-{
+export enum EndpointType {
+    UNKNOWN,
     HTTP,
     RPC,
 }
@@ -49,6 +48,15 @@ export class EndpointSchema {
         return fullRouteName;
     }
 
+    public static getEndpointType(fullRouteName: string): EndpointType {
+        if (fullRouteName.startsWith(EndpointSchema.HTTP)) {
+            return EndpointType.HTTP
+        }
+        if (fullRouteName.startsWith(EndpointSchema.RPC)) {
+            return EndpointType.RPC
+        }
+        return EndpointType.UNKNOWN
+    }
 }
 
 export interface ParamStats
@@ -347,9 +355,9 @@ export class AnalyticsProvider
         return [];
     }
 
-    public async getCodeObjectError(errorSourceUID: string): Promise<CodeObjectErrorDetails>{
+    public async getCodeObjectError(errorSourceUID: string): Promise<CodeObjectErrorDetails> {
         const response = await this.send<CodeObjectErrorDetails>(
-            'GET', 
+            'GET',
             `/CodeAnalytics/codeObjects/errors/${errorSourceUID}`
         );
         return response;
@@ -357,222 +365,215 @@ export class AnalyticsProvider
 
     public async getCodeObjectsErrors(codeObjectIds: string []): Promise<CodeObjectErrorResponse[]>
     {
-        let params : [string, any][] = [["environment",this.state.environment]];
-        codeObjectIds.forEach(o=> params.push(["codeObjectId",o]));
+        let params: [string, any][] = [["environment", this.state.environment]];
+        codeObjectIds.forEach(o => params.push(["codeObjectId", o]));
 
         const response = await this.send<CodeObjectErrorResponse[]>(
-            'GET', 
+            'GET',
             `/CodeAnalytics/codeObjects/errors`,
-            params, 
+            params,
             undefined);
-            
+
         return response;
     }
 
- 
-    public async getUsageStatus(codeObjectIds: string [], filterByInsightProviders: string[]| undefined= undefined): Promise<UsageStatusResults> 
+
+    public async getUsageStatus(codeObjectIds: string [], filterByInsightProviders: string[] | undefined = undefined): Promise<UsageStatusResults>
     {
-        
+
         const response: UsageStatusResults = await this.send<any>(
-            'POST', 
+            'POST',
             `/CodeAnalytics/codeObjects/status`,
             undefined,
             {
                 codeObjectIds: codeObjectIds,
-                filterByInsightProviders:filterByInsightProviders
+                filterByInsightProviders: filterByInsightProviders
             });
-            return response;
+        return response;
     }
 
-    public async getSpanDurations(spanName: string, instrumentationLib: string,
-        codeObjectId: string, environment:string): Promise<SpanDurationData> 
+    public async getHtmlGraphForSpanPercentiles(spanName: string, instrumentationLib: string, codeObjectId: string, environment: string): Promise<string>
     {
-        
-        const response: SpanDurationData = await this.send<any>(
-            'POST', 
-            `/CodeAnalytics/codeObjects/stats/span_durations`,
+        const response: string = await this.sendAndResponseBodyAsString(
+            'POST',
+            `/Graphs/graphForSpanPercentiles`,
             undefined,
+            // SpanHistogramQuery
             {
                 environment: environment,
                 spanName: spanName,
                 instrumentationLibrary: instrumentationLib,
                 codeObjectId: codeObjectId
             });
-            return response;
-    }
-
-    public async getSpanHistogramData(spanName: string, instrumentationLib: string,
-        codeObjectId: string, environment:string): Promise<SpanHistogramData> 
-    {
-        
-        const response: SpanHistogramData = await this.send<any>(
-            'POST', 
-            `/CodeAnalytics/codeObjects/stats/span_histogram`,
-            undefined,
-            {
-                environment: environment,
-                spanName: spanName,
-                instrumentationLibrary: instrumentationLib,
-                codeObjectId: codeObjectId
-            });
-            return response;
+        return response;
     }
 
 
-    public async getGlobalInsights(environment: string): Promise<any []> 
+    public async getGlobalInsights(environment: string): Promise<any []>
     {
-        
+
         const response: any [] = await this.send<any>(
-            'POST', 
+            'POST',
             `/CodeAnalytics/insights`,
             undefined,
             {
                 environment: this.state.environment
             });
-            return response;
+        return response;
     }
 
-    public async getInsights(codeObjectIds: string []): Promise<any []> 
+    public async getInsights(codeObjectIds: string []): Promise<any []>
     {
-        
+
         const response: any [] = await this.send<any>(
-            'POST', 
+            'POST',
             `/CodeAnalytics/codeObjects/insights`,
             undefined,
             {
                 codeObjectIds: codeObjectIds,
                 environment: this.state.environment
             });
-            return response;
+        return response;
     }
 
-    public async getSummaries(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> 
+    public async getSummaries(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]>
     {
-        try
-        {
+        try {
             const response = await this.send<CodeObjectSummary[]>(
-                'POST', 
-                `/CodeAnalytics/summary`, 
-                undefined, 
+                'POST',
+                `/CodeAnalytics/summary`,
+                undefined,
                 {codeObjectIds: symbolsIdentifiers, environment: this.state.environment});
 
             return response;
         }
-        catch(error){
+        catch (error) {
             Logger.error('Failed to get summary', error);
         }
         return [];
     }
 
-    public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> 
+    public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]>
     {
         try
         {
-            let params : [string, any][] = [["environment",this.state.environment]];
+            let params: [string, any][] = [["environment", this.state.environment]];
 
-            if(sort){
-                params.push(["sort",sort]);
+            if (sort) {
+                params.push(["sort", sort]);
             }
 
-            if(filterByCodeObjectId){
-                params.push(["codeObjectId",filterByCodeObjectId]);
+            if (filterByCodeObjectId) {
+                params.push(["codeObjectId", filterByCodeObjectId]);
             }
 
             const response = await this.send<CodeObjectErrorFlowsResponse>(
-                'GET', 
-                `/CodeAnalytics/errorFlows`, 
+                'GET',
+                `/CodeAnalytics/errorFlows`,
                 params);
 
             return response.errorFlows;
         }
-        catch(error)
+        catch (error)
         {
             Logger.error('Failed to get error flows', error);
         }
         return [];
     }
 
-    public async getErrorFlow(errorFlowId: string): Promise<ErrorFlowResponse | undefined> 
+    public async getErrorFlow(errorFlowId: string): Promise<ErrorFlowResponse | undefined>
     {
         try
         {
             const response = await this.send<ErrorFlowResponse>(
                 'POST',
-                `/CodeAnalytics/errorFlow`, 
+                `/CodeAnalytics/errorFlow`,
                 undefined,
                 {id: errorFlowId, environment: this.state.environment});
 
             return response;
         }
-        catch(error){
+        catch (error) {
             Logger.error('Failed to get error flow', error);
         }
         return;
     }
-    
-    public async sendInsturmentationEvent(event:integer): Promise<undefined> 
+
+    public async sendInsturmentationEvent(event: integer): Promise<undefined>
     {
         try
         {
             const timestamp = Date.now().toString();
             const response = await this.send<undefined>(
                 'POST',
-                `/CodeAnalytics/instrumentation/event`, 
+                `/CodeAnalytics/instrumentation/event`,
                 undefined,
-                {event: event.toString(), machineName: os.hostname(),timestamp:timestamp });
+                {event: event.toString(), machineName: os.hostname(), timestamp: timestamp});
 
             return response;
         }
-        catch(error){
+        catch (error) {
             Logger.error('Failed to get error flow', error);
         }
         return;
     }
+
     private createSslAgent(): https.Agent {
         // when NODE_TLS_REJECT_UNAUTHORIZED = 0, it allows allows insecure http 
         process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
         return new https.Agent({rejectUnauthorized: false});
     }
-    private async send<TResponse>(method: string, relativePath: string, queryParams?: [string, any][], body?: any): Promise<TResponse>
+
+    private async send<TResponse>(method: string, relativePath: string, queryParams?: [string, any][], body?: any,
+                                  respondAsJsonObject: boolean = true): Promise<TResponse>
     {
         let url = vscode.Uri.joinPath(vscode.Uri.parse(Settings.url.value), relativePath).toString();
         const agent = url.startsWith('https')
             ? this.createSslAgent()
             : undefined;
 
-        if(queryParams)
+        if (queryParams)
         {
             url += '?';
-            queryParams.forEach(val=>{
+            queryParams.forEach(val => {
                 url += `${val[0]}=${encodeURIComponent(val[1])}&`;
 
             });
         }
         const requestHeaders: any = {'Content-Type': 'application/json'};
-        if(Settings.token.value !== undefined && Settings.token.value.trim() !== ""){
+        if (Settings.token.value !== undefined && Settings.token.value.trim() !== "") {
             requestHeaders['Authorization'] = `Token ${Settings.token.value}`;
         }
         let customHeaderMatch = new RegExp(`^ *([^ ]+) *: *(.+[^ ]) *$`).exec(Settings.customHeader.value ?? '');
-        if(customHeaderMatch){
+        if (customHeaderMatch) {
             requestHeaders[customHeaderMatch[1]] = customHeaderMatch[2];
         }
 
         let response = await fetch(
-            url, 
+            url,
             {
                 agent: agent,
-                method: method, 
+                method: method,
                 headers: requestHeaders,
-                body: body ? JSON.stringify(body) : undefined, 
+                body: body ? JSON.stringify(body) : undefined,
             });
-        
-        if(!response.ok)
-        {
+
+        if (!response.ok) {
             const txt = await response.text();
             throw new HttpError(response.status, response.statusText, txt);
-        } 
-        return <TResponse>JSON.parse(await response.text(), momentJsDateParser);
-    } 
+        }
+        const responseBody = await response.text();
+        if (respondAsJsonObject) {
+            return <TResponse>JSON.parse(responseBody, momentJsDateParser);
+        }
+        return <any>responseBody;
+    }
+
+    private async sendAndResponseBodyAsString(method: string, relativePath: string, queryParams?: [string, any][], body?: any): Promise<string>
+    {
+        return this.send<string>(method, relativePath, queryParams, body, false);
+    }
+
 }
 
 export class HttpError extends Error {
