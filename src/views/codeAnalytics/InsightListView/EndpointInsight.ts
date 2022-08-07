@@ -430,6 +430,9 @@ export function adjustHttpRouteIfNeeded(route: string): string {
     if (origValue.startsWith(EndpointSchema.RPC)) {
         return origValue;
     }
+    if (origValue.startsWith(EndpointSchema.CONSUMER)) {
+        return origValue;
+    }
     // default behaviour, to be backword compatible, where did not have the scheme part of the route, so adding it as HTTP one
     return EndpointSchema.HTTP + origValue;
 }

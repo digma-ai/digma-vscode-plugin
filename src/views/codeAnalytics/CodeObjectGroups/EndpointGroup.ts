@@ -7,6 +7,8 @@ export class EndpointGroup implements ICodeObjectScopeGroupCreator {
 
     private httpEndpointGroup: HttpEndpointGroup = new HttpEndpointGroup();
     private rpcEndpointGroup: RPCEndpointGroup = new RPCEndpointGroup();
+    private consumerEndpointGroup: ConsumerEndpointGroup = new ConsumerEndpointGroup();
+
     private unknownEndpointGroup: UnknownEndpointGroup = new UnknownEndpointGroup();
 
     public constructor() {
@@ -21,7 +23,9 @@ export class EndpointGroup implements ICodeObjectScopeGroupCreator {
                 return this.httpEndpointGroup.create(type, name);
             case EndpointType.RPC:
                 return this.rpcEndpointGroup.create(type, name);
-        }
+            case EndpointType.CONSUMER:
+                return this.consumerEndpointGroup.create(type, name);
+            }
         return this.unknownEndpointGroup.create(type, name);
     }
 
@@ -66,7 +70,27 @@ export class RPCEndpointGroup {
             </div>
         `);
     }
+  
+}
 
+export class ConsumerEndpointGroup {
+
+    public constructor() {
+    }
+
+    create(type: string, name: string): IListGroupItemBase {
+
+        const shortRouteName = EndpointSchema.getShortRouteName(name);
+
+        return new GroupItem(name, type, `
+            <div class="group-item">
+                <span class="scope">Consumer: </span>
+                <span class="codicon codicon-mail" title="Endpoint"></span>
+                <span>${shortRouteName}</span>
+            </div>
+        `);
+    }
+  
 }
 
 
