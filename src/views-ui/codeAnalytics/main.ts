@@ -205,6 +205,11 @@ window.addEventListener("load", () =>
         const frameId = $(this).data('frame-id');
         publish(new UiMessage.Notify.GoToLineByFrameId(frameId));
     });
+
+    $(document).on("click", ".refresh-button", function() {
+        publish(new UiMessage.Notify.TabRefreshRequested());
+    });
+
     $(document).on("change", ".workspace-only-checkbox", function(){
         publish(new UiMessage.Notify.WorkspaceOnlyChanged(this.checked));
         if(this.checked){

@@ -1,136 +1,88 @@
-import { StringifyOptions } from "querystring";
-import { EndpointSchema } from "../../../services/analyticsProvider";
-import { GroupItem, IListGroupItemBase } from "../../ListView/IListViewGroupItem";
-import { adjustHttpRouteIfNeeded } from "../InsightListView/EndpointInsight";
-import { ICodeObjectScopeGroupCreator } from "./ICodeObjectScopeGroupCreator";
+import {EndpointSchema, EndpointType} from "../../../services/analyticsProvider";
+import {GroupItem, IListGroupItemBase} from "../../ListView/IListViewGroupItem";
+import {ICodeObjectScopeGroupCreator} from "./ICodeObjectScopeGroupCreator";
 
 
-export class EndpointGroup implements ICodeObjectScopeGroupCreator{
+export class EndpointGroup implements ICodeObjectScopeGroupCreator {
 
-    public constructor(
-        ){
+    private httpEndpointGroup: HttpEndpointGroup = new HttpEndpointGroup();
+    private rpcEndpointGroup: RPCEndpointGroup = new RPCEndpointGroup();
+    private unknownEndpointGroup: UnknownEndpointGroup = new UnknownEndpointGroup();
 
+    public constructor() {
     }
 
-    private getRoutePreix(route:string){
-        if (route.startsWith(EndpointSchema.HTTP)){
-            return 'HTTP';
-        }
-        else if (route.startsWith(EndpointSchema.RPC)){
-            return 'RPC';
-        }
-        else if (route.startsWith(EndpointSchema.CONSUMER)){
-            return '';
-        }
-        else {
-            return 'UKNOWN';
-        }
-    }
-
-    private getLabel(route:string){
-        if (route.startsWith(EndpointSchema.CONSUMER)){
-            return 'Consumer';
-        }
-        return 'Rest';
-    }
-    
-    async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
-
-        const fullRoute = adjustHttpRouteIfNeeded(name);
+    async create(type: string, name: string): Promise<IListGroupItemBase | undefined> {
+        const endpointType = EndpointSchema.getEndpointType(name);
         const shortRouteName = EndpointSchema.getShortRouteName(name);
-        const parts = shortRouteName.split(' ');        
-        
-        return new GroupItem(fullRoute.replace("ep","").replace(":", " "), "Endpoint", `
-        <div class="group-item">
-            <span class="scope">${this.getLabel(fullRoute)}: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span class="uppercase">
-            <strong>${this.getRoutePreix(fullRoute)} </strong>${parts[0]}&nbsp;</span>
-            <span>${parts[1]}</span>
-        </div>
-    `);
+
+        switch (endpointType) {
+            case EndpointType.HTTP:
+                return this.httpEndpointGroup.create(type, name);
+            case EndpointType.RPC:
+                return this.rpcEndpointGroup.create(type, name);
+        }
+        return this.unknownEndpointGroup.create(type, name);
     }
 
-  
 }
 
-export class HttpEndpointgroup implements ICodeObjectScopeGroupCreator{
+export class HttpEndpointGroup {
 
-    public constructor(
-        ){
-
+    public constructor() {
     }
-    async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
+
+    create(type: string, name: string): IListGroupItemBase {
 
         const shortRouteName = EndpointSchema.getShortRouteName(name);
-        const parts = shortRouteName.split(' ');        
-        
-        return new GroupItem(name,"Endpoint", `
-        <div class="group-item">
-            <span class="scope">REST: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span class="uppercase">
-            <strong>HTTP </strong>${parts[0]}&nbsp;</span>
-            <span>${parts[1]}</span>
-        </div>
-    `);
+        const parts = shortRouteName.split(' ');
+
+        return new GroupItem(name, type, `
+            <div class="group-item">
+                <span class="scope">REST: </span>
+                <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
+                <span class="uppercase">
+                <strong>HTTP </strong>${parts[0]}&nbsp;</span>
+                <span>${parts[1]}</span>
+            </div>
+        `);
     }
 
-  
 }
 
-export class RPCEndpointgroup implements ICodeObjectScopeGroupCreator{
+export class RPCEndpointGroup {
 
-    public constructor(
-        ){
-
+    public constructor() {
     }
-    async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
-        return new GroupItem(name,"Endpoint", `
+
+    create(type: string, name: string): IListGroupItemBase {
+        const shortRouteName = EndpointSchema.getShortRouteName(name);
+
+        return new GroupItem(name, type, `
             <div class="group-item">
-            <span class="scope">RPC: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span>${name}</span>
-        </div>
-    `);
-    }
-  
-}
-
-export class ConsumerEndpointgroup implements ICodeObjectScopeGroupCreator{
-
-    public constructor(
-        ){
-
-    }
-    async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
-        return new GroupItem(name,"Endpoint", `
-            <div class="group-item">
-            <span class="scope">Consumer: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span>${name}</span>
-        </div>
-    `);
+                <span class="scope">RPC: </span>
+                <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
+                <span>${shortRouteName}</span>
+            </div>
+        `);
     }
   
 }
 
 
-export class UnknownEndpointgroup implements ICodeObjectScopeGroupCreator{
+export class UnknownEndpointGroup {
 
-    public constructor(
-        ){
-
+    public constructor() {
     }
-    async create(type: string, name: string): Promise<IListGroupItemBase| undefined>  {
-        return new GroupItem(name, "Endpoint",`
+
+    create(type: string, name: string): IListGroupItemBase {
+        return new GroupItem(name, type, `
             <div class="group-item">
-            <span class="scope">Unkwon: </span>
-            <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
-            <span>${name}</span>
-        </div>
-    `);
+                <span class="scope">Unkwon: </span>
+                <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
+                <span>${name}</span>
+            </div>
+        `);
     }
 
-  
 }

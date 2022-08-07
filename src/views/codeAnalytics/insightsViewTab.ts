@@ -159,7 +159,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
-        let html = HtmlHelper.getCodeObjectLabel(codeObject.methodName);
+        let html = HtmlHelper.getCodeObjectLabel(this._viewUris,codeObject.methodName);
         this._channel?.publish(
             new UiMessage.Set.CodeObjectLabel(html)
         );
