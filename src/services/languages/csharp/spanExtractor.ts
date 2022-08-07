@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInspector } from '../../codeInspector';
+import { Logger } from '../../logger';
 import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from "../extractors";
 import { Token, TokenType } from '../tokens';
 import { SymbolProvider } from './../symbolProvider';
@@ -16,47 +17,77 @@ export class CSharpSpanExtractor implements ISpanExtractor {
         symbolProvider: SymbolProvider,
     ): Promise<SpanLocationInfo[]> {
         const results: SpanLocationInfo[] = [];
-        for(let i = 0; i < tokens.length - 3; i++) {
-            const isMatch = this.isCallToStartActivity(tokens, i);
-            if(!isMatch) {
-                continue;
+
+
+
+        for(var symbol of symbolInfos){
+        Logger.info("Span discovering for function: "+symbol.displayName);
+    
+            const funcStartTokenIndex = tokens.findIndex(x => x.range.intersection(symbol.range));
+            let funcEndTokenIndex: number = tokens.length-1;
+            for (let index = funcStartTokenIndex+1; index < tokens.length; index++) {
+                if(!tokens[index].range.intersection(symbol.range)){
+                    funcEndTokenIndex = index;
+                    break;
+                }
             }
 
-            const startIndex = i + 3;
-            const endIndex = this.getEndOfMethodCall(tokens, startIndex);
-            if(!endIndex) {
-                continue;
+            for (let i = funcStartTokenIndex; i < funcEndTokenIndex-3; i++) {
+                const isMatch = this.isCallToStartActivity(tokens, i);
+                if(!isMatch) {
+                    continue;
+                }
+    
+                const startIndex = i + 3;
+                const endIndex = this.getEndOfMethodCall(tokens, startIndex);
+                if(!endIndex) {
+                    continue;
+                }
+    
+                var spanName: string| undefined = undefined;
+                var spanNameToken: Token | undefined = undefined;
+
+                if(startIndex === endIndex-1){  //Activity.StartActivity() in this case span name equals to method name
+                   spanName = symbol.name;
+                   spanNameToken = tokens[startIndex]; //consider the span name token as  ( 
+                }
+                else{
+                    spanNameToken = this.detectArgumentToken(tokens, startIndex, endIndex);
+                    if(!spanNameToken) {
+                        continue;
+                    }
+                    spanName = spanNameToken.text;
+                }
+                
+    
+                const activityTokenPosition = tokens[i].range.start;
+                const activityDefinition = await this._codeInspector.getDefinitionWithTokens(document, activityTokenPosition, symbolProvider);
+                if(!activityDefinition) {
+                    continue;
+                }
+    
+                const { cursorIndex: activityCursorIndex, endIndex: activityEndIndex } = this.getStatementIndexes(activityDefinition.tokens, activityDefinition.location);
+                if(activityCursorIndex === -1 || activityEndIndex === -1) {
+                    continue;
+                }
+    
+                const activityDefinitionToken = this.detectArgumentToken(activityDefinition.tokens, activityCursorIndex, activityEndIndex);
+                if(!activityDefinitionToken) {
+                    continue;
+                }
+    
+                const instrumentationLibrary = this.cleanSpanName(activityDefinitionToken.text);
+              
+                spanName = this.cleanSpanName(spanName);
+                results.push(new SpanLocationInfo(
+                    instrumentationLibrary + '$_$' + spanName,
+                    spanName,
+                    spanNameToken.range,
+                    document.uri));
+
+                Logger.info("* Span found: "+instrumentationLibrary+"/"+spanName);
+
             }
-
-            const spanNameToken = this.detectArgumentToken(tokens, startIndex, endIndex);
-            if(!spanNameToken) {
-                continue;
-            }
-
-            const activityTokenPosition = tokens[i].range.start;
-            const activityDefinition = await this._codeInspector.getDefinitionWithTokens(document, activityTokenPosition, symbolProvider);
-            if(!activityDefinition) {
-                continue;
-            }
-
-            const { cursorIndex: activityCursorIndex, endIndex: activityEndIndex } = this.getStatementIndexes(activityDefinition.tokens, activityDefinition.location);
-            if(activityCursorIndex === -1 || activityEndIndex === -1) {
-                continue;
-            }
-
-            const activityDefinitionToken = this.detectArgumentToken(activityDefinition.tokens, activityCursorIndex, activityEndIndex);
-            if(!activityDefinitionToken) {
-                continue;
-            }
-
-            const instrumentationLibrary = this.cleanSpanName(activityDefinitionToken.text);
-            const spanName = this.cleanSpanName(spanNameToken.text);
-
-            results.push(new SpanLocationInfo(
-                instrumentationLibrary + '$_$' + spanName,
-                spanName,
-                spanNameToken.range,
-                document.uri));
         }
 
         return results;
