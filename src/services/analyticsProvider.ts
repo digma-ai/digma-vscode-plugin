@@ -55,12 +55,15 @@ export class EndpointSchema {
 
     public static getEndpointType(fullRouteName: string): EndpointType {
         if (fullRouteName.startsWith(EndpointSchema.HTTP)) {
-            return EndpointType.HTTP
+            return EndpointType.HTTP;
         }
         if (fullRouteName.startsWith(EndpointSchema.RPC)) {
-            return EndpointType.RPC
+            return EndpointType.RPC;
         }
-        return EndpointType.UNKNOWN
+        if (fullRouteName.startsWith(EndpointSchema.CONSUMER)) {
+            return EndpointType.CONSUMER;
+        }
+        return EndpointType.UNKNOWN;
     }
 }
 
