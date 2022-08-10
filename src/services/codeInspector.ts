@@ -47,7 +47,7 @@ export class CodeInspector {
 
     public async getTypeFromSymbolProvider(usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
-        symbolProvider: SymbolProvider): Promise<string | undefined>{
+        symbolProvider: SymbolProvider, traceTypePredicate: (traceToken: Token) => boolean): Promise<string | undefined>{
             const definition = await this.getType(usageDocument, usagePosition);
             if(!definition){
                 return;
@@ -61,7 +61,7 @@ export class CodeInspector {
                 return;
             }
 
-            if(traceDefToken.type === TokenType.type){
+            if(traceTypePredicate(traceDefToken)){
                 return traceDefToken.text;
             }
             return;       
@@ -87,15 +87,40 @@ export class CodeInspector {
         };
     }
 
+    // private from(value: vscode.Location | vscode.DefinitionLink): vscode.LocationLink {
+	// 	const definitionLink = <vscode.DefinitionLink>value;
+	// 	const location = <vscode.Location>value;
+	// 	return {
+	// 		originSelectionRange: definitionLink.originSelectionRange
+	// 			?  new vscode.Range(definitionLink.originSelectionRange.start.line, 
+    //                 definitionLink.originSelectionRange.start.character, 
+    //                 definitionLink.originSelectionRange.end.line, 
+    //                 definitionLink.originSelectionRange.end.character)
+	// 			: undefined,
+	// 		uri: definitionLink.targetUri ? definitionLink.targetUri : location.uri,
+	// 		// range: Range.from(definitionLink.targetRange ? definitionLink.targetRange : location.range),
+	// 		// targetSelectionRange: definitionLink.targetSelectionRange
+	// 		// 	? Range.from(definitionLink.targetSelectionRange)
+	// 		// 	: undefined,
+	// 	};
+	// }
+
     private async getDefinition(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
     ): Promise<Definition | undefined> {
         const results: any[] = await vscode.commands.executeCommand('vscode.executeDefinitionProvider', usageDocument.uri, usagePosition);
-        if(!results?.length || !results[0].uri || !results[0].range)
+
+        if(!results?.length){
             return;
-    
-        const location = <vscode.Location>results[0];
+        }
+        const value = results[0];
+
+        const definitionLink = <vscode.DefinitionLink>value;
+		var location = <vscode.Location>value;
+
+        //in some cases for example js language the return value is of type DefinitionLink
+        location = new vscode.Location(definitionLink.targetUri ? definitionLink.targetUri : location.uri, definitionLink.targetSelectionRange ?definitionLink.targetSelectionRange :location.range);
 
         const document = await vscode.workspace.openTextDocument(location.uri);
         if(!document)
