@@ -20,7 +20,8 @@ export class JSSpanExtractor implements ISpanExtractor {
         symbolProvider: SymbolProvider,
     ): Promise<SpanLocationInfo[]> {
 
-        methodSpanIterator(symbolInfos, tokens, async (symbol, methodTokens) => {
+        const results: SpanLocationInfo[] = [];
+        await methodSpanIterator(symbolInfos, tokens, async (symbol, methodTokens) => {
             Logger.info("Span discovering for function: "+symbol.displayName);
 
             for (let index = 0; index < methodTokens.length; index++) {
@@ -87,7 +88,6 @@ export class JSSpanExtractor implements ISpanExtractor {
             }
 
         });
-        const results: SpanLocationInfo[] = [];
         return results;
     }
     
@@ -257,13 +257,8 @@ export class JSSpanExtractor implements ISpanExtractor {
 
 
 }
-export interface MethodTokenHandler {
-    (symbolInfo: SymbolInfo, tokens: Token []): void;
-}
 
-
-
-export function methodSpanIterator(symbols: SymbolInfo [], tokens: Token[], methodTokenHandler: MethodTokenHandler): void {
+export async function methodSpanIterator(symbols: SymbolInfo [], tokens: Token[], methodTokenHandler: (symbolInfo: SymbolInfo, tokens: Token []) => Promise<void>) {
     for(var symbol of symbols){
         var methodTokens: Token[] = [];
         const funcStartTokenIndex = tokens.findIndex(x => x.range.intersection(symbol.range));
@@ -275,7 +270,7 @@ export function methodSpanIterator(symbols: SymbolInfo [], tokens: Token[], meth
                 methodTokens.push(tokens[index]);
             }
         }
-        methodTokenHandler(symbol, methodTokens);
+        await methodTokenHandler(symbol, methodTokens);
     }
 
 }
