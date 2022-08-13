@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { EndpointCodeObjectSummary, MethodCodeObjectSummary } from './services/analyticsProvider';
+import { EndpointCodeObjectSummary, MethodCodeObjectSummary, SpanCodeObjectSummary } from './services/analyticsProvider';
 import { Settings } from './settings';
 import { DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
@@ -63,19 +63,67 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
-            const score = documentInfo.summaries.get(MethodCodeObjectSummary, methodInfo.symbol.id)?.score ?? 0;
-            if(score >= 70)
-            {
-                codelens.push(new vscode.CodeLens(methodInfo.range, {
-                    title:  'Error Hotspot',
-                    // tooltip: methodInfo.symbol.id,
-                    command: CodelensProvider.clickCommand,
-                    arguments: [methodInfo]
-                }));
+            for (let alias of methodInfo.aliases){
+                const errorInfo = documentInfo.summaries.get(MethodCodeObjectSummary, alias);
+                if (errorInfo!=null && errorInfo.score>=70){
+                    codelens.push(new vscode.CodeLens(methodInfo.range, {
+                        title:  'Error Hotspot',
+                        // tooltip: methodInfo.symbol.id,
+                        command: CodelensProvider.clickCommand,
+                        arguments: [methodInfo]
+                    }));
+
+                }
+            }
+        
+            const spans = documentInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
+            if(spans.length>0){
+                let spanWithSummaries = spans.filter(e=> documentInfo.summaries.get(SpanCodeObjectSummary, e.id)!= undefined);
+       
+                
+                for (let span of spanWithSummaries){
+                    const summary = documentInfo.summaries.get(SpanCodeObjectSummary, span.id);
+
+                    var spanSummary = summary as SpanCodeObjectSummary;    
+                    if (spanSummary && spanSummary.isBottleneck){
+                        codelens.push(new vscode.CodeLens(span!.range, {
+                                title:  'Bottleneck',
+                                tooltip: `Bottleneck area`,
+                                command: CodelensProvider.clickCommand,
+                                arguments: [methodInfo]
+                            }));
+                    }   
+                    console.log(spanSummary.insightsCount);           
+                }
+                // if(summary?. || summary?.highUsage)
+                // {
+                //     codelens.push(new vscode.CodeLens(endpoint!.range, {
+                //         title:  summary.lowUsage ? 'Low Usage' : 'High Usage',
+                //         tooltip: `Maximum of ${summary.maxCallsIn1Min} requests per minute`,
+                //         command: CodelensProvider.clickCommand,
+                //         arguments: [methodInfo]
+                //     }));
+                // }
+
+                // if(summary?.slow)
+                // {
+                //     codelens.push(new vscode.CodeLens(endpoint!.range, {
+                //         title:  "Slow Endpoint",
+                //         tooltip: `Slow endpoint found`,
+                //         command: CodelensProvider.clickCommand,
+                //         arguments: [methodInfo]
+                //     }));
+                // }
+
+                
             }
 
-            const endpoint = documentInfo.endpoints.find(e => e.range.intersection(methodInfo.range) != undefined);
-            if(endpoint){
+            const endpoints = documentInfo.endpoints.filter(e => e.range.intersection(methodInfo.range) != undefined);
+            if(endpoints.length>0){
+                let endpoint = endpoints.find(e=> documentInfo.summaries.get(EndpointCodeObjectSummary, e.id)!= undefined);
+                if (endpoint==null){
+                    continue;
+                }
                 const summary = documentInfo.summaries.get(EndpointCodeObjectSummary, endpoint.id);
                 if(summary?.lowUsage || summary?.highUsage)
                 {

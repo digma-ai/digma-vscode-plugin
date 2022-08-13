@@ -78,7 +78,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             }
             
             const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
-            const codeObjectsIds = [methodInfo.idWithType]
+            const codeObjectsIds = methodInfo.idsWithType
                 .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
             
             responseItems = await this._analyticsProvider.getInsights(codeObjectsIds);

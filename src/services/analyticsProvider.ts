@@ -185,6 +185,7 @@ export class SpanCodeObjectSummary implements CodeObjectSummary
     codeObjectId: string = '';
     insightsCount: integer = 0;
     errorsCount: integer = 0;
+    isBottleneck: boolean=false;
 }
 
 export interface ExecutedCodeSummary{
