@@ -29,6 +29,7 @@ import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
+//import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
 
@@ -53,6 +54,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 
 	) {
 
+
         let errorFlowParamDecorator = new ErrorFlowParameterDecorator(documentInfoProvider);
 
 		this._provider = new CodeAnalyticsViewProvider(
@@ -71,6 +73,8 @@ export class CodeAnalyticsView implements vscode.Disposable
                 
 			),
 
+            //vscode.window.registerFileDecorationProvider(new DigmaFileDecorator()),
+
         
 			vscode.window.onDidChangeTextEditorSelection(
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
@@ -81,7 +85,8 @@ export class CodeAnalyticsView implements vscode.Disposable
             vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
                 await vscode.commands.executeCommand("workbench.view.extension.digma");
             }),
-            errorFlowParamDecorator
+            errorFlowParamDecorator,
+            //fileDecorator
         ];
 
 

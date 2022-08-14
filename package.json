@@ -98,6 +98,15 @@
                 "digma.jaegerAddress": {
                     "type": "string"
                 },
+
+                "digma.jaegerLinkMode": {
+                    "type": "string",
+                    "default": "Internal",
+                    "enum": [
+                        "Internal",
+                        "External"
+                    ]
+                },
                 "digma.hideFramesOutsideWorkspace": {
                     "type": "bool",
                     "defult": true
@@ -150,6 +159,7 @@
         "@types/node": "14.x",
         "@types/node-fetch": "^2.5.10",
         "@types/vscode": "^1.63.0",
+        "@types/vscode-webview": "^1.57.0",
         "@typescript-eslint/eslint-plugin": "^5.1.0",
         "@typescript-eslint/parser": "^5.1.0",
         "@vscode/test-electron": "^1.6.2",

@@ -1,6 +1,6 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AnalyticsProvider, CodeObjectSummary, EndpointCodeObjectSummary, EndpointSchema, MethodCodeObjectSummary } from './analyticsProvider';
+import { AnalyticsProvider, CodeObjectSummary, EndpointCodeObjectSummary, EndpointSchema, MethodCodeObjectSummary, SpanCodeObjectSummary } from './analyticsProvider';
 import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
@@ -174,7 +174,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const paramsExtractor = await this.symbolProvider.getParametersExtractor(doc);
                 let methodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 const summariesResult = await this.analyticsProvider.getSummaries(
-                    methodInfos.map(s => s.idWithType)
+                    methodInfos.flatMap(s => s.idsWithType)
                         .concat(endpoints.map(e => e.idWithType))
                         .concat(spans.map(s => s.idWithType))
                 );
@@ -203,6 +203,24 @@ export class DocumentInfoProvider implements vscode.Disposable
                     }
                 }
 
+                const spansDiscoveredViaServer = summariesResult.filter(x=>x.type==='SpanSummary')
+                    .filter(x=>!spans.any(e=>e.id===x.codeObjectId));
+
+                for ( const span of spansDiscoveredViaServer){
+                    const spanSummary = span as SpanCodeObjectSummary;
+    
+                    if (spanSummary && spanSummary.codeObjectId){                        
+                        const relatedMethod = symbolInfos.filter(x=>x.id===spanSummary.codeObjectId).firstOrDefault();
+                        if (relatedMethod){
+                            spans.push(new SpanLocationInfo(
+                                span.codeObjectId,
+                                span.codeObjectId,                                
+                                relatedMethod.range
+                                ,relatedMethod.documentUri));
+    
+                        }
+                    }
+                }
                 const newMethodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 methodInfos=newMethodInfos;
                 const summaries = new CodeObjectSummaryAccessor(summariesResult);
@@ -251,6 +269,13 @@ export class DocumentInfoProvider implements vscode.Disposable
         let methods: MethodInfo[] = [];
 
         for(let symbol of symbols) {
+            var folders = symbol.id.split("/");
+            let aliases = [];
+            aliases.push(symbol.id);
+            for (let i=1;i<folders.length;i++){
+                aliases.push(folders.slice(i, folders.length).join("/"));
+
+            }
             const method = new MethodInfo(
                 symbol.id,
                 symbol.name,
@@ -259,6 +284,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 symbol.range,
                 [],
                 symbol,
+                aliases,
                 ([] as CodeObjectInfo[])
                     .concat(spans.filter(s => s.range.intersection(symbol.range)))
                     .concat(endpoints.filter(e => e.range.intersection(symbol.range)))
@@ -417,9 +443,14 @@ export class MethodInfo implements CodeObjectInfo
         public range: vscode.Range,
         public parameters: ParameterInfo[],
         public symbol: SymbolInfo,
+        public aliases: string[],
         public relatedCodeObjects: CodeObjectInfo[]){}
     get idWithType(): string {
         return 'method:'+this.id;
+    }
+
+    get idsWithType(): string[] {
+        return this.aliases.map(x=> 'method:'+x);
     }
 }
 

@@ -145,7 +145,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         if(codeObject.id !== this._viewedCodeObjectId)
         {
             const methodInfo = docInfo.methods.single(x => x.id === codeObject.id);
-            const codeObjectsIds = [methodInfo.idWithType]
+            const codeObjectsIds = methodInfo.idsWithType
                 .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
 
             let errors: CodeObjectErrorResponse[] = [];

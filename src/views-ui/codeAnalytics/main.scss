@@ -444,6 +444,11 @@ vscode-panel-view {
     cursor: pointer;
 }
 
+.trace-external-link {
+    text-decoration: none;
+    margin-left: 0.2em;
+}
+
 #view-insights {
     .flow-row {
         margin-bottom: 2px;

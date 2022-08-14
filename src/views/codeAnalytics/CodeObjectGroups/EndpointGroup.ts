@@ -41,9 +41,8 @@ export class HttpEndpointGroup {
         const shortRouteName = EndpointSchema.getShortRouteName(name);
         const parts = shortRouteName.split(' ');
 
-        return new GroupItem(name, type, `
+        return new GroupItem(shortRouteName, type, `
             <div class="group-item">
-                <span class="scope">REST: </span>
                 <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
                 <span class="uppercase">
                 <strong>HTTP </strong>${parts[0]}&nbsp;</span>
@@ -62,7 +61,7 @@ export class RPCEndpointGroup {
     create(type: string, name: string): IListGroupItemBase {
         const shortRouteName = EndpointSchema.getShortRouteName(name);
 
-        return new GroupItem(name, type, `
+        return new GroupItem(shortRouteName, type, `
             <div class="group-item">
                 <span class="scope">RPC: </span>
                 <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
@@ -84,7 +83,6 @@ export class ConsumerEndpointGroup {
 
         return new GroupItem(name, type, `
             <div class="group-item">
-                <span class="scope">Consumer: </span>
                 <span class="codicon codicon-mail" title="Endpoint"></span>
                 <span>${shortRouteName}</span>
             </div>
