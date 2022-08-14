@@ -13,6 +13,7 @@ import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { SpanSearch } from "./Common/SpanSearch";
 import { decimal, integer } from "vscode-languageclient";
 import { Settings } from "../../../settings";
+import { renderTraceLink } from "./Common/TraceLinkRender";
 
 
 export interface EndpointInsight extends CodeObjectInsight {
@@ -292,16 +293,7 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
                 </div>`);
         }
 
-        let traceHtml='';
-        if (Settings.jaegerAddress.value){
-                traceHtml=`
-                
-                <span  class="insight-main-value trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${codeObjectsInsight.route}" data-trace-id="${codeObjectsInsight.spans.firstOrDefault()?.traceId}" >
-                Trace
-                </span> 
-                `;
-
-        }
+        let traceHtml=renderTraceLink(codeObjectsInsight.spans.firstOrDefault()?.traceId,codeObjectsInsight.endpointSpan);
 
         let fractionSt='';
         const fraction =codeObjectsInsight.spans.firstOrDefault()?.fraction;
