@@ -16,7 +16,6 @@ export class EndpointGroup implements ICodeObjectScopeGroupCreator {
 
     async create(type: string, name: string): Promise<IListGroupItemBase | undefined> {
         const endpointType = EndpointSchema.getEndpointType(name);
-        const shortRouteName = EndpointSchema.getShortRouteName(name);
 
         switch (endpointType) {
             case EndpointType.HTTP:
@@ -100,7 +99,6 @@ export class UnknownEndpointGroup {
     create(type: string, name: string): IListGroupItemBase {
         return new GroupItem(name, type, `
             <div class="group-item">
-                <span class="scope">Unkwon: </span>
                 <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
                 <span>${name}</span>
             </div>
