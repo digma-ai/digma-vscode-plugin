@@ -29,7 +29,7 @@ import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
-import { DigmaFileDecorator } from "../../decorators/fileDecorator";
+//import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
 
@@ -73,7 +73,7 @@ export class CodeAnalyticsView implements vscode.Disposable
                 
 			),
 
-            vscode.window.registerFileDecorationProvider(new DigmaFileDecorator()),
+            //vscode.window.registerFileDecorationProvider(new DigmaFileDecorator()),
 
         
 			vscode.window.onDidChangeTextEditorSelection(
