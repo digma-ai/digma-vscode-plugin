@@ -136,10 +136,12 @@ export class GoSpanExtractor implements ISpanExtractor {
                     if(traceVarToken.type !== TokenType.variable){
                         continue;
                     }
-                    const traceDefType = await this._codeInspector.getTypeFromSymbolProvider(document, traceVarToken.range.start, symbolProvider);
+                    const traceDefType = await this._codeInspector.getTypeFromSymbolProvider(document, traceVarToken.range.start, symbolProvider,(traceDefToken)=>traceDefToken.type === TokenType.type);
                     if(traceDefType !== "Tracer") {
                         continue;
                     }
+                    const traceDefinition = await this._codeInspector.getDefinitionWithTokens(document,traceVarToken.range.start,symbolProvider);
+
                     let references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,traceVarToken.range.start);
                     let instrumentationLibraries = new Set();
                     for(let refLocation of references)
