@@ -8,6 +8,7 @@ import { Settings } from "../../../settings";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
+import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
@@ -71,15 +72,8 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="ellipsis" title="${flow.lastServiceSpan}">${flow.lastServiceSpan}</span>`;
 
-            let traceHtml = ``;
-            if (Settings.jaegerAddress.value){
-                traceHtml=`
-                <span style="padding-left: 10px;" class="trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span}" data-trace-id="${flow.sampleTraceIds?.firstOrDefault()}" >
-                Trace
-                </span> 
-                `;
-
-            }
+            let traceHtml = renderTraceLink(flow.sampleTraceIds?.firstOrDefault(), insight.span);
+    
             return /*html*/`<div class="flow-row flex-row">
                 <span class="flow-percent">${flow.percentage.toFixed(1)}%</span>
                 <span class="flex-row flex-wrap ellipsis">
@@ -292,17 +286,8 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
 
     public async createListViewItem(codeObjectsInsight: NPlusSpansInsight): Promise<IListViewItem> {
            
-        let traceHtml ='';
-        if (Settings.jaegerAddress.value){
-            traceHtml=`
-            
-            <span  class="insight-main-value trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${codeObjectsInsight.span.name}" data-trace-id="${codeObjectsInsight.traceId}" >
-            Trace
-            </span> 
-            `;
-
-         }
-
+        let traceHtml =renderTraceLink(codeObjectsInsight.traceId,codeObjectsInsight.span.name);
+        
         let statsHtml = `
         <div style="margin-top:0.5em" class="flex-row">
                             

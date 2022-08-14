@@ -3,6 +3,8 @@ import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../../webViewUtils";
 import fetch from "node-fetch";
 import { htmlPrefilter } from "jquery";
+import { settings } from "cluster";
+import { Settings } from "../../../settings";
 
 export class TracePanel {
 
@@ -39,11 +41,11 @@ export class TracePanel {
 
         if (traceIds.length===1){
             const traceId = traceIds[0];
-            html =`
-            <body>
-            <h1>Trace:</h1>
-            <iframe style="width:100%; height:500px;"src="${jaegerAddress}/trace/${traceId}?uiEmbed=v0" title="Trace" ></iframe>
-            </body>`;
+                html =`
+                <body>
+                <h1>Trace:</h1>
+                <iframe style="width:100%; height:500px;"src="${jaegerAddress}/trace/${traceId}?uiEmbed=v0" title="Trace" ></iframe>
+                </body>`;
 
         }
 

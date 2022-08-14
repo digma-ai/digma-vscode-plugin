@@ -98,6 +98,15 @@
                 "digma.jaegerAddress": {
                     "type": "string"
                 },
+
+                "digma.jaegerLinkMode": {
+                    "type": "string",
+                    "default": "Internal",
+                    "enum": [
+                        "Internal",
+                        "External"
+                    ]
+                },
                 "digma.hideFramesOutsideWorkspace": {
                     "type": "bool",
                     "defult": true

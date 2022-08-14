@@ -41,6 +41,7 @@ export class Settings
     // public static readonly environment = new SettingsKey('environment', '');
 
     public static readonly jaegerAddress = new SettingsKey('jaegerAddress', '');
+    public static readonly jaegerMode = new SettingsKey('jaegerLinkMode', '');
 
 
     public static readonly hideFramesOutsideWorkspace = new SettingsKey('hideFramesOutsideWorkspace', true);
