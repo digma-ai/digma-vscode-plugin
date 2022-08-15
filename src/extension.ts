@@ -37,6 +37,7 @@ export async function activate(context: vscode.ExtensionContext)
     const analyticsProvider = new AnalyticsProvider(workspaceState);
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider,workspaceState);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
+    const codeLensProvider = new AnaliticsCodeLens(documentInfoProvider,workspaceState)
 
     if(!workspaceState.environment){
         const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();
@@ -45,13 +46,13 @@ export async function activate(context: vscode.ExtensionContext)
         }
     }
     
-    context.subscriptions.push(new AnaliticsCodeLens(documentInfoProvider));
+    context.subscriptions.push(codeLensProvider);
     //context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInspector));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider,
-        context.extensionUri, editorHelper,workspaceState));
+        context.extensionUri, editorHelper,workspaceState,codeLensProvider));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));

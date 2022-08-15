@@ -431,16 +431,20 @@ export class AnalyticsProvider
         return response;
     }
 
-    public async getInsights(codeObjectIds: string []): Promise<any []>
+    public async getInsights(codeObjectIds: string [], currentEnv:boolean): Promise<any []>
     {
 
+        let environment = undefined;
+        if (currentEnv){
+            environment=this.state.environment;
+        }
         const response: any [] = await this.send<any>(
             'POST',
             `/CodeAnalytics/codeObjects/insights`,
             undefined,
             {
                 codeObjectIds: codeObjectIds,
-                environment: this.state.environment
+                environment: environment
             });
         return response;
     }

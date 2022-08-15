@@ -29,6 +29,7 @@ import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
+import { AnaliticsCodeLens } from "../../analiticsCodeLens";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -50,6 +51,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 		extensionUri: vscode.Uri,
         editorHelper: EditorHelper,
         workspaceState:WorkspaceState,
+        codelensProvider: AnaliticsCodeLens
 
 
 	) {
@@ -63,7 +65,8 @@ export class CodeAnalyticsView implements vscode.Disposable
             documentInfoProvider,
             editorHelper,
             errorFlowParamDecorator,
-            workspaceState
+            workspaceState,
+            codelensProvider
 		);
         this.extensionUrl = extensionUri;
 		this._disposables = [
@@ -82,7 +85,10 @@ export class CodeAnalyticsView implements vscode.Disposable
 					    await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
 				}
 			),
-            vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
+            vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (environment:string, codeObjectId: string, codeObjectDisplayName: string) => {
+                if (environment!=workspaceState.environment){
+                    await this._provider.onChangeEnvironmentRequested(new UiMessage.Notify.ChangeEnvironmentContext(environment));
+                }
                 await vscode.commands.executeCommand("workbench.view.extension.digma");
             }),
             errorFlowParamDecorator,
@@ -125,7 +131,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         private _documentInfoProvider: DocumentInfoProvider,
         editorHelper: EditorHelper,
         errorFlowParamDecorator: ErrorFlowParameterDecorator,
-        private _workspaceState:WorkspaceState
+        private _workspaceState:WorkspaceState,
+        private _codeLensProvider:AnaliticsCodeLens
 	) {
 
 
@@ -377,6 +384,11 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             }
         }
         this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
+        this.refreshCodeLens();
+    }
+
+    private async refreshCodeLens(){
+        this._codeLensProvider.refreshRequested();
     }
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)
     {

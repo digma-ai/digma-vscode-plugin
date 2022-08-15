@@ -8,7 +8,6 @@ import { Dictionary, Future } from './utils';
 import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
-import { Settings } from '../settings';
 import { WorkspaceState } from '../state';
 import { CodeObjectInsight } from '../views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 
@@ -183,11 +182,11 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const insightsResult = await this.analyticsProvider.getInsights(
                     methodInfos.flatMap(s => s.idsWithType)
                         .concat(endpoints.map(e => e.idWithType))
-                        .concat(spans.map(s => s.idWithType))
+                        .concat(spans.map(s => s.idWithType)),false
                 );
 
                 //Get endpoints discovered via server that don't exist in document info
-                const endPointsDiscoveredViaServer = summariesResult.filter(x=>x.type==='EndpointSummary')
+                const endPointsDiscoveredViaServer = insightsResult.filter(x=>x.type==='EndpointSummary')
                     .filter(x=>!endpoints.any(e=>e.id===x.codeObjectId));
 
                 for ( const endpoint of endPointsDiscoveredViaServer){
@@ -210,7 +209,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     }
                 }
 
-                const spansDiscoveredViaServer = summariesResult.filter(x=>x.type==='SpanSummary')
+                const spansDiscoveredViaServer = insightsResult.filter(x=>x.type==='SpanSummary')
                     .filter(x=>!spans.any(e=>e.id===x.codeObjectId));
 
                 for ( const span of spansDiscoveredViaServer){
