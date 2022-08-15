@@ -10,6 +10,7 @@ import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { Settings } from '../settings';
 import { WorkspaceState } from '../state';
+import { CodeObjectInsight } from '../views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -179,6 +180,12 @@ export class DocumentInfoProvider implements vscode.Disposable
                         .concat(spans.map(s => s.idWithType))
                 );
 
+                const insightsResult = await this.analyticsProvider.getInsights(
+                    methodInfos.flatMap(s => s.idsWithType)
+                        .concat(endpoints.map(e => e.idWithType))
+                        .concat(spans.map(s => s.idWithType))
+                );
+
                 //Get endpoints discovered via server that don't exist in document info
                 const endPointsDiscoveredViaServer = summariesResult.filter(x=>x.type==='EndpointSummary')
                     .filter(x=>!endpoints.any(e=>e.id===x.codeObjectId));
@@ -224,10 +231,12 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const newMethodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 methodInfos=newMethodInfos;
                 const summaries = new CodeObjectSummaryAccessor(summariesResult);
-          
+                const insights = new CodeObjectInsightsAccessor(insightsResult);
+
                 const lines = this.createLineInfos(doc, summaries, methodInfos);
                 latestVersionInfo.value = {
                     summaries,
+                    insights,
                     methods: methodInfos,
                     lines,
                     tokens,
@@ -240,6 +249,7 @@ export class DocumentInfoProvider implements vscode.Disposable
             catch(e) {
                 latestVersionInfo.value = {
                     summaries: new CodeObjectSummaryAccessor([]),
+                    insights: new CodeObjectInsightsAccessor([]),
                     methods: [],
                     lines: [],
                     tokens: [],
@@ -400,6 +410,7 @@ class DocumentInfoContainer
 export interface DocumentInfo
 {
     summaries: CodeObjectSummaryAccessor;
+    insights: CodeObjectInsightsAccessor;
     methods: MethodInfo[];
     lines: LineInfo[];
     tokens: Token[];
@@ -418,6 +429,21 @@ export class CodeObjectSummaryAccessor{
     }
     public get all(): CodeObjectSummary[]{
         return this._codeObejctSummeries;
+    }
+}
+
+
+export class CodeObjectInsightsAccessor{
+    constructor(private _codeObjectInsights: CodeObjectInsight[]){}
+
+    public get( codeObjectId: string): CodeObjectInsight[] 
+    {
+        return this._codeObjectInsights
+                .filter(s => s.codeObjectId == codeObjectId);
+       
+    }
+    public get all(): CodeObjectInsight[]{
+        return this._codeObjectInsights;
     }
 }
 

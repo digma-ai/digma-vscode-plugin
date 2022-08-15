@@ -82,6 +82,26 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
        
                 
                 for (let span of spanWithSummaries){
+                    const insightsWithDecorators 
+                        = documentInfo.insights.get( span.id)
+                            .filter(x=>x.decorators);
+                    
+                
+                    for (const decorator of insightsWithDecorators.flatMap(x=>x.decorators)){
+                        let title =  decorator.title;
+                        if (decorator.importance=="High"){
+                            title='❗️' + title; 
+
+                        }
+                        codelens.push(new vscode.CodeLens(span!.range, {
+                            title:  title,
+                            tooltip: decorator.description,
+                            command: CodelensProvider.clickCommand,
+                            arguments: [methodInfo]
+                        }));
+
+                    }
+
                     const summary = documentInfo.summaries.get(SpanCodeObjectSummary, span.id);
 
                     var spanSummary = summary as SpanCodeObjectSummary;    

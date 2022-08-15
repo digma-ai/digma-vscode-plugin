@@ -6,6 +6,15 @@ import { EndpointInsight, adjustHttpRouteIfNeeded, adjustHttpInsightIfNeeded } f
 
 export interface CodeObjectInsight extends Insight{
     codeObjectId: string,
+    decorators: CodeObjectDecorator[]
+}
+
+export interface CodeObjectDecorator
+{
+    title:string,
+    description :string,
+    importance: string,
+    severity: number
 }
 
 export interface Insight {
