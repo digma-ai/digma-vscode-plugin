@@ -4,14 +4,12 @@ import { WebviewChannel, WebViewProvider, WebViewUris } from "../webViewUtils";
 import { CodeAnalyticsView, CodeObjectInfo } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { ErrorsLineDecorator } from "../../decorators/errorsLineDecorator";
 import { Logger } from "../../services/logger";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import moment = require('moment');
 import { ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 import { Settings } from "../../settings";
-import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";
 import { OverlayView } from "./overlayView";
 import { ErrorsHtmlBuilder } from "../errors/ErrorsHtmlBuilder";
 
@@ -25,6 +23,8 @@ import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
 import { ListViewRender } from "../ListView/ListViewRender";
 import { CodeObjectId, CodeObjectType } from "../../services/codeObject";
 import { WorkspaceState } from "../../state";
+import { ErrorsLineDecorator } from "./decorators/errorsLineDecorator";
+import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab 
 {

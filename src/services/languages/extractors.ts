@@ -19,7 +19,13 @@ export interface CodeObjectInfo {
     get idWithType(): string;
 }
 
-export class EndpointInfo implements CodeObjectInfo {
+export interface CodeObjectLocationInfo extends CodeObjectInfo{
+    range: vscode.Range;
+    documentUri: vscode.Uri;
+
+}
+
+export class EndpointInfo implements CodeObjectLocationInfo {
     constructor(
         public id: string,
         public method: string,
@@ -30,7 +36,7 @@ export class EndpointInfo implements CodeObjectInfo {
         return 'endpoint:' + this.id;
     }
 }
-export class SpanLocationInfo implements CodeObjectInfo {
+export class SpanLocationInfo implements CodeObjectLocationInfo {
     constructor(
         public id: string,
         public name: string,

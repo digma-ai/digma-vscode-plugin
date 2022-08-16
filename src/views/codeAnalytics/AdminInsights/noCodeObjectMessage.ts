@@ -4,7 +4,6 @@ import { WorkspaceState } from "../../../state";
 import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectGroupEnvironments } from "../CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { HtmlHelper } from "../common";
-import { OverlayView } from "../overlayView";
 
 export class NoCodeObjectMessage{
 
@@ -21,10 +20,10 @@ export class NoCodeObjectMessage{
 
 
         for(const method of docInfo.methods){
-            const relatedSummaries = docInfo.summaries.all.filter(s => 
+            const relatedSummaries = docInfo.insights.all.filter(s => 
                 method.id === s.codeObjectId ||
                 method.relatedCodeObjects.any(r => r.id === s.codeObjectId));
-            if(relatedSummaries.any(x => x.errorsCount > 0 || x.insightsCount > 0)){
+            if(relatedSummaries.length==0){
                     links.push(/*html*/`<vscode-link class="codeobject-link" data-line="${method.range.start.line}">${method.displayName}</vscode-link>`);
             }
   

@@ -5,7 +5,7 @@ import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor } from './languages/extractors';
+import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor, CodeObjectLocationInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { WorkspaceState } from '../state';
@@ -173,27 +173,27 @@ export class DocumentInfoProvider implements vscode.Disposable
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
                 const paramsExtractor = await this.symbolProvider.getParametersExtractor(doc);
                 let methodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
-                const summariesResult = await this.analyticsProvider.getSummaries(
-                    methodInfos.flatMap(s => s.idsWithType)
-                        .concat(endpoints.map(e => e.idWithType))
-                        .concat(spans.map(s => s.idWithType))
-                );
 
-                const insightsResult = await this.analyticsProvider.getInsights(
-                    methodInfos.flatMap(s => s.idsWithType)
+                let codeObjectIds = methodInfos.flatMap(s => s.idsWithType)
                         .concat(endpoints.map(e => e.idWithType))
-                        .concat(spans.map(s => s.idWithType)),false
-                );
+                        .concat(spans.map(s => s.idWithType));
+
+                const errorSummaries = await this.analyticsProvider.getErrorSummary(codeObjectIds,false);
+                const insightsResult = await this.analyticsProvider.getInsights(codeObjectIds,false );
 
                 //Get endpoints discovered via server that don't exist in document info
-                const endPointsDiscoveredViaServer = insightsResult.filter(x=>x.type==='EndpointSummary')
+                const endPointsDiscoveredViaServer = insightsResult
+                    .filter(x=>x.scope=="EntrySpan" && x.route)
                     .filter(x=>!endpoints.any(e=>e.id===x.codeObjectId));
-
-                for ( const endpoint of endPointsDiscoveredViaServer){
-                    const endPointSummary = endpoint as EndpointCodeObjectSummary;
+                
+                const uniqueEndpoints = [...new Map(endPointsDiscoveredViaServer.map(item =>
+                    [item.codeObjectId, item])).values()];
+                    
+                for ( const endpoint of uniqueEndpoints){
  
-                    if (endPointSummary && endPointSummary.route){
-                        const shortRouteName = EndpointSchema.getShortRouteName(endPointSummary.route);
+                    if (endpoint.route){
+
+                        const shortRouteName = EndpointSchema.getShortRouteName(endpoint.route);
                         const parts = shortRouteName.split(' ');
                         
                         const relatedMethod = symbolInfos.filter(x=>x.id===endpoint.codeObjectId).firstOrDefault();
@@ -201,7 +201,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                             endpoints.push(new EndpointInfo(
                                 endpoint.codeObjectId,
                                 parts[0],
-                                endPointSummary.route,
+                                endpoint.route,
                                 relatedMethod.range
                                 ,relatedMethod.documentUri));
     
@@ -209,10 +209,15 @@ export class DocumentInfoProvider implements vscode.Disposable
                     }
                 }
 
-                const spansDiscoveredViaServer = insightsResult.filter(x=>x.type==='SpanSummary')
+                // These are spans that the server is aware of but the client can't discover
+                const spansDiscoveredViaServer = insightsResult
+                    .filter(x=>x.scope=="Span")
                     .filter(x=>!spans.any(e=>e.id===x.codeObjectId));
 
-                for ( const span of spansDiscoveredViaServer){
+                const uniqueSpans = [...new Map(spansDiscoveredViaServer.map(item =>
+                    [item.codeObjectId, item])).values()];
+
+                for ( const span of uniqueSpans){
                     const spanSummary = span as SpanCodeObjectSummary;
     
                     if (spanSummary && spanSummary.codeObjectId){                        
@@ -229,12 +234,12 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
                 const newMethodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 methodInfos=newMethodInfos;
-                const summaries = new CodeObjectSummaryAccessor(summariesResult);
                 const insights = new CodeObjectInsightsAccessor(insightsResult);
 
-                const lines = this.createLineInfos(doc, summaries, methodInfos);
+                //const lines:LineInfo[] = [];
+
+                const lines = this.createLineInfos(doc, errorSummaries, methodInfos);
                 latestVersionInfo.value = {
-                    summaries,
                     insights,
                     methods: methodInfos,
                     lines,
@@ -247,7 +252,6 @@ export class DocumentInfoProvider implements vscode.Disposable
             }
             catch(e) {
                 latestVersionInfo.value = {
-                    summaries: new CodeObjectSummaryAccessor([]),
                     insights: new CodeObjectInsightsAccessor([]),
                     methods: [],
                     lines: [],
@@ -296,7 +300,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                 aliases,
                 ([] as CodeObjectInfo[])
                     .concat(spans.filter(s => s.range.intersection(symbol.range)))
-                    .concat(endpoints.filter(e => e.range.intersection(symbol.range)))
+                    .concat(endpoints.filter(e => e.range.intersection(symbol.range))),
+                document.uri
             );
             methods.push(method);
 
@@ -338,12 +343,12 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
-    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummaryAccessor, methods: MethodInfo[]): LineInfo[]
+    public createLineInfos(document: vscode.TextDocument, methodSummaries: MethodCodeObjectSummary[], methods: MethodInfo[]): LineInfo[]
     {
         const lineInfos: LineInfo[] = [];
         for(let method of methods)
         {
-            const codeObjectSummary = codeObjectSummaries.get(MethodCodeObjectSummary, method.symbol.id);
+            const codeObjectSummary = methodSummaries.find(x=>method.aliases.any(a=>a ==x.codeObjectId));
             if(!codeObjectSummary)
                 continue;
 
@@ -408,7 +413,6 @@ class DocumentInfoContainer
 
 export interface DocumentInfo
 {
-    summaries: CodeObjectSummaryAccessor;
     insights: CodeObjectInsightsAccessor;
     methods: MethodInfo[];
     lines: LineInfo[];
@@ -435,10 +439,11 @@ export class CodeObjectSummaryAccessor{
 export class CodeObjectInsightsAccessor{
     constructor(private _codeObjectInsights: CodeObjectInsight[]){}
 
-    public get( codeObjectId: string): CodeObjectInsight[] 
+    public get(type: string, codeObjectId: string):CodeObjectInsight[] | undefined
     {
         return this._codeObjectInsights
-                .filter(s => s.codeObjectId == codeObjectId);
+                .filter(s => s.codeObjectId == codeObjectId)
+                .filter(s=>s.type==type);
        
     }
     public get all(): CodeObjectInsight[]{
@@ -458,7 +463,7 @@ export interface LineInfo
     }[];
 }
 
-export class MethodInfo implements CodeObjectInfo
+export class MethodInfo implements CodeObjectLocationInfo
 {
     constructor(
         public id: string,
@@ -469,7 +474,8 @@ export class MethodInfo implements CodeObjectInfo
         public parameters: ParameterInfo[],
         public symbol: SymbolInfo,
         public aliases: string[],
-        public relatedCodeObjects: CodeObjectInfo[]){}
+        public relatedCodeObjects: CodeObjectInfo[],
+        public documentUri: vscode.Uri){}
     get idWithType(): string {
         return 'method:'+this.id;
     }

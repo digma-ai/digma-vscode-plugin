@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { DocumentInfoProvider, LineInfo } from '../services/documentInfoProvider';
+import { DocumentInfoProvider, LineInfo } from '../../../services/documentInfoProvider';
 
 export class ErrorsLineDecorator implements vscode.Disposable
 {

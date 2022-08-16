@@ -169,6 +169,7 @@ export class MethodCodeObjectSummary implements CodeObjectSummary
 {
     type: string = 'MethodSummary';
     codeObjectId: string = '';
+    environment: string = '';
     insightsCount: integer = 0;
     errorsCount: integer = 0;
     score: integer = 0;
@@ -344,6 +345,7 @@ export interface CodeObjectErrorDetails extends CodeObjectErrorResponse{
 
 export class AnalyticsProvider
 {
+
     public constructor(private state: WorkspaceState){
 
     }
@@ -441,6 +443,24 @@ export class AnalyticsProvider
         const response: any [] = await this.send<any>(
             'POST',
             `/CodeAnalytics/codeObjects/insights`,
+            undefined,
+            {
+                codeObjectIds: codeObjectIds,
+                environment: environment
+            });
+        return response;
+    }
+
+    public async getErrorSummary(codeObjectIds: string [], currentEnv:boolean): Promise<MethodCodeObjectSummary []>
+    {
+
+        let environment = undefined;
+        if (currentEnv){
+            environment=this.state.environment;
+        }
+        const response: any [] = await this.send<any>(
+            'POST',
+            `/CodeAnalytics/errors/codeobject_summary`,
             undefined,
             {
                 codeObjectIds: codeObjectIds,
