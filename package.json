@@ -24,7 +24,8 @@
         "Continuous Delivery",
         "DevOps"
     ],
-    "badges": [{
+    "badges": [
+        {
             "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
             "description": "Star Digma on Github",
             "href": "bit.ly/36LyUcr"
@@ -72,18 +73,22 @@
     "main": "./out/extension.js",
     "contributes": {
         "views": {
-            "digma": [{
-                "type": "webview",
-                "id": "codeAnalytics",
-                "name": "CodeAnalytics"
-            }]
+            "digma": [
+                {
+                    "type": "webview",
+                    "id": "codeAnalytics",
+                    "name": "CodeAnalytics"
+                }
+            ]
         },
         "viewsContainers": {
-            "activitybar": [{
-                "id": "digma",
-                "title": "Digma",
-                "icon": "icon.png"
-            }]
+            "activitybar": [
+                {
+                    "id": "digma",
+                    "title": "Digma",
+                    "icon": "icon.png"
+                }
+            ]
         },
         "configuration": {
             "properties": {
@@ -98,7 +103,6 @@
                 "digma.jaegerAddress": {
                     "type": "string"
                 },
-
                 "digma.jaegerLinkMode": {
                     "type": "string",
                     "default": "Internal",
