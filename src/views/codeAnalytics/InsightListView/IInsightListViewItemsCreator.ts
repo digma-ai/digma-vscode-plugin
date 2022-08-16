@@ -1,3 +1,4 @@
+import { decimal, integer } from "vscode-languageclient";
 import { UsageStatusResults } from "../../../services/analyticsProvider";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
@@ -8,16 +9,30 @@ export interface CodeObjectInsight extends Insight{
     codeObjectId: string,
     environment: string,
     scope: string,
-    
+    importance: InsightImporance,
+    severity: decimal,
     decorators: CodeObjectDecorator[]
+}
+
+export enum InsightImporance {
+    spam = 9,
+    clutter = 8,
+    notInteresting=7,
+    info = 6,
+    
+    interesting = 5,
+    important =4,
+    
+    highlyImportant =3,
+    critical =2,
+    showStopper=1
 }
 
 export interface CodeObjectDecorator
 {
     title:string,
     description :string,
-    importance: string,
-    severity: number
+
 }
 
 export interface Insight {

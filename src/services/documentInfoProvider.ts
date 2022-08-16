@@ -446,6 +446,13 @@ export class CodeObjectInsightsAccessor{
                 .filter(s=>s.type==type);
        
     }
+
+    public forEnv(env: string):CodeObjectInsight[] | undefined
+    {
+        return this._codeObjectInsights
+                .filter(s => s.environment == env);
+       
+    }
     public get all(): CodeObjectInsight[]{
         return this._codeObjectInsights;
     }

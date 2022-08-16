@@ -17,6 +17,7 @@ import { JSLanguageExtractor } from './services/languages/javascript/languageExt
 import { ErrorsLineDecorator } from './views/codeAnalytics/decorators/errorsLineDecorator';
 import { HotspotMarkerDecorator } from './views/codeAnalytics/decorators/hotspotMarkerDecorator';
 import { EnvSelectStatusBar } from './views/codeAnalytics/StatusBar/envSelectStatusBar';
+import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatusBar';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -47,7 +48,9 @@ export async function activate(context: vscode.ExtensionContext)
     }
 
     const envStatusbar = new EnvSelectStatusBar(workspaceState);
-    
+    const insightBar = new InsightsStatusBar(workspaceState,documentInfoProvider, context);
+
+    context.subscriptions.push(insightBar);
 
     context.subscriptions.push(envStatusbar);
 

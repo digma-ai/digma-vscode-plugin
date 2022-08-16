@@ -3,7 +3,7 @@ import { Settings } from './settings';
 import { DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { WorkspaceState } from './state';
-import { CodeObjectInsight } from './views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
+import { CodeObjectInsight, InsightImporance } from './views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 import { CodeObjectLocationInfo } from './services/languages/extractors';
 
 
@@ -80,9 +80,8 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 } 
     
                 let priorityEmoji = "";
-                if (decorator.importance=="High"){
+                if (insight.importance<InsightImporance.important){
                     priorityEmoji='❗️'; 
-    
                 }
     
                 let title = `${envComponent} ${priorityEmoji}${decorator.title}`;
@@ -123,7 +122,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 const otherEnvsInsightsToShow 
                     = insights
                         .filter(x=>x.environment!=this._state.environment)
-                        .filter(x=>x.decorators && x.decorators.any(x=>x.importance=="High"));
+                        .filter(x=>x.decorators && x.importance<InsightImporance.important);
 
                 const otherEnvLenses = await this.getCodeLens(methodInfo,codeObject,otherEnvsInsightsToShow,true);
                 for (const lens of otherEnvLenses){

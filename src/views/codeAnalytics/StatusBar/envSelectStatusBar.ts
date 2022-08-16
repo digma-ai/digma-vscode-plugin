@@ -9,7 +9,7 @@ export class EnvSelectStatusBar implements vscode.Disposable  {
 
     public constructor(private _state: WorkspaceState ){
 
-        this._statusBar =  vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10000)
+        this._statusBar =  vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10000);
         this._disposables = [
            
             this._statusBar
