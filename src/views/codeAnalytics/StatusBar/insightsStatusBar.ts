@@ -49,7 +49,8 @@ export class InsightsStatusBar implements vscode.Disposable  {
                                 const item = selection[0] as InsightPickItem;
                                 const file = await _editorHelper.openTextDocumentFromUri(item.location.documentUri);
                                 _editorHelper.openFileAndLine(file, item.location.range.start.line);
-                                    
+                                await vscode.commands.executeCommand("workbench.view.extension.digma");
+ 
                                     
 
                                 // const env = selection[0].label.replace(iconPrefix,"");
