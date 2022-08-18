@@ -315,7 +315,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 [],
                 symbol,
                 aliases,
-                ([] as CodeObjectInfo[])
+                ([] as CodeObjectLocationInfo[])
                     .concat(spans.filter(s => s.range.intersection(symbol.range)))
                     .concat(endpoints.filter(e => e.range.intersection(symbol.range))),
                 document.uri
@@ -489,7 +489,12 @@ export class CodeObjectSummaryAccessor{
     }
 }
 
+export interface InsightCodeObjectLink{
+    insight: CodeObjectInsight;
+    method: MethodInfo;
+    codeObject: CodeObjectLocationInfo;
 
+}
 export class CodeObjectInsightsAccessor{
     constructor(private _codeObjectInsights: CodeObjectInsight[]){}
 
@@ -507,6 +512,37 @@ export class CodeObjectInsightsAccessor{
                 .filter(s => s.environment == env);
        
     }
+
+    public byMethod(env: string, doc:DocumentInfo):InsightCodeObjectLink[] | undefined
+    {
+        let result: InsightCodeObjectLink[] = [];
+        let insights = this._codeObjectInsights;
+        if (env){
+            insights=this.forEnv(env)!;
+        }
+        
+
+        for (const method of doc.methods){
+            const methodInsights = this.forMethod(method,env);
+            for (const methodInsight of methodInsights){
+                let relatedCodeObject = method.relatedCodeObjects.find(x=>x.id==methodInsight.codeObjectId);
+                if (!relatedCodeObject){
+                    relatedCodeObject=method;
+                }
+                result.push({
+                    insight: methodInsight,
+                    method: method,
+                    codeObject:relatedCodeObject 
+                });
+
+            }
+    
+        }
+
+        return result;
+       
+    }
+
 
     public  forMethod(methodInfo: MethodInfo, environment: string|undefined){
         const codeObjectsIds = methodInfo.aliases
@@ -547,7 +583,7 @@ export class MethodInfo implements CodeObjectLocationInfo
         public parameters: ParameterInfo[],
         public symbol: SymbolInfo,
         public aliases: string[],
-        public relatedCodeObjects: CodeObjectInfo[],
+        public relatedCodeObjects: CodeObjectLocationInfo[],
         public documentUri: vscode.Uri){}
     get idWithType(): string {
         return 'method:'+this.id;
