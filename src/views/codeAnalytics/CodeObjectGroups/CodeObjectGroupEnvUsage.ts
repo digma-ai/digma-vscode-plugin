@@ -53,8 +53,12 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
         let localEnvironment = usageResults.environmentStatuses
             .filter(x=>this.isLocalEnvironmentMine(x.name)).firstOrDefault();
 
-        html+=this.getEnvironmentHtml(localEnvironment.name, "LOCAL",true,true,
+        if (localEnvironment){
+            
+            html+=this.getEnvironmentHtml(localEnvironment.name, "LOCAL",true,true,
             localEnvironment.environmentFirstRecordedTime,localEnvironment.environmentLastRecordedTime);
+
+        }
 
         for (let env of usageResults.environmentStatuses){
 

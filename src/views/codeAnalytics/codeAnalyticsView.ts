@@ -389,7 +389,13 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     public async onTabRefreshRequested(event:UiMessage.Notify.TabRefreshRequested ){
         if (this._activeTab && this._currentCodeObject){
             
+            var doc = vscode.window.activeTextEditor?.document;
+            if (doc!=null){
+                await this._documentInfoProvider.refresh(doc);
+            }
+            
             this._activeTab.onRefreshRequested(this._currentCodeObject);
+            
         }
     }
 

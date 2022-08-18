@@ -345,6 +345,7 @@ export interface CodeObjectErrorDetails extends CodeObjectErrorResponse{
 
 export class AnalyticsProvider
 {
+  
 
     public constructor(private state: WorkspaceState){
 

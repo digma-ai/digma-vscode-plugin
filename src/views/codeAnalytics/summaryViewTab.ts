@@ -60,7 +60,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         html += sort(listViewItems)
             .map(o=>o.getHtml())
             .filter((o)=>o)
-            .join("");
+                .join("");
         
         this.updateListView(html);
     }

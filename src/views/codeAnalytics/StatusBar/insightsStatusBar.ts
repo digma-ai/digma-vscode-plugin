@@ -45,7 +45,7 @@ export class InsightsStatusBar implements vscode.Disposable  {
         ];
         this._statusBar.text=`Loading insights data`;
 
-        //this._statusBar.command = this.selecFromDocInsightsCommand;
+        this._statusBar.command = this.selecFromDocInsightsCommand;
         this._statusBar.show();
         subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async doc=>{
             if (doc && doc.document){
@@ -90,9 +90,8 @@ export class InsightsStatusBar implements vscode.Disposable  {
                                             x.importance>=InsightImporance.critical);
             
         this._statusBar.text=`$(warning) ${important?.length} $(search) ${interesting?.length}`;
-        this._statusBar.tooltip=`$(warning) ${important?.length} important insights
-                                    $(search) ${interesting?.length} interesting insights
-                                    Click to see more info`;
+        
+        this._statusBar.tooltip=`❗️ ${important?.length} important insights\n🔎 ${interesting?.length} interesting insights\nClick to see more info`;
     }
 
 

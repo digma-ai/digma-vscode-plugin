@@ -84,7 +84,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                     priorityEmoji='❗️'; 
                 }
     
-                let title = `${envComponent} ${priorityEmoji}${decorator.title}`;
+                let title = `${priorityEmoji}${decorator.title} ${envComponent}`;
     
                 lens.push(new vscode.CodeLens(codeObjectInfo.range, {
                     title:  title,
@@ -122,7 +122,8 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 const otherEnvsInsightsToShow 
                     = insights
                         .filter(x=>x.environment!=this._state.environment)
-                        .filter(x=>x.decorators && x.importance<InsightImporance.important);
+                        .filter(x=>x.decorators && x.importance<InsightImporance.important)
+                        .filter(x=>!currentEnvInsights.any(i=>i.type==x.type));
 
                 const otherEnvLenses = await this.getCodeLens(methodInfo,codeObject,otherEnvsInsightsToShow,true);
                 for (const lens of otherEnvLenses){
@@ -147,14 +148,17 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         for(let methodInfo of documentInfo.methods)
         {
             for (let alias of methodInfo.aliases){
-                const insight = documentInfo.insights.all.filter(x=>x.codeObjectId== alias)
-                    .filter(x=>x.environment==this._state.environment)
+                const insights = documentInfo.insights.all.filter(x=>x.codeObjectId== alias)
                     .filter(x=>x.scope=="Function");
 
-                const lenses = await this.getCodeLens(methodInfo,methodInfo,insight,false);
+                const thisEnvInsights = insights.filter(x=>x.environment==this._state.environment);
+
+                const lenses = await this.getCodeLens(methodInfo,methodInfo,thisEnvInsights,false);
                 for (const lens of lenses){
                     codelens.push(lens);
                 }
+
+        
             }
         
             const spans = documentInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
@@ -171,12 +175,30 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             const endpoints = documentInfo.endpoints.filter(e => e.range.intersection(methodInfo.range) != undefined);
             if(endpoints.length>0){
                 const lenses = await this.getLensForCodeLocationObject(methodInfo,
-                                        endpoints,documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"));
+                                        endpoints,documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"));
 
                 for (const lens of lenses){
                     codelens.push(lens);
                 }         
                 
+
+
+            }
+
+            for (let alias of methodInfo.aliases){
+                const insights = documentInfo.insights.all.filter(x=>x.codeObjectId== alias)
+                    .filter(x=>x.scope=="Function");
+
+                const otherEnvsInsights=
+                     insights
+                        .filter(x=>x.environment!=this._state.environment)
+                        .filter(x=>x.decorators && x.importance<InsightImporance.important);
+
+                const otherEnvLenses = await this.getCodeLens(methodInfo,methodInfo,otherEnvsInsights,true);
+                for (const lens of otherEnvLenses){
+                    codelens.push(lens);
+                }
+        
             }
             
         }

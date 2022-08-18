@@ -81,9 +81,17 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             const codeObjectsIds = methodInfo.idsWithType
                 .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
             
+            
             Logger.info("Insight codeobjectIds: "+codeObjectsIds);
 
-            responseItems = await this._analyticsProvider.getInsights(codeObjectsIds,true);
+            let relevantInsight = docInfo.insights.forMethod(methodInfo,this._workspaceState.environment);
+            if (!relevantInsight){
+                relevantInsight=[];
+            }
+
+             responseItems =relevantInsight;
+
+            // responseItems = await this._analyticsProvider.getInsights(codeObjectsIds,true);
             //temp ugly workaround
             var bottleneck = responseItems.find(x=>x.type ==='SlowestSpans');
             var endpointBottlneck = responseItems.find(x=>x.type ==='SpanEndpointBottleneck');

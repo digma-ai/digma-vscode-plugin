@@ -13,6 +13,7 @@ import { CodeObjectInsight } from '../views/codeAnalytics/InsightListView/IInsig
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
+  
     private _disposables: vscode.Disposable[] = [];
     private _documentsByEnv: Dictionary<string, Dictionary<string, DocumentInfoContainer>> = {};
     private _timer;
@@ -148,6 +149,21 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
+    public async refresh(doc: vscode.TextDocument) {
+
+        const docRelativePath = doc.uri.toModulePath();
+        if(!docRelativePath || !this.symbolProvider.supportsDocument(doc)) {
+            return undefined;
+        }
+
+        let document = this._documents[docRelativePath];
+        if (document){
+            delete document.versions[doc.version];
+        }
+
+        await this.addOrUpdateDocumentInfo(doc);
+    }
+ 
     private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
         const docRelativePath = doc.uri.toModulePath();
@@ -195,18 +211,21 @@ export class DocumentInfoProvider implements vscode.Disposable
 
                         const shortRouteName = EndpointSchema.getShortRouteName(endpoint.route);
                         const parts = shortRouteName.split(' ');
-                        
-                        const relatedMethod = symbolInfos.filter(x=>x.id===endpoint.codeObjectId).firstOrDefault();
-                        if (relatedMethod){
-                            endpoints.push(new EndpointInfo(
-                                endpoint.codeObjectId,
-                                parts[0],
-                                endpoint.route,
-                                relatedMethod.range
-                                ,relatedMethod.documentUri));
-    
+                        for (const symbol of symbolInfos){
+                            if (symbol.id.endsWith(endpoint.codeObjectId)){
+                                endpoints.push(new EndpointInfo(
+                                    endpoint.codeObjectId,
+                                    parts[0],
+                                    endpoint.route,
+                                    symbol.range
+                                    ,symbol.documentUri));
+
+                            }
+
                         }
+                 
                     }
+                    
                 }
 
                 // These are spans that the server is aware of but the client can't discover
@@ -453,6 +472,18 @@ export class CodeObjectInsightsAccessor{
                 .filter(s => s.environment == env);
        
     }
+
+    public  forMethod(methodInfo: MethodInfo, environment: string|undefined){
+        const codeObjectsIds = methodInfo.aliases
+             .concat(methodInfo.relatedCodeObjects.map(r => r.id));
+        
+        let insights = this._codeObjectInsights.filter(x=>codeObjectsIds.any(o=> o==x.codeObjectId));
+        if (environment){
+            insights = insights.filter(x=>x.environment==environment);
+        }
+        return insights;
+    
+    }
     public get all(): CodeObjectInsight[]{
         return this._codeObjectInsights;
     }
@@ -490,6 +521,8 @@ export class MethodInfo implements CodeObjectLocationInfo
     get idsWithType(): string[] {
         return this.aliases.map(x=> 'method:'+x);
     }
+
+    
 }
 
 export interface ParameterInfo
