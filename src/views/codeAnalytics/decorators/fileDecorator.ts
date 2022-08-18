@@ -1,6 +1,5 @@
 import { CancellationToken, Event, FileDecoration, FileDecorationProvider, ProviderResult, ThemeColor, Uri } from "vscode";
 import { Disposable } from "vscode-languageclient";
-import { vscode } from "../views-ui/common/contracts";
 
 // export class DigmaFileDecorator implements FileDecorationProvider{
     

@@ -8,7 +8,6 @@ import { ErrorsViewTab } from "./errorsViewTab";
 import { InsightsViewTab } from "./insightsViewTab";
 import { OverlayView } from "./overlayView";
 import { UsagesViewTab } from "./summaryViewTab";
-import { ErrorFlowParameterDecorator } from "../../decorators/errorFlowParameterDecorator";
 import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
@@ -29,6 +28,10 @@ import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
+import { AnaliticsCodeLens } from "../../analyticsCodeLens";
+import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
+import { DigmaCommands } from "../../commands";
+import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -50,6 +53,8 @@ export class CodeAnalyticsView implements vscode.Disposable
 		extensionUri: vscode.Uri,
         editorHelper: EditorHelper,
         workspaceState:WorkspaceState,
+        codelensProvider: AnaliticsCodeLens,
+        envSelectStatusBar: EnvSelectStatusBar
 
 
 	) {
@@ -63,15 +68,34 @@ export class CodeAnalyticsView implements vscode.Disposable
             documentInfoProvider,
             editorHelper,
             errorFlowParamDecorator,
-            workspaceState
+            workspaceState,
+            codelensProvider,
+            envSelectStatusBar
 		);
         this.extensionUrl = extensionUri;
+    
 		this._disposables = [
 			vscode.window.registerWebviewViewProvider(
 				CodeAnalyticsView.viewId,
 				this._provider, {webviewOptions: {retainContextWhenHidden: true}}
                 
 			),
+            vscode.commands.registerCommand(DigmaCommands.changeEnvironmentCommand, async () => {
+                const quickPick = vscode.window.createQuickPick();
+                const environments = await analyticsProvider.getEnvironments();
+                const iconPrefix = "$(server) ";
+                quickPick.items = environments.map(x=> ({ label: `${iconPrefix}${x}` }));
+                await quickPick.onDidChangeSelection(async selection => {
+                    if (selection[0]) {
+                        const env = selection[0].label.replace(iconPrefix,"");
+                        await this._provider.onChangeEnvironmentRequested(new UiMessage.Notify.ChangeEnvironmentContext(env));
+                        
+                    }
+                    quickPick.hide();
+                });
+                quickPick.onDidHide(() => quickPick.dispose());
+                quickPick.show();
+            }),
 
             //vscode.window.registerFileDecorationProvider(new DigmaFileDecorator()),
 
@@ -82,7 +106,10 @@ export class CodeAnalyticsView implements vscode.Disposable
 					    await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
 				}
 			),
-            vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (codeObjectId: string, codeObjectDisplayName: string) => {
+            vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (environment:string, codeObjectId: string, codeObjectDisplayName: string) => {
+                if (environment!=workspaceState.environment){
+                    await this._provider.onChangeEnvironmentRequested(new UiMessage.Notify.ChangeEnvironmentContext(environment));
+                }
                 await vscode.commands.executeCommand("workbench.view.extension.digma");
             }),
             errorFlowParamDecorator,
@@ -125,7 +152,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         private _documentInfoProvider: DocumentInfoProvider,
         editorHelper: EditorHelper,
         errorFlowParamDecorator: ErrorFlowParameterDecorator,
-        private _workspaceState:WorkspaceState
+        private _workspaceState:WorkspaceState,
+        private _codeLensProvider:AnaliticsCodeLens,
+        private _envSelectStatusBar: EnvSelectStatusBar
 	) {
 
 
@@ -360,11 +389,15 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     public async onTabRefreshRequested(event:UiMessage.Notify.TabRefreshRequested ){
         if (this._activeTab && this._currentCodeObject){
             
+            var doc = vscode.window.activeTextEditor?.document;
+            if (doc!=null){
+                await this._documentInfoProvider.refresh(doc);
+            }
+            
             this._activeTab.onRefreshRequested(this._currentCodeObject);
+            
         }
     }
-
-
 
     public async onChangeEnvironmentRequested(event:UiMessage.Notify.ChangeEnvironmentContext ){
         if (event.environment){
@@ -376,7 +409,13 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
                 this.getCodeObjectOrShowOverlay(editor.document,editor.selection.anchor);
             }
         }
-        this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
+        await this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
+        await this.refreshCodeLens();
+        this._envSelectStatusBar.refreshEnvironment();
+    }
+
+    private async refreshCodeLens(){
+        this._codeLensProvider.refreshRequested();
     }
     public async onTabChangedEvent(event: UiMessage.Notify.TabChanged)
     {

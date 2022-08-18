@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 import { DecorationRangeBehavior } from 'vscode';
-import { MethodCodeObjectSummary } from '../services/analyticsProvider';
-import { DocumentInfoProvider, LineInfo } from '../services/documentInfoProvider';
-import { Dictionary } from '../services/utils';
-
+import { MethodCodeObjectSummary } from '../../../services/analyticsProvider';
+import { DocumentInfoProvider } from '../../../services/documentInfoProvider';
+import { Dictionary } from '../../../services/utils';
+import { HotspotInsight } from '../InsightListView/HotspotInsight';
 
 export class HotspotMarkerDecorator implements vscode.Disposable
 {
@@ -65,7 +65,12 @@ export class HotspotMarkerDecorator implements vscode.Disposable
             if (!methodInfo.nameRange)
                 continue;
 
-            const score = docInfo.summaries.get(MethodCodeObjectSummary, methodInfo.symbol.id)?.score ?? 0;
+            const hotspotInsight = docInfo.insights.get("Hotspot", methodInfo.symbol.id)?.firstOrDefault() as HotspotInsight;
+            if (hotspotInsight==null){
+                continue;
+            }
+
+            const score = hotspotInsight?.score ?? 0;
             if(score < 70)
                 continue;
             

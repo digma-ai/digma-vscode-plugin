@@ -90,6 +90,10 @@
                 }
             ]
         },
+        "commands": [{
+            "command": "digma.changeSelectedEnvironment",
+            "title": "Digma: Select deployment environment"
+        }],
         "configuration": {
             "properties": {
                 "digma.enableCodeLens": {
