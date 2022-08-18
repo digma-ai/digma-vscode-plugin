@@ -15,7 +15,7 @@ export class EnvSelectStatusBar implements vscode.Disposable  {
             this._statusBar
         ];
         
-        this._statusBar.text=_state.environment;
+        this._statusBar.text=`Digma: ${_state.environment}`;
         this._statusBar.command = DigmaCommands.changeEnvironmentCommand;
         this._statusBar.show();
 
