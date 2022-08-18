@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext)
     }
 
     const envStatusbar = new EnvSelectStatusBar(workspaceState);
-    const insightBar = new InsightsStatusBar(workspaceState,documentInfoProvider, context);
+    const insightBar = new InsightsStatusBar(workspaceState,documentInfoProvider, editorHelper, context);
     insightBar.init(documentInfoProvider);
     context.subscriptions.push(insightBar);
 
