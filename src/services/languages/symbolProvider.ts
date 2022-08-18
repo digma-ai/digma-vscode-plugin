@@ -134,7 +134,7 @@ export class SymbolProvider
         return spans;
     }
 
-    public async getMethods(document: vscode.TextDocument, symbolTrees: SymbolTree[] | undefined) : Promise<SymbolInfo[]> {
+    public async getMethods(document: vscode.TextDocument, tokens: Token [], symbolTrees: SymbolTree[] | undefined) : Promise<SymbolInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage) {
             return [];
@@ -146,7 +146,7 @@ export class SymbolProvider
                 const allDocSymbols = symbolTrees as DocumentSymbol[];
                 const methodExtractors = supportedLanguage.methodExtractors;
                 const extractedMethods = await Promise.all(
-                    methodExtractors.map(async (x) => await x.extractMethods(document, allDocSymbols))
+                    methodExtractors.map(async (x) => await x.extractMethods(document, allDocSymbols, tokens))
                 );
                 const methods = extractedMethods.flat()
                 return methods;
