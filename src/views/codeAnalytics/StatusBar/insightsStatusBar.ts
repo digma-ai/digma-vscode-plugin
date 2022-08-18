@@ -23,9 +23,10 @@ export class InsightsStatusBar implements vscode.Disposable  {
                 if (doc!=null){
                     const insights = (await _documentInfoProvider.getDocumentInfo(doc))?.insights
                                         .forEnv(_state.environment);
+
                     if (insights!=null){
                         const quickPick = vscode.window.createQuickPick();
-                        quickPick.items = insights.map(x=> ({ label: `${x.type}` }));
+                        quickPick.items = insights.map(x=> ({ label: `${x.name}` }));
                         await quickPick.onDidChangeSelection(async selection => {
                             if (selection[0]) {
                                 // const env = selection[0].label.replace(iconPrefix,"");

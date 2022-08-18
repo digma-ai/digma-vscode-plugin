@@ -9,6 +9,7 @@ export interface CodeObjectInsight extends Insight{
     codeObjectId: string,
     environment: string,
     scope: string,
+    name: string,
     importance: InsightImporance,
     severity: decimal,
     decorators: CodeObjectDecorator[]

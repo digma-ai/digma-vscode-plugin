@@ -89,7 +89,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
 
     public createListViewItem(codeObjectsInsight: LowUsageInsight): IListViewItem {
         return {
-            getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint low traffic", "Servicing a low number of requests", "gauge_low.png"),
+            getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Low Usage", "Servicing a low number of requests", "gauge_low.png"),
             sortIndex: 0,
             groupId: codeObjectsInsight.endpointSpan
         };
