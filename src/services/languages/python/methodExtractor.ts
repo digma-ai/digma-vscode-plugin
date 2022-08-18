@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
 import { IMethodExtractor, SymbolInfo } from "../extractors";
+import { Token } from '../tokens';
 
 
 export class PythonMethodExtractor implements IMethodExtractor
 {
-    public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): Promise<SymbolInfo[]> {
+    public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[], tokens: Token []): Promise<SymbolInfo[]> {
         const symbolInfos = this.extractFunctions(document.uri, document.uri.toModulePath(), '', docSymbols);
         return symbolInfos;
     }

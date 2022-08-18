@@ -181,8 +181,8 @@ export class DocumentInfoProvider implements vscode.Disposable
             try {
                 Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
                 const symbolTrees = await this.symbolProvider.getSymbolTree(doc);
-                const symbolInfos = await this.symbolProvider.getMethods(doc, symbolTrees);
                 const tokens = await this.symbolProvider.getTokens(doc);
+                const symbolInfos = await this.symbolProvider.getMethods(doc, tokens, symbolTrees);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens, symbolTrees, this);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
                 const paramsExtractor = await this.symbolProvider.getParametersExtractor(doc);

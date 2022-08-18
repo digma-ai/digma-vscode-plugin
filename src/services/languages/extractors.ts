@@ -51,6 +51,7 @@ export interface IMethodExtractor {
     extractMethods(
         document: vscode.TextDocument,
         docSymbols: DocumentSymbol[],
+        tokens: Token []
     ): Promise<SymbolInfo[]>;
 }
 
