@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentInfoProvider, LineInfo } from '../../../services/documentInfoProvider';
+import { WorkspaceState } from '../../../state';
 
 export class ErrorsLineDecorator implements vscode.Disposable
 {
@@ -50,7 +51,7 @@ export class ErrorsLineDecorator implements vscode.Disposable
         if(!method)
             return;
         
-        const lines = docInfo.lines.filter(l => method.range.contains(l.range.start));
+        const lines = docInfo.lines.getAllByCurrentEnv().filter(l => method.range.contains(l.range.start));
         if(!lines)
             return;
 

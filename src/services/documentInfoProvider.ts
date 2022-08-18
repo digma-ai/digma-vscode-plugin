@@ -15,24 +15,22 @@ export class DocumentInfoProvider implements vscode.Disposable
 {
   
     private _disposables: vscode.Disposable[] = [];
-    private _documentsByEnv: Dictionary<string, Dictionary<string, DocumentInfoContainer>> = {};
+    private _documentContainer: Dictionary<string, DocumentInfoContainer> = {};
     private _timer;
 
     private ensureDocDictionaryForEnv(){
-        let envDictionary = this._documentsByEnv[this.workspaceState.environment];
-        if (!envDictionary){
-            this._documentsByEnv[this.workspaceState.environment]={};
+        if (!this._documentContainer){
+            this._documentContainer={};
         }
     }
     get _documents(): Dictionary<string, DocumentInfoContainer> {
         
         this.ensureDocDictionaryForEnv();
-        return this._documentsByEnv[this.workspaceState.environment];
+        return this._documentContainer;
     }
 
     set _documents(value: Dictionary<string, DocumentInfoContainer>){
-        this.ensureDocDictionaryForEnv();
-        this._documentsByEnv[this.workspaceState.environment]=value;
+        this._documentContainer=value;
 
     }
 
@@ -257,7 +255,7 @@ export class DocumentInfoProvider implements vscode.Disposable
 
                 //const lines:LineInfo[] = [];
 
-                const lines = this.createLineInfos(doc, errorSummaries, methodInfos);
+                const lines = this.createLineInfos(doc, errorSummaries, methodInfos,this.workspaceState);
                 latestVersionInfo.value = {
                     insights,
                     methods: methodInfos,
@@ -273,7 +271,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 latestVersionInfo.value = {
                     insights: new CodeObjectInsightsAccessor([]),
                     methods: [],
-                    lines: [],
+                    lines: new ElementsByEnv<LineInfo>(this.workspaceState),
                     tokens: [],
                     endpoints: [],
                     spans: [],
@@ -362,14 +360,15 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
-    public createLineInfos(document: vscode.TextDocument, methodSummaries: MethodCodeObjectSummary[], methods: MethodInfo[]): LineInfo[]
+    public createLineInfos(document: vscode.TextDocument, methodSummaries: MethodCodeObjectSummary[], methods: MethodInfo[], state:WorkspaceState): ElementsByEnv<LineInfo>
     {
-        const lineInfos: LineInfo[] = [];
+        const lineInfosByEnv: ElementsByEnv<LineInfo> = new ElementsByEnv<LineInfo>(state);
         for(let method of methods)
         {
             const codeObjectSummary = methodSummaries.find(x=>method.aliases.any(a=>a ==x.codeObjectId));
             if(!codeObjectSummary)
                 continue;
+    
 
             for(let executedCodeSummary of codeObjectSummary.executedCodes)
             {
@@ -384,11 +383,11 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
             
                 const textLine = document.lineAt(lineIndex);
-                let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == textLine.lineNumber+1);
+                let lineInfo = lineInfosByEnv.getAllByEnv(codeObjectSummary.environment).firstOrDefault(x => x.lineNumber == textLine.lineNumber+1);
                 if(!lineInfo)
                 {
                     lineInfo = {lineNumber: textLine.lineNumber, range: textLine.range, exceptions: [] };
-                    lineInfos.push(lineInfo);
+                    lineInfosByEnv.addtElement(codeObjectSummary.environment, lineInfo);
                 }
 
                 lineInfo.exceptions.push({
@@ -399,7 +398,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 });
             }
         }
-        return lineInfos;
+        return lineInfosByEnv;
     }
 
     public dispose() 
@@ -430,11 +429,47 @@ class DocumentInfoContainer
     }
 }
 
+export class ElementsByEnv<T>{
+    _byEnvDict : Dictionary<string, T[]> = {};
+    constructor(private _state: WorkspaceState){
+
+    }
+
+    public getAllByCurrentEnv(): T[]{
+       
+        return this.getAllByEnv(this._state.environment);
+    }
+
+    public getAllByEnv( env:string) :T[]{
+        let result = this._byEnvDict[env];
+        if (result ==undefined){
+            result = [];
+        }
+        return result;
+    }
+
+    public addtElement( env:string, element:T){
+        if (!this._byEnvDict[env]){
+            this._byEnvDict[env]=[element];
+        }
+        else{
+            this._byEnvDict[env].push(element);
+        }
+
+    }
+
+    public setAll( env:string, elements:T[]){
+        this._byEnvDict[env]=elements;
+
+    }
+
+}
+
 export interface DocumentInfo
 {
     insights: CodeObjectInsightsAccessor;
     methods: MethodInfo[];
-    lines: LineInfo[];
+    lines: ElementsByEnv<LineInfo>;
     tokens: Token[];
     endpoints: EndpointInfo[];
     spans: SpanLocationInfo[];
