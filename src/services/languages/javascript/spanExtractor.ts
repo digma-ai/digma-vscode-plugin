@@ -22,7 +22,7 @@ export class JSSpanExtractor implements ISpanExtractor {
 
         const results: SpanLocationInfo[] = [];
         await methodSpanIterator(symbolInfos, tokens, async (symbol, methodTokens) => {
-            Logger.info("Span discovering for function: "+symbol.displayName);
+            Logger.info(`Span discovering for function: ${symbol.displayName} (${symbol.id})`);
 
             for (let index = 0; index < methodTokens.length; index++) {
                 const startSpanToken = methodTokens[index];

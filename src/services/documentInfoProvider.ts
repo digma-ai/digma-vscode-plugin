@@ -5,33 +5,32 @@ import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor } from './languages/extractors';
+import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor, CodeObjectLocationInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
-import { Settings } from '../settings';
 import { WorkspaceState } from '../state';
+import { CodeObjectInsight } from '../views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
+  
     private _disposables: vscode.Disposable[] = [];
-    private _documentsByEnv: Dictionary<string, Dictionary<string, DocumentInfoContainer>> = {};
+    private _documentContainer: Dictionary<string, DocumentInfoContainer> = {};
     private _timer;
 
     private ensureDocDictionaryForEnv(){
-        let envDictionary = this._documentsByEnv[this.workspaceState.environment];
-        if (!envDictionary){
-            this._documentsByEnv[this.workspaceState.environment]={};
+        if (!this._documentContainer){
+            this._documentContainer={};
         }
     }
     get _documents(): Dictionary<string, DocumentInfoContainer> {
         
         this.ensureDocDictionaryForEnv();
-        return this._documentsByEnv[this.workspaceState.environment];
+        return this._documentContainer;
     }
 
     set _documents(value: Dictionary<string, DocumentInfoContainer>){
-        this.ensureDocDictionaryForEnv();
-        this._documentsByEnv[this.workspaceState.environment]=value;
+        this._documentContainer=value;
 
     }
 
@@ -148,6 +147,21 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
+    public async refresh(doc: vscode.TextDocument) {
+
+        const docRelativePath = doc.uri.toModulePath();
+        if(!docRelativePath || !this.symbolProvider.supportsDocument(doc)) {
+            return undefined;
+        }
+
+        let document = this._documents[docRelativePath];
+        if (document){
+            delete document.versions[doc.version];
+        }
+
+        await this.addOrUpdateDocumentInfo(doc);
+    }
+ 
     private async addOrUpdateDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
     {
         const docRelativePath = doc.uri.toModulePath();
@@ -167,46 +181,60 @@ export class DocumentInfoProvider implements vscode.Disposable
             try {
                 Logger.trace(`Starting building DocumentInfo for "${docRelativePath}" v${doc.version}`);
                 const symbolTrees = await this.symbolProvider.getSymbolTree(doc);
-                const symbolInfos = await this.symbolProvider.getMethods(doc, symbolTrees);
                 const tokens = await this.symbolProvider.getTokens(doc);
+                const symbolInfos = await this.symbolProvider.getMethods(doc, tokens, symbolTrees);
                 const endpoints = await this.symbolProvider.getEndpoints(doc, symbolInfos, tokens, symbolTrees, this);
                 const spans = await this.symbolProvider.getSpans(doc, symbolInfos, tokens);
                 const paramsExtractor = await this.symbolProvider.getParametersExtractor(doc);
                 let methodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
-                const summariesResult = await this.analyticsProvider.getSummaries(
-                    methodInfos.flatMap(s => s.idsWithType)
+
+                let codeObjectIds = methodInfos.flatMap(s => s.idsWithType)
                         .concat(endpoints.map(e => e.idWithType))
-                        .concat(spans.map(s => s.idWithType))
-                );
+                        .concat(spans.map(s => s.idWithType));
+
+                const errorSummaries = await this.analyticsProvider.getErrorSummary(codeObjectIds,false);
+                const insightsResult = await this.analyticsProvider.getInsights(codeObjectIds,false );
 
                 //Get endpoints discovered via server that don't exist in document info
-                const endPointsDiscoveredViaServer = summariesResult.filter(x=>x.type==='EndpointSummary')
+                const endPointsDiscoveredViaServer = insightsResult
+                    .filter(x=>x.scope=="EntrySpan" && x.route)
                     .filter(x=>!endpoints.any(e=>e.id===x.codeObjectId));
-
-                for ( const endpoint of endPointsDiscoveredViaServer){
-                    const endPointSummary = endpoint as EndpointCodeObjectSummary;
+                
+                const uniqueEndpoints = [...new Map(endPointsDiscoveredViaServer.map(item =>
+                    [item.codeObjectId, item])).values()];
+                    
+                for ( const endpoint of uniqueEndpoints){
  
-                    if (endPointSummary && endPointSummary.route){
-                        const shortRouteName = EndpointSchema.getShortRouteName(endPointSummary.route);
+                    if (endpoint.route){
+
+                        const shortRouteName = EndpointSchema.getShortRouteName(endpoint.route);
                         const parts = shortRouteName.split(' ');
-                        
-                        const relatedMethod = symbolInfos.filter(x=>x.id===endpoint.codeObjectId).firstOrDefault();
-                        if (relatedMethod){
-                            endpoints.push(new EndpointInfo(
-                                endpoint.codeObjectId,
-                                parts[0],
-                                endPointSummary.route,
-                                relatedMethod.range
-                                ,relatedMethod.documentUri));
-    
+                        for (const symbol of symbolInfos){
+                            if (symbol.id.endsWith(endpoint.codeObjectId)){
+                                endpoints.push(new EndpointInfo(
+                                    endpoint.codeObjectId,
+                                    parts[0],
+                                    endpoint.route,
+                                    symbol.range
+                                    ,symbol.documentUri));
+
+                            }
+
                         }
+                 
                     }
+                    
                 }
 
-                const spansDiscoveredViaServer = summariesResult.filter(x=>x.type==='SpanSummary')
+                // These are spans that the server is aware of but the client can't discover
+                const spansDiscoveredViaServer = insightsResult
+                    .filter(x=>x.scope=="Span")
                     .filter(x=>!spans.any(e=>e.id===x.codeObjectId));
 
-                for ( const span of spansDiscoveredViaServer){
+                const uniqueSpans = [...new Map(spansDiscoveredViaServer.map(item =>
+                    [item.codeObjectId, item])).values()];
+
+                for ( const span of uniqueSpans){
                     const spanSummary = span as SpanCodeObjectSummary;
     
                     if (spanSummary && spanSummary.codeObjectId){                        
@@ -223,11 +251,13 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
                 const newMethodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 methodInfos=newMethodInfos;
-                const summaries = new CodeObjectSummaryAccessor(summariesResult);
-          
-                const lines = this.createLineInfos(doc, summaries, methodInfos);
+                const insights = new CodeObjectInsightsAccessor(insightsResult);
+
+                //const lines:LineInfo[] = [];
+
+                const lines = this.createLineInfos(doc, errorSummaries, methodInfos,this.workspaceState);
                 latestVersionInfo.value = {
-                    summaries,
+                    insights,
                     methods: methodInfos,
                     lines,
                     tokens,
@@ -239,9 +269,9 @@ export class DocumentInfoProvider implements vscode.Disposable
             }
             catch(e) {
                 latestVersionInfo.value = {
-                    summaries: new CodeObjectSummaryAccessor([]),
+                    insights: new CodeObjectInsightsAccessor([]),
                     methods: [],
-                    lines: [],
+                    lines: new ElementsByEnv<LineInfo>(this.workspaceState),
                     tokens: [],
                     endpoints: [],
                     spans: [],
@@ -285,9 +315,10 @@ export class DocumentInfoProvider implements vscode.Disposable
                 [],
                 symbol,
                 aliases,
-                ([] as CodeObjectInfo[])
+                ([] as CodeObjectLocationInfo[])
                     .concat(spans.filter(s => s.range.intersection(symbol.range)))
-                    .concat(endpoints.filter(e => e.range.intersection(symbol.range)))
+                    .concat(endpoints.filter(e => e.range.intersection(symbol.range))),
+                document.uri
             );
             methods.push(method);
 
@@ -329,14 +360,15 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
-    public createLineInfos(document: vscode.TextDocument, codeObjectSummaries: CodeObjectSummaryAccessor, methods: MethodInfo[]): LineInfo[]
+    public createLineInfos(document: vscode.TextDocument, methodSummaries: MethodCodeObjectSummary[], methods: MethodInfo[], state:WorkspaceState): ElementsByEnv<LineInfo>
     {
-        const lineInfos: LineInfo[] = [];
+        const lineInfosByEnv: ElementsByEnv<LineInfo> = new ElementsByEnv<LineInfo>(state);
         for(let method of methods)
         {
-            const codeObjectSummary = codeObjectSummaries.get(MethodCodeObjectSummary, method.symbol.id);
+            const codeObjectSummary = methodSummaries.find(x=>method.aliases.any(a=>a ==x.codeObjectId));
             if(!codeObjectSummary)
                 continue;
+    
 
             for(let executedCodeSummary of codeObjectSummary.executedCodes)
             {
@@ -351,11 +383,11 @@ export class DocumentInfoProvider implements vscode.Disposable
                 }
             
                 const textLine = document.lineAt(lineIndex);
-                let lineInfo = lineInfos.firstOrDefault(x => x.lineNumber == textLine.lineNumber+1);
+                let lineInfo = lineInfosByEnv.getAllByEnv(codeObjectSummary.environment).firstOrDefault(x => x.lineNumber == textLine.lineNumber+1);
                 if(!lineInfo)
                 {
                     lineInfo = {lineNumber: textLine.lineNumber, range: textLine.range, exceptions: [] };
-                    lineInfos.push(lineInfo);
+                    lineInfosByEnv.addtElement(codeObjectSummary.environment, lineInfo);
                 }
 
                 lineInfo.exceptions.push({
@@ -366,7 +398,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 });
             }
         }
-        return lineInfos;
+        return lineInfosByEnv;
     }
 
     public dispose() 
@@ -397,11 +429,47 @@ class DocumentInfoContainer
     }
 }
 
+export class ElementsByEnv<T>{
+    _byEnvDict : Dictionary<string, T[]> = {};
+    constructor(private _state: WorkspaceState){
+
+    }
+
+    public getAllByCurrentEnv(): T[]{
+       
+        return this.getAllByEnv(this._state.environment);
+    }
+
+    public getAllByEnv( env:string) :T[]{
+        let result = this._byEnvDict[env];
+        if (result ==undefined){
+            result = [];
+        }
+        return result;
+    }
+
+    public addtElement( env:string, element:T){
+        if (!this._byEnvDict[env]){
+            this._byEnvDict[env]=[element];
+        }
+        else{
+            this._byEnvDict[env].push(element);
+        }
+
+    }
+
+    public setAll( env:string, elements:T[]){
+        this._byEnvDict[env]=elements;
+
+    }
+
+}
+
 export interface DocumentInfo
 {
-    summaries: CodeObjectSummaryAccessor;
+    insights: CodeObjectInsightsAccessor;
     methods: MethodInfo[];
-    lines: LineInfo[];
+    lines: ElementsByEnv<LineInfo>;
     tokens: Token[];
     endpoints: EndpointInfo[];
     spans: SpanLocationInfo[];
@@ -421,6 +489,77 @@ export class CodeObjectSummaryAccessor{
     }
 }
 
+export interface InsightCodeObjectLink{
+    insight: CodeObjectInsight;
+    method: MethodInfo;
+    codeObject: CodeObjectLocationInfo;
+
+}
+export class CodeObjectInsightsAccessor{
+    constructor(private _codeObjectInsights: CodeObjectInsight[]){}
+
+    public get(type: string, codeObjectId: string):CodeObjectInsight[] | undefined
+    {
+        return this._codeObjectInsights
+                .filter(s => s.codeObjectId == codeObjectId)
+                .filter(s=>s.type==type);
+       
+    }
+
+    public forEnv(env: string):CodeObjectInsight[] | undefined
+    {
+        return this._codeObjectInsights
+                .filter(s => s.environment == env);
+       
+    }
+
+    public byMethod(env: string, doc:DocumentInfo):InsightCodeObjectLink[] | undefined
+    {
+        let result: InsightCodeObjectLink[] = [];
+        let insights = this._codeObjectInsights;
+        if (env){
+            insights=this.forEnv(env)!;
+        }
+        
+
+        for (const method of doc.methods){
+            const methodInsights = this.forMethod(method,env);
+            for (const methodInsight of methodInsights){
+                let relatedCodeObject = method.relatedCodeObjects.find(x=>x.id==methodInsight.codeObjectId);
+                if (!relatedCodeObject){
+                    relatedCodeObject=method;
+                }
+                result.push({
+                    insight: methodInsight,
+                    method: method,
+                    codeObject:relatedCodeObject 
+                });
+
+            }
+    
+        }
+
+        return result;
+       
+    }
+
+
+    public  forMethod(methodInfo: MethodInfo, environment: string|undefined){
+        const codeObjectsIds = methodInfo.aliases
+             .concat(methodInfo.relatedCodeObjects.map(r => r.id));
+        
+        let insights = this._codeObjectInsights.filter(x=>codeObjectsIds.any(o=> o==x.codeObjectId));
+        if (environment){
+            insights = insights.filter(x=>x.environment==environment);
+        }
+        return insights;
+    
+    }
+    public get all(): CodeObjectInsight[]{
+        return this._codeObjectInsights;
+    }
+}
+
 export interface LineInfo
 {
     lineNumber: number;
@@ -433,7 +572,7 @@ export interface LineInfo
     }[];
 }
 
-export class MethodInfo implements CodeObjectInfo
+export class MethodInfo implements CodeObjectLocationInfo
 {
     constructor(
         public id: string,
@@ -444,7 +583,8 @@ export class MethodInfo implements CodeObjectInfo
         public parameters: ParameterInfo[],
         public symbol: SymbolInfo,
         public aliases: string[],
-        public relatedCodeObjects: CodeObjectInfo[]){}
+        public relatedCodeObjects: CodeObjectLocationInfo[],
+        public documentUri: vscode.Uri){}
     get idWithType(): string {
         return 'method:'+this.id;
     }
@@ -452,6 +592,8 @@ export class MethodInfo implements CodeObjectInfo
     get idsWithType(): string[] {
         return this.aliases.map(x=> 'method:'+x);
     }
+
+    
 }
 
 export interface ParameterInfo

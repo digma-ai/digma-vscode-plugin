@@ -3,13 +3,14 @@ import * as path from 'path';
 import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
 import { IMethodExtractor, SymbolInfo } from "../extractors";
 import { Logger } from '../../logger';
+import { Token } from '../tokens';
 
 export class GoMethodExtractor implements IMethodExtractor{
     private async getModuleName(modFile:vscode.Uri): Promise<string| undefined>{
         const modDocument = await vscode.workspace.openTextDocument(modFile);
         const match = modDocument.getText().match(/^module (.+)$/m);
         if(!match){
-            Logger.warn(`Could not found module name in '${modFile.path}'`);
+            Logger.warn(`Could not find module name in '${modFile.path}'`);
             return undefined;
         }
         return match[1];
@@ -18,13 +19,13 @@ export class GoMethodExtractor implements IMethodExtractor{
     private getPackageDefinationName(document: vscode.TextDocument): string| undefined{
         const match = document.getText().match(/^package (.+)$/m);
         if(!match){
-            Logger.warn(`Could not found packakge name in '${document.uri.path}'`);
+            Logger.warn(`Could not find packakge name in '${document.uri.path}'`);
             return undefined;
         }
         return match[1]; 
     }
 
-    public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[]): Promise<SymbolInfo[]> {
+    public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[], tokens: Token []): Promise<SymbolInfo[]> {
         const methodSymbols = docSymbols.filter(s => s.kind+1 === SymbolKind.Method || s.kind+1 === SymbolKind.Function); 
         if(!methodSymbols.length){
             return [];
