@@ -234,7 +234,7 @@ vscode-panel-view {
         margin-right: 5px;
         opacity: 0.6;
     }
-    .codicon {
+    .code-object-type-icon {
         margin-right: 5px;
         padding-top: 1px;
     }
@@ -491,8 +491,8 @@ vscode-panel-view {
 }
 
 .refresh-button {
-    margin-left: auto;
     cursor: pointer;
+    transform: rotate(90deg);
 }
 
 #view-insights {

@@ -41,12 +41,15 @@ export class HtmlHelper
     public static getCodeObjectLabel( viewUris:WebViewUris, funcName: string): string 
     {
         return /*html*/ `
+            <span class="codicon codicon-symbol-method code-object-type-icon" title="Method"></span>
+            <span class="method-name left-ellipsis flex-stretch" title="${funcName}">${funcName}</span>
+            
 
-            <span class="codicon codicon-symbol-method" title="Method"></span>
-            <span class="method-name left-ellipsis" title="${funcName}">${funcName}</span>
-            <img class="refresh-button" title="Refresh" style="align-self:center;" width="16" height="16" src="${viewUris.image("refresh.png")}" >
+            <vscode-button appearance="icon" class="refresh-button">
+                <span class="codicon codicon-refresh"></span>
+            </vscode-button>
 
-            `;
+        `;
     }
 
     public static getInfoMessage(text: string): string
