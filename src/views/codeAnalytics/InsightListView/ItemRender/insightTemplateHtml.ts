@@ -1,11 +1,16 @@
 import * as vscode from 'vscode';
 
 export interface IInsightTemplateData{
-    title: string,
+    title: string | ITitle,
     description?: string,
     icon?: vscode.Uri,
     body?: string,
     buttons?: string[]
+}
+
+export interface ITitle{
+    text: string,
+    tooltip: string
 }
 
 export class InsightTemplateHtml
@@ -13,12 +18,6 @@ export class InsightTemplateHtml
 
     constructor(
         public readonly data: IInsightTemplateData){
-        // public readonly title: string,
-        // public readonly description?: string,
-        // public readonly icon?: vscode.Uri,
-        // public readonly body?: string,
-        // public readonly buttons?: string[]){
-
     }
 
     public renderHtml():string{
@@ -35,14 +34,24 @@ export class InsightTemplateHtml
             : ``;
         
         let iconHtml = this.data.icon
-            ? `<img class="list-item-icon" src="${this.data.icon}" width="15" height="15">`
+            ? `<img class="list-item-icon" src="${this.data.icon}" width="18" height="18">`
             : ``;
+        
+        let title = "";
+        let tooltip = "";
+        if(typeof this.data.title === 'string'){
+            title = <string>this.data.title;
+        }
+        else{
+            title = (<ITitle>this.data.title).text;
+            tooltip = (<ITitle>this.data.title).tooltip;
+        }
 
         const html = /*html*/`
             <div class="list-item insight">
                 <div class="list-item-top-area">
                     <div class="list-item-header">
-                        <div class="list-item-title"><strong>${this.data.title}</strong></div>
+                        <div class="list-item-title" title="${tooltip}"><strong>${title}</strong></div>
                         ${descriptionHtml}
                     </div>
                     ${iconHtml}

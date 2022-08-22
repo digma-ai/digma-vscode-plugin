@@ -196,26 +196,11 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
                 </div>`);
         }
 
-        // const html = `
-        // <div class="list-item">
-        //     <div class="list-item-content-area">
-        //         <div class="list-item-header" title="Spans that take more than 50% of the endpoint duration">
-        //             <strong>Span Bottleneck</strong>
-        //         </div>
-        //         <div class="list-item-content-description">The following spans are slowing request handling</div>
-        //         <div>
-        //             ${items.join('')}
-        //         </div>
-        //     </div>
-        //     <div class="list-item-right-area">
-        //         <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
-        //         <span class="insight-main-value" style="text-align:center;">Slow Spans</span>
-
-        //     </div>
-        // </div>`;
-
         const template = new InsightTemplateHtml({
-            title: "Span Bottleneck",
+            title: {
+                text:"Span Bottleneck",
+                tooltip: "Spans that take more than 50% of the endpoint duration"
+            },
             description: "The following spans are slowing request handling",
             icon: this._viewUris.image("bottleneck.svg"),
             body: items.join('')
@@ -319,29 +304,11 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
             </div>
         `;
         
-
-
-        // const html = `
-        // <div class="list-item">
-        //     <div class="list-item-content-area">
-        //         <div class="list-item-header" title="Repeating select query pattern suggests N-Plus-One">
-        //             <strong>Suspected N-Plus-1</strong>
-        //         </div>
-        //         <div class="list-item-content-description">Check the following locations:</div>
-        //         <div>
-        //             ${items.join('')}
-        //         </div>
-        //         ${statsHtml}
-
-        //     </div>
-        //     <div class="list-item-right-area">
-        //         <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("sql.png")}" width="32" height="32">
-        //         ${traceHtml}
-        //     </div>
-        // </div>`;
-
         const template = new InsightTemplateHtml({
-            title: "Suspected N-Plus-1",
+            title: {
+                text:"Suspected N-Plus-1",
+                tooltip: "Repeating select query pattern suggests N-Plus-One"
+            },
             description: "Check the following locations:",
             icon: this._viewUris.image("sql.png"),
             body: ` <div>
@@ -388,37 +355,15 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
         return `${(((value / compare)-1) * 100).toFixed(0)}%`;
     }
     public createListViewItem(codeObjectsInsight: SlowEndpointInsight): IListViewItem {
-        const tooltip = `
-        server processed 50% of requests in less than ${this.duration(codeObjectsInsight.endpointsMedian)}\n
-        server processed 25% of requests in higher than ${this.duration(codeObjectsInsight.endpointsP75)}`;
-        // const html = `
-        // <div class="list-item">
-        //     <div class="list-item-content-area">
-        //         <div class="list-item-header" title="${tooltip}"><strong>Slow Endpoint</strong></div>
-        //         <div title="${tooltip}"><span class="list-item-content-description" >On average requests are slower than other endpoints by</span> 
-        //         <span class="negative-value">${this.computePercentageDiff(codeObjectsInsight.median.raw, codeObjectsInsight.endpointsMedianOfMedians.raw)}</span></div>
-        
-        //     </div>
-        //     <div class="list-item-right-area">
-        //     <img class="insight-main-image" style="align-self:center;" src="${this.viewUris.image("slow.png")}" width="32" height="32">
-        //     <span class="insight-main-value">${this.duration(codeObjectsInsight.median)}</span>
-        // </div>
-        // </div>`;
-
-        //     <div class="grid-area">
-        //     <div title="endpoint processed 50% of requests in less than ${this.duration(codeObjectsInsight.median)}">
-        //         <strong>median</strong>: ${this.duration(codeObjectsInsight.median)}
-        //     </div>
-        //     <div title="endpoint processed 5% of requests in higher than ${this.duration(codeObjectsInsight.p95)}">
-        //         <strong>95th percentile</strong>: ${this.duration(codeObjectsInsight.p95)}
-        //     </div>
-        //     <div>
-        //         <strong>mean</strong>: ${this.duration(codeObjectsInsight.mean)}
-        //     </div>
-        // </div>
+        const tooltip = 
+        `server processed 50% of requests in less than ${this.duration(codeObjectsInsight.endpointsMedian)}\n`+
+        `server processed 25% of requests in higher than ${this.duration(codeObjectsInsight.endpointsP75)}`;
 
         const template = new InsightTemplateHtml({
-            title: "Slow Endpoint",
+            title: {
+                text:"Slow Endpoint",
+                tooltip: tooltip
+            },
             description: `<span>On average requests are slower than other endpoints by</span> 
                           <span class="negative-value">${this.computePercentageDiff(codeObjectsInsight.median.raw, codeObjectsInsight.endpointsMedianOfMedians.raw)}</span>`,
             icon: this.viewUris.image("snail.svg"),

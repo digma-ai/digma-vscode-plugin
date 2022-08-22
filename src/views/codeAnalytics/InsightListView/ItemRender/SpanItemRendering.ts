@@ -150,23 +150,7 @@ export class SpanItemHtmlRendering{
             <div class="span-durations-insight-body">
                 ${percentileHtmls.join('')}
             </div>`;
-        // const html = /*html*/ `
-        //     <div class="list-item span-durations-insight">
-        //         <div class="list-item-content-area">
-        //             <div class="list-item-header"><strong>Duration</strong></div>
-        //             <div class="percentiles-grid">
-        //                 ${percentileHtmls.join('')}
-        //             </div>                    
-        //         </div>     
 
-        //         <div class="list-item-right-area">
-        //             <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("histogram.png")}" width="32" height="32">
-        //             <div class="insight-main-value histogram-link link" data-span-name="${insight.span.name}" data-span-instrumentationlib="${insight.span.instrumentationLibrary}">
-        //               Histogram
-        //             </div>
-        //             ${traceHtml}   
-        //         </div>
-        //     </div>`;
         return new InsightTemplateHtml({
             title: "Duration",
             body: body,

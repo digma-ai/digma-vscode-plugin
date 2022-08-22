@@ -43,22 +43,6 @@ export class ErrorsListViewItemsCreator
                 );
             });
 
-            // const html = `
-            // <div class="list-item">
-            //     <div class="list-item-content-area">
-            //         <div class="list-item-header"><strong>Errors</strong></div>
-            //         <div class="list-item-content-description">${o.errorCount} Errors (${o.unhandledCount} unhandled ${o.unexpectedCount} unexpected)</div>
-            //         <div class="small-spacer"></div>
-            //         ${errorsHtml.join("")}
-            //     </div>
-
-            //     <div class="list-item-right-area">
-            //         <div class="expand">
-            //             <vscode-link class="expand" tab-id="tab-errors" href="#">Expand</vscode-link>
-            //         </div>
-            //     </div>
-            // </div>`;
-
             let groupId = undefined;
             if (CodeObjectId.isSpan(o.codeObjectId)) {
                 groupId = o.codeObjectId.split("$_$")[1]; //span name

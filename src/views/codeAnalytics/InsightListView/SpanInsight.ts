@@ -211,26 +211,11 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
                 </div>`);
         }
 
-        // const html = `
-        // <div class="list-item">
-        //     <div class="list-item-content-area">
-        //         <div class="list-item-header" title="Endpoints that this takes up more than 40% of their duration">
-        //             <strong>Bottleneck</strong>
-        //         </div>
-        //         <div class="list-item-content-description">The following trace sources spend a significant portion here:</div>
-        //         <div>
-        //             ${items.join('')}
-        //         </div>
-        //     </div>
-        //     <div class="list-item-right-area">
-        //         <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
-        //         <span class="insight-main-value" style="text-align:center;">Slow Point</span>
-
-        //     </div>
-        // </div>`;
-
         const template = new InsightTemplateHtml({
-            title: "Bottleneck",
+            title: {
+                text:"Bottleneck",
+                tooltip: "Endpoints that this takes up more than 40% of their duration"
+            },
             description: "The following trace sources spend a significant portion here:",
             icon: this._viewUris.image("bottleneck.png"),
             body: items.join('')
@@ -307,28 +292,11 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
             </div>
         `;
         
-        // const html = `
-        // <div class="list-item">
-        //     <div class="list-item-content-area">
-        //         <div class="list-item-header" title="Repeating select query pattern suggests N-Plus-One">
-        //             <strong>Suspected N-Plus-1</strong>
-        //         </div>
-        //         <div class="list-item-content-description">Check the following SELECT statement</div>
-        //         <div>
-        //             ${codeObjectsInsight.clientSpanName}
-        //         </div>
-        //         ${statsHtml}                            
-      
-        //     </div>
-        //     <div class="list-item-right-area">
-        //         <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("sql.png")}" width="32" height="32">
-        //         ${traceHtml}
-
-        //     </div>
-        // </div>`;
-
         const template = new InsightTemplateHtml({
-            title: "Suspected N-Plus-1",
+            title: {
+                text:"Suspected N-Plus-1",
+                tooltip: "Repeating select query pattern suggests N-Plus-One"
+            },
             description: "Check the following SELECT statement",
             icon: this._viewUris.image("sql.png"),
             body: `<div>
