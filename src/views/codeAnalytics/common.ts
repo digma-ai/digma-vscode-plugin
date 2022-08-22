@@ -84,7 +84,7 @@ export class HtmlHelper
     {
         return /*html*/ `
             <span
-                class="error-name ${link ? 'link' : '' } ellipsis-left"
+                class="error-name ${link ? 'link' : '' } left-ellipsis"
                 data-error-source-uid="${errorSourceUID}">${errorType}</span>
             ${HtmlHelper.getSourceCodeObject( errorSourceCodeObjectId)}
         `;

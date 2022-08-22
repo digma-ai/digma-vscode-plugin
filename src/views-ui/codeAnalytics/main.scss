@@ -29,12 +29,66 @@ vscode-panel-view {
 }
 
 .list-item {
-    padding: 3px;
-    display: flex;
+    padding: 3px 3px 3px 6px;
     background: var(--vscode-list-hoverBackground);
     margin-top: 6px;
-    border-radius: 2px;
     width: 100%;
+    position: relative;
+    display: flex;
+    font-size: var(--type-ramp-minus1-font-size);
+    box-sizing: border-box;
+    &.insight{
+        flex-direction: column;
+    }
+}
+
+.list-item::before {
+    background: var(--foreground);
+    content: " ";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    opacity: 0.07;
+    border-radius: 4px;
+}
+
+.list-item-top-area {
+    display: flex;
+    z-index: 2;
+}
+
+.list-item-header {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.list-item-icon {
+    padding: 2px 2px;
+}
+
+.list-item-body {
+    margin-top: 5px;
+    z-index: 2;
+}
+
+.list-item-buttons {
+    z-index: 2;
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 5px;
+}
+
+.list-item-button {
+    background: var(--vscode-sideBar-background);
+    border-radius: 3px;
+    padding: 1px 5px 2px 5px;
+    &:hover {
+        cursor: pointer;
+        background: #7676768f;
+    }
 }
 
 .summary-list-item {
@@ -50,6 +104,7 @@ vscode-panel-view {
     flex-direction: column;
     flex-grow: 1;
     overflow: auto;
+    z-index: 2;
 }
 
 .summary-list-item-header {
@@ -147,10 +202,6 @@ vscode-panel-view {
 
 .score-green {
     border: 2px solid #7dd87d;
-}
-
-.expand {
-    margin-top: auto;
 }
 
 .spacer {
@@ -408,7 +459,7 @@ vscode-panel-view {
 .group-item {
     display: flex;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 15px;
     width: 100%;
     .scope {
         margin-right: 5px;
@@ -444,11 +495,6 @@ vscode-panel-view {
     cursor: pointer;
 }
 
-.trace-external-link {
-    text-decoration: none;
-    margin-left: 0.2em;
-}
-
 #view-insights {
     .flow-row {
         margin-bottom: 2px;
@@ -466,21 +512,13 @@ vscode-panel-view {
             margin: 0 3px
         }
     }
-    .span-durations-insight {
-        .percentiles-grid {
-            display: grid;
-            justify-content: start;
-            grid-template-columns: auto auto auto 1fr;
-            column-gap: 10px;
-            row-gap: 5px;
-        }
-        .periodic-percentiles-grid {
-            display: grid;
-            justify-content: start;
-            grid-template-columns: auto auto auto auto 1fr;
-            column-gap: 10px;
-            row-gap: 5px;
-        }
+    .span-durations-insight-body {
+        display: grid;
+        justify-content: start;
+        grid-template-columns: auto auto auto 1fr;
+        column-gap: 10px;
+        row-gap: 5px;
+        
         .change {
             opacity: 0.7;
         }

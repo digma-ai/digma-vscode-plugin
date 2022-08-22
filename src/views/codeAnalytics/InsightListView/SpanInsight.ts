@@ -11,6 +11,7 @@ import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 
 export interface SpanUsagesInsight extends CodeObjectInsight
@@ -86,16 +87,13 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
             </div>`;
         });
 
-        const html = /*html*/ `
-            <div class="list-item span-usages-insight">
-                <div class="list-item-content-area">
-                    <div class="list-item-header"><strong>Top Usage</strong></div>
-                    <div>${usages.join('')}</div>
-                </div>
-            </div>`;
+        const template = new InsightTemplateHtml({
+            title: "Top Usage",
+            body: usages.join('')
+        })
 
         return {
-            getHtml: ()=> html, 
+            getHtml: ()=> template.renderHtml(), 
             sortIndex: 0, 
             groupId: insight.span
         };
@@ -156,7 +154,7 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
         let renderer = new SpanItemHtmlRendering(this._viewUris);
 
         return {
-            getHtml: ()=> renderer.spanDurationItemHtml(insight), 
+            getHtml: ()=> renderer.spanDurationItemHtml(insight).renderHtml(), 
             sortIndex: 0, 
             groupId: insight.span.name
         };
@@ -213,26 +211,33 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
                 </div>`);
         }
 
-        const html = `
-        <div class="list-item">
-            <div class="list-item-content-area">
-                <div class="list-item-header" title="Endpoints that this takes up more than 40% of their duration">
-                    <strong>Bottleneck</strong>
-                </div>
-                <div class="list-item-content-description">The following trace sources spend a significant portion here:</div>
-                <div>
-                    ${items.join('')}
-                </div>
-            </div>
-            <div class="list-item-right-area">
-                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
-                <span class="insight-main-value" style="text-align:center;">Slow Point</span>
+        // const html = `
+        // <div class="list-item">
+        //     <div class="list-item-content-area">
+        //         <div class="list-item-header" title="Endpoints that this takes up more than 40% of their duration">
+        //             <strong>Bottleneck</strong>
+        //         </div>
+        //         <div class="list-item-content-description">The following trace sources spend a significant portion here:</div>
+        //         <div>
+        //             ${items.join('')}
+        //         </div>
+        //     </div>
+        //     <div class="list-item-right-area">
+        //         <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("bottleneck.png")}" width="32" height="32">
+        //         <span class="insight-main-value" style="text-align:center;">Slow Point</span>
 
-            </div>
-        </div>`;
+        //     </div>
+        // </div>`;
+
+        const template = new InsightTemplateHtml({
+            title: "Bottleneck",
+            description: "The following trace sources spend a significant portion here:",
+            icon: this._viewUris.image("bottleneck.png"),
+            body: items.join('')
+        })
 
         return {
-            getHtml: () => html,
+            getHtml: () => template.renderHtml(),
             sortIndex: 0,
             groupId: codeObjectsInsight.span.name
         };
@@ -302,28 +307,38 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
             </div>
         `;
         
-        const html = `
-        <div class="list-item">
-            <div class="list-item-content-area">
-                <div class="list-item-header" title="Repeating select query pattern suggests N-Plus-One">
-                    <strong>Suspected N-Plus-1</strong>
-                </div>
-                <div class="list-item-content-description">Check the following SELECT statement</div>
-                <div>
-                    ${codeObjectsInsight.clientSpanName}
-                </div>
-                ${statsHtml}                            
+        // const html = `
+        // <div class="list-item">
+        //     <div class="list-item-content-area">
+        //         <div class="list-item-header" title="Repeating select query pattern suggests N-Plus-One">
+        //             <strong>Suspected N-Plus-1</strong>
+        //         </div>
+        //         <div class="list-item-content-description">Check the following SELECT statement</div>
+        //         <div>
+        //             ${codeObjectsInsight.clientSpanName}
+        //         </div>
+        //         ${statsHtml}                            
       
-            </div>
-            <div class="list-item-right-area">
-                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("sql.png")}" width="32" height="32">
-                ${traceHtml}
+        //     </div>
+        //     <div class="list-item-right-area">
+        //         <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("sql.png")}" width="32" height="32">
+        //         ${traceHtml}
 
-            </div>
-        </div>`;
+        //     </div>
+        // </div>`;
+
+        const template = new InsightTemplateHtml({
+            title: "Suspected N-Plus-1",
+            description: "Check the following SELECT statement",
+            icon: this._viewUris.image("sql.png"),
+            body: `<div>
+                        ${codeObjectsInsight.clientSpanName}
+                    </div>
+                    ${statsHtml}`
+        });
 
         return {
-            getHtml: () => html,
+            getHtml: () => template.renderHtml(),
             sortIndex: 0,
             groupId: codeObjectsInsight.span.name
         };
