@@ -34,7 +34,7 @@ export class InsightTemplateHtml
             : ``;
         
         let iconHtml = this.data.icon
-            ? `<img class="list-item-icon" src="${this.data.icon}" width="18" height="18">`
+            ? `<img class="list-item-icon" src="${this.data.icon}" width="15" height="15">`
             : ``;
         
         let title = "";
