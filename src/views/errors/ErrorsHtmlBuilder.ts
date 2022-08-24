@@ -14,10 +14,11 @@ export class ErrorsHtmlBuilder
             const html = /*html*/ `
             <div class="list-item">
                     <div class="list-item-content-area">
-                        <div class="list-item-header flex-v-center">
+                        <div class="flex-v-center">
                             ${HtmlHelper.getErrorName( error.name, error.sourceCodeObjectId, error.uid)}
                         </div>
                         <div class="error-characteristic">${error.characteristic}</div>
+                        <div class="flex-stretch"></div>
                         <div class="flex-row">
                             ${ErrorsHtmlBuilder.getErrorStartEndTime(error)}
                         </div>

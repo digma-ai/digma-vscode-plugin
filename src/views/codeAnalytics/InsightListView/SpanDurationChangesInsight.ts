@@ -48,7 +48,7 @@ export class SpanDurationChangesInsightCreator implements IInsightListViewItemsC
                 let html = ` 
                 <div class="summary-list-item">
                     <div class="list-item-content-area">
-                        <div class="list-item-header span-name flex-v-center ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
+                        <div class="span-name flex-v-center ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">
                             ${spanChange.span.name}
                             ${unverified}
                         </div>
