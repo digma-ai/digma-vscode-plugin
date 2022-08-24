@@ -7,7 +7,7 @@ export function renderTraceLink(traceId: string | undefined, spanName:string) : 
         if (Settings.jaegerMode.value && Settings.jaegerMode.value==="External"){
             traceHtml=`
         
-            <a class="trace-external-link link" href="${Settings.jaegerAddress.value}/trace/${traceId}" >
+            <a class="list-item-button" href="${Settings.jaegerAddress.value}/trace/${traceId}" >
             Trace
             </a> 
             `;
@@ -15,7 +15,7 @@ export function renderTraceLink(traceId: string | undefined, spanName:string) : 
         else{
 
             traceHtml=`
-            <span style="padding-left: 10px;" class="trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${spanName}" data-trace-id="${traceId}" >
+            <span class="trace-link list-item-button" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${spanName}" data-trace-id="${traceId}" >
             Trace
             </span> 
             `;

@@ -18,7 +18,7 @@ export class TopErrorsInsightCreator implements IInsightListViewItemsCreator {
 
            let html = ` <div class="summary-list-item">
             <div class="list-item-content-area">
-                <div class="list-item-header flex-v-center">
+                <div class="flex-v-center">
                     ${HtmlHelper.getErrorName( err.name, err.sourceCodeObjectId, err.uid)}
                     <span class="error-characteristic-tag">${this.getCharacteric(err)}</span>
 

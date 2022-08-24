@@ -1,9 +1,11 @@
 import moment = require("moment");
+import { title } from "process";
 import { decimal } from "vscode-languageclient";
 import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
 import { SpanDurationsInsight } from "../SpanInsight";
+import { InsightTemplateHtml } from "./insightTemplateHtml";
 
 export class SpanItemHtmlRendering{
 
@@ -29,18 +31,12 @@ export class SpanItemHtmlRendering{
      }
     
     
-    private getStillCalculatingHtml():string{
-        return   /*html*/ `
-        <div class="list-item span-durations-insight">
-            <div class="list-item-content-area">
-                <div class="list-item-header"><strong>Duration</strong></div>
-                <div class="list-item-content-description">Waiting for more data.</div>
-            </div>     
-
-            <div class="list-item-right-area">
-                <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("waiting-data.png")}" width="32" height="32">
-            </div>
-        </div>`;
+    private getStillCalculatingHtml():InsightTemplateHtml{
+        return new InsightTemplateHtml({
+            title: "Duration",
+            description: "Waiting for more data.",
+            icon: this._viewUris.image("sand-watch.svg")
+        });
     }
 
 
@@ -48,7 +44,7 @@ export class SpanItemHtmlRendering{
 
         return insight.periodicPercentiles.filter(x=>x.percentile===percentile && period===period).firstOrDefault()?.currentDuration.value;
     }
-    public spanDurationItemHtml(insight: SpanDurationsInsight): string{
+    public spanDurationItemHtml(insight: SpanDurationsInsight): InsightTemplateHtml{
         
         const percentileHtmls = [];
         if (insight.percentiles.length===0){
@@ -133,38 +129,34 @@ export class SpanItemHtmlRendering{
         </div>
         `;
 
-        let traceHtml = ``;
+        const buttons = [];
+        buttons.push(/*html*/ `
+            <div class="insight-main-value histogram-link list-item-button" data-span-name="${insight.span.name}" data-span-instrumentationlib="${insight.span.instrumentationLibrary}">
+                Histogram
+            </div>`);
+
         if (Settings.jaegerAddress.value){
 
             const traceLabelsAtt = `data-trace-label="${traceLabels.join(",")}"`;
             const traceIdAtt = `data-trace-id="${traceIds.join(",")}"`;
 
-            traceHtml=`
-            <span  class="insight-main-value trace-link link" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span.name}" 
-                ${traceLabelsAtt} ${traceIdAtt} >
-            Compare
-            </span> 
-            `;
-
+            buttons.push(/*html*/ `
+                <span  class="insight-main-value trace-link list-item-button" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span.name}" 
+                    ${traceLabelsAtt} ${traceIdAtt} >
+                Compare
+                </span>`);
         }
-        const html = /*html*/ `
-            <div class="list-item span-durations-insight">
-                <div class="list-item-content-area">
-                    <div class="list-item-header"><strong>Duration</strong></div>
-                    <div class="percentiles-grid">
-                        ${percentileHtmls.join('')}
-                    </div>                    
-                </div>     
-
-                <div class="list-item-right-area">
-                    <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image("histogram.png")}" width="32" height="32">
-                    <div class="insight-main-value histogram-link link" data-span-name="${insight.span.name}" data-span-instrumentationlib="${insight.span.instrumentationLibrary}">
-                      Histogram
-                    </div>
-                    ${traceHtml}   
-                </div>
+        const body = /*html*/ `
+            <div class="span-durations-insight-body">
+                ${percentileHtmls.join('')}
             </div>`;
-        return html;
+
+        return new InsightTemplateHtml({
+            title: "Duration",
+            body: body,
+            icon: this._viewUris.image("duration.svg"),
+            buttons: buttons
+        });
     }
 
 }

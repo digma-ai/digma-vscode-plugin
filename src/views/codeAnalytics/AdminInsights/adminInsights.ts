@@ -1,26 +1,19 @@
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
+import { InsightTemplateHtml } from "../InsightListView/ItemRender/insightTemplateHtml";
 
 export class UnknownInsightInsight implements IListViewItemBase {
     constructor(private viewUris: WebViewUris) {
     }
     sortIndex: number | undefined;
     getHtml(): string | undefined {
-
-        return `
-        <div class="list-item">
-        <div class="list-item-content-area">
-            <div class="list-item-header"><strong>The Digma Plugin probably requires an update</strong></div>
-            <div class="list-item-content-description">We're getting wicked new insights but this plugin just ain't up to date. Please update the plugin via your vscode Settings.</div>
-        </div>
-        <div class="list-item-right-area">
-            <img class="insight-main-image" style="align-self:center;" src="${this.viewUris.image("update-required.png")}" width="32" height="32">
-        </div>
-    </div>
-    `;
+        return new InsightTemplateHtml({
+            title: "The Digma Plugin probably requires an update",
+            description: "We're getting wicked new insights but this plugin just ain't up to date. Please update the plugin via your vscode Settings.",
+            icon: this.viewUris.image("update-required.png")
+        }).renderHtml();
     }
     groupId: string | undefined;
-
 }
 
 export class CannotConnectToDigmaInsight implements IListViewItemBase {
