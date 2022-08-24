@@ -28,10 +28,10 @@ import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
-import { AnaliticsCodeLens } from "../../analyticsCodeLens";
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
 import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
+import { AnaliticsCodeLens } from "../../analyticsCodeLens";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -395,6 +395,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             }
             
             this._activeTab.onRefreshRequested(this._currentCodeObject);
+            this._envSelectStatusBar.refreshEnvironment();
             
         }
     }
