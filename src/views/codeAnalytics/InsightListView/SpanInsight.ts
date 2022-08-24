@@ -302,7 +302,8 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
             body: `<div>
                         ${codeObjectsInsight.clientSpanName}
                     </div>
-                    ${statsHtml}`
+                    ${statsHtml}`,
+            buttons: [traceHtml]
         });
 
         return {
