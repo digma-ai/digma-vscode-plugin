@@ -1,3 +1,4 @@
+import { SpanLocationInfo } from "../../../services/languages/extractors";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
 import { InsightTemplateHtml } from "../InsightListView/ItemRender/insightTemplateHtml";
@@ -14,6 +15,21 @@ export class UnknownInsightInsight implements IListViewItemBase {
         }).renderHtml();
     }
     groupId: string | undefined;
+}
+
+export class DuplicateSpanInsight implements IListViewItemBase {
+    constructor(private span: SpanLocationInfo, private viewUris: WebViewUris) {
+    }
+
+    sortIndex: number | undefined;
+    getHtml(): string | undefined {
+        return new InsightTemplateHtml({
+            title: "Duplicate span detected",
+            description: "Two spans have the exact same identifier, please change the name to avoid getting the wires crossed...",
+            icon: this.viewUris.image("update-required.png")
+        }).renderHtml();
+    }
+    groupId: string | undefined = this.span.name;
 }
 
 export class CannotConnectToDigmaInsight implements IListViewItemBase {

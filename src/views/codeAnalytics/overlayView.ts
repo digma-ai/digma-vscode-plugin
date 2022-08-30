@@ -54,7 +54,7 @@ export class OverlayView
     public async showCodeSelectionNotFoundMessage(docInfo: DocumentInfo){
         const links = [];
 
-        const codeObjects = docInfo.methods.flatMap(x=>[x.idWithType].concat(x.relatedCodeObjects.map(r=>r.idWithType)));
+        const codeObjects = docInfo.methods.flatMap(x=>[x.idWithType].concat(x.relatedCodeObjects.flatMap(r=>r.idsWithType)));
         var usageStatuses =  await this._analyticsProvider.getUsageStatus(codeObjects);
 
 

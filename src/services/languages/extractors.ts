@@ -16,7 +16,8 @@ export interface SymbolInfo {
 
 export interface CodeObjectInfo {
     id: string;
-    get idWithType(): string;
+    get ids(): string[];
+    get idsWithType(): string[];
 }
 
 export interface CodeObjectLocationInfo extends CodeObjectInfo{
@@ -32,18 +33,27 @@ export class EndpointInfo implements CodeObjectLocationInfo {
         public path: string,
         public range: vscode.Range,
         public documentUri: vscode.Uri) { }
-    get idWithType() {
-        return 'endpoint:' + this.id;
-    }
+        get idsWithType() {
+            return ['endpoint:' + this.id];
+        }
+        get ids() {
+            return [ this.id];
+        }
 }
 export class SpanLocationInfo implements CodeObjectLocationInfo {
     constructor(
         public id: string,
         public name: string,
+        public aliases: string[],
+        public duplicates: SpanLocationInfo[],
         public range: vscode.Range,
         public documentUri: vscode.Uri) { }
-    get idWithType() {
-        return 'span:' + this.id;
+    get idsWithType() {
+        return this.aliases.map(x=> 'span:' + x);
+    }
+
+    get ids() {
+        return this.aliases.map(x=> x);
     }
 }
 

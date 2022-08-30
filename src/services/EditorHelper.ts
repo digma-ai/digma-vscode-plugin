@@ -182,6 +182,12 @@ export class EditorHelper {
                 
                 return workspaceUri;
             }
+            else{
+                const file = await (await vscode.workspace.findFiles(modulePhysicalPath)).firstOrDefault();
+                return file;
+            }
+
+
         }
 
        

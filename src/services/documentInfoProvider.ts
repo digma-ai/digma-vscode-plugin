@@ -1,6 +1,6 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AnalyticsProvider, CodeObjectSummary, EndpointCodeObjectSummary, EndpointSchema, MethodCodeObjectSummary, SpanCodeObjectSummary } from './analyticsProvider';
+import { AnalyticsProvider, CodeObjectSummary, CodeObjectUsageStatus, EndpointCodeObjectSummary, EndpointSchema, MethodCodeObjectSummary, SpanCodeObjectSummary, UsageStatusResults } from './analyticsProvider';
 import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
@@ -86,7 +86,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                     if (codeLocations){
                         codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method && x.name===match);
                         if (codeLocations.length===1){
-                            return new SpanLocationInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, codeLocations[0].location.range, codeLocations[0].location.uri);
+                            return new SpanLocationInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, [instrumentationInfo.spanName!],[], codeLocations[0].location.range, codeLocations[0].location.uri);
                         }
                     }
                 }
@@ -102,7 +102,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 if (doc){
                     const docInfo = await this.getDocumentInfo(doc);
                     if (docInfo){
-                        let spanInfos = docInfo.spans.filter(span => span.name===instrumentationInfo.spanName);
+                        let spanInfos = docInfo.spans.filter(span => span.aliases.any(x=> x===instrumentationInfo.spanName));
                         return spanInfos.firstOrDefault(x=>x!== undefined);
 
                     }
@@ -189,11 +189,12 @@ export class DocumentInfoProvider implements vscode.Disposable
                 let methodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
 
                 let codeObjectIds = methodInfos.flatMap(s => s.idsWithType)
-                        .concat(endpoints.map(e => e.idWithType))
-                        .concat(spans.map(s => s.idWithType));
+                        .concat(endpoints.flatMap(e => e.idsWithType))
+                        .concat(spans.flatMap(s => s.idsWithType));
 
                 const errorSummaries = await this.analyticsProvider.getErrorSummary(codeObjectIds,false);
                 const insightsResult = await this.analyticsProvider.getInsights(codeObjectIds,false );
+                const usageData = await this.analyticsProvider.getUsageStatus(codeObjectIds );
 
                 //Get endpoints discovered via server that don't exist in document info
                 const endPointsDiscoveredViaServer = insightsResult
@@ -242,19 +243,26 @@ export class DocumentInfoProvider implements vscode.Disposable
                         if (relatedMethod){
                             spans.push(new SpanLocationInfo(
                                 span.codeObjectId,
-                                span.codeObjectId,                                
+                                span.codeObjectId,  
+                                [span.codeObjectId], 
+                                [],                             
                                 relatedMethod.range
                                 ,relatedMethod.documentUri));
     
                         }
                     }
                 }
+               
                 const newMethodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolInfos, tokens, spans, endpoints);
                 methodInfos=newMethodInfos;
                 const insights = new CodeObjectInsightsAccessor(insightsResult);
-
                 //const lines:LineInfo[] = [];
-
+                
+                for (const span of spans){
+                    span.duplicates=spans.filter(x=>span!=x && span.id==x.id && 
+                        (span.documentUri!=x.documentUri || span.range!=x.range));
+                }
+                
                 const lines = this.createLineInfos(doc, errorSummaries, methodInfos,this.workspaceState);
                 latestVersionInfo.value = {
                     insights,
@@ -263,7 +271,8 @@ export class DocumentInfoProvider implements vscode.Disposable
                     tokens,
                     endpoints,
                     spans,
-                    uri: doc.uri
+                    uri: doc.uri,
+                    usageData: new UsageDataAccessor(usageData)
                 };
                 Logger.trace(`Finished building DocumentInfo for "${docRelativePath}" v${doc.version}`);
             }
@@ -275,7 +284,13 @@ export class DocumentInfoProvider implements vscode.Disposable
                     tokens: [],
                     endpoints: [],
                     spans: [],
-                    uri: doc.uri
+                    uri: doc.uri,
+                    usageData: new UsageDataAccessor({
+                        codeObjectStatuses: [],
+                        environmentStatuses: []
+                    
+                    })
+
 
                 };
                 Logger.error(`Failed to build DocumentInfo for ${doc.uri} v${doc.version}`, e);
@@ -429,6 +444,24 @@ class DocumentInfoContainer
     }
 }
 
+export class UsageDataAccessor{
+
+    public getForCodeObjectIds(codeObjectIds:string[]) : UsageStatusResults{
+        return {
+            codeObjectStatuses: this._state
+                .codeObjectStatuses.filter(x=>codeObjectIds.any(y=>y==x.codeObjectId)),
+            environmentStatuses: this._state.environmentStatuses  
+        };
+
+    }
+    public getAll(){
+        return this._state;
+    }
+    constructor(private _state: UsageStatusResults){
+
+    }
+ 
+}
 export class ElementsByEnv<T>{
     _byEnvDict : Dictionary<string, T[]> = {};
     constructor(private _state: WorkspaceState){
@@ -474,6 +507,8 @@ export interface DocumentInfo
     endpoints: EndpointInfo[];
     spans: SpanLocationInfo[];
     uri: vscode.Uri;
+    usageData: UsageDataAccessor;
+
 }
 export class CodeObjectSummaryAccessor{
     constructor(private _codeObejctSummeries: CodeObjectSummary[]){}
@@ -546,7 +581,7 @@ export class CodeObjectInsightsAccessor{
 
     public  forMethod(methodInfo: MethodInfo, environment: string|undefined){
         const codeObjectsIds = methodInfo.aliases
-             .concat(methodInfo.relatedCodeObjects.map(r => r.id));
+             .concat(methodInfo.relatedCodeObjects.flatMap(r => r.ids));
         
         let insights = this._codeObjectInsights.filter(x=>codeObjectsIds.any(o=> o==x.codeObjectId));
         if (environment){
@@ -591,6 +626,10 @@ export class MethodInfo implements CodeObjectLocationInfo
 
     get idsWithType(): string[] {
         return this.aliases.map(x=> 'method:'+x);
+    }
+
+    get ids(): string[] {
+        return this.aliases.map(x=> x);
     }
 
     

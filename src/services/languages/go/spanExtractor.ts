@@ -183,6 +183,8 @@ export class GoSpanExtractor implements ISpanExtractor {
                     results.push(new SpanLocationInfo(
                         instrumentationLibrary + '$_$' + spanName,
                         spanName,
+                        [spanName],
+                        [],
                         token.range,
                         document.uri));
 

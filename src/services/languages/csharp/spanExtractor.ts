@@ -82,6 +82,8 @@ export class CSharpSpanExtractor implements ISpanExtractor {
                 results.push(new SpanLocationInfo(
                     instrumentationLibrary + '$_$' + spanName,
                     spanName,
+                    [spanName],
+                    [],
                     spanNameToken.range,
                     document.uri));
 

@@ -217,7 +217,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
                 tooltip: "Endpoints that this takes up more than 40% of their duration"
             },
             description: "The following trace sources spend a significant portion here:",
-            icon: this._viewUris.image("bottleneck.png"),
+            icon: this._viewUris.image("bottleneck.svg"),
             body: items.join('')
         })
 
