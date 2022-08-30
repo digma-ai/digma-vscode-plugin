@@ -581,7 +581,7 @@ export class CodeObjectInsightsAccessor{
 
     public  forMethod(methodInfo: MethodInfo, environment: string|undefined){
         const codeObjectsIds = methodInfo.aliases
-             .concat(methodInfo.relatedCodeObjects.map(r => r.id));
+             .concat(methodInfo.relatedCodeObjects.flatMap(r => r.ids));
         
         let insights = this._codeObjectInsights.filter(x=>codeObjectsIds.any(o=> o==x.codeObjectId));
         if (environment){
@@ -626,6 +626,10 @@ export class MethodInfo implements CodeObjectLocationInfo
 
     get idsWithType(): string[] {
         return this.aliases.map(x=> 'method:'+x);
+    }
+
+    get ids(): string[] {
+        return this.aliases.map(x=> x);
     }
 
     
