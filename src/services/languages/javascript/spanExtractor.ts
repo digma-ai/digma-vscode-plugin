@@ -80,6 +80,8 @@ export class JSSpanExtractor implements ISpanExtractor {
                 results.push(new SpanLocationInfo(
                     instrumentationLibrary + '$_$' + spanName,
                     spanName,
+                    [spanName],
+                    [],
                     startSpanToken.range,
                     document.uri));
 

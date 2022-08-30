@@ -20,6 +20,7 @@ import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
+import { DuplicateSpanInsight } from "./AdminInsights/adminInsights";
 
 
 
@@ -60,6 +61,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.clearSpanLabel();
         let responseItems: any [] | undefined = undefined;
         let usageResults: UsageStatusResults;
+        let duplicateSpansItems : DuplicateSpanInsight[]=[];
         try {
             const editor = vscode.window.activeTextEditor;
             if(!editor) {
@@ -79,7 +81,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             
             const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
             const codeObjectsIds = methodInfo.idsWithType
-                .concat(methodInfo.relatedCodeObjects.map(r => r.idWithType));
+                .concat(methodInfo.relatedCodeObjects.flatMap(r => r.idsWithType));
             
             
             Logger.info("Insight codeobjectIds: "+codeObjectsIds);
@@ -100,7 +102,17 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 responseItems=responseItems.filter(x=>x.type!=='SpanEndpointBottleneck');
             }
 
-            usageResults = await this._analyticsProvider.getUsageStatus(codeObjectsIds);
+            var relevantSpans = docInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
+            var duplicates = relevantSpans.filter(x=>x.duplicates.length>0);
+            for (const duplicate of duplicates){
+                duplicateSpansItems.push(new DuplicateSpanInsight(duplicate, this._viewUris));
+                responseItems=responseItems.filter(x=>x.codeObjectId!=duplicate.id);
+
+
+            }
+      
+
+            usageResults = docInfo.usageData.getForCodeObjectIds(codeObjectsIds);
             if (!this._workspaceState.environment && 
                 (usageResults.codeObjectStatuses.length>0 || usageResults.environmentStatuses.length>0) ){
                     let html = await this._noEnvironmentSelectedMessage.showNoEnvironmentSelectedMessage(usageResults);
@@ -124,18 +136,20 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             let groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults.codeObjectStatuses);
             groupItems = groupItems.filter((item,index)=> groupItems.findIndex(x=>x.groupId===item.groupId) === index);
           
-            const listViewItems = await this._listViewItemsCreator.create( responseItems);
+            let listViewItems = await this._listViewItemsCreator.create( responseItems);
+            listViewItems=listViewItems.concat(duplicateSpansItems);
             const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._viewUris, this._workspaceState);
             const groupRenderer = new InsightItemGroupRendererFactory(new EmptyGroupItemTemplate(this._viewUris,this._workspaceState));
             
-            const html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
+            let html = codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults) + new ListViewRender(listViewItems, groupItems, groupRenderer).getHtml();
         
-            if(html)
+            if(listViewItems.length>0)
             {
                 this.updateListView(html);
             }
             else{
-                this.updateListView(HtmlHelper.getInfoMessage("No insights about this code object yet."));
+                html+=HtmlHelper.getInfoMessage("No insights about this code object yet.")
+                this.updateListView(html);
             }
         }
         catch(e)

@@ -91,15 +91,19 @@ export class PythonSpanExtractor implements ISpanExtractor {
             else{
                 instLibraryOptions.push(tracerName);
             }
-            //Add the unrooted form
-            for (let i=0;i<instLibraryOptions.length;i++){
+
+            if (instLibraryOptions.length>0){
 
                 results.push(new SpanLocationInfo(
-                    instLibraryOptions[i] + '$_$' + spanName,
+                    instLibraryOptions[0] + '$_$' + spanName,
                     spanName,
+                    instLibraryOptions.map(x=>x + '$_$' + spanName),
+                    [],
                     token.range,
                     document.uri));
+
             }
+            
 
         }
 

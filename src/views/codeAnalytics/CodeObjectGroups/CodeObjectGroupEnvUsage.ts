@@ -166,9 +166,9 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
             return '';
         }
 
-        if (usageResults.codeObjectStatuses.length===0){
-            return '';
-        }
+        // if (usageResults.codeObjectStatuses.length===0){
+        //     return '';
+        // }
 
         return `
         <div class="codeobj-environment-usage-group">

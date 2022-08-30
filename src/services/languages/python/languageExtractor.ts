@@ -31,7 +31,7 @@ export class PythonLanguageExtractor implements ILanguageExtractor
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
         return [
-            new FastapiEndpointExtractor()
+            
         ];
     }
 
