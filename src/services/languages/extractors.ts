@@ -48,12 +48,16 @@ export class SpanLocationInfo implements CodeObjectLocationInfo {
         public duplicates: SpanLocationInfo[],
         public range: vscode.Range,
         public documentUri: vscode.Uri) { }
+
     get idsWithType() {
-        return this.aliases.map(x=> 'span:' + x);
+        return this.ids.map(x=> 'span:' + x);
     }
 
     get ids() {
-        return this.aliases.map(x=> x);
+        return [
+            this.id,
+            ...this.aliases,
+        ];
     }
 }
 
