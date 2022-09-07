@@ -620,16 +620,20 @@ export class MethodInfo implements CodeObjectLocationInfo
         public aliases: string[],
         public relatedCodeObjects: CodeObjectLocationInfo[],
         public documentUri: vscode.Uri){}
+
     get idWithType(): string {
-        return 'method:'+this.id;
+        return 'method:' + this.id;
     }
 
     get idsWithType(): string[] {
-        return this.aliases.map(x=> 'method:'+x);
+        return this.ids.map(x=> 'method:' + x);
     }
 
     get ids(): string[] {
-        return this.aliases.map(x=> x);
+        return [
+            this.id,
+            ...this.aliases,
+        ];
     }
 
     
