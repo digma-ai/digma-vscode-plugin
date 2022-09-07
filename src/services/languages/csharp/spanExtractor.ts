@@ -96,9 +96,6 @@ export class CSharpSpanExtractor implements ISpanExtractor {
     }
 
     private isCallToStartActivity(tokens: Token[], i: number) {
-        const activityToken = tokens[i + 0];
-        const isActivity = (activityToken.type === TokenType.field || activityToken.type === TokenType.variable) && activityToken.text === 'Activity';
-
         const dotToken = tokens[i + 1];
         const isDot = dotToken.type === TokenType.operator && dotToken.text === '.';
 
@@ -108,7 +105,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
         const openParensToken = tokens[i + 3];
         const isOpenParens = openParensToken.type === TokenType.punctuation && openParensToken.text === '(';
 
-        const isMatch = isActivity && isDot && isStartActivity && isOpenParens;
+        const isMatch = isDot && isStartActivity && isOpenParens;
         return isMatch;
     }
 
