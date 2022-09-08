@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
-import { CodeInspector } from '../../codeInspector';
+import { CodeInspector, Definition } from '../../codeInspector';
 import { Logger } from '../../logger';
 import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from "../extractors";
 import { Token, TokenType } from '../tokens';
@@ -9,6 +9,48 @@ import { SymbolProvider } from './../symbolProvider';
 
 export class CSharpSpanExtractor implements ISpanExtractor {
     constructor(private _codeInspector: CodeInspector) {}
+
+    private activitySourceVarTokenTypes = [TokenType.variable, TokenType.field];
+
+
+    private async getDeclaration(
+        usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position,
+    ): Promise<Definition | undefined> {
+        let results: any[]  = await vscode.commands.executeCommand("vscode.executeDefinitionProvider",usageDocument.uri, usagePosition);
+        if(!results?.length || !results[0].uri || !results[0].range){
+            return;
+        }
+
+        const location = <vscode.Location>results[0];
+        const document = await vscode.workspace.openTextDocument(location.uri);
+        if(!document){
+            return;
+        }
+
+        return {
+            document,
+            location,
+        };
+    }
+
+    private async getTypeNameFromSymbolProvider(usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position, symbolProvider: SymbolProvider): Promise<string | undefined> {
+            
+            const definition = await this.getDeclaration(usageDocument, usagePosition);
+            if(!definition){
+                return;
+            }
+            
+            const tokens = await symbolProvider.getTokens(definition.document);
+
+            const traceVarTokenIndex = tokens.findIndex(x => x.range.intersection(definition.location.range));
+            if (traceVarTokenIndex < 1) {
+                return;
+            }
+            const traceDefToken = tokens[traceVarTokenIndex - 1];
+            return traceDefToken.text;
+    }
 
     async extractSpans(
         document: TextDocument,
@@ -33,11 +75,22 @@ export class CSharpSpanExtractor implements ISpanExtractor {
             }
 
             for (let i = funcStartTokenIndex; i < funcEndTokenIndex-3; i++) {
+                //case: activitySource.StartActivity()
                 const isMatch = this.isCallToStartActivity(tokens, i);
                 if(!isMatch) {
                     continue;
                 }
-    
+
+                const activitySourceVarToken = tokens[i];
+                if (!this.activitySourceVarTokenTypes.includes(activitySourceVarToken.type)) {
+                    continue;
+                }
+                //case: ActivitySource activitySource = new("SomeClassName")
+                const activitySourceTypeName = await this.getTypeNameFromSymbolProvider(document, activitySourceVarToken.range.start, symbolProvider);
+                if (activitySourceTypeName !== "ActivitySource") {
+                    continue;
+                }
+
                 const startIndex = i + 3;
                 const endIndex = this.getEndOfMethodCall(tokens, startIndex);
                 if(!endIndex) {
