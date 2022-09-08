@@ -10,7 +10,7 @@ import { SymbolProvider } from './../symbolProvider';
 export class CSharpSpanExtractor implements ISpanExtractor {
     constructor(private _codeInspector: CodeInspector) {}
 
-    private activitySourceVarTokenTypes = [TokenType.variable, TokenType.field];
+    private activitySourceVarTokenTypes = [TokenType.variable, TokenType.field, TokenType.local];
 
 
     private async getDeclaration(
@@ -34,14 +34,14 @@ export class CSharpSpanExtractor implements ISpanExtractor {
         };
     }
 
-    private async getTypeNameFromSymbolProvider(usageDocument: vscode.TextDocument,
+    private async getTypeName(usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position, symbolProvider: SymbolProvider): Promise<string | undefined> {
-            
+
             const definition = await this.getDeclaration(usageDocument, usagePosition);
             if(!definition){
                 return;
             }
-            
+
             const tokens = await symbolProvider.getTokens(definition.document);
 
             const traceVarTokenIndex = tokens.findIndex(x => x.range.intersection(definition.location.range));
@@ -86,7 +86,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
                     continue;
                 }
                 //case: ActivitySource activitySource = new("SomeClassName")
-                const activitySourceTypeName = await this.getTypeNameFromSymbolProvider(document, activitySourceVarToken.range.start, symbolProvider);
+                const activitySourceTypeName = await this.getTypeName(document, activitySourceVarToken.range.start, symbolProvider);
                 if (activitySourceTypeName !== "ActivitySource") {
                     continue;
                 }

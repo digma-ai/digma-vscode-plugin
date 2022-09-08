@@ -22,6 +22,7 @@ export enum TokenType {
     function = 'function',
     method = 'method',
     property = 'property',
+    local = 'local', // CSharp local variable
     variable = 'variable',
     parameter = 'parameter',
     module = 'module',
