@@ -31,7 +31,6 @@ export class JSMethodExtractor implements IMethodExtractor {
         //relative = `${path.basename(packageFolderParent)}/${relative}`;
         relative = `${packageName}:${relative}`;
         return this.extractFunctions(document, relative, '', docSymbols, tokens);
-
     }
 
     private async getPackageName(packageFile: vscode.Uri): Promise<string | undefined> {
@@ -64,7 +63,12 @@ export class JSMethodExtractor implements IMethodExtractor {
             return `${line}_${character}`;
         };
         // both declaration function assignment and function call
-        tokens.filter(o => o.type === TokenType.function).map(o => functionMap[getKey(o.range.start.line, o.range.start.character)] = o);
+        tokens
+            .filter(token => token.type === TokenType.function)
+            .forEach(token => {
+                const key = getKey(token.range.start.line, token.range.start.character);
+                functionMap[key] = token;
+            });
 
         for (const symbol of symbols) {
             let symPath = (parentSymPath ? parentSymPath + '.' : '') + symbol.name;
@@ -97,7 +101,8 @@ export class JSMethodExtractor implements IMethodExtractor {
                 });
             }
             if (hasChildren) {
-                symbolInfos = symbolInfos.concat(this.extractFunctions(document, filePath, symPath, symbol.children!, tokens));
+                const childFunctions = this.extractFunctions(document, filePath, symPath, symbol.children!, tokens);
+                symbolInfos = symbolInfos.concat(childFunctions);
             }
         }
 
