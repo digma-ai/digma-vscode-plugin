@@ -66,6 +66,7 @@ export class CodeInspector {
             }
             return;       
     }
+
     private async getType(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
@@ -125,6 +126,30 @@ export class CodeInspector {
         const document = await vscode.workspace.openTextDocument(location.uri);
         if(!document)
             return;
+
+        return {
+            document,
+            location,
+        };
+    }
+
+    public async getDeclaration(
+        usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position,
+    ): Promise<Definition | undefined> {
+        let results: any[]  = await vscode.commands.executeCommand("vscode.executeDefinitionProvider",usageDocument.uri, usagePosition);
+        if(!results?.length){
+            return;
+        }
+        if(!results[0].uri || !results[0].range){
+            return;
+        }
+
+        const location = <vscode.Location>results[0];
+        const document = await vscode.workspace.openTextDocument(location.uri);
+        if(!document){
+            return;
+        }
 
         return {
             document,

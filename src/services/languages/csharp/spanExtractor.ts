@@ -12,32 +12,10 @@ export class CSharpSpanExtractor implements ISpanExtractor {
 
     private activitySourceVarTokenTypes = [TokenType.variable, TokenType.field, TokenType.local];
 
-
-    private async getDeclaration(
-        usageDocument: vscode.TextDocument,
-        usagePosition: vscode.Position,
-    ): Promise<Definition | undefined> {
-        let results: any[]  = await vscode.commands.executeCommand("vscode.executeDefinitionProvider",usageDocument.uri, usagePosition);
-        if(!results?.length || !results[0].uri || !results[0].range){
-            return;
-        }
-
-        const location = <vscode.Location>results[0];
-        const document = await vscode.workspace.openTextDocument(location.uri);
-        if(!document){
-            return;
-        }
-
-        return {
-            document,
-            location,
-        };
-    }
-
     private async getTypeName(usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position, symbolProvider: SymbolProvider): Promise<string | undefined> {
 
-            const definition = await this.getDeclaration(usageDocument, usagePosition);
+            const definition = await this._codeInspector.getDeclaration(usageDocument, usagePosition);
             if(!definition){
                 return;
             }
