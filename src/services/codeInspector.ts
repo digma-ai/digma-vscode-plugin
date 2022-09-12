@@ -21,11 +21,11 @@ export class CodeInspector {
         documentInfoProvider: DocumentInfoProvider,
     ): Promise<MethodInfo | undefined> {
         const definition = await this.getDefinition(usageDocument, usagePosition);
-        if(!definition)
+        if (!definition)
             return;
-        
+
         const docInfo = await documentInfoProvider.getDocumentInfo(definition.document);
-        if(!docInfo)
+        if (!docInfo)
             return;
 
         const methodInfo = docInfo.methods.firstOrDefault(m => m.range.contains(definition.location.range.end));
@@ -38,47 +38,47 @@ export class CodeInspector {
         symbolProvider: SymbolProvider,
     ): Promise<DefinitionWithTokens | undefined> {
         const definition = await this.getDefinition(usageDocument, usagePosition);
-        if(!definition)
+        if (!definition)
             return;
-        
+
         const tokens = await symbolProvider.getTokens(definition.document);
         return { ...definition, tokens };
     }
 
     public async getTypeFromSymbolProvider(usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
-        symbolProvider: SymbolProvider, traceTypePredicate: (traceToken: Token) => boolean): Promise<string | undefined>{
-            const definition = await this.getType(usageDocument, usagePosition);
-            if(!definition){
-                return;
-            }
-            
-            const tokens = await symbolProvider.getTokens(definition.document);
+        symbolProvider: SymbolProvider, traceTypePredicate: (traceToken: Token) => boolean): Promise<string | undefined> {
+        const definition = await this.getType(usageDocument, usagePosition);
+        if (!definition) {
+            return;
+        }
+
+        const tokens = await symbolProvider.getTokens(definition.document);
 
 
-            const traceDefToken = tokens.find(x => x.range.intersection(definition.location.range));
-            if(!traceDefToken) {
-                return;
-            }
+        const traceDefToken = tokens.find(x => x.range.intersection(definition.location.range));
+        if (!traceDefToken) {
+            return;
+        }
 
-            if(traceTypePredicate(traceDefToken)){
-                return traceDefToken.text;
-            }
-            return;       
+        if (traceTypePredicate(traceDefToken)) {
+            return traceDefToken.text;
+        }
+        return;
     }
 
     private async getType(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
     ): Promise<Definition | undefined> {
-        const results: any[]  = await vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider",usageDocument.uri, usagePosition);
-        if(!results?.length || !results[0].uri || !results[0].range){
+        const results: any[] = await vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider", usageDocument.uri, usagePosition);
+        if (!results?.length || !results[0].uri || !results[0].range) {
             return;
         }
 
         const location = <vscode.Location>results[0];
         const document = await vscode.workspace.openTextDocument(location.uri);
-        if(!document){
+        if (!document) {
             return;
         }
 
@@ -89,22 +89,22 @@ export class CodeInspector {
     }
 
     // private from(value: vscode.Location | vscode.DefinitionLink): vscode.LocationLink {
-	// 	const definitionLink = <vscode.DefinitionLink>value;
-	// 	const location = <vscode.Location>value;
-	// 	return {
-	// 		originSelectionRange: definitionLink.originSelectionRange
-	// 			?  new vscode.Range(definitionLink.originSelectionRange.start.line, 
+    // 	const definitionLink = <vscode.DefinitionLink>value;
+    // 	const location = <vscode.Location>value;
+    // 	return {
+    // 		originSelectionRange: definitionLink.originSelectionRange
+    // 			?  new vscode.Range(definitionLink.originSelectionRange.start.line, 
     //                 definitionLink.originSelectionRange.start.character, 
     //                 definitionLink.originSelectionRange.end.line, 
     //                 definitionLink.originSelectionRange.end.character)
-	// 			: undefined,
-	// 		uri: definitionLink.targetUri ? definitionLink.targetUri : location.uri,
-	// 		// range: Range.from(definitionLink.targetRange ? definitionLink.targetRange : location.range),
-	// 		// targetSelectionRange: definitionLink.targetSelectionRange
-	// 		// 	? Range.from(definitionLink.targetSelectionRange)
-	// 		// 	: undefined,
-	// 	};
-	// }
+    // 			: undefined,
+    // 		uri: definitionLink.targetUri ? definitionLink.targetUri : location.uri,
+    // 		// range: Range.from(definitionLink.targetRange ? definitionLink.targetRange : location.range),
+    // 		// targetSelectionRange: definitionLink.targetSelectionRange
+    // 		// 	? Range.from(definitionLink.targetSelectionRange)
+    // 		// 	: undefined,
+    // 	};
+    // }
 
     private async getDefinition(
         usageDocument: vscode.TextDocument,
@@ -112,19 +112,19 @@ export class CodeInspector {
     ): Promise<Definition | undefined> {
         const results: any[] = await vscode.commands.executeCommand('vscode.executeDefinitionProvider', usageDocument.uri, usagePosition);
 
-        if(!results?.length){
+        if (!results?.length) {
             return;
         }
         const value = results[0];
 
         const definitionLink = <vscode.DefinitionLink>value;
-		var location = <vscode.Location>value;
+        var location = <vscode.Location>value;
 
         //in some cases for example js language the return value is of type DefinitionLink
-        location = new vscode.Location(definitionLink.targetUri ? definitionLink.targetUri : location.uri, definitionLink.targetSelectionRange ?definitionLink.targetSelectionRange :location.range);
+        location = new vscode.Location(definitionLink.targetUri ? definitionLink.targetUri : location.uri, definitionLink.targetSelectionRange ? definitionLink.targetSelectionRange : location.range);
 
         const document = await vscode.workspace.openTextDocument(location.uri);
-        if(!document)
+        if (!document)
             return;
 
         return {
@@ -137,17 +137,17 @@ export class CodeInspector {
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
     ): Promise<Definition | undefined> {
-        const results: any[]  = await vscode.commands.executeCommand("vscode.executeDefinitionProvider",usageDocument.uri, usagePosition);
-        if(!results?.length){
+        const results: any[] = await vscode.commands.executeCommand("vscode.executeDefinitionProvider", usageDocument.uri, usagePosition);
+        if (!results?.length) {
             return;
         }
-        if(!results[0].uri || !results[0].range){
+        if (!results[0].uri || !results[0].range) {
             return;
         }
 
         const location = <vscode.Location>results[0];
         const document = await vscode.workspace.openTextDocument(location.uri);
-        if(!document){
+        if (!document) {
             return;
         }
 
@@ -158,15 +158,15 @@ export class CodeInspector {
     }
 
     public * getAllSymbolsOfKind(symbolTrees: SymbolTree[] | undefined, kind: vscode.SymbolKind): Generator<SymbolTree> {
-        if(!symbolTrees) {
+        if (!symbolTrees) {
             return;
         }
 
         for (const symbolTree of symbolTrees) {
-            if(symbolTree.kind === kind) {
+            if (symbolTree.kind === kind) {
                 yield symbolTree;
             }
-            yield * this.getAllSymbolsOfKind(symbolTree.children as SymbolTree[] | undefined, kind);
+            yield* this.getAllSymbolsOfKind(symbolTree.children as SymbolTree[] | undefined, kind);
         }
     }
 
@@ -177,21 +177,21 @@ export class CodeInspector {
         findParentToken: (tokens: Token[], position: vscode.Position) => Token | undefined,
     ): Promise<boolean> {
         const parentToken = findParentToken(definition.tokens, definition.location.range.start);
-        if(!parentToken) {
+        if (!parentToken) {
             return false;
         }
 
-        if(parentToken.text === ancestorName) {
+        if (parentToken.text === ancestorName) {
             return true;
         }
 
         const parentInfo = await this.getDefinitionWithTokens(definition.document, parentToken.range.start, symbolProvider);
-        if(!parentInfo) {
+        if (!parentInfo) {
             return false;
         }
 
         const parentSymbolTree = await symbolProvider.getSymbolTree(parentInfo.document);
-        if(!parentSymbolTree) {
+        if (!parentSymbolTree) {
             return false;
         }
 
