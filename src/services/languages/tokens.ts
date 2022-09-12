@@ -44,29 +44,29 @@ export enum TokenType {
 }
 
 export function matchTokenSequence(tokens: Token[], matchers: TokenMatcher[]): boolean {
-    if(!tokens || !matchers) {
+    if (!tokens || !matchers) {
         return false;
     }
 
-    if(tokens.length === 0 && matchers.length === 0) {
+    if (tokens.length === 0 && matchers.length === 0) {
         return true;
     }
 
-    if(tokens.length === 0 || matchers.length === 0) {
+    if (tokens.length === 0 || matchers.length === 0) {
         return false;
     }
 
-    for(let tokenIndex = 0; tokenIndex < tokens.length - matchers.length; tokenIndex++) {
+    for (let tokenIndex = 0; tokenIndex < tokens.length - matchers.length; tokenIndex++) {
         let isPartialMatch = true;
-        for(let matcherIndex = 0; matcherIndex < matchers.length; matcherIndex++) {
+        for (let matcherIndex = 0; matcherIndex < matchers.length; matcherIndex++) {
             const token = tokens[tokenIndex + matcherIndex];
             const matcher = matchers[matcherIndex];
-            if(!matchToken(token, matcher)) {
+            if (!matchToken(token, matcher)) {
                 isPartialMatch = false;
                 break;
             }
         }
-        if(isPartialMatch) {
+        if (isPartialMatch) {
             return true;
         }
     }
@@ -75,19 +75,19 @@ export function matchTokenSequence(tokens: Token[], matchers: TokenMatcher[]): b
 }
 
 export function matchToken(token: Token, match: TokenMatcher) {
-    if(!token || !match) {
+    if (!token || !match) {
         return false;
     }
 
-    if(token === match) {
+    if (token === match) {
         return true;
     }
 
-    if(match.text && match.text !== token.text) {
+    if (match.text && match.text !== token.text) {
         return false;
     }
 
-    if(match.type && match.type !== token.type) {
+    if (match.type && match.type !== token.type) {
         return false;
     }
 
