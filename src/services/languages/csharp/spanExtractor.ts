@@ -22,7 +22,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
 
             const tokens = await symbolProvider.getTokens(definition.document);
 
-            const traceVarTokenIndex = tokens.findIndex(x => x.range.intersection(definition.location.range));
+            const traceVarTokenIndex = tokens.findIndex(token => token.range.intersection(definition.location.range));
             if (traceVarTokenIndex < 1) {
                 return;
             }
