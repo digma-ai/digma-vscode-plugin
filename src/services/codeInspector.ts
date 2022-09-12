@@ -71,7 +71,7 @@ export class CodeInspector {
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
     ): Promise<Definition | undefined> {
-        let results: any[]  = await vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider",usageDocument.uri, usagePosition);
+        const results: any[]  = await vscode.commands.executeCommand("vscode.executeTypeDefinitionProvider",usageDocument.uri, usagePosition);
         if(!results?.length || !results[0].uri || !results[0].range){
             return;
         }
@@ -137,7 +137,7 @@ export class CodeInspector {
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
     ): Promise<Definition | undefined> {
-        let results: any[]  = await vscode.commands.executeCommand("vscode.executeDefinitionProvider",usageDocument.uri, usagePosition);
+        const results: any[]  = await vscode.commands.executeCommand("vscode.executeDefinitionProvider",usageDocument.uri, usagePosition);
         if(!results?.length){
             return;
         }
