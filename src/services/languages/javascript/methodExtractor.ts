@@ -21,11 +21,9 @@ export class JSMethodExtractor implements IMethodExtractor {
             return [];
         }
 
-        //    UserService
         const packageFolderParent = path.dirname(packageFile.fsPath);
-        const docFolder = path.dirname(document.uri.fsPath);
 
-        var relative = path.relative(packageFolderParent, document.uri.fsPath)
+        let relative = path.relative(packageFolderParent, document.uri.fsPath)
             .replaceAll('\\', '/'); // get rid of windows backslashes
         
         if(relative.startsWith('node_modules')) {
