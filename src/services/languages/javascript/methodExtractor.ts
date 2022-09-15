@@ -88,13 +88,13 @@ export class JSMethodExtractor implements IMethodExtractor {
             const id = `${codeObjectPath}$_$${symbol.name}`;
             let isMethodCodeObjectRelated = this.isOfKind(symbol, SymbolKind.Method);
 
-            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Function) && hasChildren) {
+            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Function)) {
                 const textLine = document.lineAt(symbol.range.start.line);
                 const functionMatch = `\\s*function\\s*${symbol.name}`; //should handle only function declaration, and filter out function call like db.getAll()
                 const match = textLine.text.match(functionMatch);
                 isMethodCodeObjectRelated = match !== undefined && match!== null;
             }
-            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Variable) && hasChildren) {
+            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Variable)) {
                 const functionToken = functionMap[getKey(symbol.range.start.line, symbol.range.start.character)];
                 isMethodCodeObjectRelated = functionToken !== undefined;
             }
