@@ -15,7 +15,7 @@ export class JSMethodExtractor implements IMethodExtractor {
             return [];
         }
 
-        const packageName = await this.getPackageName(packageFile);
+        let packageName = await this.getPackageName(packageFile);
         if (packageName === undefined || packageName === "") {
             Logger.warn(`Could not find package name in '${packageFile.path}'`);
             return [];
@@ -27,10 +27,18 @@ export class JSMethodExtractor implements IMethodExtractor {
 
         var relative = path.relative(packageFolderParent, document.uri.fsPath)
             .replaceAll('\\', '/'); // get rid of windows backslashes
+        
+        if(relative.startsWith('node_modules')) {
+            const pattern = /node_modules\/(@[\w\d-]+\/[\w-]+|[\w\d-]+)\/(.*)/;
+            const matches = relative.match(pattern);
+            if(matches) {
+                [ , packageName, relative ] = matches;
+            }
+        }
 
         //relative = `${path.basename(packageFolderParent)}/${relative}`;
-        relative = `${packageName}:${relative}`;
-        return this.extractFunctions(document, relative, '', docSymbols, tokens);
+        const codeObjectPath = `${packageName}:${relative}`;
+        return this.extractFunctions(document, codeObjectPath, '', docSymbols, tokens);
     }
 
     private async getPackageName(packageFile: vscode.Uri): Promise<string | undefined> {
@@ -39,7 +47,7 @@ export class JSMethodExtractor implements IMethodExtractor {
         return pkgjson.name;
     }
 
-    private extractFunctions(document: vscode.TextDocument, filePath: string, parentSymPath: string, symbols: DocumentSymbol[], tokens: Token[]): SymbolInfo[] {
+    private extractFunctions(document: vscode.TextDocument, codeObjectPath: string, parentSymPath: string, symbols: DocumentSymbol[], tokens: Token[]): SymbolInfo[] {
         let symbolInfos: SymbolInfo[] = [];
 
         /*
@@ -77,7 +85,7 @@ export class JSMethodExtractor implements IMethodExtractor {
                 new vscode.Position(symbol.range.start.line, symbol.range.start.character),
                 new vscode.Position(symbol.range.end.line, symbol.range.end.character));
 
-            const id = `${filePath}$_$${symbol.name}`;
+            const id = `${codeObjectPath}$_$${symbol.name}`;
             let isMethodCodeObjectRelated = this.isOfKind(symbol, SymbolKind.Method);
 
             if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Function) && hasChildren) {
@@ -95,14 +103,14 @@ export class JSMethodExtractor implements IMethodExtractor {
                 symbolInfos.push({
                     id,
                     name: symbol.name,
-                    codeLocation: filePath,
+                    codeLocation: codeObjectPath,
                     displayName: symPath,
                     range,
                     documentUri: document.uri
                 });
             }
             if (hasChildren) {
-                const childFunctions = this.extractFunctions(document, filePath, symPath, symbol.children!, tokens);
+                const childFunctions = this.extractFunctions(document, codeObjectPath, symPath, symbol.children!, tokens);
                 symbolInfos = symbolInfos.concat(childFunctions);
             }
         }
