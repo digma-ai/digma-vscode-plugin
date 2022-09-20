@@ -43,9 +43,8 @@ export class CodeObjectGroupEnvironments implements IRenderCodeObjectGroupEnviro
 
     private isLocalEnvironmentMine(environment:string){
         var hostname = os.hostname().toLowerCase();
-        var hostnameNoLocal = hostname.replace(new RegExp(".local$"), "");
         var env = environment.toLowerCase();
-        return env.startsWith(hostname) || env.startsWith(hostnameNoLocal);
+        return env.startsWith(hostname);
     }
 
     public getJustEnvironmentsHtml(usageResults: UsageStatusResults): string{
