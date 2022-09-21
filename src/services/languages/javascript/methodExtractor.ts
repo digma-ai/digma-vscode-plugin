@@ -83,7 +83,7 @@ export class JSMethodExtractor implements IMethodExtractor {
                 new vscode.Position(symbol.range.start.line, symbol.range.start.character),
                 new vscode.Position(symbol.range.end.line, symbol.range.end.character));
 
-            const id = `${codeObjectPath}$_$${symbol.name}`;
+            let name = symbol.name;
             let isMethodCodeObjectRelated = this.isOfKind(symbol, SymbolKind.Method);
 
             if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Function)) {
@@ -92,15 +92,25 @@ export class JSMethodExtractor implements IMethodExtractor {
                 const match = textLine.text.match(functionMatch);
                 isMethodCodeObjectRelated = match !== undefined && match!== null;
             }
+            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Function)) {
+                const pattern = /.*(get|head|post|put|delete|connect|options|trace|patch)\s*\(\s*['"`](.*)['"`]\)\s*callback$/i;
+                const match = name.match(pattern);
+                if(match) {
+                    const[ , verb, route ] = match;
+                    name = `${verb.toUpperCase()} ${route}`;
+                    isMethodCodeObjectRelated = true;
+                }
+            }
             if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Variable)) {
                 const functionToken = functionMap[getKey(symbol.range.start.line, symbol.range.start.character)];
                 isMethodCodeObjectRelated = functionToken !== undefined;
             }
 
             if (isMethodCodeObjectRelated) {
+                const id = `${codeObjectPath}$_$${name}`;
                 symbolInfos.push({
                     id,
-                    name: symbol.name,
+                    name,
                     codeLocation: codeObjectPath,
                     displayName: symPath,
                     range,
