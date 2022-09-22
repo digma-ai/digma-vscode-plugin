@@ -7,6 +7,7 @@ import { CodeInspector } from '../codeInspector';
 import { EndpointInfo, ILanguageExtractor, IParametersExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
+import { IMethodPositionSelector, DefaultMethodPositionSelector } from './methodPositionSelector';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -231,6 +232,11 @@ export class SymbolProvider
         }
 
         return tokes;
+    }
+
+    public async getMethodPositionSelector(document: vscode.TextDocument): Promise<IMethodPositionSelector> {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        return supportedLanguage?.methodPositionSelector ?? new DefaultMethodPositionSelector();
     }
 
     private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined>

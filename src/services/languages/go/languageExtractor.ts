@@ -3,6 +3,7 @@ import { CodeInspector } from '../../codeInspector';
 import { Logger } from '../../logger';
 import { BasicParametersExtractor } from '../defaultImpls';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { IMethodPositionSelector, DefaultMethodPositionSelector } from '../methodPositionSelector';
 import { GoMethodExtractor } from './methodExtractor';
 import { GoSpanExtractor } from './spanExtractor';
 
@@ -28,6 +29,10 @@ export class GoLanguageExtractor implements ILanguageExtractor
 
     public get parametersExtractor(): IParametersExtractor {
         return new BasicParametersExtractor();
+    }
+
+    get methodPositionSelector(): IMethodPositionSelector {
+        return new DefaultMethodPositionSelector();
     }
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {

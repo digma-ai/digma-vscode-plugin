@@ -4,6 +4,7 @@ import { DocumentInfoProvider, ParameterInfo } from '../documentInfoProvider';
 import { CodeInspector } from '../codeInspector';
 import { SymbolProvider, SymbolTree } from './symbolProvider';
 import { Token } from './tokens';
+import { IMethodPositionSelector } from './methodPositionSelector';
 
 export interface SymbolInfo {
     id: string;
@@ -101,6 +102,7 @@ export interface ILanguageExtractor {
     get documentFilter(): vscode.DocumentFilter;
     get methodExtractors(): IMethodExtractor[];
     get parametersExtractor(): IParametersExtractor;
+    get methodPositionSelector(): IMethodPositionSelector;
     getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];
     getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
     validateConfiguration(): Promise<void>

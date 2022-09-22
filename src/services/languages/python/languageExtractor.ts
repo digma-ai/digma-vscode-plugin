@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
 import { BasicParametersExtractor } from '../defaultImpls';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { IMethodPositionSelector, DefaultMethodPositionSelector } from '../methodPositionSelector';
 import { FastapiEndpointExtractor } from './fastapiEndpointExtractor';
 import { PythonMethodExtractor } from './methodExtractor';
 import { PythonSpanExtractor } from './spanExtractor';
@@ -27,6 +28,10 @@ export class PythonLanguageExtractor implements ILanguageExtractor
 
     public get parametersExtractor(): IParametersExtractor {
         return new BasicParametersExtractor();
+    }
+
+    get methodPositionSelector(): IMethodPositionSelector {
+        return new DefaultMethodPositionSelector();
     }
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {

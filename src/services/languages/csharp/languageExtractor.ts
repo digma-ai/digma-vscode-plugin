@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { IMethodPositionSelector, DefaultMethodPositionSelector } from '../methodPositionSelector';
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
@@ -26,6 +27,10 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
 
     public get parametersExtractor(): IParametersExtractor {
         return new CSharpParametersExtractor();
+    }
+
+    get methodPositionSelector(): IMethodPositionSelector {
+        return new DefaultMethodPositionSelector();
     }
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {

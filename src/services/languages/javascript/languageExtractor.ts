@@ -3,6 +3,8 @@ import { CodeInspector } from '../../codeInspector';
 import { Logger } from '../../logger';
 import { BasicParametersExtractor } from '../defaultImpls';
 import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { IMethodPositionSelector } from '../methodPositionSelector';
+import { JSMethodPositionSelector } from './methodPositionSelector';
 import { JSMethodExtractor } from './methodExtractor';
 import { JSSpanExtractor } from './spanExtractor';
 
@@ -29,6 +31,10 @@ export class JSLanguageExtractor implements ILanguageExtractor
 
     public get parametersExtractor(): IParametersExtractor {
         return new BasicParametersExtractor();
+    }
+
+    get methodPositionSelector(): IMethodPositionSelector {
+        return new JSMethodPositionSelector();
     }
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
