@@ -29,8 +29,9 @@ export class GoLanguageExtractor extends LanguageExtractor
             new GoSpanExtractor(codeInspector)
         ];
     }
+
     public async validateConfiguration(): Promise<void>{
-        const section:any = vscode.workspace.getConfiguration().get("gopls");
+        const section: any = vscode.workspace.getConfiguration().get("gopls");
         if(section !== undefined && section["ui.semanticTokens"]){
             return;
         }

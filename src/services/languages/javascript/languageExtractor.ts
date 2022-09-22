@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
-import { Logger } from '../../logger';
 import { IMethodExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
 import { IMethodPositionSelector } from '../methodPositionSelector';

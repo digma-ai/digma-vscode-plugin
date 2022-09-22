@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
+import { SymbolInformation, DocumentSymbol } from 'vscode-languageclient';
 import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';

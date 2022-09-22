@@ -39,6 +39,7 @@ export class EndpointInfo implements CodeObjectLocationInfo {
             return [ this.id];
         }
 }
+
 export class SpanLocationInfo implements CodeObjectLocationInfo {
     constructor(
         public id: string,
