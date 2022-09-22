@@ -2,7 +2,7 @@
     "name": "digma",
     "displayName": "Digma Continuous Feedback",
     "description": "Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
-    "version": "0.5.35",
+    "version": "0.5.36",
     "publisher": "digma",
     "icon": "digma.png",
     "engines": {
@@ -90,10 +90,12 @@
                 }
             ]
         },
-        "commands": [{
-            "command": "digma.changeSelectedEnvironment",
-            "title": "Digma: Select deployment environment"
-        }],
+        "commands": [
+            {
+                "command": "digma.changeSelectedEnvironment",
+                "title": "Digma: Select deployment environment"
+            }
+        ],
         "configuration": {
             "properties": {
                 "digma.enableCodeLens": {
