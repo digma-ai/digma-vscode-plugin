@@ -320,6 +320,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._overlay.overlayId === OverlayView.UnsupportedDocumentOverlayId;
         
     }
+
     private async getCodeObjectOrShowOverlay(
 		document: vscode.TextDocument,
 		position: vscode.Position
@@ -329,7 +330,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             return;
         }
 
-        const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+        const symbolProvider = this._documentInfoProvider.symbolProvider;
+        const docInfo = symbolProvider.supportsDocument(document)
             ? await this._documentInfoProvider.getDocumentInfo(document)
             : undefined;
 
@@ -344,7 +346,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             return;
         }
         
-		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
+        const methodPositionSelector = await symbolProvider.getMethodPositionSelector(document);
+        const methodInfo = methodPositionSelector.filter(position, docInfo.methods);
+
         // if(!methodInfo){
         //     if(this.canChangeOverlayOnCodeSelectionChanged()) {
         //         await this._overlay.showCodeSelectionNotFoundMessage(docInfo);

@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
-import { SymbolInformation, DocumentSymbol } from "vscode-languageclient";
+import { SymbolInformation, DocumentSymbol } from 'vscode-languageclient';
 import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EndpointInfo, ILanguageExtractor, IParametersExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
+import { EndpointInfo, IParametersExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
+import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
+import { IMethodPositionSelector, DefaultMethodPositionSelector } from './methodPositionSelector';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -231,6 +233,11 @@ export class SymbolProvider
         }
 
         return tokes;
+    }
+
+    public async getMethodPositionSelector(document: vscode.TextDocument): Promise<IMethodPositionSelector> {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        return supportedLanguage?.methodPositionSelector ?? new DefaultMethodPositionSelector();
     }
 
     private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined>

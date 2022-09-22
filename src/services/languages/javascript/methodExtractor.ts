@@ -1,9 +1,16 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
-import { IMethodExtractor, SymbolInfo } from "../extractors";
+import { DocumentSymbol } from 'vscode-languageclient';
+import { IMethodExtractor, SymbolInfo } from '../extractors';
 import { Logger } from '../../logger';
 import { Token, TokenType } from '../tokens';
+import {
+    MethodSymbolInfoExtractor,
+    SymbolInfoExtractor,
+    NamedFunctionDeclarationSymbolInfoExtractor,
+    AnonymousExpressRequestHandlerSymbolInfoExtractor,
+    VariableFunctionSymbolInfoExtractor,
+} from './symbolInfoExtractors';
 
 export class JSMethodExtractor implements IMethodExtractor {
 
@@ -45,8 +52,8 @@ export class JSMethodExtractor implements IMethodExtractor {
         return pkgjson.name;
     }
 
-    private extractFunctions(document: vscode.TextDocument, codeObjectPath: string, parentSymPath: string, symbols: DocumentSymbol[], tokens: Token[]): SymbolInfo[] {
-        let symbolInfos: SymbolInfo[] = [];
+    private extractFunctions(document: vscode.TextDocument, codeObjectPath: string, parentSymbolPath: string, symbols: DocumentSymbol[], tokens: Token[]): SymbolInfo[] {
+        const symbolInfos: SymbolInfo[] = [];
 
         /*
         declation example:
@@ -76,49 +83,31 @@ export class JSMethodExtractor implements IMethodExtractor {
                 functionMap[key] = token;
             });
 
+        const symbolInfoExtractors: SymbolInfoExtractor[] = [
+            new MethodSymbolInfoExtractor(),
+            new NamedFunctionDeclarationSymbolInfoExtractor(),
+            new AnonymousExpressRequestHandlerSymbolInfoExtractor(),
+            new VariableFunctionSymbolInfoExtractor(functionMap, getKey),
+        ];
+
         for (const symbol of symbols) {
-            let symPath = (parentSymPath ? parentSymPath + '.' : '') + symbol.name;
+            const symbolPath = (parentSymbolPath ? parentSymbolPath + '.' : '') + symbol.name;
+
+            const symbolInfo: SymbolInfo | undefined = symbolInfoExtractors.reduce(
+                (info: SymbolInfo | undefined, extractor) => info || extractor.extract(symbol, codeObjectPath, symbol.name, document, symbolPath),
+                undefined,
+            );
+            if(symbolInfo) {
+                symbolInfos.push(symbolInfo);
+            }
+
             const hasChildren = symbol.children && symbol.children.length > 0;
-            let range = new vscode.Range(
-                new vscode.Position(symbol.range.start.line, symbol.range.start.character),
-                new vscode.Position(symbol.range.end.line, symbol.range.end.character));
-
-            const id = `${codeObjectPath}$_$${symbol.name}`;
-            let isMethodCodeObjectRelated = this.isOfKind(symbol, SymbolKind.Method);
-
-            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Function)) {
-                const textLine = document.lineAt(symbol.range.start.line);
-                const functionMatch = `\\s*function\\s*${symbol.name}`; //should handle only function declaration, and filter out function call like db.getAll()
-                const match = textLine.text.match(functionMatch);
-                isMethodCodeObjectRelated = match !== undefined && match!== null;
-            }
-            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Variable)) {
-                const functionToken = functionMap[getKey(symbol.range.start.line, symbol.range.start.character)];
-                isMethodCodeObjectRelated = functionToken !== undefined;
-            }
-
-            if (isMethodCodeObjectRelated) {
-                symbolInfos.push({
-                    id,
-                    name: symbol.name,
-                    codeLocation: codeObjectPath,
-                    displayName: symPath,
-                    range,
-                    documentUri: document.uri
-                });
-            }
             if (hasChildren) {
-                const childFunctions = this.extractFunctions(document, codeObjectPath, symPath, symbol.children!, tokens);
-                symbolInfos = symbolInfos.concat(childFunctions);
+                const childFunctions = this.extractFunctions(document, codeObjectPath, symbolPath, symbol.children!, tokens);
+                symbolInfos.push(...childFunctions);
             }
         }
 
         return symbolInfos;
-
     }
-
-    private isOfKind(symbol: DocumentSymbol, kind: number): boolean {
-        return symbol.kind + 1 === kind;
-    }
-
 }

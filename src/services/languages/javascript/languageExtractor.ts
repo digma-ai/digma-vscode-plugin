@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
-import { Logger } from '../../logger';
-import { BasicParametersExtractor } from '../defaultImpls';
-import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { IMethodExtractor, ISpanExtractor } from '../extractors';
+import { LanguageExtractor } from '../languageExtractor';
+import { IMethodPositionSelector } from '../methodPositionSelector';
+import { JSMethodPositionSelector } from './methodPositionSelector';
 import { JSMethodExtractor } from './methodExtractor';
 import { JSSpanExtractor } from './spanExtractor';
 
-
-
-
-export class JSLanguageExtractor implements ILanguageExtractor 
+export class JSLanguageExtractor extends LanguageExtractor 
 {
     public requiredExtensionLoaded: boolean = false;
 
@@ -27,20 +25,13 @@ export class JSLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public get parametersExtractor(): IParametersExtractor {
-        return new BasicParametersExtractor();
-    }
-
-    public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
-        return [];
+    public get methodPositionSelector(): IMethodPositionSelector {
+        return new JSMethodPositionSelector();
     }
 
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
             new JSSpanExtractor(codeInspector)
         ];
-    }
-    public async validateConfiguration(): Promise<void>{
-        
     }
 }
