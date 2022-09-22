@@ -8,9 +8,6 @@ import { JSMethodPositionSelector } from './methodPositionSelector';
 import { JSMethodExtractor } from './methodExtractor';
 import { JSSpanExtractor } from './spanExtractor';
 
-
-
-
 export class JSLanguageExtractor implements ILanguageExtractor 
 {
     public requiredExtensionLoaded: boolean = false;

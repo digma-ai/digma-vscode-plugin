@@ -7,8 +7,6 @@ import { IMethodPositionSelector, DefaultMethodPositionSelector } from '../metho
 import { GoMethodExtractor } from './methodExtractor';
 import { GoSpanExtractor } from './spanExtractor';
 
-
-
 export class GoLanguageExtractor implements ILanguageExtractor 
 {
     public requiredExtensionLoaded: boolean = false;

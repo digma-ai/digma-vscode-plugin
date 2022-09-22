@@ -320,6 +320,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._overlay.overlayId === OverlayView.UnsupportedDocumentOverlayId;
         
     }
+
     private async getCodeObjectOrShowOverlay(
 		document: vscode.TextDocument,
 		position: vscode.Position
