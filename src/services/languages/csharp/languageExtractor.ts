@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
-import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
-import { IMethodPositionSelector, DefaultMethodPositionSelector } from '../methodPositionSelector';
+import { IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { LanguageExtractor } from "../languageExtractor";
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
 // import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor';
 
-export class CSharpLanguageExtractor implements ILanguageExtractor 
+export class CSharpLanguageExtractor extends LanguageExtractor 
 {
     public requiredExtensionLoaded: boolean = false;
 
@@ -29,23 +29,15 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
         return new CSharpParametersExtractor();
     }
 
-    get methodPositionSelector(): IMethodPositionSelector {
-        return new DefaultMethodPositionSelector();
-    }
-
-    public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
-        return [
-            // new AspNetCoreMvcEndpointExtractor(codeInspector),
-        ];
-    }
+    // public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
+    //     return [
+    //         new AspNetCoreMvcEndpointExtractor(codeInspector),
+    //     ];
+    // }
 
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
             new CSharpSpanExtractor(codeInspector),
         ];
-    }
-
-    public async validateConfiguration(): Promise<void>{
-        
     }
 }
