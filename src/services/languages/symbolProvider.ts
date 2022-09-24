@@ -240,8 +240,7 @@ export class SymbolProvider
         return supportedLanguage?.methodPositionSelector ?? new DefaultMethodPositionSelector();
     }
 
-    private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined>
-    {
+    private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined> {
         const supportedLanguage = this.languageExtractors.find(x => vscode.languages.match(x.documentFilter, document) > 0);
         if (!supportedLanguage ||
             !(supportedLanguage.requiredExtensionLoaded || await this.loadRequiredExtension(supportedLanguage)))
@@ -251,8 +250,7 @@ export class SymbolProvider
         return supportedLanguage;
     }
 
-    private async loadRequiredExtension(language: ILanguageExtractor) : Promise<boolean>
-    {
+    private async loadRequiredExtension(language: ILanguageExtractor) : Promise<boolean> {
         const extension = vscode.extensions.getExtension(language.requiredExtensionId);
         if (!extension) 
         {
