@@ -4,7 +4,8 @@ import { decimal } from "vscode-languageclient";
 import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
-import { SpanDurationsInsight } from "../SpanInsight";
+import { CodeObjectId } from "../../../../services/codeObject";
+import { SpanDurationsInsight, ChildSpanDurationsInsight } from "../SpanInsight";
 import { InsightTemplateHtml } from "./insightTemplateHtml";
 
 export class SpanItemHtmlRendering{
@@ -44,7 +45,8 @@ export class SpanItemHtmlRendering{
 
         return insight.periodicPercentiles.filter(x=>x.percentile===percentile && period===period).firstOrDefault()?.currentDuration.value;
     }
-    public spanDurationItemHtml(insight: SpanDurationsInsight): InsightTemplateHtml{
+    
+    public spanDurationItemHtml(insight: SpanDurationsInsight, titleVal: string = "Duration"): InsightTemplateHtml{
         
         const percentileHtmls = [];
         if (insight.percentiles.length===0){
@@ -152,11 +154,17 @@ export class SpanItemHtmlRendering{
             </div>`;
 
         return new InsightTemplateHtml({
-            title: "Duration",
+            title: titleVal,
             body: body,
             icon: this._viewUris.image("duration.svg"),
             buttons: buttons
         });
+    }
+
+    public childSpanDurationItemHtml(insight: ChildSpanDurationsInsight): InsightTemplateHtml {
+        const spanName = CodeObjectId.getSpanName(insight.codeObjectId);
+        const titleVal = "Duration of child span " + spanName;
+        return this.spanDurationItemHtml(insight, titleVal);
     }
 
 }

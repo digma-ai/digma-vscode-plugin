@@ -12,7 +12,7 @@ import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
 import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
-import { NPlusSpansListViewItemsCreator, SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
+import { NPlusSpansListViewItemsCreator, SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator, ChildSpanDurationsListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, EPNPlusSpansListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
 import { Settings } from "../../settings";
@@ -194,6 +194,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator(this._webViewUris));
+        listViewItemsCreator.add("ChildSpanDurations", new ChildSpanDurationsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
         const usageTemplate = new UsageViewItemsTemplate(this._webViewUris);
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
