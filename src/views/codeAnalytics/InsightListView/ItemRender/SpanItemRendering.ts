@@ -162,7 +162,7 @@ export class SpanItemHtmlRendering{
     }
 
     public childSpanDurationItemHtml(insight: ChildSpanDurationsInsight): InsightTemplateHtml {
-        const spanName = CodeObjectId.getSpanName(insight.codeObjectId);
+        const spanName = CodeObjectId.getSpanName(insight.childCodeObjectId);
         const titleVal = "Duration of child span " + spanName;
         return this.spanDurationItemHtml(insight, titleVal);
     }
