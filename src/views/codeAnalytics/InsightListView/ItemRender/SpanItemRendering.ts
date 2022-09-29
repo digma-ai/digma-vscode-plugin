@@ -43,7 +43,7 @@ export class SpanItemHtmlRendering{
 
     private findByPercentileAndPeriod(insight: SpanDurationsInsight, percentile: number, period:string){
 
-        return insight.periodicPercentiles.filter(x=>x.percentile===percentile && period===period).firstOrDefault()?.currentDuration.value;
+        return insight.periodicPercentiles?.filter(x=>x.percentile===percentile && period===period).firstOrDefault()?.currentDuration.value;
     }
     
     public spanDurationItemHtml(insight: SpanDurationsInsight, titleVal: string = "Duration"): InsightTemplateHtml{
