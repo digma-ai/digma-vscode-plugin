@@ -15,6 +15,18 @@ export interface CodeObjectInsight extends Insight{
     decorators: CodeObjectDecorator[]
 }
 
+export interface ChildInsight extends CodeObjectInsight {
+    childCodeObjectId: string,
+}
+
+export class InsightUtils {
+
+    public static instanceOfChildInsight(object: CodeObjectInsight): boolean {
+        return 'childCodeObjectId' in object;
+    }
+
+}
+
 export enum InsightImporance {
     spam = 9,
     clutter = 8,

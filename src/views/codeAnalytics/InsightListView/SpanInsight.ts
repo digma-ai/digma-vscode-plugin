@@ -11,7 +11,7 @@ import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from 
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
-import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { CodeObjectInsight, ChildInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 
@@ -121,8 +121,7 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
     }[]
 }
 
-export interface ChildSpanDurationsInsight extends SpanDurationsInsight {
-    parentSpanCodeObjectId: string,
+export interface ChildSpanDurationsInsight extends SpanDurationsInsight, ChildInsight {
 }
 
 export interface EndpointInfo {
@@ -185,11 +184,12 @@ export class ChildSpanDurationsListViewItemsCreator implements IInsightListViewI
 
         return {
             getHtml: ()=> renderer.childSpanDurationItemHtml(insight).renderHtml(), 
-            sortIndex: 0, 
-            groupId: CodeObjectId.getSpanName(insight.parentSpanCodeObjectId)
+            sortIndex: 99, 
+            // grouping by the parent span
+            groupId: CodeObjectId.getSpanName(insight.codeObjectId)
         };
     }
-    
+
 }
 
 export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightListViewItemsCreator {
