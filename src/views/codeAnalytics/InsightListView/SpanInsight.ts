@@ -2,6 +2,7 @@ import moment = require("moment");
 import { Uri } from "vscode";
 import { decimal } from "vscode-languageclient";
 import { EndpointSchema, UsageStatusResults } from "../../../services/analyticsProvider";
+import { CodeObjectId } from "../../../services/codeObject";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { Settings } from "../../../settings";
@@ -120,6 +121,14 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
     }[]
 }
 
+export interface ChildSpanDurationsInsight extends SpanDurationsInsight {
+    parentCodeObjectId: string
+}
+
+export interface ChildrenSpanDurationsInsight extends CodeObjectInsight {
+    childInsights: ChildSpanDurationsInsight[]
+}
+
 export interface EndpointInfo {
     route: string,
     serviceName: string
@@ -137,11 +146,13 @@ export interface SpandSlowEndpointsInsight extends CodeObjectInsight{
     span: SpanInfo,
     slowEndpoints:SlowEndpointInfo[]
 }
+
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
     
     public constructor(private _viewUris:WebViewUris ){
 
     }
+
     public async create( codeObjectsInsight: SpanDurationsInsight[]): Promise<IListViewItemBase []>
     {
         return codeObjectsInsight.map(x=>this.createListViewItem(x));
@@ -161,6 +172,30 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     }
 }
 
+export class ChildrenSpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator {
+
+    public constructor(private _viewUris:WebViewUris) {
+
+    }
+
+    public async create( codeObjectsInsight: ChildrenSpanDurationsInsight[]): Promise<IListViewItemBase []> {
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
+    }
+
+
+    public createListViewItem(insight: ChildrenSpanDurationsInsight) : IListViewItem {
+
+        let renderer = new SpanItemHtmlRendering(this._viewUris);
+
+        return {
+            getHtml: ()=> renderer.childrenSpanDurationItemHtml(insight).renderHtml(), 
+            sortIndex: 55, 
+            // grouping by the parent span
+            groupId: CodeObjectId.getSpanName(insight.codeObjectId)
+        };
+    }
+
+}
 
 export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightListViewItemsCreator {
     constructor(
