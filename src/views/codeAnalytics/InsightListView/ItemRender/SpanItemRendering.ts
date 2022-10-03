@@ -167,17 +167,48 @@ export class SpanItemHtmlRendering{
         return this.spanDurationItemHtml(insight, titleVal);
     }
 
+    private getUniquePercentiles(insight: ChildrenSpanDurationsInsight): Set<number> {
+        const setOfNumbers: Set<number> = new Set();
+        setOfNumbers.add(0.50); // make sure at least one entry is there - P50
+
+        for (const childInsight of insight.childInsights) {
+            for (const pctl of childInsight.percentiles) {
+                setOfNumbers.add(pctl.percentile);
+            }
+        }
+        const sortedArray = [...setOfNumbers].sort((a, b) => a - b);
+        const sortedSet = new Set(sortedArray);
+
+        return sortedSet;
+    }
+
+    private getValueOfPercentile(insight: ChildSpanDurationsInsight, requestedPercentile: number): string {
+        for (const pctl of insight.percentiles) {
+            if (pctl.percentile === requestedPercentile) {
+                return `${pctl.currentDuration.value} ${pctl.currentDuration.unit}`;
+            }
+        }
+        return "";
+    }
+
     public childrenSpanDurationItemHtml(insight: ChildrenSpanDurationsInsight): InsightTemplateHtml {
         
         const htmlRecords: string[] = [];
 
+        const percentilesSet = this.getUniquePercentiles(insight);
+
         for (const childInsight of insight.childInsights) {
             const spanName = CodeObjectId.getSpanName(childInsight.childCodeObjectId);
+            const pctlHtmlColumns: string[] = [];
+            for (const pctl of percentilesSet) {
+                const pctlColumn = /*html*/ `
+                    <td>${this.getValueOfPercentile(childInsight, pctl)}</td>`;
+                pctlHtmlColumns.push(pctlColumn);
+            }
             const htmlRecord: string = /*html*/ `
             <tr>
                 <td>${spanName}</td>
-                <td>1</td>
-                <td>2</td>
+                ${pctlHtmlColumns.join('')}
             </tr>`;
 
             htmlRecords.push(htmlRecord);
@@ -186,11 +217,11 @@ export class SpanItemHtmlRendering{
         const body = /*html*/ `
             <div class="span-durations-insight-body">
             <table>
-            <tr>
-                <th>Child Span</th>
-                <th>P50</th>
-                <th>P95</th>
-            </tr>
+                <tr>
+                    <th>Child Span</th>
+                    <th>P50</th>
+                    <th>P95</th>
+                </tr>
                 ${htmlRecords.join('')}
             </table>
             </div>`;
