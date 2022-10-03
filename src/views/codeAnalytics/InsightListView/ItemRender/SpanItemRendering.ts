@@ -46,7 +46,7 @@ export class SpanItemHtmlRendering{
         return insight.periodicPercentiles?.filter(x=>x.percentile===percentile && period===period).firstOrDefault()?.currentDuration.value;
     }
     
-    public spanDurationItemHtml(insight: SpanDurationsInsight, titleVal: string = "Duration"): InsightTemplateHtml{
+    public spanDurationItemHtml(insight: SpanDurationsInsight): InsightTemplateHtml{
         
         const percentileHtmls = [];
         if (insight.percentiles.length===0){
@@ -154,17 +154,11 @@ export class SpanItemHtmlRendering{
             </div>`;
 
         return new InsightTemplateHtml({
-            title: titleVal,
+            title: "Duration",
             body: body,
             icon: this._viewUris.image("duration.svg"),
             buttons: buttons
         });
-    }
-
-    public childSpanDurationItemHtml(insight: ChildSpanDurationsInsight): InsightTemplateHtml {
-        const spanName = CodeObjectId.getSpanName(insight.childCodeObjectId);
-        const titleVal = "Duration of child span " + spanName;
-        return this.spanDurationItemHtml(insight, titleVal);
     }
 
     private getUniquePercentiles(insight: ChildrenSpanDurationsInsight): Set<number> {
@@ -198,7 +192,7 @@ export class SpanItemHtmlRendering{
         const percentilesSet = this.getUniquePercentiles(insight);
 
         for (const childInsight of insight.childInsights) {
-            const spanName = CodeObjectId.getSpanName(childInsight.childCodeObjectId);
+            const spanName = CodeObjectId.getSpanName(childInsight.codeObjectId);
             const pctlHtmlColumns: string[] = [];
             for (const pctl of percentilesSet) {
                 const pctlValue = this.getValueOfPercentile(childInsight, pctl);

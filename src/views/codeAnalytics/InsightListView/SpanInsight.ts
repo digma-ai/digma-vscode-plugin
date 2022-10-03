@@ -11,7 +11,7 @@ import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from 
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
-import { CodeObjectInsight, ChildInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 
@@ -121,7 +121,8 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
     }[]
 }
 
-export interface ChildSpanDurationsInsight extends SpanDurationsInsight, ChildInsight {
+export interface ChildSpanDurationsInsight extends SpanDurationsInsight {
+    parentCodeObjectId: string
 }
 
 export interface ChildrenSpanDurationsInsight extends CodeObjectInsight {
@@ -171,31 +172,6 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     }
 }
 
-export class ChildSpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator {
-
-    public constructor(private _viewUris:WebViewUris) {
-
-    }
-
-    public async create( codeObjectsInsight: ChildSpanDurationsInsight[]): Promise<IListViewItemBase []> {
-        return codeObjectsInsight.map(x=>this.createListViewItem(x));
-    }
-
-
-    public createListViewItem(insight: ChildSpanDurationsInsight) : IListViewItem {
-
-        let renderer = new SpanItemHtmlRendering(this._viewUris);
-
-        return {
-            getHtml: ()=> renderer.childSpanDurationItemHtml(insight).renderHtml(), 
-            sortIndex: 99, 
-            // grouping by the parent span
-            groupId: CodeObjectId.getSpanName(insight.codeObjectId)
-        };
-    }
-
-}
-
 export class ChildrenSpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator {
 
     public constructor(private _viewUris:WebViewUris) {
@@ -213,7 +189,7 @@ export class ChildrenSpanDurationsListViewItemsCreator implements IInsightListVi
 
         return {
             getHtml: ()=> renderer.childrenSpanDurationItemHtml(insight).renderHtml(), 
-            sortIndex: 97, 
+            sortIndex: 55, 
             // grouping by the parent span
             groupId: CodeObjectId.getSpanName(insight.codeObjectId)
         };
