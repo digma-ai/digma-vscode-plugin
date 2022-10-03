@@ -5,7 +5,7 @@ import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
 import { CodeObjectId } from "../../../../services/codeObject";
-import { SpanDurationsInsight, ChildSpanDurationsInsight } from "../SpanInsight";
+import { SpanDurationsInsight, ChildSpanDurationsInsight, ChildrenSpanDurationsInsight } from "../SpanInsight";
 import { InsightTemplateHtml } from "./insightTemplateHtml";
 
 export class SpanItemHtmlRendering{
@@ -165,6 +165,18 @@ export class SpanItemHtmlRendering{
         const spanName = CodeObjectId.getSpanName(insight.childCodeObjectId);
         const titleVal = "Duration of child span " + spanName;
         return this.spanDurationItemHtml(insight, titleVal);
+    }
+
+    public childrenSpanDurationItemHtml(insight: ChildrenSpanDurationsInsight): InsightTemplateHtml {
+        const titleVal = "Durations of children";
+
+        var childForExample: ChildSpanDurationsInsight;
+        if (insight.childInsights == undefined || insight.childInsights.length <= 0) {
+            childForExample = {} as ChildSpanDurationsInsight;
+        } else {
+            childForExample = insight.childInsights[0];
+        }
+        return this.spanDurationItemHtml(childForExample, titleVal);
     }
 
 }

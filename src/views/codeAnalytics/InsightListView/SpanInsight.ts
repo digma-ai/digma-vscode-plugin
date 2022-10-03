@@ -124,6 +124,10 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
 export interface ChildSpanDurationsInsight extends SpanDurationsInsight, ChildInsight {
 }
 
+export interface ChildrenSpanDurationsInsight extends CodeObjectInsight {
+    childInsights: ChildSpanDurationsInsight[]
+}
+
 export interface EndpointInfo {
     route: string,
     serviceName: string
@@ -185,6 +189,31 @@ export class ChildSpanDurationsListViewItemsCreator implements IInsightListViewI
         return {
             getHtml: ()=> renderer.childSpanDurationItemHtml(insight).renderHtml(), 
             sortIndex: 99, 
+            // grouping by the parent span
+            groupId: CodeObjectId.getSpanName(insight.codeObjectId)
+        };
+    }
+
+}
+
+export class ChildrenSpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator {
+
+    public constructor(private _viewUris:WebViewUris) {
+
+    }
+
+    public async create( codeObjectsInsight: ChildrenSpanDurationsInsight[]): Promise<IListViewItemBase []> {
+        return codeObjectsInsight.map(x=>this.createListViewItem(x));
+    }
+
+
+    public createListViewItem(insight: ChildrenSpanDurationsInsight) : IListViewItem {
+
+        let renderer = new SpanItemHtmlRendering(this._viewUris);
+
+        return {
+            getHtml: ()=> renderer.childrenSpanDurationItemHtml(insight).renderHtml(), 
+            sortIndex: 97, 
             // grouping by the parent span
             groupId: CodeObjectId.getSpanName(insight.codeObjectId)
         };

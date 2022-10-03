@@ -17,6 +17,7 @@ export interface CodeObjectInsight extends Insight{
 
 export interface ChildInsight extends CodeObjectInsight {
     childCodeObjectId: string,
+    parentCodeObjectId: string,
 }
 
 export class InsightUtils {
