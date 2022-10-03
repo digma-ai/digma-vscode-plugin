@@ -168,15 +168,39 @@ export class SpanItemHtmlRendering{
     }
 
     public childrenSpanDurationItemHtml(insight: ChildrenSpanDurationsInsight): InsightTemplateHtml {
-        const titleVal = "Durations of children";
+        
+        const htmlRecords: string[] = [];
 
-        var childForExample: ChildSpanDurationsInsight;
-        if (insight.childInsights == undefined || insight.childInsights.length <= 0) {
-            childForExample = {} as ChildSpanDurationsInsight;
-        } else {
-            childForExample = insight.childInsights[0];
+        for (const childInsight of insight.childInsights) {
+            const spanName = CodeObjectId.getSpanName(childInsight.childCodeObjectId);
+            const htmlRecord: string = /*html*/ `
+            <tr>
+                <td>${spanName}</td>
+                <td>1</td>
+                <td>2</td>
+            </tr>`;
+
+            htmlRecords.push(htmlRecord);
         }
-        return this.spanDurationItemHtml(childForExample, titleVal);
+
+        const body = /*html*/ `
+            <div class="span-durations-insight-body">
+            <table>
+            <tr>
+                <th>Child Span</th>
+                <th>P50</th>
+                <th>P95</th>
+            </tr>
+                ${htmlRecords.join('')}
+            </table>
+            </div>`;
+
+        return new InsightTemplateHtml({
+            title: "Durations of children",
+            body: body,
+            icon: this._viewUris.image("duration.svg"),
+            buttons: []
+        });
     }
 
 }
