@@ -201,9 +201,8 @@ export class SpanItemHtmlRendering{
             const spanName = CodeObjectId.getSpanName(childInsight.childCodeObjectId);
             const pctlHtmlColumns: string[] = [];
             for (const pctl of percentilesSet) {
-                const pctlColumn = /*html*/ `
-                    <td>${this.getValueOfPercentile(childInsight, pctl)}</td>`;
-                pctlHtmlColumns.push(pctlColumn);
+                const pctlValue = this.getValueOfPercentile(childInsight, pctl);
+                pctlHtmlColumns.push(/*html*/ `<td>${pctlValue}</td>`);
             }
             const htmlRecord: string = /*html*/ `
             <tr>
@@ -214,13 +213,17 @@ export class SpanItemHtmlRendering{
             htmlRecords.push(htmlRecord);
         }
 
+        const tableHeaders: string[] = [];
+        for (const percentile of percentilesSet) {
+            tableHeaders.push(/*html*/ `<th>P${percentile*100}</th>`);
+        }
+
         const body = /*html*/ `
             <div class="span-durations-insight-body">
             <table>
                 <tr>
                     <th>Child Span</th>
-                    <th>P50</th>
-                    <th>P95</th>
+                    ${tableHeaders.join('')}
                 </tr>
                 ${htmlRecords.join('')}
             </table>
