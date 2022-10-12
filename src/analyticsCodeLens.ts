@@ -8,7 +8,7 @@ import { CodeObjectLocationInfo } from './services/languages/extractors';
 import { CodeObjectUsageStatus, UsageStatusResults } from './services/analyticsProvider';
 
 
-export class AnaliticsCodeLens implements vscode.Disposable
+export class AnalyticsCodeLens implements vscode.Disposable
 {
 
     private _provider: CodelensProvider;
