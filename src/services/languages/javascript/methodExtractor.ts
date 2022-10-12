@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { DocumentSymbol } from 'vscode-languageclient';
 import { IMethodExtractor, SymbolInfo } from '../extractors';
-import { Logger } from '../../logger';
 import { Token, TokenType } from '../tokens';
 import {
     MethodSymbolInfoExtractor,
@@ -11,20 +10,23 @@ import {
     AnonymousExpressRequestHandlerSymbolInfoExtractor,
     VariableFunctionSymbolInfoExtractor,
 } from './symbolInfoExtractors';
+import { JSPackageReader } from './packageReader';
 
 export class JSMethodExtractor implements IMethodExtractor {
 
+    constructor(
+        private packageReader: JSPackageReader,
+    ) {
+    }
+
     public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[], tokens: Token[]): Promise<SymbolInfo[]> {
-        const packages = await vscode.workspace.findFiles('**/package.json');
-        const packageFile = packages.find(f => document.uri.fsPath.startsWith(path.dirname(f.fsPath)));
+        const packageFile = await this.packageReader.findPackage(document.uri);
         if (!packageFile) {
-            Logger.warn(`Could not resolve package file for '${document.uri.path}'`);
             return [];
         }
 
-        let packageName = await this.getPackageName(packageFile);
-        if (packageName === undefined || packageName === "") {
-            Logger.warn(`Could not find package name in '${packageFile.path}'`);
+        let packageName = await this.packageReader.getPackageName(packageFile);
+        if (packageName === undefined) {
             return [];
         }
 
@@ -44,12 +46,6 @@ export class JSMethodExtractor implements IMethodExtractor {
         //relative = `${path.basename(packageFolderParent)}/${relative}`;
         const codeObjectPath = `${packageName}:${relative}`;
         return this.extractFunctions(document, codeObjectPath, '', docSymbols, tokens);
-    }
-
-    private async getPackageName(packageFile: vscode.Uri): Promise<string | undefined> {
-        const modDocument = await vscode.workspace.openTextDocument(packageFile);
-        const pkgjson = JSON.parse(modDocument.getText());
-        return pkgjson.name;
     }
 
     private extractFunctions(document: vscode.TextDocument, codeObjectPath: string, parentSymbolPath: string, symbols: DocumentSymbol[], tokens: Token[]): SymbolInfo[] {
