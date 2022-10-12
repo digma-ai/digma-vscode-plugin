@@ -93,12 +93,10 @@ export class JSMethodExtractor implements IMethodExtractor {
         for (const symbol of symbols) {
             const symbolPath = (parentSymbolPath ? parentSymbolPath + '.' : '') + symbol.name;
 
-            const symbolInfo: SymbolInfo | undefined = symbolInfoExtractors.reduce(
-                (info: SymbolInfo | undefined, extractor) => info || extractor.extract(symbol, codeObjectPath, symbol.name, document, symbolPath),
-                undefined,
-            );
-            if(symbolInfo) {
-                symbolInfos.push(symbolInfo);
+            for (const extractor of symbolInfoExtractors) {
+                symbolInfos.push(
+                    ...extractor.extract(symbol, codeObjectPath, symbol.name, document, symbolPath)
+                );
             }
 
             const hasChildren = symbol.children && symbol.children.length > 0;
