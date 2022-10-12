@@ -4,6 +4,7 @@ import { IMethodExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
 import { IMethodPositionSelector } from '../methodPositionSelector';
 import { JSMethodPositionSelector } from './methodPositionSelector';
+import { IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
 import { JSMethodExtractor } from './methodExtractor';
 import { JSSpanExtractor } from './spanExtractor';
 
@@ -32,6 +33,13 @@ export class JSLanguageExtractor extends LanguageExtractor
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
             new JSSpanExtractor(codeInspector)
+        ];
+    }
+
+    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+        return [
+            new LogicalModulePathToUriConverter(),
+            new PhysicalModulePathToUriConverter(),
         ];
     }
 }

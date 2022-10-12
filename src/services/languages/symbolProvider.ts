@@ -240,7 +240,7 @@ export class SymbolProvider
         return supportedLanguage?.methodPositionSelector ?? new DefaultMethodPositionSelector();
     }
 
-    private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined> {
+    public async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined> {
         const supportedLanguage = this.languageExtractors.find(x => vscode.languages.match(x.documentFilter, document) > 0);
         if (!supportedLanguage ||
             !(supportedLanguage.requiredExtensionLoaded || await this.loadRequiredExtension(supportedLanguage)))

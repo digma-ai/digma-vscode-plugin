@@ -204,8 +204,9 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._overlay.show(HtmlHelper.getLoadingMessage('Loading error view...'), this.errorOverlayId);
         const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
         const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
+        const { document } = await this.getCurrentDocumentContext();
 
-        const viewModels = await this.createViewModels(errorDetails);
+        const viewModels = await this.createViewModels(errorDetails, document);
         const stackViewModel = viewModels.firstOrDefault();
         this._stackViewModel = stackViewModel;
         this._stackViewModels = viewModels;
@@ -261,7 +262,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         return result;
     }
 
-    private async createViewModels(errorDetails: CodeObjectErrorDetails): Promise<ErrorFlowStackViewModel[]> {
+    private async createViewModels(
+        errorDetails: CodeObjectErrorDetails,
+        document?: vscode.TextDocument,
+    ): Promise<ErrorFlowStackViewModel[]> {
         const sourceFlows = errorDetails.errors;
         const viewModels: ErrorFlowStackViewModel[] = [];
         let id = 0;
@@ -286,10 +290,14 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                         repeat,
                     } = sourceFrame;
 
-                    const workspaceUri = await this._editorHelper.getWorkspaceFileUri({
-                        moduleLogicalPath,
-                        modulePhysicalPath,
-                    });
+                    const workspaceUri = await this._editorHelper.getWorkspaceFileUri(
+                        {
+                            codeObjectId,
+                            moduleLogicalPath,
+                            modulePhysicalPath,
+                        },
+                        document,
+                    );
                                     
                     const frame: FrameViewModel = {
                         id: id++,
@@ -333,13 +341,22 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         return viewModels;
     }
 
-    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
+    private async getCurrentDocumentContext(): Promise<DocumentContext> {
         const editor = vscode.window.activeTextEditor;
-        if(!editor) {
+        const document = editor?.document;
+
+        return {
+            editor,
+            document,
+        };
+    }
+
+    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
+        const { editor, document } = await this.getCurrentDocumentContext();
+        if(!editor || !document) {
             return;
         }
 
-        const document = editor.document;
         const position = editor.selection.anchor;
 
         const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
@@ -403,3 +420,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._errorFlowParamDecorator.errorFlow = errorFlow;
     }
 }
+
+type DocumentContext = {
+    editor?: vscode.TextEditor
+    document?: vscode.TextDocument
+};

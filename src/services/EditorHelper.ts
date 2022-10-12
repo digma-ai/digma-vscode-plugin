@@ -5,6 +5,7 @@ import { Logger } from './logger';
 import { SourceControl } from './sourceControl';
 import { DocumentInfoProvider } from './documentInfoProvider';
 import { Settings } from './../settings';
+import { ModulePathInfo } from './languages/modulePathToUriConverters';
 
 export interface EditorInfo {
     workspaceUri?: vscode.Uri;
@@ -155,50 +156,28 @@ export class EditorHelper {
         return await this._sourceControl.current?.getFile(uri, commit);
     }
 
-
-    public async getWorkspaceFileUri(editorInfo: EditorInfo) : Promise<vscode.Uri | undefined>    {
-        
-        const moduleLogicalPath = editorInfo.moduleLogicalPath;
-        //Try first using the logical name of the function if we have it
-        if (moduleLogicalPath){ 
-
-            var symbols = await this.lookupCodeObjectByFullName(moduleLogicalPath);
-            //We have a match
-            if (symbols.length===1){
-                return symbols[0].location.uri;
-            }
+    public async getWorkspaceFileUri(
+        pathInfo: ModulePathInfo,
+        document?: vscode.TextDocument,
+    ) : Promise<vscode.Uri | undefined> {
+        if(!document) {
+            return;
         }
 
-        const modulePhysicalPath = editorInfo.modulePhysicalPath;
-        if (modulePhysicalPath){
-
-            const moduleRootFolder = modulePhysicalPath.split('/').firstOrDefault();
-            const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name === moduleRootFolder);
-            if (moduleWorkspace){
-        
-                const workspaceUri = moduleWorkspace
-                    ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', modulePhysicalPath)
-                    : undefined;
-                
-                return workspaceUri;
-            }
-            else{
-                const file = await (await vscode.workspace.findFiles(modulePhysicalPath)).firstOrDefault();
-                return file;
-            }
-
-
+        const languageExtractor = await this._documentInfoProvider.symbolProvider.getSupportedLanguageExtractor(document);
+        if(!languageExtractor) {
+            return;
         }
 
-       
+        const converters = await languageExtractor.getModulePathToUriConverters();
+        let path;
+        for (let index = 0; !path && index < converters.length; index++) {
+            const converter = converters[index];
+            path = await converter.convert(pathInfo);
+        }
+
+        return path;
     }
-
-    private async lookupCodeObjectByFullName(name:string) : Promise<vscode.SymbolInformation[]>{
-        return await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", name);
-    }
-
-
-
 
     public async getExecutedCodeFromScm(uri: vscode.Uri, commit: string, line: integer) : Promise<string |undefined>{
         var doc = await this.getFromSourceControl(uri, commit);
