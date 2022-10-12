@@ -1,14 +1,12 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
-import { BasicParametersExtractor } from '../defaultImpls';
-import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
-import { FastapiEndpointExtractor } from './fastapiEndpointExtractor';
+import { IMethodExtractor, ISpanExtractor } from '../extractors';
+import { LanguageExtractor } from '../languageExtractor';
+import { IModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
 import { PythonMethodExtractor } from './methodExtractor';
 import { PythonSpanExtractor } from './spanExtractor';
 
-
-export class PythonLanguageExtractor implements ILanguageExtractor 
-{
+export class PythonLanguageExtractor extends LanguageExtractor {
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
@@ -25,21 +23,15 @@ export class PythonLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public get parametersExtractor(): IParametersExtractor {
-        return new BasicParametersExtractor();
-    }
-
-    public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
-        return [
-            
-        ];
-    }
-
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
             new PythonSpanExtractor(codeInspector)
         ];
     }
-    public async validateConfiguration(): Promise<void>{
+
+    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+        return [
+            new PhysicalModulePathToUriConverter(),
+        ];
     }
 }

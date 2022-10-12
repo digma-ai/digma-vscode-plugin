@@ -4,7 +4,7 @@ export enum CodeObjectType
     span = "span",
 }
 
-export class CodeObjectId{
+export class CodeObjectId {
    
     static readonly codeObjectSeparator: string = "$_$";
 
@@ -24,5 +24,14 @@ export class CodeObjectId{
         var codeObjectType: string = parts[0];
         return (<any>CodeObjectType)[codeObjectType];
     }
-    
+
+    public static getSpanName(spanCodeObjectId: string): string {
+
+        const ix = spanCodeObjectId.lastIndexOf(this.codeObjectSeparator);
+        if (ix < 0) {
+            return spanCodeObjectId;
+        }
+        return spanCodeObjectId.substring(ix + this.codeObjectSeparator.length);
+    }
+
 }

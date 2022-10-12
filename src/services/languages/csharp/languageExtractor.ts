@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
-import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { LanguageExtractor } from '../languageExtractor';
+import { IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
 // import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor';
 
-export class CSharpLanguageExtractor implements ILanguageExtractor 
-{
+export class CSharpLanguageExtractor extends LanguageExtractor {
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
@@ -28,11 +29,11 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
         return new CSharpParametersExtractor();
     }
 
-    public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
-        return [
-            // new AspNetCoreMvcEndpointExtractor(codeInspector),
-        ];
-    }
+    // public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
+    //     return [
+    //         new AspNetCoreMvcEndpointExtractor(codeInspector),
+    //     ];
+    // }
 
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
@@ -40,7 +41,10 @@ export class CSharpLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public async validateConfiguration(): Promise<void>{
-        
+    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+        return [
+            new LogicalModulePathToUriConverter(),
+            new PhysicalModulePathToUriConverter(),
+        ];
     }
 }

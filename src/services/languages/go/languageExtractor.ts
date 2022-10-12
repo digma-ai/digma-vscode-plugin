@@ -1,15 +1,13 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
 import { Logger } from '../../logger';
-import { BasicParametersExtractor } from '../defaultImpls';
-import { IEndpointExtractor, ILanguageExtractor, IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
+import { IMethodExtractor, ISpanExtractor } from '../extractors';
+import { LanguageExtractor } from '../languageExtractor';
+import { IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
 import { GoMethodExtractor } from './methodExtractor';
 import { GoSpanExtractor } from './spanExtractor';
 
-
-
-export class GoLanguageExtractor implements ILanguageExtractor 
-{
+export class GoLanguageExtractor extends LanguageExtractor {
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
@@ -26,21 +24,14 @@ export class GoLanguageExtractor implements ILanguageExtractor
         ];
     }
 
-    public get parametersExtractor(): IParametersExtractor {
-        return new BasicParametersExtractor();
-    }
-
-    public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
-        return [];
-    }
-
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
             new GoSpanExtractor(codeInspector)
         ];
     }
+
     public async validateConfiguration(): Promise<void>{
-        const section:any = vscode.workspace.getConfiguration().get("gopls");
+        const section: any = vscode.workspace.getConfiguration().get("gopls");
         if(section !== undefined && section["ui.semanticTokens"]){
             return;
         }
@@ -53,5 +44,12 @@ export class GoLanguageExtractor implements ILanguageExtractor
             await extension.activate();
             Logger.info(`Finished activating "${extension.id}" extension`);
         }
+    }
+
+    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+        return [
+            new LogicalModulePathToUriConverter(),
+            new PhysicalModulePathToUriConverter(),
+        ];
     }
 }

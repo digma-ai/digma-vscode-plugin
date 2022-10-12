@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol } from 'vscode-languageclient';
 import { DocumentInfoProvider, ParameterInfo } from '../documentInfoProvider';
-import { CodeInspector } from '../codeInspector';
 import { SymbolProvider, SymbolTree } from './symbolProvider';
 import { Token } from './tokens';
 
@@ -40,6 +39,7 @@ export class EndpointInfo implements CodeObjectLocationInfo {
             return [ this.id];
         }
 }
+
 export class SpanLocationInfo implements CodeObjectLocationInfo {
     constructor(
         public id: string,
@@ -93,15 +93,4 @@ export interface ISpanExtractor {
         tokens: Token[],
         symbolProvider: SymbolProvider,
     ): Promise<SpanLocationInfo[]>;
-}
-
-export interface ILanguageExtractor {
-    requiredExtensionLoaded: boolean;
-    get requiredExtensionId(): string;
-    get documentFilter(): vscode.DocumentFilter;
-    get methodExtractors(): IMethodExtractor[];
-    get parametersExtractor(): IParametersExtractor;
-    getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];
-    getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
-    validateConfiguration(): Promise<void>
 }

@@ -12,7 +12,7 @@ import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { HotspotListViewItemsCreator } from "./InsightListView/HotspotInsight";
 import { ErrorsListViewItemsCreator } from "./InsightListView/ErrorsInsight";
 import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
-import { NPlusSpansListViewItemsCreator, SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator } from "./InsightListView/SpanInsight";
+import { NPlusSpansListViewItemsCreator, SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator, ChildrenSpanDurationsListViewItemsCreator } from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, EPNPlusSpansListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
 import { Settings } from "../../settings";
@@ -31,7 +31,7 @@ import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelec
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
 import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
-import { AnaliticsCodeLens } from "../../analyticsCodeLens";
+import { AnalyticsCodeLens } from "../../analyticsCodeLens";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -53,7 +53,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 		extensionUri: vscode.Uri,
         editorHelper: EditorHelper,
         workspaceState:WorkspaceState,
-        codelensProvider: AnaliticsCodeLens,
+        codelensProvider: AnalyticsCodeLens,
         envSelectStatusBar: EnvSelectStatusBar
 
 
@@ -153,7 +153,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         editorHelper: EditorHelper,
         errorFlowParamDecorator: ErrorFlowParameterDecorator,
         private _workspaceState:WorkspaceState,
-        private _codeLensProvider:AnaliticsCodeLens,
+        private _codeLensProvider:AnalyticsCodeLens,
         private _envSelectStatusBar: EnvSelectStatusBar
 	) {
 
@@ -194,6 +194,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator(this._webViewUris));
+        listViewItemsCreator.add("ChildrenSpanDurations", new ChildrenSpanDurationsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
         const usageTemplate = new UsageViewItemsTemplate(this._webViewUris);
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
@@ -320,6 +321,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._overlay.overlayId === OverlayView.UnsupportedDocumentOverlayId;
         
     }
+
     private async getCodeObjectOrShowOverlay(
 		document: vscode.TextDocument,
 		position: vscode.Position
@@ -329,7 +331,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             return;
         }
 
-        const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
+        const symbolProvider = this._documentInfoProvider.symbolProvider;
+        const docInfo = symbolProvider.supportsDocument(document)
             ? await this._documentInfoProvider.getDocumentInfo(document)
             : undefined;
 
@@ -344,7 +347,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             return;
         }
         
-		const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
+        const methodPositionSelector = await symbolProvider.getMethodPositionSelector(document);
+        const methodInfo = methodPositionSelector.filter(position, docInfo.methods);
+
         // if(!methodInfo){
         //     if(this.canChangeOverlayOnCodeSelectionChanged()) {
         //         await this._overlay.showCodeSelectionNotFoundMessage(docInfo);

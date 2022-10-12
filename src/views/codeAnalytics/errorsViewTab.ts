@@ -18,16 +18,13 @@ import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
 import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
-import { IListViewItem, InsightItemGroupRendererFactory } from "../ListView/IListViewItem";
-import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
+import { InsightItemGroupRendererFactory } from "../ListView/IListViewItem";
 import { ListViewRender } from "../ListView/ListViewRender";
-import { CodeObjectId, CodeObjectType } from "../../services/codeObject";
 import { WorkspaceState } from "../../state";
 import { ErrorsLineDecorator } from "./decorators/errorsLineDecorator";
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
 
-export class ErrorsViewTab implements ICodeAnalyticsViewTab 
-{
+export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     private _viewedCodeObjectId?: string = undefined;
     private _stackViewModel?: ErrorFlowStackViewModel = undefined;
     private _disposables: vscode.Disposable[] = [];
@@ -37,7 +34,6 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
     public static Commands = class {
         public static readonly ShowErrorView = `digma.ErrorView.show`;
     };
-
 
     constructor(
         private _channel: WebviewChannel,
@@ -61,7 +57,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
         this._disposables.push(vscode.commands.registerCommand(ErrorsViewTab.Commands.ShowErrorView, async (codeObjectId: string, codeObjectDisplayName: string, errorSourceUID: string) => {
             const view = this._webViewProvider.get();
-            if(view === undefined || view.visible === false){
+            if(view === undefined || view.visible === false) {
 
                 this._channel.consume(UiMessage.Notify.TabLoaded, async (e: UiMessage.Notify.TabLoaded)=>{
                         this.onShowErrorDetailsEvent(new UiMessage.Get.ErrorDetails(errorSourceUID));
@@ -130,7 +126,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         }
         const document = editor.document;
         let docInfo = await this._documentInfoProvider.getDocumentInfo(document);
-        if (!docInfo){
+        if (!docInfo) {
             return;
         }
         
@@ -157,7 +153,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
             }
             catch(e)
             {
-                if(!(e instanceof HttpError) || e.status !== 404){
+                if(!(e instanceof HttpError) || e.status !== 404) {
                     Logger.error(`Failed to get codeObject ${codeObject.id} errors`, e);
                     const html = HtmlHelper.getErrorMessage("Failed to fetch errors from Digma server.\nSee Output window from more info.");
                     this._channel.publish(new UiMessage.Set.ErrorsList(html));
@@ -171,7 +167,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
             const codeObjectGroupEnv = new CodeObjectGroupEnvironments(this._webViewUris, this._workspaceState);
 
-            if (errors.length==0){
+            if (errors.length == 0) {
                 let html =codeObjectGroupEnv.getUsageHtml(undefined,undefined,usageResults);
                 html += `${HtmlHelper.getInfoMessage("Great news! No errors recorded here yet. Fingers crossed...")}`;
                 this._channel.publish(new UiMessage.Set.ErrorsList(html));
@@ -188,10 +184,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         }
     }
 
-    
-
-    
-    private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails){
+    private async onShowErrorDetailsEvent(e: UiMessage.Get.ErrorDetails) {
         if(!e.errorSourceUID) {
             return;
         }
@@ -204,12 +197,13 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._overlay.show(HtmlHelper.getLoadingMessage('Loading error view...'), this.errorOverlayId);
         const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
         const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
+        const { document } = await this.getCurrentDocumentContext();
 
-        const viewModels = await this.createViewModels(errorDetails);
+        const viewModels = await this.createViewModels(errorDetails, document);
         const stackViewModel = viewModels.firstOrDefault();
         this._stackViewModel = stackViewModel;
         this._stackViewModels = viewModels;
-        let html = ErrorsHtmlBuilder.buildErrorDetails(errorDetails,  viewModels);
+        const html = ErrorsHtmlBuilder.buildErrorDetails(errorDetails, viewModels);
         this._overlay.show(html, this.errorOverlayId);
         this.navigateErrorFlow();
         this.updateEditorDecorations(stackViewModel);
@@ -217,7 +211,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
 
     private onOverlayVisibilityChanged(e: UiMessage.Notify.OverlayVisibilityChanged)
     {
-        if(e.visible !== undefined && e.id ===this.errorOverlayId){//error overlay visibility changed
+        if(e.visible !== undefined && e.id === this.errorOverlayId) {//error overlay visibility changed
             this._errorFlowParamDecorator.enabled = e.visible;
         }
     }
@@ -261,7 +255,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         return result;
     }
 
-    private async createViewModels(errorDetails: CodeObjectErrorDetails): Promise<ErrorFlowStackViewModel[]> {
+    private async createViewModels(
+        errorDetails: CodeObjectErrorDetails,
+        document?: vscode.TextDocument,
+    ): Promise<ErrorFlowStackViewModel[]> {
         const sourceFlows = errorDetails.errors;
         const viewModels: ErrorFlowStackViewModel[] = [];
         let id = 0;
@@ -280,16 +277,20 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                         moduleName,
                         functionName,
                         lineNumber,
-                        executedCode: executedCode,
+                        executedCode,
                         codeObjectId,
                         parameters,
                         repeat,
                     } = sourceFrame;
 
-                    const workspaceUri = await this._editorHelper.getWorkspaceFileUri({
-                        moduleLogicalPath,
-                        modulePhysicalPath,
-                    });
+                    const workspaceUri = await this._editorHelper.getWorkspaceFileUri(
+                        {
+                            codeObjectId,
+                            moduleLogicalPath,
+                            modulePhysicalPath,
+                        },
+                        document,
+                    );
                                     
                     const frame: FrameViewModel = {
                         id: id++,
@@ -303,7 +304,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                         moduleName,
                         functionName,
                         lineNumber,
-                        executedCode: executedCode,
+                        executedCode,
                         codeObjectId,
                         repeat,
                         workspaceUri,
@@ -326,20 +327,29 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
                 lastInstanceCommitId: sourceFlow.lastInstanceCommitId,
                 affectedSpanPaths: [],
                 exceptionType: '',
-                summary: undefined
+                summary: undefined,
             };
             viewModels.push(viewModel);
         }
         return viewModels;
     }
 
-    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
+    private async getCurrentDocumentContext(): Promise<DocumentContext> {
         const editor = vscode.window.activeTextEditor;
-        if(!editor) {
+        const document = editor?.document;
+
+        return {
+            editor,
+            document,
+        };
+    }
+
+    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
+        const { editor, document } = await this.getCurrentDocumentContext();
+        if(!editor || !document) {
             return;
         }
 
-        const document = editor.document;
         const position = editor.selection.anchor;
 
         const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
@@ -348,24 +358,27 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         if(!docInfo){
             return;
         }
-        
+
         const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
-        if(!methodInfo){
+        if(!methodInfo) {
             return;
         }
 
-        const codeObject = <CodeObjectInfo>{ 
-            id: methodInfo.symbol.id, 
-            methodName: methodInfo.displayName 
+        const codeObject = <CodeObjectInfo>{
+            id: methodInfo.symbol.id,
+            methodName: methodInfo.displayName,
         };
         return codeObject;
     }
 
-    private async onWorkspaceOnlyChanged(value?: boolean){
-        if(value != undefined)
+    private async onWorkspaceOnlyChanged(value?: boolean) {
+        if(value != undefined) {
             await Settings.hideFramesOutsideWorkspace.set(value);
+        }
     }
+
     private errorOverlayId = "errorOverlay";
+
     private async goToFileAndLineById(frameId?: number) {
         const frame = this._stackViewModel?.stacks
             .flatMap(s => s.frames)
@@ -403,3 +416,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab
         this._errorFlowParamDecorator.errorFlow = errorFlow;
     }
 }
+
+type DocumentContext = {
+    editor?: vscode.TextEditor
+    document?: vscode.TextDocument
+};

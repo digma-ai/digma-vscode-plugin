@@ -1,46 +1,55 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { DocumentSymbol, SymbolKind } from "vscode-languageclient";
-import { IMethodExtractor, SymbolInfo } from "../extractors";
-import { Logger } from '../../logger';
+import { DocumentSymbol } from 'vscode-languageclient';
+import { IMethodExtractor, SymbolInfo } from '../extractors';
 import { Token, TokenType } from '../tokens';
+import {
+    MethodSymbolInfoExtractor,
+    SymbolInfoExtractor,
+    NamedFunctionDeclarationSymbolInfoExtractor,
+    AnonymousExpressRequestHandlerSymbolInfoExtractor,
+    VariableFunctionSymbolInfoExtractor,
+} from './symbolInfoExtractors';
+import { JSPackageReader } from './packageReader';
 
 export class JSMethodExtractor implements IMethodExtractor {
 
+    constructor(
+        private packageReader: JSPackageReader,
+    ) {
+    }
+
     public async extractMethods(document: vscode.TextDocument, docSymbols: DocumentSymbol[], tokens: Token[]): Promise<SymbolInfo[]> {
-        const packages = await vscode.workspace.findFiles('**/package.json');
-        const packageFile = packages.find(f => document.uri.fsPath.startsWith(path.dirname(f.fsPath)));
+        const packageFile = await this.packageReader.findPackage(document.uri);
         if (!packageFile) {
-            Logger.warn(`Could not resolve package file for '${document.uri.path}'`);
             return [];
         }
 
-        const packageName = await this.getPackageName(packageFile);
-        if (packageName === undefined || packageName === "") {
-            Logger.warn(`Could not find package name in '${packageFile.path}'`);
+        let packageName = await this.packageReader.getPackageName(packageFile);
+        if (packageName === undefined) {
             return [];
         }
 
-        //    UserService
         const packageFolderParent = path.dirname(packageFile.fsPath);
-        const docFolder = path.dirname(document.uri.fsPath);
 
-        var relative = path.relative(packageFolderParent, document.uri.fsPath)
+        let relative = path.relative(packageFolderParent, document.uri.fsPath)
             .replaceAll('\\', '/'); // get rid of windows backslashes
+        
+        if(relative.startsWith('node_modules')) {
+            const pattern = /node_modules\/(@[\w\d-]+\/[\w-]+|[\w\d-]+)\/(.*)/;
+            const matches = relative.match(pattern);
+            if(matches) {
+                [ , packageName, relative ] = matches;
+            }
+        }
 
         //relative = `${path.basename(packageFolderParent)}/${relative}`;
-        relative = `${packageName}:${relative}`;
-        return this.extractFunctions(document, relative, '', docSymbols, tokens);
+        const codeObjectPath = `${packageName}:${relative}`;
+        return this.extractFunctions(document, codeObjectPath, '', docSymbols, tokens);
     }
 
-    private async getPackageName(packageFile: vscode.Uri): Promise<string | undefined> {
-        const modDocument = await vscode.workspace.openTextDocument(packageFile);
-        const pkgjson = JSON.parse(modDocument.getText());
-        return pkgjson.name;
-    }
-
-    private extractFunctions(document: vscode.TextDocument, filePath: string, parentSymPath: string, symbols: DocumentSymbol[], tokens: Token[]): SymbolInfo[] {
-        let symbolInfos: SymbolInfo[] = [];
+    private extractFunctions(document: vscode.TextDocument, codeObjectPath: string, parentSymbolPath: string, symbols: DocumentSymbol[], tokens: Token[]): SymbolInfo[] {
+        const symbolInfos: SymbolInfo[] = [];
 
         /*
         declation example:
@@ -70,49 +79,29 @@ export class JSMethodExtractor implements IMethodExtractor {
                 functionMap[key] = token;
             });
 
+        const symbolInfoExtractors: SymbolInfoExtractor[] = [
+            new MethodSymbolInfoExtractor(),
+            new NamedFunctionDeclarationSymbolInfoExtractor(),
+            new AnonymousExpressRequestHandlerSymbolInfoExtractor(),
+            new VariableFunctionSymbolInfoExtractor(functionMap, getKey),
+        ];
+
         for (const symbol of symbols) {
-            let symPath = (parentSymPath ? parentSymPath + '.' : '') + symbol.name;
+            const symbolPath = (parentSymbolPath ? parentSymbolPath + '.' : '') + symbol.name;
+
+            for (const extractor of symbolInfoExtractors) {
+                symbolInfos.push(
+                    ...extractor.extract(symbol, codeObjectPath, symbol.name, document, symbolPath)
+                );
+            }
+
             const hasChildren = symbol.children && symbol.children.length > 0;
-            let range = new vscode.Range(
-                new vscode.Position(symbol.range.start.line, symbol.range.start.character),
-                new vscode.Position(symbol.range.end.line, symbol.range.end.character));
-
-            const id = `${filePath}$_$${symbol.name}`;
-            let isMethodCodeObjectRelated = this.isOfKind(symbol, SymbolKind.Method);
-
-            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Function) && hasChildren) {
-                const textLine = document.lineAt(symbol.range.start.line);
-                const functionMatch = `\\s*function\\s*${symbol.name}`; //should handle only function declaration, and filter out function call like db.getAll()
-                const match = textLine.text.match(functionMatch);
-                isMethodCodeObjectRelated = match !== undefined && match!== null;
-            }
-            if (!isMethodCodeObjectRelated && this.isOfKind(symbol, SymbolKind.Variable) && hasChildren) {
-                const functionToken = functionMap[getKey(symbol.range.start.line, symbol.range.start.character)];
-                isMethodCodeObjectRelated = functionToken !== undefined;
-            }
-
-            if (isMethodCodeObjectRelated) {
-                symbolInfos.push({
-                    id,
-                    name: symbol.name,
-                    codeLocation: filePath,
-                    displayName: symPath,
-                    range,
-                    documentUri: document.uri
-                });
-            }
             if (hasChildren) {
-                const childFunctions = this.extractFunctions(document, filePath, symPath, symbol.children!, tokens);
-                symbolInfos = symbolInfos.concat(childFunctions);
+                const childFunctions = this.extractFunctions(document, codeObjectPath, symbolPath, symbol.children!, tokens);
+                symbolInfos.push(...childFunctions);
             }
         }
 
         return symbolInfos;
-
     }
-
-    private isOfKind(symbol: DocumentSymbol, kind: number): boolean {
-        return symbol.kind + 1 === kind;
-    }
-
 }
