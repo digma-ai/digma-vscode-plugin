@@ -6,9 +6,7 @@ import { IModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../
 import { PythonMethodExtractor } from './methodExtractor';
 import { PythonSpanExtractor } from './spanExtractor';
 
-
-export class PythonLanguageExtractor extends LanguageExtractor 
-{
+export class PythonLanguageExtractor extends LanguageExtractor {
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {

@@ -30,8 +30,7 @@ export class EditorHelper {
         private _documentInfoProvider: DocumentInfoProvider,
     ) {}
     
-    public async goToFileAndLine(editorInfo?: EditorInfo)
-    {
+    public async goToFileAndLine(editorInfo?: EditorInfo) {
         if(!editorInfo?.workspaceUri) {
             return;
         }
@@ -39,71 +38,60 @@ export class EditorHelper {
         const workspaceUri = editorInfo.workspaceUri;
         const lineNumber = editorInfo.lineNumber ?? 0;
 
-        try
-        {
+        try {
             let doc: vscode.TextDocument | undefined = undefined;
 
-            if(!await utils.fileExists(workspaceUri))
-            {
+            if(!await utils.fileExists(workspaceUri)) {
                 doc = await this.askAndOpenFromSourceControl(editorInfo);
             }
-            else
-            {
+            else {
                 doc = await vscode.workspace.openTextDocument(workspaceUri);
 
                 const txtLine = doc.lineAt(lineNumber-1);
-                var fileChanged:boolean = false;
-                if (editorInfo.executedCode){
+                let fileChanged:boolean = false;
+                if (editorInfo.executedCode) {
                     fileChanged = (txtLine.text.trim() !== editorInfo.executedCode);
                 }
                 else {
                     try {
-                        var sourceDoc = await this.getFromSourceControl(workspaceUri, editorInfo.lastInstanceCommitId!);
-                        if (sourceDoc){
+                        const sourceDoc = await this.getFromSourceControl(workspaceUri, editorInfo.lastInstanceCommitId!);
+                        if (sourceDoc) {
                             fileChanged = (txtLine.text.trim() !== sourceDoc.lineAt(lineNumber-1).text.trim());
                         }
-                        else{
+                        else {
                             return;
                         }
                     }
-                    catch (exeption){
+                    catch(exeption) {
                         await vscode.window.showWarningMessage(
                             'Cannot locate file in source control. Please make sure its checked in');
                     }
-                
-
                 }
-                if(fileChanged)
-                {
+                if(fileChanged) {
                     doc = await this.askAndOpenFromSourceControl(editorInfo);;
                 }
-                else
-                {
+                else {
                     const docInfo = await this._documentInfoProvider.getDocumentInfo(doc);
                     const methodInfos = docInfo?.methods || [];
-                    if(methodInfos.all(m => m.symbol.name != editorInfo.functionName))
-                    {
+                    if(methodInfos.all(m => m.symbol.name != editorInfo.functionName)) {
                         doc = await this.askAndOpenFromSourceControl(editorInfo);
                     }
                 }
             }
             
-            if(doc)
-            {
+            if(doc) {
                 await this.openFileAndLine(doc, lineNumber); 
             }
         }
-        catch(error)
-        {
+        catch(error) {
             Logger.error(`Failed to open file: ${editorInfo.modulePhysicalPath}`, error);
             vscode.window.showErrorMessage(`Failed to open file: ${editorInfo.modulePhysicalPath}`)
         }
     }
 
-    public async openTextDocumentFromUri(uri: vscode.Uri) : Promise<vscode.TextDocument>{
+    public async openTextDocumentFromUri(uri: vscode.Uri) : Promise<vscode.TextDocument> {
         let doc = await vscode.workspace.openTextDocument(uri);
         return doc;
-
     }
 
     public async openFileAndLine(doc: vscode.TextDocument, lineNumber: number) {
@@ -118,18 +106,16 @@ export class EditorHelper {
         return await vscode.window.showTextDocument(doc);
     }
 
-    private async askAndOpenFromSourceControl(editorInfo: EditorInfo) : Promise<vscode.TextDocument | undefined>
-    {
-        if(!this._sourceControl.current)
-        {
+    private async askAndOpenFromSourceControl(editorInfo: EditorInfo) : Promise<vscode.TextDocument | undefined> {
+        if(!this._sourceControl.current) {
             const sel = await vscode.window.showWarningMessage(
                 'File version is different from the version recorded in this flow.\nPlease configure source control.',
                 'configure');
-            if(sel == 'configure')
+            if(sel == 'configure') {
                 await vscode.commands.executeCommand("workbench.action.openWorkspaceSettings", {query: Settings.sourceControl.key});
+            }
         }
-        else
-        {
+        else {
             let sel = await vscode.window.showWarningMessage(
                 `File version is different from the version recorded in this flow, would you like to open the remote version of the file' installed.`,
                 'yes'
@@ -180,8 +166,8 @@ export class EditorHelper {
     }
 
     public async getExecutedCodeFromScm(uri: vscode.Uri, commit: string, line: integer) : Promise<string |undefined>{
-        var doc = await this.getFromSourceControl(uri, commit);
-        if (doc){
+        const doc = await this.getFromSourceControl(uri, commit);
+        if (doc) {
             return doc.lineAt(line-1).text.trim();
         }
     }

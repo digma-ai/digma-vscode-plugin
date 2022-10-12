@@ -8,8 +8,7 @@ import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
 // import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor';
 
-export class CSharpLanguageExtractor extends LanguageExtractor 
-{
+export class CSharpLanguageExtractor extends LanguageExtractor {
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {

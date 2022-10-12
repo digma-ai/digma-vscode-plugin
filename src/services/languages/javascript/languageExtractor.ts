@@ -10,9 +10,7 @@ import { JSSpanExtractor } from './spanExtractor';
 import { JSPackageReader } from './packageReader';
 import { JSPackageToUriConverter } from './modulePathToUriConverters';
 
-export class JSLanguageExtractor extends LanguageExtractor 
-{
-
+export class JSLanguageExtractor extends LanguageExtractor {
     private packageReader: JSPackageReader = new JSPackageReader();
     public requiredExtensionLoaded: boolean = false;
 

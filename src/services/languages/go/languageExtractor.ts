@@ -7,8 +7,7 @@ import { IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalMod
 import { GoMethodExtractor } from './methodExtractor';
 import { GoSpanExtractor } from './spanExtractor';
 
-export class GoLanguageExtractor extends LanguageExtractor 
-{
+export class GoLanguageExtractor extends LanguageExtractor {
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
