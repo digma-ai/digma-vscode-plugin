@@ -4,11 +4,14 @@ import { IMethodExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
 import { IMethodPositionSelector } from '../methodPositionSelector';
 import { JSMethodPositionSelector } from './methodPositionSelector';
+import { IModulePathToUriConverter } from '../modulePathToUriConverters';
 import { JSMethodExtractor } from './methodExtractor';
 import { JSSpanExtractor } from './spanExtractor';
+import { JSPackageReader } from './packageReader';
+import { JSPackageToUriConverter } from './modulePathToUriConverters';
 
-export class JSLanguageExtractor extends LanguageExtractor 
-{
+export class JSLanguageExtractor extends LanguageExtractor {
+    private packageReader: JSPackageReader = new JSPackageReader();
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
@@ -21,7 +24,7 @@ export class JSLanguageExtractor extends LanguageExtractor
 
     public get methodExtractors(): IMethodExtractor[] {
         return [
-            new JSMethodExtractor()
+            new JSMethodExtractor(this.packageReader),
         ];
     }
 
@@ -32,6 +35,13 @@ export class JSLanguageExtractor extends LanguageExtractor
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
             new JSSpanExtractor(codeInspector)
+        ];
+    }
+
+    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+        const packagesMap = await this.packageReader.loadPackagesMap();
+        return [
+            new JSPackageToUriConverter(packagesMap),
         ];
     }
 }

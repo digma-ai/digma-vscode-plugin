@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AnaliticsCodeLens } from './analyticsCodeLens';
+import { AnalyticsCodeLens } from './analyticsCodeLens';
 import { AnalyticsProvider} from './services/analyticsProvider';
 import { SymbolProvider } from './services/languages/symbolProvider';
 import { PythonLanguageExtractor } from "./services/languages/python/languageExtractor";
@@ -36,9 +36,9 @@ export async function activate(context: vscode.ExtensionContext)
     const codeInspector = new CodeInspector();
     const symbolProvider = new SymbolProvider(supportedLanguages, codeInspector);
     const analyticsProvider = new AnalyticsProvider(workspaceState);
-    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider,workspaceState);
+    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
-    const codeLensProvider = new AnaliticsCodeLens(documentInfoProvider,workspaceState)
+    const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
 
     if(!workspaceState.environment){
         const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();

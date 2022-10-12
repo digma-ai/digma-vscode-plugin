@@ -3,6 +3,7 @@ import { CodeInspector } from '../codeInspector';
 import { IMethodPositionSelector, DefaultMethodPositionSelector } from './methodPositionSelector';
 import { IMethodExtractor, IParametersExtractor, IEndpointExtractor, ISpanExtractor } from './extractors';
 import { BasicParametersExtractor } from './defaultImpls';
+import { IModulePathToUriConverter } from './modulePathToUriConverters';
 
 export interface ILanguageExtractor {
     requiredExtensionLoaded: boolean;
@@ -14,6 +15,7 @@ export interface ILanguageExtractor {
     getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];
     getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
     validateConfiguration(): Promise<void>;
+    getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]>;
 }
 
 export abstract class LanguageExtractor implements ILanguageExtractor {
@@ -41,4 +43,6 @@ export abstract class LanguageExtractor implements ILanguageExtractor {
 
     public async validateConfiguration(): Promise<void> {
     }
+
+    public abstract getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]>;
 }
