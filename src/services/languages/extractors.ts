@@ -15,6 +15,7 @@ export interface SymbolInfo {
 
 export interface CodeObjectInfo {
     id: string;
+    codeObjectType: string;
     get ids(): string[];
     get idsWithType(): string[];
 }
@@ -32,8 +33,9 @@ export class EndpointInfo implements CodeObjectLocationInfo {
         public path: string,
         public range: vscode.Range,
         public documentUri: vscode.Uri) { }
+        public codeObjectType: string = "endpoint";
         get idsWithType() {
-            return ['endpoint:' + this.id];
+            return [`${this.codeObjectType}:${this.id}`];
         }
         get ids() {
             return [ this.id];
@@ -48,17 +50,13 @@ export class SpanLocationInfo implements CodeObjectLocationInfo {
         public duplicates: SpanLocationInfo[],
         public range: vscode.Range,
         public documentUri: vscode.Uri) { }
-
-    get idsWithType() {
-        return this.ids.map(x=> 'span:' + x);
-    }
-
-    get ids() {
-        return [
-            this.id,
-            ...this.aliases,
-        ];
-    }
+        public codeObjectType: string="span";
+        get idsWithType() {
+            return this.aliases.map(x=> `${this.codeObjectType}:${x}`);
+        }
+        get ids() {
+            return this.aliases.map(x=> x);
+        }
 }
 
 export interface IMethodExtractor {
