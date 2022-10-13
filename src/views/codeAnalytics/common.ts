@@ -1,7 +1,6 @@
 import { Disposable } from "vscode";
 import { WebViewUris } from "../webViewUtils";
-import { CodeObjectInfo } from "./codeAnalyticsView";
-
+import { CodeObjectInfo } from "../../services/codeObject";
 
 export interface ICodeAnalyticsViewTab extends Disposable
 {

@@ -9,6 +9,8 @@ import { JSMethodExtractor } from './methodExtractor';
 import { JSSpanExtractor } from './spanExtractor';
 import { JSPackageReader } from './packageReader';
 import { JSPackageToUriConverter } from './modulePathToUriConverters';
+import { ICodeObjectIdParser } from '../../codeObject';
+import { JSCodeObjectIdParser } from './codeObjectIdParser';
 
 export class JSLanguageExtractor extends LanguageExtractor {
     private packageReader: JSPackageReader = new JSPackageReader();
@@ -43,5 +45,9 @@ export class JSLanguageExtractor extends LanguageExtractor {
         return [
             new JSPackageToUriConverter(packagesMap),
         ];
+    }
+
+    public getCodeObjectIdParser(): ICodeObjectIdParser {
+        return new JSCodeObjectIdParser();
     }
 }

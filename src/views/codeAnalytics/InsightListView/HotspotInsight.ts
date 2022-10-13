@@ -1,7 +1,6 @@
 import { CodeObjectId } from "../../../services/codeObject";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
-import { CodeObjectInfo } from "../codeAnalyticsView";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 

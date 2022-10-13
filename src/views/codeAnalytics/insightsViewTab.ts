@@ -5,7 +5,7 @@ import {
 } from "../../services/analyticsProvider";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
-import { CodeObjectInfo } from "./codeAnalyticsView";
+import { CodeObjectInfo } from "../../services/codeObject";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
@@ -183,7 +183,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
-        let html = HtmlHelper.getCodeObjectLabel(this._viewUris,codeObject.methodName);
+        let html = HtmlHelper.getCodeObjectLabel(this._viewUris, codeObject.displayName);
         this._channel?.publish(
             new UiMessage.Set.CodeObjectLabel(html)
         );

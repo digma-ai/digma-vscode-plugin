@@ -1,6 +1,7 @@
 import { dirname, join } from 'path';
 import * as vscode from 'vscode';
 import { IModulePathToUriConverter, ModulePathInfo } from '../modulePathToUriConverters';
+import { JSCodeObjectIdParser } from './codeObjectIdParser';
 
 export class JSPackageToUriConverter implements IModulePathToUriConverter {
 
@@ -24,32 +25,5 @@ export class JSPackageToUriConverter implements IModulePathToUriConverter {
                 return uri;
             }
         }
-    }
-}
-
-interface JSCodeObjectInfo {
-    packageName: string
-    modulePath: string
-    symbol: string
-}
-
-class JSCodeObjectIdParser {
-    parse(codeObjectId: string): JSCodeObjectInfo {
-        const pattern = /([\w\@/-]+):(?:.)+\$_\$(?:.)*/;
-        const matches = codeObjectId.match(pattern);
-        if(matches) {
-            const [ , packageName, modulePath, symbol ] = matches;
-            return {
-                packageName,
-                modulePath,
-                symbol,
-            };
-        }
-
-        return {
-            packageName: '',
-            modulePath: '',
-            symbol: '',
-        };
     }
 }

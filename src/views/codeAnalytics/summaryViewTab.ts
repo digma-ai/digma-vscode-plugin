@@ -6,7 +6,7 @@ import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { sort } from "../ListView/IListViewItem";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
-import { CodeObjectInfo } from "./codeAnalyticsView";
+import { CodeObjectInfo } from "../../services/codeObject";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { ICodeAnalyticsViewTab } from "./common";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
