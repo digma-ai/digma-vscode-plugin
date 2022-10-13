@@ -35,3 +35,61 @@ export class CodeObjectId {
     }
 
 }
+
+export interface CodeObjectInfo {
+	id: string;
+	get displayName(): string;
+    get ids(): string[];
+    get idsWithType(): string[];
+}
+
+export class EmptyCodeObjectInfo implements CodeObjectInfo {
+    id: string = '';
+    get displayName(): string {
+        return '';
+    }
+    get ids(): string[] {
+        return [this.id];
+    }
+    get idsWithType(): string[] {
+        return this.ids;
+    }
+}
+
+export class MinimalCodeObjectInfo implements CodeObjectInfo {
+    constructor(
+        public id: string,
+        private _displayName: string,
+    ) {
+    }
+    get displayName(): string {
+        return this._displayName;
+    }
+    get ids(): string[] {
+        return [this.id];
+    }
+    get idsWithType(): string[] {
+        return this.ids;
+    }
+}
+
+export interface ICodeObjectIdParser {
+    parse(codeObjectId: string): CodeObjectInfo;
+    generateAliases(codeObjectId: string): string[];
+}
+
+export class CommonCodeObjectIdParser implements ICodeObjectIdParser {
+    parse(codeObjectId: string): CodeObjectInfo {
+        const [path, method] = codeObjectId.split(CodeObjectId.codeObjectSeparator);
+        return new MinimalCodeObjectInfo(codeObjectId, method);
+    }
+
+    generateAliases(codeObjectId: string): string[] {
+        const folders = codeObjectId.split('/');
+        const aliases = [codeObjectId];
+        for (let i = 1; i < folders.length; i++) {
+            aliases.push(folders.slice(i, folders.length).join('/'));
+        }
+        return aliases;
+    }
+}

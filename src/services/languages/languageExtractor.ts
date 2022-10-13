@@ -4,6 +4,7 @@ import { IMethodPositionSelector, DefaultMethodPositionSelector } from './method
 import { IMethodExtractor, IParametersExtractor, IEndpointExtractor, ISpanExtractor } from './extractors';
 import { BasicParametersExtractor } from './defaultImpls';
 import { IModulePathToUriConverter } from './modulePathToUriConverters';
+import { ICodeObjectIdParser, CommonCodeObjectIdParser } from '../codeObject';
 
 export interface ILanguageExtractor {
     requiredExtensionLoaded: boolean;
@@ -16,6 +17,7 @@ export interface ILanguageExtractor {
     getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
     validateConfiguration(): Promise<void>;
     getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]>;
+    getCodeObjectIdParser(): ICodeObjectIdParser;
 }
 
 export abstract class LanguageExtractor implements ILanguageExtractor {
@@ -45,4 +47,8 @@ export abstract class LanguageExtractor implements ILanguageExtractor {
     }
 
     public abstract getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]>;
+
+    public getCodeObjectIdParser(): ICodeObjectIdParser {
+        return new CommonCodeObjectIdParser();
+    }
 }

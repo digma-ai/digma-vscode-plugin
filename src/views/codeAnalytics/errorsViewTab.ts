@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider, CodeObjectErrorResponse, CodeObjectErrorDetails, HttpError, UsageStatusResults } from "../../services/analyticsProvider";
 import { WebviewChannel, WebViewProvider, WebViewUris } from "../webViewUtils";
-import { CodeAnalyticsView, CodeObjectInfo } from "./codeAnalyticsView";
+import { CodeObjectInfo } from "../../services/codeObject";
+import { CodeAnalyticsView } from "./codeAnalyticsView";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { Logger } from "../../services/logger";
@@ -115,7 +116,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     }    
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 
     {
-        let html = HtmlHelper.getCodeObjectLabel(this._webViewUris, codeObject.methodName);
+        let html = HtmlHelper.getCodeObjectLabel(this._webViewUris, codeObject.displayName);
         this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
     private async refreshList(codeObject: CodeObjectInfo) 
@@ -189,14 +190,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
             return;
         }
 
-        const emptyCodeObject: CodeObjectInfo = {
-            id: '',
-            methodName: ''
-        };
-
         this._overlay.show(HtmlHelper.getLoadingMessage('Loading error view...'), this.errorOverlayId);
         const errorDetails = await this._analyticsProvider.getCodeObjectError(e.errorSourceUID);
-        const codeObject = await this.getCurrentCodeObject() || emptyCodeObject;
         const { document } = await this.getCurrentDocumentContext();
 
         const viewModels = await this.createViewModels(errorDetails, document);
@@ -342,33 +337,6 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
             editor,
             document,
         };
-    }
-
-    private async getCurrentCodeObject(): Promise<CodeObjectInfo | undefined> {
-        const { editor, document } = await this.getCurrentDocumentContext();
-        if(!editor || !document) {
-            return;
-        }
-
-        const position = editor.selection.anchor;
-
-        const docInfo = this._documentInfoProvider.symbolProvider.supportsDocument(document)
-            ? await this._documentInfoProvider.getDocumentInfo(document)
-            : undefined;
-        if(!docInfo){
-            return;
-        }
-
-        const methodInfo = docInfo?.methods.firstOrDefault((m) => m.range.contains(position));
-        if(!methodInfo) {
-            return;
-        }
-
-        const codeObject = <CodeObjectInfo>{
-            id: methodInfo.symbol.id,
-            methodName: methodInfo.displayName,
-        };
-        return codeObject;
     }
 
     private async onWorkspaceOnlyChanged(value?: boolean) {

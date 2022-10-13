@@ -1,7 +1,6 @@
 import { CodeObjectErrorResponse, CodeObjectErrorDetails, CodeObjectError } from "../../services/analyticsProvider";
 import { CodeObjectId } from "../../services/codeObject";
 import { Settings } from "../../settings";
-import { CodeObjectInfo } from "../codeAnalytics/codeAnalyticsView";
 import { HtmlHelper } from "../codeAnalytics/common";
 import { ErrorFlowStackViewModel, StackViewModel, ErrorFlowStackRenderer } from "../codeAnalytics/errorFlowStackRenderer";
 import { IListViewItem } from "../ListView/IListViewItem";

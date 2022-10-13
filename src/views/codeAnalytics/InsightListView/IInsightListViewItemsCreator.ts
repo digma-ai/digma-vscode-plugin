@@ -2,7 +2,6 @@ import { decimal, integer } from "vscode-languageclient";
 import { UsageStatusResults } from "../../../services/analyticsProvider";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
-import { CodeObjectInfo } from "../codeAnalyticsView";
 import { EndpointInsight, adjustHttpRouteIfNeeded, adjustHttpInsightIfNeeded } from "./EndpointInsight";
 
 export interface CodeObjectInsight extends Insight{

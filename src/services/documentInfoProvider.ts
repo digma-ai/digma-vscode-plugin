@@ -5,7 +5,7 @@ import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor, CodeObjectLocationInfo } from './languages/extractors';
+import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, IParametersExtractor, CodeObjectLocationInfo } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { WorkspaceState } from '../state';
@@ -311,16 +311,15 @@ export class DocumentInfoProvider implements vscode.Disposable
         spans: SpanLocationInfo[],
         endpoints: EndpointInfo[],
     ): Promise<MethodInfo[]> {
+        const codeObjectIdParser = await this.symbolProvider.getCodeObjectIdParser(document);
+        if(!codeObjectIdParser) {
+            return [];
+        }
+
         let methods: MethodInfo[] = [];
 
         for(let symbol of symbols) {
-            var folders = symbol.id.split("/");
-            let aliases = [];
-            aliases.push(symbol.id);
-            for (let i=1;i<folders.length;i++){
-                aliases.push(folders.slice(i, folders.length).join("/"));
-
-            }
+            const aliases = codeObjectIdParser.generateAliases(symbol.id);
             const method = new MethodInfo(
                 symbol.id,
                 symbol.name,
