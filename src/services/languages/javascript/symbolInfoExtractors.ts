@@ -64,8 +64,7 @@ export class NamedFunctionDeclarationSymbolInfoExtractor extends SymbolInfoExtra
             const functionMatch = `\\s*function\\s*${symbol.name}`; //should handle only function declaration, and filter out function call like db.getAll()
             const match = textLine.text.match(functionMatch);
             if(match !== undefined && match !== null) {
-                const names = [name, `Object.${name}`];
-                return super.extract(symbol, codeObjectPath, names, document, symbolPath);
+                return super.extract(symbol, codeObjectPath, name, document, symbolPath);
             }
         }
         return [];
