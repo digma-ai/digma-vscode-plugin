@@ -45,10 +45,10 @@ export class JSPackageReader {
                     if(packageName) {
                         this.packagesMap.set(packageName, packageFile);
                     }
-                    console.log(packageName, packageFile.fsPath);
+                    Logger.info(`Parsed the package ${packageName} at ${packageFile.fsPath}`);
                 }
                 catch(err) {
-                    console.error('failed to parse package name for', packageFile);
+                    Logger.error(`Failed to parse package name for: ${packageFile}`);
                 }
             }
         }
