@@ -1,3 +1,4 @@
+import * as vscode from "vscode";
 import {AnalyticsProvider} from "../../../services/analyticsProvider";
 import {WorkspaceState} from "../../../state";
 
@@ -7,9 +8,15 @@ export class HistogramPanel {
     }
 
     public async getHtml(spanName: string, instrumentationLibrary: string, codeObjectId: string): Promise<string> {
-
+        let theme;
+        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark){
+            theme = 'dark';
+        }
+        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light){
+            theme = 'light';
+        }
         const html = await this._analyticsProvider.getHtmlGraphForSpanPercentiles(
-            spanName, instrumentationLibrary, codeObjectId, this._workspaceState.environment);
+            spanName, instrumentationLibrary, codeObjectId, this._workspaceState.environment, theme);
 
         return html;
     }
