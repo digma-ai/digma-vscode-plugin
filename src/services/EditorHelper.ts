@@ -156,13 +156,13 @@ export class EditorHelper {
         }
 
         const converters = await languageExtractor.getModulePathToUriConverters();
-        let path;
-        for (let index = 0; !path && index < converters.length; index++) {
+        let uri: vscode.Uri | undefined;
+        for (let index = 0; !uri && index < converters.length; index++) {
             const converter = converters[index];
-            path = await converter.convert(pathInfo);
+            uri = await converter.convert(pathInfo);
         }
 
-        return path;
+        return uri;
     }
 
     public async getExecutedCodeFromScm(uri: vscode.Uri, commit: string, line: integer) : Promise<string |undefined>{
