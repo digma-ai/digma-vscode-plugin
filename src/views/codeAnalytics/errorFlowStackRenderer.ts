@@ -265,7 +265,8 @@ export class ErrorFlowStackRenderer {
 
     private static getFrameItemHtml(frame: FrameViewModel)
     {
-        const path = `${frame.modulePhysicalPath} in ${frame.functionName}`;
+        const functionName = frame.functionName?.trim().length > 0 ? ` in ${frame.functionName}` : '';
+        const path = frame.modulePhysicalPath + functionName;
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
