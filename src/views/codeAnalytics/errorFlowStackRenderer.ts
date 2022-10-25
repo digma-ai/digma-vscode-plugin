@@ -275,6 +275,8 @@ export class ErrorFlowStackRenderer {
             pathParts.push(functionName);
         }
         const path = pathParts.join(' in ');
+        const pathTooltip = frame.workspaceUri?.fsPath ?? modulePath;
+
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
@@ -292,7 +294,7 @@ export class ErrorFlowStackRenderer {
         let pathHtml = `<div class="left-ellipsis" title="${path}">${path}</div>`;
         if(executedCodeHtml === ''){
             if(frame.workspaceUri){
-                pathHtml = /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${path}">${path}</vscode-link>`;
+                pathHtml = /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${pathTooltip}">${path}</vscode-link>`;
             }
             if (showExceptionIcon){
                 pathHtml = `<div class="frame-code-path">${exceptionHtml}${pathHtml}</div>`;
