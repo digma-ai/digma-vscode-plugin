@@ -265,8 +265,16 @@ export class ErrorFlowStackRenderer {
 
     private static getFrameItemHtml(frame: FrameViewModel)
     {
-        const functionName = frame.functionName?.trim().length > 0 ? ` in ${frame.functionName}` : '';
-        const path = frame.modulePhysicalPath + functionName;
+        const pathParts = [];
+        const modulePath = frame.modulePhysicalPath;
+        if(modulePath) {
+            pathParts.push(modulePath);
+        }
+        const functionName = frame.functionName?.trim();
+        if(functionName.length > 0) {
+            pathParts.push(functionName);
+        }
+        const path = pathParts.join(' in ');
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
