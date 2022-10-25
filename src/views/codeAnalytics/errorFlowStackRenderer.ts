@@ -298,13 +298,17 @@ export class ErrorFlowStackRenderer {
                 pathHtml = `<div class="frame-code-path">${exceptionHtml}${pathHtml}</div>`;
             }
         }
+        let lineNumberHtml = '';
+        if(frame.lineNumber !== -1) {
+            lineNumberHtml = `<div class="number-cell">line ${frame.lineNumber}</div>`;
+        }
         return /*html*/`
             <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
                 <div class="line ${selectedClass} ${disabledClass}">
                     ${pathHtml}
                     <div class="bottom-line">
                         ${executedCodeHtml}
-                        <div class="number-cell">line ${frame.lineNumber}</div>
+                        ${lineNumberHtml}
                     </div>
                 </div>
             </li>
