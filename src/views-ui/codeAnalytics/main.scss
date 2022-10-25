@@ -532,6 +532,29 @@ vscode-panel-view {
             opacity: 0.6;
         }
     }
+    .span-duration-breakdown-insight{
+        .span-name {
+            margin-right: 5px;
+            font-weight:normal;
+        }
+        .duration {
+            font-weight: bold;
+        }
+        .prev {
+            cursor: pointer;
+            &.disabled {
+                opacity: 0.4;
+                cursor: unset;
+            }
+        }
+        .next {
+            cursor: pointer;
+            &.disabled {
+                opacity: 0.4;
+                cursor: unset;
+            }
+        }
+    }
 }
 
 .frame-span {

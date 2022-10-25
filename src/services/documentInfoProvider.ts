@@ -230,7 +230,7 @@ export class DocumentInfoProvider implements vscode.Disposable
                 // These are spans that the server is aware of but the client can't discover
                 const spansDiscoveredViaServer = insightsResult
                     .filter(x=>x.scope=="Span")
-                    .filter(x=>!spans.any(e=>e.id===x.codeObjectId));
+                    .filter(x=>!spans.any(e=>e.id===x.codeObjectId)); //why we assume the the codeobjectid is span codeobject id, the output is that these span are spans discovered by server 
 
                 const uniqueSpans = [...new Map(spansDiscoveredViaServer.map(item =>
                     [item.codeObjectId, item])).values()];
