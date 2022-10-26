@@ -185,7 +185,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
-            for (let alias of methodInfo.aliases){
+            for (let alias of methodInfo.ids){
                 const insights = documentInfo.insights.all.filter(x=>x.codeObjectId== alias)
                     .filter(x=>x.scope=="Function");
 
@@ -235,7 +235,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
 
             }
 
-            for (let alias of methodInfo.aliases){
+            for (let alias of methodInfo.ids){
                 const insights = documentInfo.insights.all.filter(x=>x.codeObjectId== alias)
                     .filter(x=>x.scope=="Function");
 

@@ -4,7 +4,7 @@ import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EndpointInfo, IParametersExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
+import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
 import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
@@ -238,6 +238,10 @@ export class SymbolProvider
     public async getMethodPositionSelector(document: vscode.TextDocument): Promise<IMethodPositionSelector> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         return supportedLanguage?.methodPositionSelector ?? new DefaultMethodPositionSelector();
+    }
+    public async getSymbolAliasExtractor(document: vscode.TextDocument): Promise<ISymbolAliasExtractor> {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        return supportedLanguage?.symbolAliasExtractor ?? new EmptySymbolAliasExtractor();
     }
 
     private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined> {
