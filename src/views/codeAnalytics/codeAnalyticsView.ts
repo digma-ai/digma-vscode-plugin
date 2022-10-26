@@ -31,7 +31,8 @@ import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelec
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
 import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
-import { AnaliticsCodeLens } from "../../analyticsCodeLens";
+import { AnalyticsCodeLens } from "../../analyticsCodeLens";
+import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../../services/codeObject";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -53,7 +54,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 		extensionUri: vscode.Uri,
         editorHelper: EditorHelper,
         workspaceState:WorkspaceState,
-        codelensProvider: AnaliticsCodeLens,
+        codelensProvider: AnalyticsCodeLens,
         envSelectStatusBar: EnvSelectStatusBar
 
 
@@ -128,11 +129,6 @@ export class CodeAnalyticsView implements vscode.Disposable
 	}
 }
 
-export interface CodeObjectInfo {
-	id: string,
-	methodName: string
-}
-
 class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Disposable
 {  
  
@@ -153,7 +149,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         editorHelper: EditorHelper,
         errorFlowParamDecorator: ErrorFlowParameterDecorator,
         private _workspaceState:WorkspaceState,
-        private _codeLensProvider:AnaliticsCodeLens,
+        private _codeLensProvider:AnalyticsCodeLens,
         private _envSelectStatusBar: EnvSelectStatusBar
 	) {
 
@@ -359,10 +355,10 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         //     return;
         // }
 
-		const codeObject = <CodeObjectInfo>{ 
-            id: methodInfo?.symbol.id, 
-            methodName: methodInfo?.displayName
-        };
+		const codeObject: CodeObjectInfo =
+            methodInfo
+                ? new MinimalCodeObjectInfo(methodInfo.symbol.id, methodInfo.displayName)
+                : new EmptyCodeObjectInfo();
         return codeObject;
 	}
 

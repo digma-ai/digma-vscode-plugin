@@ -9,6 +9,7 @@ import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
 import { IMethodPositionSelector, DefaultMethodPositionSelector } from './methodPositionSelector';
+import { ICodeObjectIdParser } from '../codeObject';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -244,7 +245,7 @@ export class SymbolProvider
         return supportedLanguage?.symbolAliasExtractor ?? new EmptySymbolAliasExtractor();
     }
 
-    private async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined> {
+    public async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined> {
         const supportedLanguage = this.languageExtractors.find(x => vscode.languages.match(x.documentFilter, document) > 0);
         if (!supportedLanguage ||
             !(supportedLanguage.requiredExtensionLoaded || await this.loadRequiredExtension(supportedLanguage)))
@@ -253,7 +254,6 @@ export class SymbolProvider
         }
         return supportedLanguage;
     }
-
     private async loadRequiredExtension(language: ILanguageExtractor) : Promise<boolean> {
         const extension = vscode.extensions.getExtension(language.requiredExtensionId);
         if (!extension) 

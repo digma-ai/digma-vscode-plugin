@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol } from 'vscode-languageclient';
+import { CodeObjectInfo } from '../codeObject';
 import { DocumentInfoProvider, ParameterInfo } from '../documentInfoProvider';
 import { SymbolProvider, SymbolTree } from './symbolProvider';
 import { Token } from './tokens';
@@ -13,16 +14,9 @@ export interface SymbolInfo {
     documentUri: vscode.Uri;
 }
 
-export interface CodeObjectInfo {
-    id: string;
-    get ids(): string[];
-    get idsWithType(): string[];
-}
-
-export interface CodeObjectLocationInfo extends CodeObjectInfo{
+export interface CodeObjectLocationInfo extends CodeObjectInfo {
     range: vscode.Range;
     documentUri: vscode.Uri;
-
 }
 
 export class EndpointInfo implements CodeObjectLocationInfo {
@@ -31,13 +25,20 @@ export class EndpointInfo implements CodeObjectLocationInfo {
         public method: string,
         public path: string,
         public range: vscode.Range,
-        public documentUri: vscode.Uri) { }
-        get idsWithType() {
-            return ['endpoint:' + this.id];
-        }
-        get ids() {
-            return [ this.id];
-        }
+        public documentUri: vscode.Uri,
+    ) { }
+
+    get displayName(): string {
+        return this.method;
+    }
+
+    get idsWithType() {
+        return ['endpoint:' + this.id];
+    }
+
+    get ids() {
+        return [ this.id];
+    }
 }
 
 export class SpanLocationInfo implements CodeObjectLocationInfo {
@@ -47,7 +48,12 @@ export class SpanLocationInfo implements CodeObjectLocationInfo {
         public aliases: string[],
         public duplicates: SpanLocationInfo[],
         public range: vscode.Range,
-        public documentUri: vscode.Uri) { }
+        public documentUri: vscode.Uri,
+    ) { }
+
+    get displayName(): string {
+        return this.name;
+    }
 
     get idsWithType() {
         return this.ids.map(x=> 'span:' + x);
@@ -65,7 +71,7 @@ export interface IMethodExtractor {
     extractMethods(
         document: vscode.TextDocument,
         docSymbols: DocumentSymbol[],
-        tokens: Token []
+        tokens: Token [],
     ): Promise<SymbolInfo[]>;
 }
 export interface ISymbolAliasExtractor {

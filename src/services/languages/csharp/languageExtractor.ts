@@ -1,14 +1,14 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
 import { IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
-import { LanguageExtractor } from "../languageExtractor";
+import { LanguageExtractor } from '../languageExtractor';
+import { IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
 // import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor';
 
-export class CSharpLanguageExtractor extends LanguageExtractor 
-{
+export class CSharpLanguageExtractor extends LanguageExtractor {
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
@@ -38,6 +38,13 @@ export class CSharpLanguageExtractor extends LanguageExtractor
     public getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[] {
         return [
             new CSharpSpanExtractor(codeInspector),
+        ];
+    }
+
+    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+        return [
+            new LogicalModulePathToUriConverter(),
+            new PhysicalModulePathToUriConverter(),
         ];
     }
 }

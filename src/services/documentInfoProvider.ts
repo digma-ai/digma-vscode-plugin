@@ -5,7 +5,7 @@ import { Logger } from "./logger";
 import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
-import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, CodeObjectInfo, IParametersExtractor, CodeObjectLocationInfo, ISymbolAliasExtractor } from './languages/extractors';
+import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, IParametersExtractor, CodeObjectLocationInfo, ISymbolAliasExtractor } from './languages/extractors';
 import { InstrumentationInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { WorkspaceState } from '../state';
@@ -315,7 +315,6 @@ export class DocumentInfoProvider implements vscode.Disposable
         endpoints: EndpointInfo[],
     ): Promise<MethodInfo[]> {
         let methods: MethodInfo[] = [];
-
         for(let symbol of symbols) {
             const aliases = symbolAliasExtractor.extractAliases(symbol);
             const method = new MethodInfo(
