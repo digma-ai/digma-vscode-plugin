@@ -34,16 +34,4 @@ export class JSCodeObjectIdParser implements ICodeObjectIdParser {
             symbol,
         );
     }
-
-    generateAliases(codeObjectId: string): string[] {
-        const objectPrefix = 'Object.';
-        const info: JSCodeObjectInfo = this.parse(codeObjectId);
-        const prefixedAliased = info.symbol.startsWith(objectPrefix)
-            ? info.symbol.substring(objectPrefix.length)
-            : `${objectPrefix}${info.symbol}`;
-        return [
-            codeObjectId,
-            `${info.packageName}:${info.modulePath}${CodeObjectId.codeObjectSeparator}${prefixedAliased}`,
-        ];
-    }
 }

@@ -4,7 +4,7 @@ import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EndpointInfo, IParametersExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
+import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
 import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
@@ -240,6 +240,10 @@ export class SymbolProvider
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         return supportedLanguage?.methodPositionSelector ?? new DefaultMethodPositionSelector();
     }
+    public async getSymbolAliasExtractor(document: vscode.TextDocument): Promise<ISymbolAliasExtractor> {
+        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
+        return supportedLanguage?.symbolAliasExtractor ?? new EmptySymbolAliasExtractor();
+    }
 
     public async getSupportedLanguageExtractor(document: vscode.TextDocument): Promise<ILanguageExtractor | undefined> {
         const supportedLanguage = this.languageExtractors.find(x => vscode.languages.match(x.documentFilter, document) > 0);
@@ -250,14 +254,6 @@ export class SymbolProvider
         }
         return supportedLanguage;
     }
-
-    public async getCodeObjectIdParser(document: vscode.TextDocument): Promise<ICodeObjectIdParser | undefined> {
-        const supportedLanguage = await this.getSupportedLanguageExtractor(document);
-        if(supportedLanguage) {
-            return supportedLanguage.getCodeObjectIdParser();
-        }
-    }
-
     private async loadRequiredExtension(language: ILanguageExtractor) : Promise<boolean> {
         const extension = vscode.extensions.getExtension(language.requiredExtensionId);
         if (!extension) 
