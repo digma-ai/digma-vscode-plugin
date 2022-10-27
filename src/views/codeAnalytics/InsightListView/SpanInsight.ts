@@ -148,10 +148,13 @@ export interface EndpointInfo {
 export interface SlowEndpointInfo{
     
     endpointInfo: EndpointInfo,
+    probabilityOfBeingBottleneck?: number,
+    avgDurationWhenBeingBottleneck?: Duration,
+    
+    // Obsolete
     p50: Percentile,
     p95: Percentile,
     p99: Percentile,
-
 }
 export interface SpandSlowEndpointsInsight extends CodeObjectInsight{
     span: SpanInfo,
@@ -424,11 +427,17 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     }
 
     private getDescription(span: SlowEndpointInfo){
-        if (span.p95){
-            return `Up to ~${(span.p95.fraction*100.0).toFixed(3)}% of the entire request time (${span.p95.maxDuration.value}${span.p95.maxDuration.unit}).`;
-
+        if(span.probabilityOfBeingBottleneck && span.avgDurationWhenBeingBottleneck)
+        {
+            return `Slowing ${(span.probabilityOfBeingBottleneck*100).toFixed(0)}% of the requests (~${span.avgDurationWhenBeingBottleneck.value}${span.avgDurationWhenBeingBottleneck.unit})`;
         }
-        return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request time (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
+        else { // Obsolete
+            if (span.p95){
+                return `Up to ~${(span.p95.fraction*100.0).toFixed(3)}% of the entire request time (${span.p95.maxDuration.value}${span.p95.maxDuration.unit}).`;
+
+            }
+            return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request time (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
+        }
     }
 
     private getTooltip(span: SlowEndpointInfo){
