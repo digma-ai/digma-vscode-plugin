@@ -25,6 +25,60 @@ window.addEventListener("load", () =>
         tabsElement.moveToTabByIndex(group, group.indexOf(tab));
     }
 
+    function changePage(paginationListElement: any, page: number){
+        const recordsPerPage: number = paginationListElement.data('records-per-page');
+        const numOfItems: number =  paginationListElement.children('.item').length;
+        const numOfPages = Math.ceil(numOfItems/recordsPerPage);
+
+        paginationListElement.children('.item').hide();
+
+        paginationListElement.children('.item').each((index, item)=>{
+            if(index<page*recordsPerPage && index>=(page-1)*recordsPerPage){
+                $(item).show();
+            }
+        });
+
+        const nav = paginationListElement.children('.pagination-nav');
+        if(numOfPages > 1){
+            nav.children('.page').html(page+" of "+numOfPages+" pages");
+            const prev = nav.children('.prev');
+            const next = nav.children('.next');
+            if(page>1){
+                prev.removeClass("disabled");
+            }else{
+                prev.addClass("disabled");
+            }
+            if(page<numOfPages){
+                next.removeClass("disabled");
+            }else{
+                next.addClass("disabled");
+            }
+        } else{
+            nav.hide();
+        }
+    }
+
+    function prevPage(paginationListElement: any) {
+        let currentPage: number = paginationListElement.data('current-page');
+        if (currentPage > 1) {
+            paginationListElement.data('current-page',  --currentPage);
+            changePage(paginationListElement, currentPage);
+        }
+    }
+
+    function nextPage(paginationListElement: any) {
+        const recordsPerPage: number = paginationListElement.data('records-per-page');
+        const numOfItems: number =  paginationListElement.children('.item').length;
+        let currentPage: number = paginationListElement.data('current-page');
+
+        const numOfPages = Math.ceil(numOfItems/recordsPerPage);
+
+        if (currentPage < numOfPages) {
+            paginationListElement.data('current-page',  ++currentPage);
+            changePage(paginationListElement, currentPage);
+        }
+    }
+ 
     const overlay = $("#view-overlay");
     const tabsContainer = $("#view-tabs");
     const insightsTab = $("#view-insights");
@@ -60,12 +114,18 @@ window.addEventListener("load", () =>
         $(".stack-nav-next").toggleClass("disabled", !stackInfo?.canNavigateToNext);
     });
     
-
+    function initPaginationLists(){
+        const paginationLists =  $('.pagination-list');
+        paginationLists.each(function(){
+            changePage($(this), 1);
+        });
+    }
     consume(UiMessage.Set.InsightsList, (event) => {
-
+        
         if (event.htmlContent !== undefined) {
             insightsTab.find("#insightList").html(event.htmlContent);
         }
+        initPaginationLists();
     });
 
     
@@ -145,6 +205,17 @@ window.addEventListener("load", () =>
         const jaeger = $(this).data("jaeger-address");
 
         publish(new UiMessage.Notify.OpenTracePanel(traceIds,traceLabels,span, jaeger));
+    });
+
+    $(document).on("click",".pagination-nav .prev", function(){
+        var paginationListElement = $(this).closest('.pagination-list');
+        prevPage(paginationListElement);
+
+    });
+    $(document).on("click",".pagination-nav .next", function(){
+        var paginationListElement = $(this).closest('.pagination-list');
+        nextPage(paginationListElement);
+
     });
       
     consume(UiMessage.Set.TracePanel, (event) => {

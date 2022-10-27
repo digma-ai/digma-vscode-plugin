@@ -1,14 +1,11 @@
 import moment = require("moment");
 import { Uri } from "vscode";
-import { decimal } from "vscode-languageclient";
-import { EndpointSchema, UsageStatusResults } from "../../../services/analyticsProvider";
-import { CodeObjectId } from "../../../services/codeObject";
+import { EndpointSchema } from "../../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { SpanLocationInfo } from "../../../services/languages/extractors";
-import { Settings } from "../../../settings";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
-import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
+import { IListViewItem, IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { SpanSearch } from "./Common/SpanSearch";
 import { renderTraceLink } from "./Common/TraceLinkRender";
@@ -148,13 +145,10 @@ export interface EndpointInfo {
 export interface SlowEndpointInfo{
     
     endpointInfo: EndpointInfo,
-    probabilityOfBeingBottleneck?: number,
-    avgDurationWhenBeingBottleneck?: Duration,
-    
-    // Obsolete
     p50: Percentile,
     p95: Percentile,
     p99: Percentile,
+
 }
 export interface SpandSlowEndpointsInsight extends CodeObjectInsight{
     span: SpanInfo,
@@ -282,72 +276,14 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
             htmlRecords.push(htmlRecord);
         });
         const body = /*html*/ `
-        <div class="span-duration-breakdown-insight">
-        ${htmlRecords.join('')}
-        <div class="nav">
-            <a class="prev">Prev</a>
-            <a class="next">Next</a>
-            <span class="page"></span>
-        </div>
-        <script type="text/javascript">
-        var current_page = 1;
-        var records_per_page = ${recordsPerPage};
-        var numOfItems =  $('.span-duration-breakdown-insight .item').length;
-        var numOfPages = Math.ceil(numOfItems/records_per_page);
-        function prevPage()
-        {
-            if (current_page > 1) {
-                current_page--;
-                changePage(current_page);
-            }
-        }
-        
-        function nextPage()
-        {
-            if (current_page < numOfPages) {
-                current_page++;
-                changePage(current_page);
-            }
-        }
-      
-
-        function changePage(page) {
-            $(".span-duration-breakdown-insight .item").hide();
-            $('.span-duration-breakdown-insight .item').each(function(){
-                var index = $(this).data('index');
-                if(index<current_page*records_per_page && index>=(current_page-1)*records_per_page){
-                    $(this).show();
-                }
-              });
-            
-            if(numOfPages > 1){
-                $('.span-duration-breakdown-insight .page').html(current_page+" of "+numOfPages+" pages")
-                
-                if(page>1){
-                    $(".span-duration-breakdown-insight .prev").removeClass("disabled");
-                }else{
-                    $(".span-duration-breakdown-insight .prev").addClass("disabled");
-                }
-                if(page<numOfPages){
-                    $(".span-duration-breakdown-insight .next").removeClass("disabled");
-                }else{
-                    $(".span-duration-breakdown-insight .next").addClass("disabled");
-                }
-            } else{
-                $(".span-duration-breakdown-insight .nav").hide();
-            }
-            
-        }
-        $(".span-duration-breakdown-insight .next").click(function() {
-            nextPage();
-        })
-        $(".span-duration-breakdown-insight .prev").click(function() {
-            prevPage();
-        })
-        changePage(1);
-        </script>
-        </div>
-        `;
+        <div class="span-duration-breakdown-insight pagination-list" data-current-page="1" data-records-per-page="3">
+            ${htmlRecords.join('')}
+            <div class="pagination-nav">
+                <a class="prev">Prev</a>
+                <a class="next">Next</a>
+                <span class="page"></span>
+            </div>
+        </div>`;
 
         return new InsightTemplateHtml({
             title: "Duration Breakdown",
@@ -427,17 +363,11 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     }
 
     private getDescription(span: SlowEndpointInfo){
-        if(span.probabilityOfBeingBottleneck && span.avgDurationWhenBeingBottleneck)
-        {
-            return `Slowing ${(span.probabilityOfBeingBottleneck*100).toFixed(0)}% of the requests (~${span.avgDurationWhenBeingBottleneck.value}${span.avgDurationWhenBeingBottleneck.unit})`;
-        }
-        else { // Obsolete
-            if (span.p95){
-                return `Up to ~${(span.p95.fraction*100.0).toFixed(3)}% of the entire request time (${span.p95.maxDuration.value}${span.p95.maxDuration.unit}).`;
+        if (span.p95){
+            return `Up to ~${(span.p95.fraction*100.0).toFixed(3)}% of the entire request time (${span.p95.maxDuration.value}${span.p95.maxDuration.unit}).`;
 
-            }
-            return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request time (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
         }
+        return `Up to ~${(span.p50.fraction*100.0).toFixed(3)}% of the entire request time (${span.p50.maxDuration.value}${span.p50.maxDuration.unit}).`;
     }
 
     private getTooltip(span: SlowEndpointInfo){
