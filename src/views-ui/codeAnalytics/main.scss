@@ -540,6 +540,9 @@ vscode-panel-view {
         .duration {
             font-weight: bold;
         }
+       
+    }
+    .pagination-list{
         .prev {
             cursor: pointer;
             &.disabled {
