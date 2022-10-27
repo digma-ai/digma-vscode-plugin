@@ -74,6 +74,18 @@ export interface IMethodExtractor {
         tokens: Token [],
     ): Promise<SymbolInfo[]>;
 }
+export interface ISymbolAliasExtractor {
+    extractAliases(
+        symbol: SymbolInfo): string[];
+}
+export class EmptySymbolAliasExtractor implements ISymbolAliasExtractor {
+    extractAliases(symbol: SymbolInfo): string[] {
+        return [];
+    }
+   
+}
+
+
 
 export interface IParametersExtractor {
     extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]>;

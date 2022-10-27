@@ -265,7 +265,18 @@ export class ErrorFlowStackRenderer {
 
     private static getFrameItemHtml(frame: FrameViewModel)
     {
-        const path = `${frame.modulePhysicalPath} in ${frame.functionName}`;
+        const pathParts = [];
+        const modulePath = frame.modulePhysicalPath;
+        if(modulePath) {
+            pathParts.push(modulePath);
+        }
+        const functionName = frame.functionName?.trim();
+        if(functionName.length > 0) {
+            pathParts.push(functionName);
+        }
+        const path = pathParts.join(' in ');
+        const pathTooltip = frame.workspaceUri?.fsPath ?? modulePath;
+
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
@@ -283,11 +294,15 @@ export class ErrorFlowStackRenderer {
         let pathHtml = `<div class="left-ellipsis" title="${path}">${path}</div>`;
         if(executedCodeHtml === ''){
             if(frame.workspaceUri){
-                pathHtml = /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${path}">${path}</vscode-link>`;
+                pathHtml = /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${pathTooltip}">${path}</vscode-link>`;
             }
             if (showExceptionIcon){
                 pathHtml = `<div class="frame-code-path">${exceptionHtml}${pathHtml}</div>`;
             }
+        }
+        let lineNumberHtml = '';
+        if(frame.lineNumber !== -1) {
+            lineNumberHtml = `<div class="number-cell">line ${frame.lineNumber}</div>`;
         }
         return /*html*/`
             <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
@@ -295,7 +310,7 @@ export class ErrorFlowStackRenderer {
                     ${pathHtml}
                     <div class="bottom-line">
                         ${executedCodeHtml}
-                        <div class="number-cell">line ${frame.lineNumber}</div>
+                        ${lineNumberHtml}
                     </div>
                 </div>
             </li>

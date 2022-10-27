@@ -80,10 +80,8 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             }
             
             const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
-            const codeObjectsIds = methodInfo.idsWithType
-                .concat(methodInfo.relatedCodeObjects.flatMap(r => r.idsWithType));
-            
-            
+            const codeObjectsIds = methodInfo.getIds(true, true);
+ 
             Logger.info('Insight codeobjectIds:\n'+codeObjectsIds.join('\n'));
 
             let relevantInsight = docInfo.insights.forMethod(methodInfo,this._workspaceState.environment);

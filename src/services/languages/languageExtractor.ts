@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../codeInspector';
 import { IMethodPositionSelector, DefaultMethodPositionSelector } from './methodPositionSelector';
-import { IMethodExtractor, IParametersExtractor, IEndpointExtractor, ISpanExtractor } from './extractors';
+import { IMethodExtractor, IParametersExtractor, IEndpointExtractor, ISpanExtractor, ISymbolAliasExtractor, EmptySymbolAliasExtractor } from './extractors';
 import { BasicParametersExtractor } from './defaultImpls';
 import { IModulePathToUriConverter } from './modulePathToUriConverters';
 import { ICodeObjectIdParser, CommonCodeObjectIdParser } from '../codeObject';
@@ -16,11 +16,13 @@ export interface ILanguageExtractor {
     getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[];
     getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];
     validateConfiguration(): Promise<void>;
+    get symbolAliasExtractor(): ISymbolAliasExtractor;
     getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]>;
     getCodeObjectIdParser(): ICodeObjectIdParser;
 }
 
 export abstract class LanguageExtractor implements ILanguageExtractor {
+    
     public abstract requiredExtensionLoaded: boolean;
 
     public abstract get requiredExtensionId(): string;
@@ -29,6 +31,10 @@ export abstract class LanguageExtractor implements ILanguageExtractor {
 
     public abstract get methodExtractors(): IMethodExtractor[];
 
+    public get symbolAliasExtractor(): ISymbolAliasExtractor {
+        return new EmptySymbolAliasExtractor();
+    }
+    
     public get parametersExtractor(): IParametersExtractor {
         return new BasicParametersExtractor();
     }

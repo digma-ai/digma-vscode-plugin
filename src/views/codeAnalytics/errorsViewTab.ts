@@ -142,9 +142,8 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         if(codeObject.id !== this._viewedCodeObjectId)
         {
             const methodInfo = docInfo.methods.single(x => x.id === codeObject.id);
-            const codeObjectsIds = methodInfo.idsWithType
-                .concat(methodInfo.relatedCodeObjects.flatMap(r => r.idsWithType));
-
+            const codeObjectsIds = methodInfo.getIds(true, true);
+      
             let errors: CodeObjectErrorResponse[] = [];
             let usageResults:UsageStatusResults|undefined;
             try

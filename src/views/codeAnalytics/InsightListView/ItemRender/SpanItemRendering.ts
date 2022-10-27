@@ -1,11 +1,8 @@
 import moment = require("moment");
-import { title } from "process";
-import { decimal } from "vscode-languageclient";
 import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
-import { CodeObjectId } from "../../../../services/codeObject";
-import { SpanDurationsInsight, ChildSpanDurationsInsight, ChildrenSpanDurationsInsight } from "../SpanInsight";
+import { SpanDurationsInsight } from "../SpanInsight";
 import { InsightTemplateHtml } from "./insightTemplateHtml";
 
 export class SpanItemHtmlRendering{
@@ -158,76 +155,6 @@ export class SpanItemHtmlRendering{
             body: body,
             icon: this._viewUris.image("duration.svg"),
             buttons: buttons
-        });
-    }
-
-    private getUniquePercentiles(insight: ChildrenSpanDurationsInsight): Set<number> {
-        const setOfNumbers: Set<number> = new Set();
-        setOfNumbers.add(0.50); // make sure at least one entry is there - P50
-
-        for (const childInsight of insight.childInsights) {
-            for (const pctl of childInsight.percentiles) {
-                setOfNumbers.add(pctl.percentile);
-            }
-        }
-        const sortedArray = [...setOfNumbers].sort((a, b) => a - b);
-        const sortedSet = new Set(sortedArray);
-
-        return sortedSet;
-    }
-
-    private getValueOfPercentile(insight: ChildSpanDurationsInsight, requestedPercentile: number): string {
-        for (const pctl of insight.percentiles) {
-            if (pctl.percentile === requestedPercentile) {
-                return `${pctl.currentDuration.value} ${pctl.currentDuration.unit}`;
-            }
-        }
-        return "";
-    }
-
-    public childrenSpanDurationItemHtml(insight: ChildrenSpanDurationsInsight): InsightTemplateHtml {
-        
-        const htmlRecords: string[] = [];
-
-        const percentilesSet = this.getUniquePercentiles(insight);
-
-        for (const childInsight of insight.childInsights) {
-            const spanName = CodeObjectId.getSpanName(childInsight.codeObjectId);
-            const pctlHtmlColumns: string[] = [];
-            for (const pctl of percentilesSet) {
-                const pctlValue = this.getValueOfPercentile(childInsight, pctl);
-                pctlHtmlColumns.push(/*html*/ `<td>${pctlValue}</td>`);
-            }
-            const htmlRecord: string = /*html*/ `
-            <tr>
-                <td>${spanName}</td>
-                ${pctlHtmlColumns.join('')}
-            </tr>`;
-
-            htmlRecords.push(htmlRecord);
-        }
-
-        const tableHeaders: string[] = [];
-        for (const percentile of percentilesSet) {
-            tableHeaders.push(/*html*/ `<th>P${percentile*100}</th>`);
-        }
-
-        const body = /*html*/ `
-            <div class="span-durations-insight-body">
-            <table>
-                <tr>
-                    <th>Child Span</th>
-                    ${tableHeaders.join('')}
-                </tr>
-                ${htmlRecords.join('')}
-            </table>
-            </div>`;
-
-        return new InsightTemplateHtml({
-            title: "Durations of children",
-            body: body,
-            icon: this._viewUris.image("duration.svg"),
-            buttons: []
         });
     }
 

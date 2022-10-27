@@ -5,15 +5,18 @@ import { EndpointSchema, UsageStatusResults } from "../../../services/analyticsP
 import { CodeObjectId } from "../../../services/codeObject";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
+import { SpanLocationInfo } from "../../../services/languages/extractors";
 import { Settings } from "../../../settings";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase, InsightListGroupItemsRenderer } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
+import { SpanSearch } from "./Common/SpanSearch";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
+const entities = require("entities");
 
 export interface SpanUsagesInsight extends CodeObjectInsight
 {
@@ -121,12 +124,20 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
     }[]
 }
 
-export interface ChildSpanDurationsInsight extends SpanDurationsInsight {
-    parentCodeObjectId: string
+export interface SpanDurationBreakdownEntry {
+    spanName: string,
+    spanDisplayName: string,
+    spanInstrumentationLibrary: string,
+    spanCodeObjectId: string,
+    percentiles: {
+        percentile: number,
+        duration: Duration
+    }[]
 }
 
-export interface ChildrenSpanDurationsInsight extends CodeObjectInsight {
-    childInsights: ChildSpanDurationsInsight[]
+export interface SpanDurationBreakdownInsight extends CodeObjectInsight {
+    spanName: string,
+    breakdownEntries: SpanDurationBreakdownEntry[]
 }
 
 export interface EndpointInfo {
@@ -172,28 +183,177 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     }
 }
 
-export class ChildrenSpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator {
+export class SpanDurationBreakdownListViewItemsCreator implements IInsightListViewItemsCreator {
 
-    public constructor(private _viewUris:WebViewUris) {
+    private static readonly p50: number =  0.50;
+    public constructor(private _viewUris:WebViewUris, private _documentInfoProvider: DocumentInfoProvider) {
 
     }
 
-    public async create( codeObjectsInsight: ChildrenSpanDurationsInsight[]): Promise<IListViewItemBase []> {
-        return codeObjectsInsight.map(x=>this.createListViewItem(x));
+    public async create( codeObjectsInsight: SpanDurationBreakdownInsight[]): Promise<IListViewItem []> {
+        let items:IListViewItem[] = [];
+        for (const insight of codeObjectsInsight){
+            items.push(await this.createListViewItem(insight));
+
+        }
+        return items;
     }
 
 
-    public createListViewItem(insight: ChildrenSpanDurationsInsight) : IListViewItem {
+    public async createListViewItem(insight: SpanDurationBreakdownInsight) : Promise<IListViewItem> {
 
-        let renderer = new SpanItemHtmlRendering(this._viewUris);
+        let spanSearch = new SpanSearch(this._documentInfoProvider);
+        const validBreakdownEntries = insight.breakdownEntries.filter(o=>o.percentiles.any(o=>o.percentile ===SpanDurationBreakdownListViewItemsCreator.p50))
+                                        .sort((a,b)=>this.getValueOfPercentile(b, SpanDurationBreakdownListViewItemsCreator.p50)!-this.getValueOfPercentile(a, SpanDurationBreakdownListViewItemsCreator.p50)!);
+        const spansToSearch = validBreakdownEntries.map(o=>{
+            return {
+                instrumentationLibrary:o.spanInstrumentationLibrary,
+                name: o.spanName,
+                breakdownEntry: o
+            };
+        });
+        const spanLocations = await spanSearch.searchForSpans(spansToSearch);
+        let entries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] = [];
+        validBreakdownEntries.forEach( (entry,index) => {
+            entries.push({breakdownEntry:entry, location:spanLocations[index]});
+        });
 
         return {
-            getHtml: ()=> renderer.childrenSpanDurationItemHtml(insight).renderHtml(), 
-            sortIndex: 55, 
-            // grouping by the parent span
-            groupId: CodeObjectId.getSpanName(insight.codeObjectId)
+            getHtml: ()=> this.spanDurationBreakdownItemHtml(entries).renderHtml(), 
+            sortIndex: 55,
+            groupId: insight.spanName
         };
     }
+
+    private getValueOfPercentile(breakdownEntry: SpanDurationBreakdownEntry, requestedPercentile: number): number | undefined {
+        for (const pctl of breakdownEntry.percentiles) {
+            if (pctl.percentile === requestedPercentile) {
+                return pctl.duration.raw;
+            }
+        }
+        return undefined;
+    }
+    private getDisplayValueOfPercentile(breakdownEntry: SpanDurationBreakdownEntry, requestedPercentile: number): string {
+        for (const pctl of breakdownEntry.percentiles) {
+            if (pctl.percentile === requestedPercentile) {
+                return `${pctl.duration.value} ${pctl.duration.unit}`;
+            }
+        }
+        return "";
+    }
+    private getTooltip(breakdownEntry: SpanDurationBreakdownEntry){
+
+        const sortedPercentiles =breakdownEntry.percentiles.sort((p1,p2)=> p1.percentile-p2.percentile);
+        let tooltip = 'Percentage of time spent in span:\n';
+        for(const p of sortedPercentiles){
+            tooltip+=`P${p.percentile*100}: ${p.duration.value} ${p.duration.unit}\n`;
+        }
+        return tooltip;
+    }
+    
+    private spanDurationBreakdownItemHtml(breakdownEntries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] ): InsightTemplateHtml {
+        
+        const htmlRecords: string[] = [];
+        const recordsPerPage: number = 3;
+        breakdownEntries.forEach((entry, index) => {
+            const p50 = this.getDisplayValueOfPercentile(entry.breakdownEntry, SpanDurationBreakdownListViewItemsCreator.p50);
+            const spanLocation = entry.location;
+            
+            const spanDisplayName =entities.encodeHTML(entry.breakdownEntry.spanDisplayName);
+            const spanName = spanDisplayName;
+          //  const visibilityClass = index<itemsPerPage ? '': 'hide';
+
+            const htmlRecord: string = /*html*/ `
+            <div data-index=${index} class="item flow-row flex-row">
+                <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
+                <span class="flex-row flex-wrap ellipsis">
+                    <span class="ellipsis">
+                        <span title="${spanDisplayName}" class="span-name ${spanLocation ? "link" : ""}" data-code-uri="${spanLocation?.documentUri}" data-code-line="${spanLocation?.range.end.line!+1}">
+                            ${spanName}
+                        </span>
+                    </span>
+                    <span class="duration" title='${this.getTooltip(entry.breakdownEntry)}'>${p50}</span>
+                </span>
+            </div>`;
+
+            htmlRecords.push(htmlRecord);
+        });
+        const body = /*html*/ `
+        <div class="span-duration-breakdown-insight">
+        ${htmlRecords.join('')}
+        <div class="nav">
+            <a class="prev">Prev</a>
+            <a class="next">Next</a>
+            <span class="page"></span>
+        </div>
+        <script type="text/javascript">
+        var current_page = 1;
+        var records_per_page = ${recordsPerPage};
+        var numOfItems =  $('.span-duration-breakdown-insight .item').length;
+        var numOfPages = Math.ceil(numOfItems/records_per_page);
+        function prevPage()
+        {
+            if (current_page > 1) {
+                current_page--;
+                changePage(current_page);
+            }
+        }
+        
+        function nextPage()
+        {
+            if (current_page < numOfPages) {
+                current_page++;
+                changePage(current_page);
+            }
+        }
+      
+
+        function changePage(page) {
+            $(".span-duration-breakdown-insight .item").hide();
+            $('.span-duration-breakdown-insight .item').each(function(){
+                var index = $(this).data('index');
+                if(index<current_page*records_per_page && index>=(current_page-1)*records_per_page){
+                    $(this).show();
+                }
+              });
+            
+            if(numOfPages > 1){
+                $('.span-duration-breakdown-insight .page').html(current_page+" of "+numOfPages+" pages")
+                
+                if(page>1){
+                    $(".span-duration-breakdown-insight .prev").removeClass("disabled");
+                }else{
+                    $(".span-duration-breakdown-insight .prev").addClass("disabled");
+                }
+                if(page<numOfPages){
+                    $(".span-duration-breakdown-insight .next").removeClass("disabled");
+                }else{
+                    $(".span-duration-breakdown-insight .next").addClass("disabled");
+                }
+            } else{
+                $(".span-duration-breakdown-insight .nav").hide();
+            }
+            
+        }
+        $(".span-duration-breakdown-insight .next").click(function() {
+            nextPage();
+        })
+        $(".span-duration-breakdown-insight .prev").click(function() {
+            prevPage();
+        })
+        changePage(1);
+        </script>
+        </div>
+        `;
+
+        return new InsightTemplateHtml({
+            title: "Duration Breakdown",
+            body: body,
+            icon: this._viewUris.image("duration.svg"),
+            buttons: []
+        });
+    }
+
 
 }
 
