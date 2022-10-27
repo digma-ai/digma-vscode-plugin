@@ -76,7 +76,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
 
             let traceHtml = renderTraceLink(flow.sampleTraceIds?.firstOrDefault(), insight.span);
     
-            return /*html*/`<div class="flow-row flex-row">
+            return /*html*/`<div class="flow-row flex-row item">
                 <span class="flow-percent">${flow.percentage.toFixed(1)}%</span>
                 <span class="flex-row flex-wrap ellipsis">
                     ${firstServiceHtml}    
@@ -90,8 +90,18 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
 
         const template = new InsightTemplateHtml({
             title: "Top Usage",
-            body: usages.join('')
-        })
+            body: `
+            <div class="pagination-list" data-current-page="1" data-records-per-page="2">
+                ${usages.join('')}
+                <div class="pagination-nav">
+                    <a class="prev">Prev</a>
+                    <a class="next">Next</a>
+                    <span class="page"></span>
+                </div>
+            </div>
+            `
+        });
+
 
         return {
             getHtml: ()=> template.renderHtml(), 
