@@ -30,6 +30,10 @@ export interface LowUsageInsight extends EndpointInsight {
 
 export interface SlowSpanInfo {
     spanInfo: SpanInfo;
+    probabilityOfBeingBottleneck?: number;
+    avgDurationWhenBeingBottleneck?: Duration;
+
+    // Obsolete
     p50: Percentile;
     p95: Percentile;
     p99: Percentile;
@@ -214,21 +218,28 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
     }
 
     private getDescription(span: SlowSpanInfo){
-        if(span.p50.fraction > 0.4)
-            return `50% of the users by up to ${span.p50.maxDuration.value}${span.p50.maxDuration.unit}`;
-        if(span.p95.fraction > 0.4)
-            return `5% of the users by up to ${span.p95.maxDuration.value}${span.p95.maxDuration.unit}`;
-        return `1% of the users by up to ${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`;
+        if(span.probabilityOfBeingBottleneck && span.avgDurationWhenBeingBottleneck)
+        {
+            return `Slowing ${(span.probabilityOfBeingBottleneck*100).toFixed(0)}% of the requests (~${span.avgDurationWhenBeingBottleneck.value}${span.avgDurationWhenBeingBottleneck.unit})`;
+        }
+        else // Obsolete
+        {
+            if(span.p50.fraction > 0.4)
+                return `50% of the users by up to ${span.p50.maxDuration.value}${span.p50.maxDuration.unit}`;
+            if(span.p95.fraction > 0.4)
+                return `5% of the users by up to ${span.p95.maxDuration.value}${span.p95.maxDuration.unit}`;
+            return `1% of the users by up to ${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`;
+        }
     }
 
     private getTooltip(span: SlowSpanInfo){
         //&#13;
-        return `${span.spanInfo.displayName} 
+        return span.spanInfo.displayName;
 
-Percentage of time spent in span:
-Median: ${(span.p50.fraction*100).toFixed(0)}% ~${span.p50.maxDuration.value}${span.p50.maxDuration.unit}
-P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${span.p95.maxDuration.unit}
-P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
+// Percentage of time spent in span:
+// Median: ${(span.p50.fraction*100).toFixed(0)}% ~${span.p50.maxDuration.value}${span.p50.maxDuration.unit}
+// P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${span.p95.maxDuration.unit}
+// P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
     }
     
     public async create( codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
