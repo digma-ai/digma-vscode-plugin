@@ -89,6 +89,9 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             if (!insight.decorators){
                 continue;
             }
+            if (insight.environment=="PRODUCTIONS"){
+                continue;
+            }
             for (const decorator of insight.decorators){
 
                 let envComponent = "";
@@ -128,7 +131,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             }) );
     }
     public async getLensForCodeLocationObject(methodInfo: MethodInfo, codeObjects: CodeObjectLocationInfo[], 
-        usageStatus:UsageStatusResults, allInsights: CodeObjectInsight[] ) :Promise<vscode.CodeLens[]> {
+        usageStatus:UsageStatusResults, allInsights: CodeObjectInsight[], showNoData:boolean ) :Promise<vscode.CodeLens[]> {
         
             let codelens: vscode.CodeLens[] = [];
             
@@ -139,10 +142,14 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 const insights =  allInsights.filter(x=>x.codeObjectId== codeObject.id);
                 const codeObjectUsage = usageStatus.codeObjectStatuses.filter(x=>x.codeObjectId==codeObject.id);
                 if (insights.length==0 &&
-                    codeObjectUsage.length==0){
+                    codeObjectUsage.length==0 && showNoData){
                     
                     const emptyLenses = await this.getNoDataCodeLens(methodInfo,codeObject);
                     for (const lens of emptyLenses){
+                        if (codelens.any(x=>x.command?.title=="Never reached")){
+                            continue;
+                        }
+    
                         codelens.push(lens);
                     }               
                 }
@@ -202,6 +209,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             let spans = documentInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
             let duplicates = spans.filter(x=>documentInfo.spans.any(span=>span!=x && span.name==x.name && span.range!=x.range));
             spans=spans.filter(span=>!duplicates.includes(span));
+            spans = spans.filter((v, i, a) => a.findIndex(x=>x.name==v.name) === i);
 
             if(duplicates.length>0){
                 const lenses = await this.getDuplicateSpanLens(methodInfo, duplicates);
@@ -213,9 +221,13 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             }
             if(spans.length>0){
                 const lenses = await this.getLensForCodeLocationObject(methodInfo,
-                                                  spans,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="Span"));
+                                                  spans,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="Span"), true);
 
                 for (const lens of lenses){
+                    if (codelens.any(x=>x.command?.title==lens.command?.title
+                        && x.range.end==lens.range.end && x.range.start== lens.range.start)){
+                            continue;
+                        }
                     codelens.push(lens);
                 }         
                 
@@ -224,10 +236,13 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             const endpoints = documentInfo.endpoints.filter(e => e.range.intersection(methodInfo.range) != undefined);
             if(endpoints.length>0){
                 const lenses = await this.getLensForCodeLocationObject(methodInfo,
-                                        endpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),
+                                        endpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),false
                                         );
 
                 for (const lens of lenses){
+                    if (codelens.find(x=>x.command?.title==lens.command?.title)){
+                        continue;
+                    }
                     codelens.push(lens);
                 }         
                 

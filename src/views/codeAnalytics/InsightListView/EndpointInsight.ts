@@ -60,7 +60,7 @@ export class UsageViewItemsTemplate {
         private viewUris: WebViewUris
     ) { }
 
-    public generateHtml(
+public generateHtml(
         maxCallsIn1Min: number,
         header: string,
         description: string,
@@ -125,6 +125,8 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
 export interface HighUsageInsight extends EndpointInsight {
     maxCallsIn1Min: number;
 }
+
+
 
 export interface SlowEndpointInsight extends EndpointInsight {
     endpointsMedian: Duration;

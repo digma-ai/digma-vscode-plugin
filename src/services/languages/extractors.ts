@@ -14,6 +14,7 @@ export interface SymbolInfo {
     documentUri: vscode.Uri;
 }
 
+
 export interface CodeObjectLocationInfo extends CodeObjectInfo {
     range: vscode.Range;
     documentUri: vscode.Uri;
@@ -25,21 +26,20 @@ export class EndpointInfo implements CodeObjectLocationInfo {
         public method: string,
         public path: string,
         public range: vscode.Range,
-        public documentUri: vscode.Uri,
-    ) { }
+        public documentUri: vscode.Uri){}
 
-    get displayName(): string {
-        return this.method;
+        public codeObjectType: string = "endpoint";
+     
+        get idsWithType() {
+            return [`${this.codeObjectType}:${this.id}`];
+        }
+        get displayName(): string {
+            return this.method;
+        }
+        get ids() {
+            return [ this.id];
+        }
     }
-
-    get idsWithType() {
-        return ['endpoint:' + this.id];
-    }
-
-    get ids() {
-        return [ this.id];
-    }
-}
 
 export class SpanLocationInfo implements CodeObjectLocationInfo {
     constructor(
@@ -48,16 +48,19 @@ export class SpanLocationInfo implements CodeObjectLocationInfo {
         public aliases: string[],
         public duplicates: SpanLocationInfo[],
         public range: vscode.Range,
-        public documentUri: vscode.Uri,
-    ) { }
+        public documentUri: vscode.Uri) 
+        { }
+        
+    public codeObjectType: string="span";
 
+    get idsWithType() {
+        return this.ids.map(x=> `${this.codeObjectType}:${x}`);
+    }
+    
     get displayName(): string {
         return this.name;
     }
 
-    get idsWithType() {
-        return this.ids.map(x=> 'span:' + x);
-    }
 
     get ids() {
         return [

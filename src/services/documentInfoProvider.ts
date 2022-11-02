@@ -544,7 +544,7 @@ export class CodeObjectInsightsAccessor{
        
     }
 
-    public byMethod(env: string, doc:DocumentInfo):InsightCodeObjectLink[] | undefined
+    public forDocument(env: string, doc:DocumentInfo):InsightCodeObjectLink[] | undefined
     {
         let result: InsightCodeObjectLink[] = [];
         let insights = this._codeObjectInsights;
@@ -614,14 +614,14 @@ export class MethodInfo implements CodeObjectLocationInfo
         private aliases: string[],
         public relatedCodeObjects: CodeObjectLocationInfo[],
         public documentUri: vscode.Uri){}
-
-    get idWithType(): string {
-        return 'method:' + this.id;
-    }
-
-    get idsWithType(): string[] {
-        return this.ids.map(x=> 'method:' + x);
-    }
+        public codeObjectType:string= "method";
+        
+        get idWithType(): string {
+            return `${this.codeObjectType}:${this.id}`;
+        }
+        get idsWithType(): string[] {
+            return this.aliases.map(x=> `${this.codeObjectType}:${x}`);
+        }
 
     get ids(): string[] {
         return [

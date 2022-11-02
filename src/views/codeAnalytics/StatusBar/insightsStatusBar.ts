@@ -4,8 +4,11 @@ import { DocumentInfo, DocumentInfoProvider } from "../../../services/documentIn
 import { WorkspaceState } from "../../../state";
 import { CodeObjectInsight, InsightImporance } from "../InsightListView/IInsightListViewItemsCreator";
 import { QuickPickItem } from "vscode";
-import { CodeObjectLocationInfo } from "../../../services/languages/extractors";
+import { CodeObjectLocationInfo, SpanLocationInfo } from "../../../services/languages/extractors";
 import { EditorHelper } from "../../../services/EditorHelper";
+import { CodeObjectInfo } from "../codeAnalyticsView";
+import { SlowestSpansInsight } from "../InsightListView/EndpointInsight";
+import { Percentile } from "../InsightListView/CommonInsightObjects";
 
 export interface InsightPickItem extends QuickPickItem{
     location: CodeObjectLocationInfo;
@@ -20,6 +23,7 @@ export class InsightsStatusBar implements vscode.Disposable  {
 
 
 
+    
     public constructor(private _state: WorkspaceState,
         private _documentInfoProvider: DocumentInfoProvider,
         private _editorHelper: EditorHelper,
@@ -33,22 +37,78 @@ export class InsightsStatusBar implements vscode.Disposable  {
 
                 if (doc!=null){
                     const docInfo = await _documentInfoProvider.getDocumentInfo(doc)
-                    const insightsByMethod = (docInfo)?.insights.byMethod(_state.environment,docInfo);
+                    const documentInsights = (docInfo)?.insights.forDocument(_state.environment,docInfo);
+                    const insightsByType = documentInsights?.groupBy(x=>x.insight.type);
+                    const insightsSorted = documentInsights?.sort((a,b)=>a.insight.importance-b.insight.importance)
+                        .map(x=>x.insight.type);
                     
-                    if (insightsByMethod!=null){
- 
+                    const distinctInsights = [...new Set(insightsSorted)];
+
+                    let items : QuickPickItem[]= [];
+
+                    if (insightsByType!=null && documentInsights!=null){
+                        for (const insightType of distinctInsights){
+                            let insightsForType = insightsByType[insightType];
+                            const insight= insightsForType.firstOrDefault();
+
+                            items.push({
+                                label: `${this.getInsightEmoji(insight.insight)} ${insight.insight.name}`,
+                                kind: vscode.QuickPickItemKind.Separator,
+
+                            });
+
+                            if (insight.insight.shortDisplayInfo){
+                                const insightItems = insightsForType.map(x=>({ 
+                                                label: `${this.getCodeObjectTypeEmoji(x.insight)} ${x.insight.shortDisplayInfo.targetDisplayName}`, 
+                                                description: `${x.insight.shortDisplayInfo.subtitle}`,
+                                                detail: `${x.insight.shortDisplayInfo.description}`,
+                                                location: x.codeObject
+                                            }));
+
+                                items=items.concat(insightItems);
+
+
+                            }
+
+                            // if (insightType=="SlowestSpans"){
+                            //     const slowestSpans = insightsForType.map(x=> ( {
+                            //         insight: x.insight as SlowestSpansInsight,
+                            //         method: x.method,
+                            //         codeObject: x.codeObject
+                            //     }))
+
+        
+                            //         .map(x=> ({ 
+                            //             label: `${this.getCodeObjectTypeEmoji(x.insight)} ${x.insight.endpointSpan}`, 
+                            //             description: `${x.insight.spans.length} spans`,
+                            //             detail: `${this.getBottleneckString(x.insight.spans.flatMap(y=>[({y:y,p:y.p50}), ({y:y,p:y.p95}), ({y:y,p:y.p99})])
+                            //                                       .reduce((prev, current)=>(prev.p.fraction>current.p.fraction) ? prev : current))}`,
+                            //             location: x.codeObject
+                            //         }));
+                            //         items=items.concat(slowestSpans);
+
+                            // }
+                            else{
+                                const typeInsightsItems = insightsForType.map(x=> ({ 
+                                    label: `${this.getCodeObjectTypeEmoji(x.insight)} ${x.insight.name}`, 
+                                    description: x.codeObject.id.split("$_$")[1],
+                                    detail: `method: ${x.method.name}`,
+                                    location: x.codeObject
+                                }));
+                                items=items.concat(typeInsightsItems);
+
+                            }
+                 
+
+
+                        }
                         const quickPick = vscode.window.createQuickPick();
-                        quickPick.items = insightsByMethod.map(x=> ({ 
-                            label: `${this.getInsightEmoji(x.insight)}  ${x.insight.name}`, 
-                            description: x.codeObject.id.split("$_$")[1],
-                            detail: `method: ${x.method.name}`,
-                            location: x.codeObject
-                        }));
+                        quickPick.items =items
                         await quickPick.onDidChangeSelection(async selection => {
                             if (selection[0]) {
                                 const item = selection[0] as InsightPickItem;
                                 const file = await _editorHelper.openTextDocumentFromUri(item.location.documentUri);
-                                _editorHelper.openFileAndLine(file, item.location.range.start.line);
+                                _editorHelper.openFileAndLine(file, item.location.range.start.line+1);
                                 await vscode.commands.executeCommand("workbench.view.extension.digma");
  
                                     
@@ -103,6 +163,9 @@ export class InsightsStatusBar implements vscode.Disposable  {
         }
     }
 
+// private getBottleneckString(percentile: any):string{
+//         return `${percentile.p.fraction.toFixed(2)*100}% ${percentile.y.spanInfo.displayName} ${ percentile.p.maxDuration.value} ${ percentile.p.maxDuration.unit}`;
+//     }
     private getInsightEmoji(insight:CodeObjectInsight) :string{
         if (this.isInteresting(insight)){
             return this.interestingEmoji;
@@ -111,6 +174,16 @@ export class InsightsStatusBar implements vscode.Disposable  {
             return this.importEmoji;
         }
 
+        return '';
+    }
+
+    private getCodeObjectTypeEmoji(insight:CodeObjectInsight): string{
+        if (insight.scope=="Span"){
+            return '🔭';
+        }
+        if (insight.scope=="EntrySpan"){
+            return '⚆';
+        }   
         return '';
     }
     private isInteresting(insight:CodeObjectInsight) :boolean{

@@ -7,11 +7,22 @@ import { EndpointInsight, adjustHttpRouteIfNeeded, adjustHttpInsightIfNeeded } f
 export interface CodeObjectInsight extends Insight{
     codeObjectId: string,
     environment: string,
+    category: string,
+    specificity: integer,
+
+    shortDisplayInfo: InsightShortDisplayInfo,
     scope: string,
     name: string,
     importance: InsightImporance,
     severity: decimal,
     decorators: CodeObjectDecorator[]
+}
+
+export interface InsightShortDisplayInfo{
+    title:string,
+    targetDisplayName :string,
+    subtitle :string,
+    description :string
 }
 
 export enum InsightImporance {
