@@ -44,7 +44,9 @@ export class InsightTemplateHtml
         
         const { insight } = this.data;
         
+        let startTime = '';
         let formattedStartTime = '';
+        let hasCustomTime = false;
 
         const menuItems = [];
         if((<CodeObjectInsight>insight)?.prefixedCodeObjectId) {
@@ -52,17 +54,15 @@ export class InsightTemplateHtml
             const {
                 prefixedCodeObjectId: codeObjectId,
                 type: insightType,
+                actualStartTime,
                 customStartTime,
             } = codeObjectInsight;
 
             console.log('insight', codeObjectId, insightType, customStartTime);
 
-            formattedStartTime = customStartTime?.toDateString() || formattedStartTime;
-
-            const customStartDateLinkStates = {
-                unset: { label: 'Recalculate', action: 'reset' },
-            };
-            const state = customStartDateLinkStates.unset;
+            startTime = actualStartTime?.format('L') || '';
+            formattedStartTime = actualStartTime?.fromNow() || formattedStartTime;
+            hasCustomTime = !!customStartTime;
             
             menuItems.push(`
                 <li
@@ -70,8 +70,7 @@ export class InsightTemplateHtml
                     data-code-object-id="${codeObjectId}"
                     data-insight-type="${insightType}"
                 >
-                    <i class="codicon codicon-calendar"></i>
-                    ${state.label}
+                    Recalculate
                 </li>
             `);
         }
@@ -88,6 +87,18 @@ export class InsightTemplateHtml
                 </li>
             </ul>`
             : ``;
+        // const menuItemsHtml = menuItems.length > 0
+        //     ? `<li class="list-item-menu-item">
+        //         <img class="list-item-icon" src="${threeDotImageUri}" height="15">
+        //         <ul>
+        //             ${menuItems.join("")}
+        //         </ul>
+        //     </li>`
+        //     : ``;
+        // const menuHtml = `
+        //     <ul class="list-item-menu sf-menu sf-js-enabled">
+        //         ${menuItemsHtml}
+        //     </ul>`;
         
         let title = "";
         let tooltip = "";
@@ -99,11 +110,13 @@ export class InsightTemplateHtml
             tooltip = (<ITitle>this.data.title).tooltip;
         }
 
+        const timeInfoVisibilityClass = hasCustomTime ? '' : 'hidden';
         const timeInfoHtml = `
-            <div class="list-item-time-info hidden">
-                <span class="list-item-time-info-message">Insight calculated since ${formattedStartTime}</span>
+            <div class="list-item-time-info ${timeInfoVisibilityClass}">
+                <span class="list-item-time-info-message" title="${startTime}">Age of data: ${formattedStartTime}</span>
                 <a href="#" class="custom-start-date-refresh-link">Refresh</a>
-            </div>`;
+            </div>
+        `;
 
         const html = /*html*/`
             <div class="list-item insight">

@@ -101,10 +101,18 @@ vscode-panel-view {
         right: 0;
         min-width: unset;
         font-family: var(--font-family);
-        cursor: pointer;
 
         &, &:hover, &.sfHover {
             background: transparent;
+        }
+
+        cursor: pointer;
+        * {
+            cursor: pointer;
+        }
+
+        li {
+            padding: 4px 8px;
         }
     }
 

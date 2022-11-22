@@ -1,3 +1,4 @@
+import { Moment } from "moment";
 import { decimal, integer } from "vscode-languageclient";
 import { UsageStatusResults } from "../../../services/analyticsProvider";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
@@ -12,7 +13,8 @@ export interface CodeObjectInsight extends Insight{
     importance: InsightImporance,
     severity: decimal,
     decorators: CodeObjectDecorator[],
-    customStartTime: Date,
+    actualStartTime?: Moment,
+    customStartTime?: Moment,
     prefixedCodeObjectId: string,
 }
 
