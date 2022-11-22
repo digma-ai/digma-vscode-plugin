@@ -34,10 +34,6 @@ export class InsightTemplateHtml
             ? ` <div class="list-item-body">${this.data.body}</div>`
             : ``;
 
-        const buttonsHtml = this.data.buttons
-            ? ` <div class="list-item-buttons">${this.data.buttons.join("")}</div>`
-            : ``;
-        
         const iconHtml = this.data.icon
             ? `<img class="list-item-icon" src="${this.data.icon}" width="15" height="15">`
             : ``;
@@ -47,6 +43,8 @@ export class InsightTemplateHtml
         let startTime = '';
         let formattedStartTime = '';
         let hasCustomTime = false;
+
+        const buttons = this.data.buttons || [];
 
         const menuItems = [];
         if((<CodeObjectInsight>insight)?.prefixedCodeObjectId) {
@@ -64,19 +62,28 @@ export class InsightTemplateHtml
             formattedStartTime = actualStartTime?.fromNow() || formattedStartTime;
             hasCustomTime = !!customStartTime;
             
-            menuItems.push(`
-                <li
-                    class="list-item-menu-item custom-start-date-recalculate-link"
+            const recalculateButton = `
+                <div
+                    class="list-item-button hover-button custom-start-date-recalculate-link"
                     data-code-object-id="${codeObjectId}"
                     data-insight-type="${insightType}"
-                >
-                    Recalculate
-                </li>
-            `);
+                    title="Recalculate the insight only using new data"
+                >Recalculate</div>
+            `;
+            buttons.push(recalculateButton);
+        
+            // menuItems.push(`
+            //     <li
+            //         class="list-item-menu-item custom-start-date-recalculate-link"
+            //         data-code-object-id="${codeObjectId}"
+            //         data-insight-type="${insightType}"
+            //     >Recalculate</li>
+            // `);
         }
 
-        const threeDotImageUri = this._viewUris.image('three-dots.svg');
+        // const threeDotImageUri = this._viewUris.image('three-dots.svg');
 
+        let menuHtml = ``;
         // let menuHtml = menuItems?.length > 0
         //     ? `<ul class="list-item-menu sf-menu sf-js-enabled">
         //         <li class="list-item-menu">
@@ -87,14 +94,6 @@ export class InsightTemplateHtml
         //         </li>
         //     </ul>`
         //     : ``;
-        let menuHtml = menuItems?.length > 0
-            ? `<div
-                class="list-item-icon custom-start-date-recalculate-link codicon codicon-calendar"
-                src="${threeDotImageUri}"
-                title="Recalculate\n\nClick to recalculate this insight only using new data"
-                height="15"
-            ></div>`
-            : ``;
         // const menuItemsHtml = menuItems.length > 0
         //     ? `<li class="list-item-menu-item">
         //         <img class="list-item-icon" src="${threeDotImageUri}" height="15">
@@ -126,6 +125,10 @@ export class InsightTemplateHtml
             </div>
         `;
 
+        const buttonsHtml = this.data.buttons
+            ? ` <div class="list-item-buttons">${this.data.buttons.join("")}</div>`
+            : ``;
+    
         const html = /*html*/`
             <div class="list-item insight">
                 <div class="list-item-top-area">
@@ -134,8 +137,8 @@ export class InsightTemplateHtml
                         ${timeInfoHtml}
                         ${descriptionHtml}
                     </div>
-                    ${menuHtml}
                     ${iconHtml}
+                    ${menuHtml}
                 </div>
                 ${bodyHtml}
                 ${buttonsHtml}

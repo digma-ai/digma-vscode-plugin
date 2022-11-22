@@ -126,6 +126,8 @@ ul.list-item-menu {
             right: 0;
             min-width: unset;
             z-index: 100;
+            position: fixed;
+            top: unset;
     
             li {
                 color: var(--button-secondary-foreground);
@@ -134,6 +136,15 @@ ul.list-item-menu {
         }
     }
 }
+
+.hover-button {
+    visibility: hidden;
+
+    .list-item:hover & {
+        visibility: visible;
+    }
+}
+
 
 .hidden {
     display: none;
