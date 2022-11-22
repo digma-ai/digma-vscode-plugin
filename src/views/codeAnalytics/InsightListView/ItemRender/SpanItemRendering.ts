@@ -2,6 +2,7 @@ import moment = require("moment");
 import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
+import { Insight } from "../IInsightListViewItemsCreator";
 import { SpanDurationsInsight } from "../SpanInsight";
 import { InsightTemplateHtml } from "./insightTemplateHtml";
 
@@ -29,12 +30,13 @@ export class SpanItemHtmlRendering{
      }
     
     
-    private getStillCalculatingHtml():InsightTemplateHtml{
+    private getStillCalculatingHtml(insight: Insight): InsightTemplateHtml {
         return new InsightTemplateHtml({
             title: "Duration",
             description: "Waiting for more data.",
-            icon: this._viewUris.image("sand-watch.svg")
-        });
+            icon: this._viewUris.image("sand-watch.svg"),
+            insight,
+        }, this._viewUris);
     }
 
 
@@ -47,7 +49,7 @@ export class SpanItemHtmlRendering{
         
         const percentileHtmls = [];
         if (insight.percentiles.length===0){
-           return this.getStillCalculatingHtml();
+           return this.getStillCalculatingHtml(insight);
         }
         insight.percentiles.sort((a,b) => a.percentile - b.percentile);
         //todo move to file settings
@@ -94,17 +96,19 @@ export class SpanItemHtmlRendering{
                 //                                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
                 //                                     ${this.getBestUnit(item.previousDuration, item.currentDuration)}, ${item.changeTime.fromNow()}</span>`);
             }
-            else
+            else {
                 percentileHtmls.push(/*html*/ `<span></span>`);
+            }
 
-            if(item.changeTime && changeMeaningfulEnough && item.changeVerified === false)
+            if(item.changeTime && changeMeaningfulEnough && item.changeVerified === false) {
                 percentileHtmls.push(/*html*/ `<span title="This change is still being validated and is based on initial data.">Evaluating</span>`);
-            else
+            }
+            else {
                 percentileHtmls.push(/*html*/ `<span></span>`);
+            }
 
         }
 
-        insight.periodicPercentiles
         let newHtml = `
         <div class="periodic-percentiles-grid">
         <div class="grid-header"></div>
@@ -154,8 +158,9 @@ export class SpanItemHtmlRendering{
             title: "Duration",
             body: body,
             icon: this._viewUris.image("duration.svg"),
-            buttons: buttons
-        });
+            buttons: buttons,
+            insight,
+        }, this._viewUris);
     }
 
 }

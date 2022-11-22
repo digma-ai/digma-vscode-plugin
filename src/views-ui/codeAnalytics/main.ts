@@ -1,5 +1,6 @@
 import { consume, publish } from "../common/contracts";
 import { UiMessage } from "./contracts";
+
 window.addEventListener("load", () => 
 {
     let overlayVisibility = false;
@@ -88,10 +89,12 @@ window.addEventListener("load", () =>
     const errorsTab = $("#view-errors");
 
     consume(UiMessage.Set.Overlay, e => {
-        if(e.htmlContent)
+        if(e.htmlContent) {
             showOverlay(e.htmlContent, e.id);
-        else
+        }
+        else {
             hideOverlay();
+        }
     });
 
     consume(UiMessage.Set.ErrorsList, (event) => {
@@ -120,15 +123,23 @@ window.addEventListener("load", () =>
             changePage($(this), 1);
         });
     }
+    
+    function initListItemMenus(){
+        const menus: any = $('.list-item-menu');
+        menus.superfish({
+            delay: 10000,
+            cssArrows: false,
+        });
+    }
+
     consume(UiMessage.Set.InsightsList, (event) => {
         
         if (event.htmlContent !== undefined) {
             insightsTab.find("#insightList").html(event.htmlContent);
         }
         initPaginationLists();
+        initListItemMenus();
     });
-
-    
 
     consume(UiMessage.Set.GlobalInsightsList, (event) => {
         if (event.htmlContent !== undefined) {
@@ -145,6 +156,12 @@ window.addEventListener("load", () =>
     consume(UiMessage.Set.CodeObjectLabel, (event) => {
         if (event.htmlContent !== undefined) {
             $(".codeobject-selection").html(event.htmlContent);
+        }
+    });
+
+    consume(UiMessage.Set.SpanObjectLabel, (event) => {
+        if (event.htmlContent !== undefined) {
+            $("#spanScope").html(event.htmlContent);
         }
     });
 
@@ -197,7 +214,36 @@ window.addEventListener("load", () =>
         publish(new UiMessage.Notify.OpenHistogramPanel(spanName,spanInstrumentationLibrary));
     });
 
+    $(document).on("click", ".custom-start-date-recalculate-link", function () {
+        const $this = $(this);
+        const codeObjectId = $this.data("code-object-id");
+        const insightType = $this.data("insight-type");
+
+        const $timeInfo = $this
+            .closest('.list-item.insight')
+            .find('.list-item-time-info');
+        $timeInfo
+            .find('.list-item-time-info-message')
+            .text('Applying the new time filter. Wait a few minutes and then refresh.');
+        $timeInfo.show();
+        publish(new UiMessage.Notify.SetInsightCustomStartTime(codeObjectId, insightType, new Date()));
+    });
+
+    $(document).on("click", ".custom-start-date-refresh-link", function () {
+        publish(new UiMessage.Notify.TabRefreshRequested());
+    });
+
     $(document).on("click", ".trace-link", function () {
+        const traceIds = $(this).data("trace-id").split(",");
+        const traceLabels = $(this).data("trace-label")?.split(",");
+        
+        const span = $(this).data("span-name");
+        const jaeger = $(this).data("jaeger-address");
+
+        publish(new UiMessage.Notify.OpenTracePanel(traceIds,traceLabels,span, jaeger));
+    });
+
+    $(document).on("click", ".reset-link", function () {
         const traceIds = $(this).data("trace-id").split(",");
         const traceLabels = $(this).data("trace-label")?.split(",");
         

@@ -55,7 +55,8 @@ export class ErrorsListViewItemsCreator
                 buttons: [
                     `<div class="expand list-item-button" tab-id="tab-errors">Expand</div>`,
                 ],
-            });
+                insight: o,
+            }, this._viewUris);
 
             return {
                 getHtml: () => template.renderHtml(),

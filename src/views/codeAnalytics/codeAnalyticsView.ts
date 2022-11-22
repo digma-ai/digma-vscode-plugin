@@ -33,6 +33,7 @@ import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
 import { AnalyticsCodeLens } from "../../analyticsCodeLens";
 import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../../services/codeObject";
+import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -103,8 +104,9 @@ export class CodeAnalyticsView implements vscode.Disposable
         
 			vscode.window.onDidChangeTextEditorSelection(
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
-                    if(e.textEditor.document.languageId !== 'Log')
+                    if(e.textEditor.document.languageId !== 'Log') {
 					    await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
+                    }
 				}
 			),
             vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (environment:string, codeObjectId: string, codeObjectDisplayName: string) => {
@@ -182,7 +184,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel.consume(UiMessage.Notify.OpenHistogramPanel, this.onOpenHistogramRequested.bind(this));
         this._channel.consume(UiMessage.Notify.OpenTracePanel, this.onOpenTracePanel.bind(this));
 
-
+        this._channel.consume(UiMessage.Notify.SetInsightCustomStartTime, this.onSetInsightCustomStartTime.bind(this));
 
         const listViewItemsCreator = new InsightListViewItemsCreator();
         listViewItemsCreator.setUknownTemplate(new UnknownInsightInsight(this._webViewUris));
@@ -222,8 +224,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
         this._disposables.concat(tabsList);
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
-        for(let tab of tabsList)
+        for(let tab of tabsList) {
             this._tabs.set(tab.tabId, tab);
+        }
         this._lastActivedTab = tabsList[0];
 	}
 
@@ -323,7 +326,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		position: vscode.Position
 	): Promise<CodeObjectInfo | undefined> {
         if(document.uri.scheme !== 'file'){
-            Logger.error("getCodeObjectOrShowOverlay was called with a non file document! " + document.uri.toString())
+            Logger.error("getCodeObjectOrShowOverlay was called with a non file document! " + document.uri.toString());
             return;
         }
 
@@ -479,10 +482,13 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1.0">
                 <link rel="stylesheet" href="${this._webViewUris.codiconCss}">
+                <link rel="stylesheet" href="${this._webViewUris.superfishCss}">
                 <link rel="stylesheet" href="${this._webViewUris.commonCss}">
                 <link rel="stylesheet" href="${this._webViewUris.mainCss}">
                 <script type="module" src="${this._webViewUris.jQueryJs}"></script>
                 <script type="module" src="${this._webViewUris.toolkitJs}"></script>
+                <script type="module" src="${this._webViewUris.hosverIntentJs}"></script>
+                <script type="module" src="${this._webViewUris.superfishJs}"></script>
                 <script src="${this._webViewUris.requireJs}"></script>
                 <script src="${this._webViewUris.buildJs}"></script>
             </head>
@@ -496,4 +502,22 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             </body>
             </html>`;
 	}
+
+    public async onSetInsightCustomStartTime(event: UiMessage.Notify.SetInsightCustomStartTime) {
+        if (event.codeObjectId && event.insightType && event.time) {
+            try {
+                await this._analyticsProvider.setInsightCustomStartTime(
+                    event.codeObjectId,
+                    event.insightType,
+                    event.time,
+                );
+            }
+            catch(e) {
+                let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(e);
+                // this.updateListView(html);
+                console.log(html);
+                return;
+            }
+        }
+    }
 }

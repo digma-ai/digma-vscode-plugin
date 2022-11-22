@@ -24,6 +24,11 @@ export class WebViewUris
         return this.getUri('node_modules', '@vscode/codicons', 'dist', 'codicon.css');
     }
 
+    public get superfishCss() : vscode.Uri
+    {
+        return this.getUri('node_modules', 'superfish', 'dist', 'css', 'superfish.css');
+    }
+
     public get commonCss() : vscode.Uri
     {
         return this.getUri("out", "views-ui", "common", "common.css");
@@ -44,6 +49,16 @@ export class WebViewUris
     public get jQueryJs() : vscode.Uri
     {
         return this.getUri("out", "views-ui", "common", "jquery-3.6.0.min.js");
+    }
+
+    public get hosverIntentJs() : vscode.Uri
+    {
+        return this.getUri("node_modules", "superfish", "dist", "js", "hoverIntent.js");
+    }
+
+    public get superfishJs() : vscode.Uri
+    {
+        return this.getUri("node_modules", "superfish", "dist", "js", "superfish.min.js");
     }
 
     public get requireJs() : vscode.Uri

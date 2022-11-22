@@ -452,6 +452,25 @@ export class AnalyticsProvider
             });
         return response;
     }
+    
+    public async setInsightCustomStartTime(
+        codeObjectId: string,
+        insightType: string,
+        time: Date,
+    ): Promise<any> {
+        const response: any [] = await this.send<any>(
+            'PUT',
+            `/CodeAnalytics/insights/start-time`,
+            undefined,
+            {
+                Environment: this.state.environment,
+                CodeObjectId: codeObjectId,
+                InsightType: insightType,
+                Time: time,
+            },
+        );
+        return response;
+    }
 
     public async getErrorSummary(codeObjectIds: string [], currentEnv:boolean): Promise<MethodCodeObjectSummary []>
     {

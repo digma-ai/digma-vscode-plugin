@@ -26,8 +26,9 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
                     const template = new InsightTemplateHtml({
                         title: "This is an error hotspot",
                         description: "Major errors occur or propogate through this function.",
-                        icon: this.viewUris.image("hotspot.svg")
-                    })
+                        icon: this.viewUris.image("hotspot.svg"),
+                        insight: o,
+                    }, this.viewUris);
             return {
                 getHtml: ()=>template.renderHtml(), 
                 sortIndex: 0, 

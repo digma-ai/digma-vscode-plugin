@@ -10,7 +10,7 @@ import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { SpanSearch } from "./Common/SpanSearch";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
-import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { CodeObjectInsight, IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 const entities = require("entities");
@@ -55,24 +55,27 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                 </span>`;
 
             let lastServiceHtml = '';
-            if(flow.lastService)
+            if(flow.lastService) {
                 lastServiceHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="flow-entry ellipsis" title="${flow.lastService.service}: ${flow.lastService.span}">
                         <span class="flow-service">${flow.lastService.service}:</span>
                         <span class="flow-span">${flow.lastService.span}</span>
                     </span>`;
+            }
 
             let intermediateSpanHtml = '';
             let lastServiceSpanHtml = '';
-            if(flow.intermediateSpan)
+            if(flow.intermediateSpan) {
                 intermediateSpanHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="ellipsis" title="${flow.intermediateSpan}">${flow.intermediateSpan}</span>`;
-            else if(flow.lastServiceSpan)
+            }
+            else if(flow.lastServiceSpan) {
                 lastServiceSpanHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="ellipsis" title="${flow.lastServiceSpan}">${flow.lastServiceSpan}</span>`;
+            }
 
             let traceHtml = renderTraceLink(flow.sampleTraceIds?.firstOrDefault(), insight.span);
     
@@ -99,8 +102,9 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     <span class="page"></span>
                 </div>
             </div>
-            `
-        });
+            `,
+            insight,
+        }, this._viewUris);
 
 
         return {
@@ -226,7 +230,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
         });
 
         return {
-            getHtml: ()=> this.spanDurationBreakdownItemHtml(entries).renderHtml(), 
+            getHtml: ()=> this.spanDurationBreakdownItemHtml(entries, insight).renderHtml(),
             sortIndex: 55,
             groupId: insight.spanName
         };
@@ -258,8 +262,10 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
         return tooltip;
     }
     
-    private spanDurationBreakdownItemHtml(breakdownEntries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] ): InsightTemplateHtml {
-        
+    private spanDurationBreakdownItemHtml(
+        breakdownEntries: { breakdownEntry: SpanDurationBreakdownEntry, location: SpanLocationInfo | undefined }[],
+        insight: Insight,
+    ): InsightTemplateHtml {        
         const htmlRecords: string[] = [];
         const recordsPerPage: number = 3;
         breakdownEntries.forEach((entry, index) => {
@@ -299,11 +305,10 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
             title: "Duration Breakdown",
             body: body,
             icon: this._viewUris.image("duration.svg"),
-            buttons: []
-        });
+            buttons: [],
+            insight,
+        }, this._viewUris);
     }
-
-
 }
 
 export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightListViewItemsCreator {
@@ -362,8 +367,9 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
             },
             description: "The following trace sources spend a significant portion here:",
             icon: this._viewUris.image("bottleneck.svg"),
-            body: items.join('')
-        })
+            body: items.join(''),
+            insight: codeObjectsInsight,
+        }, this._viewUris);
 
         return {
             getHtml: () => template.renderHtml(),
@@ -387,7 +393,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
 Percentage of time spent in span:
 Median: ${(span.p50.fraction*100).toFixed(0)}% ~${span.p50.maxDuration.value}${span.p50.maxDuration.unit}
 P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${span.p95.maxDuration.unit}
-P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
+P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`;
     }
     
     public async create( codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {
@@ -447,8 +453,9 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
                         ${codeObjectsInsight.clientSpanName}
                     </div>
                     ${statsHtml}`,
-            buttons: [traceHtml]
-        });
+            buttons: [traceHtml],
+            insight: codeObjectsInsight,
+        }, this._viewUris);
 
         return {
             getHtml: () => template.renderHtml(),

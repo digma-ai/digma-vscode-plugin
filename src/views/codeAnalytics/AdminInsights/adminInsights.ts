@@ -11,8 +11,8 @@ export class UnknownInsightInsight implements IListViewItemBase {
         return new InsightTemplateHtml({
             title: "The Digma Plugin probably requires an update",
             description: "We're getting wicked new insights but this plugin just ain't up to date. Please update the plugin via your vscode Settings.",
-            icon: this.viewUris.image("update-required.png")
-        }).renderHtml();
+            icon: this.viewUris.image("update-required.png"),
+        }, this.viewUris).renderHtml();
     }
     groupId: string | undefined;
 }
@@ -26,8 +26,8 @@ export class DuplicateSpanInsight implements IListViewItemBase {
         return new InsightTemplateHtml({
             title: "Duplicate span detected",
             description: "Two spans have the exact same identifier, please change the name to avoid getting the wires crossed...",
-            icon: this.viewUris.image("update-required.png")
-        }).renderHtml();
+            icon: this.viewUris.image("update-required.png"),
+        }, this.viewUris).renderHtml();
     }
     groupId: string | undefined = this.span.name;
 }
