@@ -96,8 +96,13 @@ vscode-panel-view {
     margin: 0;
 }
 
-.sf-menu {
-    li {
+.list-item-menu-item {
+    padding: 4px;
+    margin: 0;
+}
+
+ul.list-item-menu {
+    li.list-item-menu {
         right: 0;
         min-width: unset;
         font-family: var(--font-family);
@@ -111,20 +116,21 @@ vscode-panel-view {
             cursor: pointer;
         }
 
-        li {
-            color: var(--button-secondary-foreground);
-            background: var(--button-secondary-background);
-        }
-    }
+        // li {
+        //     color: var(--button-secondary-foreground);
+        //     background: var(--button-secondary-background);
+        // }
 
-    ul {
-        left: unset;
-        right: 0;
-        min-width: unset;
-
-        li {
-            color: var(--button-secondary-foreground);
-            background: var(--button-secondary-background);
+        ul {
+            left: unset;
+            right: 0;
+            min-width: unset;
+            z-index: 100;
+    
+            li {
+                color: var(--button-secondary-foreground);
+                background: var(--button-secondary-background);
+            }
         }
     }
 }

@@ -77,15 +77,23 @@ export class InsightTemplateHtml
 
         const threeDotImageUri = this._viewUris.image('three-dots.svg');
 
+        // let menuHtml = menuItems?.length > 0
+        //     ? `<ul class="list-item-menu sf-menu sf-js-enabled">
+        //         <li class="list-item-menu">
+        //             <img class="list-item-icon" src="${threeDotImageUri}" height="15">
+        //             <ul>
+        //                 ${menuItems.join("")}
+        //             </ul>
+        //         </li>
+        //     </ul>`
+        //     : ``;
         let menuHtml = menuItems?.length > 0
-            ? `<ul class="list-item-menu sf-menu sf-js-enabled">
-                <li class="list-item-menu-item">
-                    <img class="list-item-icon" src="${threeDotImageUri}" height="15">
-                    <ul>
-                        ${menuItems.join("")}
-                    </ul>
-                </li>
-            </ul>`
+            ? `<div
+                class="list-item-icon custom-start-date-recalculate-link codicon codicon-calendar"
+                src="${threeDotImageUri}"
+                title="Recalculate\n\nClick to recalculate this insight only using new data"
+                height="15"
+            ></div>`
             : ``;
         // const menuItemsHtml = menuItems.length > 0
         //     ? `<li class="list-item-menu-item">
@@ -126,8 +134,8 @@ export class InsightTemplateHtml
                         ${timeInfoHtml}
                         ${descriptionHtml}
                     </div>
-                    ${iconHtml}
                     ${menuHtml}
+                    ${iconHtml}
                 </div>
                 ${bodyHtml}
                 ${buttonsHtml}
