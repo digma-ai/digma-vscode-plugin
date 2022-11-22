@@ -61,17 +61,18 @@ export class UsageViewItemsTemplate {
     ) { }
 
     public generateHtml(
-        maxCallsIn1Min: number,
+        insight: LowUsageInsight,
         header: string,
         description: string,
         image: string) {
-        const value = new DecimalRounder().getRoundedString(maxCallsIn1Min);
+        const value = new DecimalRounder().getRoundedString(insight.maxCallsIn1Min);
         const template = new InsightTemplateHtml({
             title: header,
             description: description,
             icon: this.viewUris.image(image),
-            body: `<span title="Maximum of ${value} requests per minute">${value}/min</span>`
-        })
+            body: `<span title="Maximum of ${value} requests per minute">${value}/min</span>`,
+            insight,
+        }, this.viewUris);
         return template.renderHtml();
     }
 }
@@ -88,7 +89,7 @@ export class LowUsageListViewItemsCreator implements IInsightListViewItemsCreato
 
     public createListViewItem(codeObjectsInsight: LowUsageInsight): IListViewItem {
         return {
-            getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint low traffic", "Servicing a low number of requests", "traffic-low.svg"),
+            getHtml: () => this.template.generateHtml(codeObjectsInsight, "Endpoint low traffic", "Servicing a low number of requests", "traffic-low.svg"),
             sortIndex: 0,
             groupId: codeObjectsInsight.endpointSpan
         };
@@ -114,7 +115,7 @@ export class NormalUsageListViewItemsCreator implements IInsightListViewItemsCre
 
     public createListViewItem(codeObjectsInsight: NormalUsageInsight): IListViewItem {
         return {
-            getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint normal level of traffic", "Servicing an average number of requests", "traffic-normal.svg"),
+            getHtml: () => this.template.generateHtml(codeObjectsInsight, "Endpoint normal level of traffic", "Servicing an average number of requests", "traffic-normal.svg"),
             sortIndex: 0,
             groupId: codeObjectsInsight.endpointSpan
         };
@@ -149,7 +150,7 @@ export class HighUsageListViewItemsCreator implements IInsightListViewItemsCreat
 
     public createListViewItem(codeObjectsInsight: HighUsageInsight): IListViewItem {
         return {
-            getHtml: () => this.template.generateHtml(codeObjectsInsight.maxCallsIn1Min, "Endpoint high traffic", "Servicing a high number of requests", "traffic-high.svg"),
+            getHtml: () => this.template.generateHtml(codeObjectsInsight, "Endpoint high traffic", "Servicing a high number of requests", "traffic-high.svg"),
             sortIndex: 0,
             groupId: codeObjectsInsight.endpointSpan
         };
@@ -207,8 +208,9 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
             },
             description: "The following spans are slowing request handling",
             icon: this._viewUris.image("bottleneck.svg"),
-            body: items.join('')
-        });
+            body: items.join(''),
+            insight: codeObjectsInsight,
+        }, this._viewUris);
 
         return {
             getHtml: () => template.renderHtml(),
@@ -326,8 +328,9 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
                         ${items.join('')}
                     </div>
                     ${statsHtml}`,
-            buttons: [traceHtml]
-        });
+            buttons: [traceHtml],
+            insight: codeObjectsInsight,
+        }, this._viewUris);
 
         return {
             getHtml: () => template.renderHtml(),
@@ -378,8 +381,9 @@ export class SlowEndpointListViewItemsCreator implements IInsightListViewItemsCr
             description: `<span>On average requests are slower than other endpoints by</span> 
                           <span class="negative-value">${this.computePercentageDiff(codeObjectsInsight.median.raw, codeObjectsInsight.endpointsMedianOfMedians.raw)}</span>`,
             icon: this.viewUris.image("snail.svg"),
-            body: this.duration(codeObjectsInsight.median)
-        });
+            body: this.duration(codeObjectsInsight.median),
+            insight: codeObjectsInsight,
+        }, this.viewUris);
 
         return {
             getHtml: () => template.renderHtml(),

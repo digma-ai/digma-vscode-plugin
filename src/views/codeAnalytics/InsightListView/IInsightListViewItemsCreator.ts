@@ -11,7 +11,9 @@ export interface CodeObjectInsight extends Insight{
     name: string,
     importance: InsightImporance,
     severity: decimal,
-    decorators: CodeObjectDecorator[]
+    decorators: CodeObjectDecorator[],
+    customStartTime: Date,
+    prefixedCodeObjectId: string,
 }
 
 export enum InsightImporance {

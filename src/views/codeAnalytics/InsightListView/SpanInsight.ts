@@ -10,7 +10,7 @@ import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { SpanSearch } from "./Common/SpanSearch";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
-import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
+import { CodeObjectInsight, IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 const entities = require("entities");
@@ -99,8 +99,9 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     <span class="page"></span>
                 </div>
             </div>
-            `
-        });
+            `,
+            insight,
+        }, this._viewUris);
 
 
         return {
@@ -226,7 +227,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
         });
 
         return {
-            getHtml: ()=> this.spanDurationBreakdownItemHtml(entries).renderHtml(), 
+            getHtml: ()=> this.spanDurationBreakdownItemHtml(entries, insight).renderHtml(),
             sortIndex: 55,
             groupId: insight.spanName
         };
@@ -258,8 +259,10 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
         return tooltip;
     }
     
-    private spanDurationBreakdownItemHtml(breakdownEntries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] ): InsightTemplateHtml {
-        
+    private spanDurationBreakdownItemHtml(
+        breakdownEntries: { breakdownEntry: SpanDurationBreakdownEntry, location: SpanLocationInfo | undefined }[],
+        insight: Insight,
+    ): InsightTemplateHtml {        
         const htmlRecords: string[] = [];
         const recordsPerPage: number = 3;
         breakdownEntries.forEach((entry, index) => {
@@ -299,11 +302,10 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
             title: "Duration Breakdown",
             body: body,
             icon: this._viewUris.image("duration.svg"),
-            buttons: []
-        });
+            buttons: [],
+            insight,
+        }, this._viewUris);
     }
-
-
 }
 
 export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightListViewItemsCreator {
@@ -362,8 +364,9 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
             },
             description: "The following trace sources spend a significant portion here:",
             icon: this._viewUris.image("bottleneck.svg"),
-            body: items.join('')
-        })
+            body: items.join(''),
+            insight: codeObjectsInsight,
+        }, this._viewUris);
 
         return {
             getHtml: () => template.renderHtml(),
@@ -447,8 +450,9 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
                         ${codeObjectsInsight.clientSpanName}
                     </div>
                     ${statsHtml}`,
-            buttons: [traceHtml]
-        });
+            buttons: [traceHtml],
+            insight: codeObjectsInsight,
+        }, this._viewUris);
 
         return {
             getHtml: () => template.renderHtml(),

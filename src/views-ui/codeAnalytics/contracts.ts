@@ -52,6 +52,14 @@ export namespace UiMessage
         export class OverlayVisibilityChanged {
             constructor(public visible?: boolean, public id?:string){}
         }
+
+        export class SetInsightCustomStartTime {
+            constructor(
+                public codeObjectId?: string,
+                public insightType?: string,
+                public time?: Date,
+            ) {}
+        }
     }
 
     export namespace Get

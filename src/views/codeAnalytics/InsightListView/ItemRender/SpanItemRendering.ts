@@ -2,6 +2,7 @@ import moment = require("moment");
 import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
+import { Insight } from "../IInsightListViewItemsCreator";
 import { SpanDurationsInsight } from "../SpanInsight";
 import { InsightTemplateHtml } from "./insightTemplateHtml";
 
@@ -29,12 +30,13 @@ export class SpanItemHtmlRendering{
      }
     
     
-    private getStillCalculatingHtml():InsightTemplateHtml{
+    private getStillCalculatingHtml(insight: Insight): InsightTemplateHtml {
         return new InsightTemplateHtml({
             title: "Duration",
             description: "Waiting for more data.",
-            icon: this._viewUris.image("sand-watch.svg")
-        });
+            icon: this._viewUris.image("sand-watch.svg"),
+            insight,
+        }, this._viewUris);
     }
 
 
@@ -47,7 +49,7 @@ export class SpanItemHtmlRendering{
         
         const percentileHtmls = [];
         if (insight.percentiles.length===0){
-           return this.getStillCalculatingHtml();
+           return this.getStillCalculatingHtml(insight);
         }
         insight.percentiles.sort((a,b) => a.percentile - b.percentile);
         //todo move to file settings
@@ -154,8 +156,9 @@ export class SpanItemHtmlRendering{
             title: "Duration",
             body: body,
             icon: this._viewUris.image("duration.svg"),
-            buttons: buttons
-        });
+            buttons: buttons,
+            insight,
+        }, this._viewUris);
     }
 
 }
