@@ -112,7 +112,8 @@ vscode-panel-view {
         }
 
         li {
-            padding: 4px 8px;
+            color: var(--button-secondary-foreground);
+            background: var(--button-secondary-background);
         }
     }
 

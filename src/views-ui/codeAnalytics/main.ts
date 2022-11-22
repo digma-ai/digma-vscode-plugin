@@ -126,7 +126,10 @@ window.addEventListener("load", () =>
     
     function initListItemMenus(){
         const menus: any = $('.list-item-menu');
-        menus.superfish();
+        menus.superfish({
+            delay: 10000,
+            cssArrows: false,
+        });
     }
 
     consume(UiMessage.Set.InsightsList, (event) => {
@@ -221,7 +224,7 @@ window.addEventListener("load", () =>
             .find('.list-item-time-info');
         $timeInfo
             .find('.list-item-time-info-message')
-            .text('Applying the new filter. Wait a few minutes and then refresh.');
+            .text('Applying the new time filter. Wait a few minutes and then refresh.');
         $timeInfo.show();
         publish(new UiMessage.Notify.SetInsightCustomStartTime(codeObjectId, insightType, new Date()));
     });
