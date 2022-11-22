@@ -55,24 +55,27 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                 </span>`;
 
             let lastServiceHtml = '';
-            if(flow.lastService)
+            if(flow.lastService) {
                 lastServiceHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="flow-entry ellipsis" title="${flow.lastService.service}: ${flow.lastService.span}">
                         <span class="flow-service">${flow.lastService.service}:</span>
                         <span class="flow-span">${flow.lastService.span}</span>
                     </span>`;
+            }
 
             let intermediateSpanHtml = '';
             let lastServiceSpanHtml = '';
-            if(flow.intermediateSpan)
+            if(flow.intermediateSpan) {
                 intermediateSpanHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="ellipsis" title="${flow.intermediateSpan}">${flow.intermediateSpan}</span>`;
-            else if(flow.lastServiceSpan)
+            }
+            else if(flow.lastServiceSpan) {
                 lastServiceSpanHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="ellipsis" title="${flow.lastServiceSpan}">${flow.lastServiceSpan}</span>`;
+            }
 
             let traceHtml = renderTraceLink(flow.sampleTraceIds?.firstOrDefault(), insight.span);
     
@@ -390,7 +393,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
 Percentage of time spent in span:
 Median: ${(span.p50.fraction*100).toFixed(0)}% ~${span.p50.maxDuration.value}${span.p50.maxDuration.unit}
 P95:    ${(span.p95.fraction*100).toFixed(0)}% ~${span.p95.maxDuration.value}${span.p95.maxDuration.unit}
-P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`
+P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`;
     }
     
     public async create( codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {

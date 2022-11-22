@@ -1,5 +1,6 @@
 import { consume, publish } from "../common/contracts";
 import { UiMessage } from "./contracts";
+
 window.addEventListener("load", () => 
 {
     let overlayVisibility = false;
@@ -88,10 +89,12 @@ window.addEventListener("load", () =>
     const errorsTab = $("#view-errors");
 
     consume(UiMessage.Set.Overlay, e => {
-        if(e.htmlContent)
+        if(e.htmlContent) {
             showOverlay(e.htmlContent, e.id);
-        else
+        }
+        else {
             hideOverlay();
+        }
     });
 
     consume(UiMessage.Set.ErrorsList, (event) => {

@@ -26,19 +26,19 @@ export class InsightTemplateHtml
     }
 
     public renderHtml():string{
-        let descriptionHtml = this.data.description
+        const descriptionHtml = this.data.description
             ? ` <div class="list-item-content-description">${this.data.description}</div>`
             : ``;
 
-        let bodyHtml = this.data.body
+        const bodyHtml = this.data.body
             ? ` <div class="list-item-body">${this.data.body}</div>`
             : ``;
 
-        let buttonsHtml = this.data.buttons
+        const buttonsHtml = this.data.buttons
             ? ` <div class="list-item-buttons">${this.data.buttons.join("")}</div>`
             : ``;
         
-        let iconHtml = this.data.icon
+        const iconHtml = this.data.icon
             ? `<img class="list-item-icon" src="${this.data.icon}" width="15" height="15">`
             : ``;
         

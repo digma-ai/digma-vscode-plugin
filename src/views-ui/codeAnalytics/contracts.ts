@@ -1,4 +1,4 @@
-import { decimal } from "vscode-languageclient"
+import { decimal } from "vscode-languageclient";
 
 export namespace UiMessage
 {
@@ -7,6 +7,7 @@ export namespace UiMessage
         export class TabLoaded {
             constructor(public selectedViewId?: string) {}
         }
+
         export class TabChanged {
             constructor(public viewId?: string) {}
         }
@@ -19,9 +20,11 @@ export namespace UiMessage
             constructor(public environment?: string) {}
 
         }
+
         export class GoToLine{
             constructor(public line?: number){}
         }
+
         export class GoToLineByFrameId {
             constructor(public frameId?: number){}
         }
@@ -37,18 +40,23 @@ export namespace UiMessage
         export class OpenTracePanel {
             constructor(public traceIds?: string[], public traceLabels?:string[],  public span?:string, public jaegerAddress?:string){}
         }
+
         export class OpenRawTrace {
             constructor(public content?: string) {}
         }
+
         export class WorkspaceOnlyChanged {
             constructor(public value?: boolean){}
         }
+
         export class ErrorViewVisibilityChanged {
             constructor(public visible?: boolean){}
         }
+
         export class NavigateErrorFlow {
             constructor(public offset?: number) {}
         }
+
         export class OverlayVisibilityChanged {
             constructor(public visible?: boolean, public id?:string){}
         }
@@ -87,12 +95,15 @@ export namespace UiMessage
         export class SpanList {
             constructor(public htmlContent?: string) {}
         }
+
         export class ErrorsList {
             constructor(public htmlContent?: string) {}
         }
+
         export class StackDetails {
             constructor(public htmlContent?: string) {}
         }
+
         export class CurrenStackInfo {
             constructor(public stackInfo?: {
                 stackNumber: number
@@ -101,12 +112,15 @@ export namespace UiMessage
                 canNavigateToNext: boolean,
             }) {}
         }
+
         export class CodeObjectLabel {
             constructor(public htmlContent?: string) {}
         }
+
         export class SpanObjectLabel {
             constructor(public htmlContent?: string) {}
         }
+        
         export class Overlay {
             constructor(public htmlContent?: string, public id?: string) {}
         }

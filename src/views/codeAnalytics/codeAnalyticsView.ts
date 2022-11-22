@@ -104,8 +104,9 @@ export class CodeAnalyticsView implements vscode.Disposable
         
 			vscode.window.onDidChangeTextEditorSelection(
 				async (e: vscode.TextEditorSelectionChangeEvent) => {
-                    if(e.textEditor.document.languageId !== 'Log')
+                    if(e.textEditor.document.languageId !== 'Log') {
 					    await this._provider.onCodeSelectionChanged(e.textEditor.document, e.selections[0].anchor);
+                    }
 				}
 			),
             vscode.commands.registerCommand(CodeAnalyticsView.Commands.Show, async (environment:string, codeObjectId: string, codeObjectDisplayName: string) => {
@@ -223,8 +224,9 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
         this._disposables.concat(tabsList);
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
-        for(let tab of tabsList)
+        for(let tab of tabsList) {
             this._tabs.set(tab.tabId, tab);
+        }
         this._lastActivedTab = tabsList[0];
 	}
 
@@ -324,7 +326,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		position: vscode.Position
 	): Promise<CodeObjectInfo | undefined> {
         if(document.uri.scheme !== 'file'){
-            Logger.error("getCodeObjectOrShowOverlay was called with a non file document! " + document.uri.toString())
+            Logger.error("getCodeObjectOrShowOverlay was called with a non file document! " + document.uri.toString());
             return;
         }
 

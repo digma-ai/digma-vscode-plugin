@@ -96,17 +96,19 @@ export class SpanItemHtmlRendering{
                 //                                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
                 //                                     ${this.getBestUnit(item.previousDuration, item.currentDuration)}, ${item.changeTime.fromNow()}</span>`);
             }
-            else
+            else {
                 percentileHtmls.push(/*html*/ `<span></span>`);
+            }
 
-            if(item.changeTime && changeMeaningfulEnough && item.changeVerified === false)
+            if(item.changeTime && changeMeaningfulEnough && item.changeVerified === false) {
                 percentileHtmls.push(/*html*/ `<span title="This change is still being validated and is based on initial data.">Evaluating</span>`);
-            else
+            }
+            else {
                 percentileHtmls.push(/*html*/ `<span></span>`);
+            }
 
         }
 
-        insight.periodicPercentiles
         let newHtml = `
         <div class="periodic-percentiles-grid">
         <div class="grid-header"></div>
