@@ -77,28 +77,18 @@ export class InsightTemplateHtml
 
         const threeDotImageUri = this._viewUris.image('three-dots.svg');
 
-        let menuHtml = menuItems?.length > 0
-            ? `<ul class="list-item-menu sf-menu sf-js-enabled">
-                <li class="list-item-menu-item">
-                    <img class="list-item-icon" src="${threeDotImageUri}" height="15">
-                    <ul>
-                        ${menuItems.join("")}
-                    </ul>
-                </li>
-            </ul>`
+        const menuItemsHtml = menuItems.length > 0
+            ? `<li class="list-item-menu">
+                <img class="list-item-icon" src="${threeDotImageUri}" height="15">
+                <ul>
+                    ${menuItems.join("")}
+                </ul>
+            </li>`
             : ``;
-        // const menuItemsHtml = menuItems.length > 0
-        //     ? `<li class="list-item-menu-item">
-        //         <img class="list-item-icon" src="${threeDotImageUri}" height="15">
-        //         <ul>
-        //             ${menuItems.join("")}
-        //         </ul>
-        //     </li>`
-        //     : ``;
-        // const menuHtml = `
-        //     <ul class="list-item-menu sf-menu sf-js-enabled">
-        //         ${menuItemsHtml}
-        //     </ul>`;
+        const menuHtml = `
+            <ul class="list-item-menu sf-menu sf-js-enabled">
+                ${menuItemsHtml}
+            </ul>`;
         
         let title = "";
         let tooltip = "";
