@@ -185,8 +185,6 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel.consume(UiMessage.Notify.OpenHistogramPanel, this.onOpenHistogramRequested.bind(this));
         this._channel.consume(UiMessage.Notify.OpenTracePanel, this.onOpenTracePanel.bind(this));
 
-        this._actions.push(new SetCustomStartTimeAction(this._analyticsProvider, this._webViewUris, this._channel));
-
         const listViewItemsCreator = new InsightListViewItemsCreator();
         listViewItemsCreator.setUknownTemplate(new UnknownInsightInsight(this._webViewUris));
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
