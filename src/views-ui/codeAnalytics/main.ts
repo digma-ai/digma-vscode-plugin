@@ -229,6 +229,9 @@ window.addEventListener("load", () =>
             .find('.custom-start-date-refresh-link')
             .show();
         $timeInfo.show();
+
+        (<any>$this.closest('li.list-item-menu')).superfish('hide');
+
         publish(new UiMessage.Notify.SetInsightCustomStartTime(codeObjectId, insightType, new Date()));
     });
 
