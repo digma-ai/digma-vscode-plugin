@@ -44,9 +44,7 @@ export class InsightTemplateHtml
         
         const { insight } = this.data;
         
-        let startTime = '';
-        let formattedStartTime = '';
-        let hasCustomTime = false;
+        let timeInfoHtml = '';
 
         const menuItems = [];
         if((<CodeObjectInsight>insight)?.prefixedCodeObjectId) {
@@ -60,10 +58,23 @@ export class InsightTemplateHtml
 
             console.log('insight', codeObjectId, insightType, customStartTime);
 
-            startTime = actualStartTime?.format('L') || '';
-            formattedStartTime = actualStartTime?.fromNow() || formattedStartTime;
-            hasCustomTime = !!customStartTime;
+            const startTime = actualStartTime?.format('L') || '';
+            const formattedStartTime = actualStartTime?.fromNow() || '';
+            const identicalStartTimes = actualStartTime?.valueOf() === customStartTime?.valueOf();
             
+            const timeInfoVisibilityClass = !!customStartTime ? '' : 'hidden';
+            const refreshButtonVisibilityClass = identicalStartTimes ? 'hidden' : '';
+            const timeInfoMessage = identicalStartTimes
+                ? `Age of data: ${formattedStartTime}`
+                : `Applying the new time filter. Wait a few minutes and then refresh.`;
+    
+            timeInfoHtml = `
+                <div class="list-item-time-info ${timeInfoVisibilityClass}">
+                    <span class="list-item-time-info-message" title="${startTime}">${timeInfoMessage}</span>
+                    <a href="#" class="custom-start-date-refresh-link ${refreshButtonVisibilityClass}">Refresh</a>
+                </div>
+            `;
+    
             menuItems.push(`
                 <li
                     class="list-item-menu-item custom-start-date-recalculate-link"
@@ -99,14 +110,6 @@ export class InsightTemplateHtml
             title = (<ITitle>this.data.title).text;
             tooltip = (<ITitle>this.data.title).tooltip;
         }
-
-        const timeInfoVisibilityClass = hasCustomTime ? '' : 'hidden';
-        const timeInfoHtml = `
-            <div class="list-item-time-info ${timeInfoVisibilityClass}">
-                <span class="list-item-time-info-message" title="${startTime}">Age of data: ${formattedStartTime}</span>
-                <a href="#" class="custom-start-date-refresh-link">Refresh</a>
-            </div>
-        `;
 
         const html = /*html*/`
             <div class="list-item insight">

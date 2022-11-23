@@ -225,6 +225,9 @@ window.addEventListener("load", () =>
         $timeInfo
             .find('.list-item-time-info-message')
             .text('Applying the new time filter. Wait a few minutes and then refresh.');
+        $timeInfo
+            .find('.custom-start-date-refresh-link')
+            .show();
         $timeInfo.show();
         publish(new UiMessage.Notify.SetInsightCustomStartTime(codeObjectId, insightType, new Date()));
     });
