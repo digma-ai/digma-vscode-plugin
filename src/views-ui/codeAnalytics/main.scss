@@ -21,6 +21,15 @@ vscode-panel-view {
     color: #f14c4c;
 }
 
+.links-list {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    .codeobject-link{
+        align-self: flex-start;
+    }
+}
+
 .list {
     padding: 0px;
     display: flex;
