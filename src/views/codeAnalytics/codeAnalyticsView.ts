@@ -33,7 +33,6 @@ import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
 import { AnalyticsCodeLens } from "../../analyticsCodeLens";
 import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../../services/codeObject";
-import { SetCustomStartTimeAction } from "./InsightListView/Actions/SetCustomStartTimeAction";
 import { Action } from "./InsightListView/Actions/Action";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 

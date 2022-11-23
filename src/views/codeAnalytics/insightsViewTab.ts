@@ -36,7 +36,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _viewUris: WebViewUris,
         private _noCodeObjectsMessage: NoCodeObjectMessage,
         private _workspaceState: WorkspaceState,
-        private _noEnvironmentSelectedMessage: NoEnvironmentSelectedMessage) { }
+        private _noEnvironmentSelectedMessage: NoEnvironmentSelectedMessage,
+    ) {
+            this._channel.consume(UiMessage.Notify.SetInsightCustomStartTime, this.onSetInsightCustomStartTime.bind(this));
+    }
     
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
@@ -213,5 +216,20 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             <div id="spanList" class="list"></div>
 
             `;
+    }
+
+    private async onSetInsightCustomStartTime(event: UiMessage.Notify.SetInsightCustomStartTime) {
+        if (event.codeObjectId && event.insightType && event.time) {
+            try {
+                await this._analyticsProvider.setInsightCustomStartTime(
+                    event.codeObjectId,
+                    event.insightType,
+                    event.time,
+                );
+            }
+            catch(error) {
+                this.showError(error);
+            }
+        }
     }
 }
