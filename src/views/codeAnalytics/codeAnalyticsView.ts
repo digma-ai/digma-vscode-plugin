@@ -33,7 +33,8 @@ import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
 import { AnalyticsCodeLens } from "../../analyticsCodeLens";
 import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../../services/codeObject";
-import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
+import { SetCustomStartTimeAction as SetCustomStartTimeAction } from "./InsightListView/Actions/SetCustomStartTimeAction";
+import { Action } from "./InsightListView/Actions/Action";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -144,6 +145,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     private _currentCodeObject?: CodeObjectInfo;
     private _disposables: vscode.Disposable[] = [];
     private _webviewViewProvider: WebviewViewProvider;
+    private _actions: Action[] = [];
 	constructor(
 		extensionUri: vscode.Uri,
 		private _analyticsProvider: AnalyticsProvider,
@@ -184,7 +186,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         this._channel.consume(UiMessage.Notify.OpenHistogramPanel, this.onOpenHistogramRequested.bind(this));
         this._channel.consume(UiMessage.Notify.OpenTracePanel, this.onOpenTracePanel.bind(this));
 
-        this._channel.consume(UiMessage.Notify.SetInsightCustomStartTime, this.onSetInsightCustomStartTime.bind(this));
+        this._actions.push(new SetCustomStartTimeAction(this._analyticsProvider, this._webViewUris, this._channel));
 
         const listViewItemsCreator = new InsightListViewItemsCreator();
         listViewItemsCreator.setUknownTemplate(new UnknownInsightInsight(this._webViewUris));
@@ -502,22 +504,4 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             </body>
             </html>`;
 	}
-
-    public async onSetInsightCustomStartTime(event: UiMessage.Notify.SetInsightCustomStartTime) {
-        if (event.codeObjectId && event.insightType && event.time) {
-            try {
-                await this._analyticsProvider.setInsightCustomStartTime(
-                    event.codeObjectId,
-                    event.insightType,
-                    event.time,
-                );
-            }
-            catch(e) {
-                let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(e);
-                // this.updateListView(html);
-                console.log(html);
-                return;
-            }
-        }
-    }
 }
