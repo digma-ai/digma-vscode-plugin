@@ -113,6 +113,7 @@ vscode-panel-view {
         li {
             color: var(--button-secondary-foreground);
             background: var(--button-secondary-background);
+            padding: 4px 8px;
         }
     }
 
@@ -121,7 +122,7 @@ vscode-panel-view {
         right: 0;
         min-width: unset;
 
-        li {
+        li, li:hover {
             color: var(--button-secondary-foreground);
             background: var(--button-secondary-background);
         }
