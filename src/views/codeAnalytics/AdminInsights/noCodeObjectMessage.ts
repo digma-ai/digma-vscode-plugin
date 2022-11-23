@@ -19,10 +19,10 @@ export class NoCodeObjectMessage{
         var usageStatuses =  await this._analyticsProvider.getUsageStatus(codeObjects);
 
         for(const method of docInfo.methods){
-            const relatedSummaries = docInfo.insights.all.filter(s => 
+            const relatedInsights = docInfo.insights.all.filter(s => 
                 method.id === s.codeObjectId ||
                 method.relatedCodeObjects.any(r => r.id === s.codeObjectId));
-            if(relatedSummaries.length==0){
+            if(relatedInsights.length !==0){
                     links.push(/*html*/`<vscode-link class="codeobject-link" data-line="${method.range.start.line}">${method.displayName}</vscode-link>`);
             }
   
