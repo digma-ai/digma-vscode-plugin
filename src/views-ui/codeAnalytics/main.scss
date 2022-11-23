@@ -71,7 +71,6 @@ vscode-panel-view {
 
 .list-item-body {
     margin-top: 5px;
-    z-index: 2;
 }
 
 .list-item-buttons {
@@ -94,15 +93,11 @@ vscode-panel-view {
 .list-item-menu {
     padding: 0;
     margin: 0;
+    width: 8px;
 }
 
-.list-item-menu-item {
-    padding: 4px;
-    margin: 0;
-}
-
-ul.list-item-menu {
-    li.list-item-menu {
+.sf-menu {
+    li {
         right: 0;
         min-width: unset;
         font-family: var(--font-family);
@@ -116,21 +111,21 @@ ul.list-item-menu {
             cursor: pointer;
         }
 
-        // li {
-        //     color: var(--button-secondary-foreground);
-        //     background: var(--button-secondary-background);
-        // }
+        li {
+            color: var(--button-secondary-foreground);
+            background: var(--button-secondary-background);
+            padding: 4px 8px;
+        }
+    }
 
-        ul {
-            left: unset;
-            right: 0;
-            min-width: unset;
-            z-index: 100;
-    
-            li {
-                color: var(--button-secondary-foreground);
-                background: var(--button-secondary-background);
-            }
+    ul {
+        left: unset;
+        right: 0;
+        min-width: unset;
+
+        li, li:hover {
+            color: var(--button-secondary-foreground);
+            background: var(--button-secondary-background);
         }
     }
 }

@@ -44,9 +44,7 @@ export class InsightTemplateHtml
         
         const { insight } = this.data;
         
-        let startTime = '';
-        let formattedStartTime = '';
-        let hasCustomTime = false;
+        let timeInfoHtml = '';
 
         const menuItems = [];
         if((<CodeObjectInsight>insight)?.prefixedCodeObjectId) {
@@ -60,10 +58,23 @@ export class InsightTemplateHtml
 
             console.log('insight', codeObjectId, insightType, customStartTime);
 
-            startTime = actualStartTime?.format('L') || '';
-            formattedStartTime = actualStartTime?.fromNow() || formattedStartTime;
-            hasCustomTime = !!customStartTime;
+            const startTime = actualStartTime?.format('L') || '';
+            const formattedStartTime = actualStartTime?.fromNow() || '';
+            const identicalStartTimes = actualStartTime?.valueOf() === customStartTime?.valueOf();
             
+            const timeInfoVisibilityClass = !!customStartTime ? '' : 'hidden';
+            const refreshButtonVisibilityClass = identicalStartTimes ? 'hidden' : '';
+            const timeInfoMessage = identicalStartTimes
+                ? `Age of data: ${formattedStartTime}`
+                : `Applying the new time filter. Wait a few minutes and then refresh.`;
+    
+            timeInfoHtml = `
+                <div class="list-item-time-info ${timeInfoVisibilityClass}">
+                    <span class="list-item-time-info-message" title="${startTime}">${timeInfoMessage}</span>
+                    <a href="#" class="custom-start-date-refresh-link ${refreshButtonVisibilityClass}">Refresh</a>
+                </div>
+            `;
+    
             menuItems.push(`
                 <li
                     class="list-item-menu-item custom-start-date-recalculate-link"
@@ -77,36 +88,18 @@ export class InsightTemplateHtml
 
         const threeDotImageUri = this._viewUris.image('three-dots.svg');
 
-        // let menuHtml = menuItems?.length > 0
-        //     ? `<ul class="list-item-menu sf-menu sf-js-enabled">
-        //         <li class="list-item-menu">
-        //             <img class="list-item-icon" src="${threeDotImageUri}" height="15">
-        //             <ul>
-        //                 ${menuItems.join("")}
-        //             </ul>
-        //         </li>
-        //     </ul>`
-        //     : ``;
-        let menuHtml = menuItems?.length > 0
-            ? `<div
-                class="list-item-icon custom-start-date-recalculate-link codicon codicon-calendar"
-                src="${threeDotImageUri}"
-                title="Recalculate\n\nClick to recalculate this insight only using new data"
-                height="15"
-            ></div>`
+        const menuItemsHtml = menuItems.length > 0
+            ? `<li class="list-item-menu">
+                <img class="list-item-icon" src="${threeDotImageUri}" height="15">
+                <ul>
+                    ${menuItems.join("")}
+                </ul>
+            </li>`
             : ``;
-        // const menuItemsHtml = menuItems.length > 0
-        //     ? `<li class="list-item-menu-item">
-        //         <img class="list-item-icon" src="${threeDotImageUri}" height="15">
-        //         <ul>
-        //             ${menuItems.join("")}
-        //         </ul>
-        //     </li>`
-        //     : ``;
-        // const menuHtml = `
-        //     <ul class="list-item-menu sf-menu sf-js-enabled">
-        //         ${menuItemsHtml}
-        //     </ul>`;
+        const menuHtml = `
+            <ul class="list-item-menu sf-menu sf-js-enabled">
+                ${menuItemsHtml}
+            </ul>`;
         
         let title = "";
         let tooltip = "";
@@ -118,14 +111,6 @@ export class InsightTemplateHtml
             tooltip = (<ITitle>this.data.title).tooltip;
         }
 
-        const timeInfoVisibilityClass = hasCustomTime ? '' : 'hidden';
-        const timeInfoHtml = `
-            <div class="list-item-time-info ${timeInfoVisibilityClass}">
-                <span class="list-item-time-info-message" title="${startTime}">Age of data: ${formattedStartTime}</span>
-                <a href="#" class="custom-start-date-refresh-link">Refresh</a>
-            </div>
-        `;
-
         const html = /*html*/`
             <div class="list-item insight">
                 <div class="list-item-top-area">
@@ -134,8 +119,8 @@ export class InsightTemplateHtml
                         ${timeInfoHtml}
                         ${descriptionHtml}
                     </div>
-                    ${menuHtml}
                     ${iconHtml}
+                    ${menuHtml}
                 </div>
                 ${bodyHtml}
                 ${buttonsHtml}

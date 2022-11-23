@@ -468,6 +468,7 @@ export class AnalyticsProvider
                 InsightType: insightType,
                 Time: time,
             },
+            false,
         );
         return response;
     }

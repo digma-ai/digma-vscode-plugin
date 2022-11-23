@@ -36,7 +36,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         private _viewUris: WebViewUris,
         private _noCodeObjectsMessage: NoCodeObjectMessage,
         private _workspaceState: WorkspaceState,
-        private _noEnvironmentSelectedMessage: NoEnvironmentSelectedMessage) { }
+        private _noEnvironmentSelectedMessage: NoEnvironmentSelectedMessage,
+    ) {
+            this._channel.consume(UiMessage.Notify.SetInsightCustomStartTime, this.onSetInsightCustomStartTime.bind(this));
+    }
     
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
@@ -123,12 +126,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         catch(e)
         {
-
-            let html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(e);
-            this.updateListView(html);
+            this.showError(e);
             return;
-
         }
+        
         try{
            
             let groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults.codeObjectStatuses);
@@ -201,7 +202,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this._channel?.publish(new UiMessage.Set.InsightsList(html));
     }
 
-    
+    public showError(error: any): void {
+        let html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(error);
+        this.updateListView(html);
+    }
 
     public getHtml(): string {
         return /*html*/`
@@ -212,5 +216,20 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             <div id="spanList" class="list"></div>
 
             `;
+    }
+
+    private async onSetInsightCustomStartTime(event: UiMessage.Notify.SetInsightCustomStartTime) {
+        if (event.codeObjectId && event.insightType && event.time) {
+            try {
+                await this._analyticsProvider.setInsightCustomStartTime(
+                    event.codeObjectId,
+                    event.insightType,
+                    event.time,
+                );
+            }
+            catch(error) {
+                this.showError(error);
+            }
+        }
     }
 }
