@@ -127,7 +127,7 @@ window.addEventListener("load", () =>
     function initListItemMenus(){
         const menus: any = $('.list-item-menu');
         menus.superfish({
-            delay: 10000,
+            delay: 3000,
             cssArrows: false,
         });
     }
