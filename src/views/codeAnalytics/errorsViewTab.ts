@@ -114,6 +114,12 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
                 <div id="error-list" class="list"></div>
             </div>`;
     }    
+
+    public showError(error: any): void {
+        let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(error);
+        this._channel.publish(new UiMessage.Set.ErrorsList(html));
+    }
+
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 
     {
         let html = HtmlHelper.getCodeObjectLabel(this._webViewUris, codeObject.displayName);
@@ -160,8 +166,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
                     return;
                 }
 
-                let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(e);
-                this._channel.publish(new UiMessage.Set.ErrorsList(html));
+                this.showError(e);
                 return;
             }
 

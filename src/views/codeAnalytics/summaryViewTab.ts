@@ -49,8 +49,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
             usageResults = await this._analyticsProvider.getUsageStatus([]);
         }
         catch(e){
-            let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(e);
-            this.updateListView(html);
+            this.showError(e);
             return;
         }
         
@@ -95,5 +94,10 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         //         </div>
         //     </div>
         // </div>`;
+    }
+
+    public showError(error: any): void {
+        let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(error);
+        this.updateListView(html);
     }
 }

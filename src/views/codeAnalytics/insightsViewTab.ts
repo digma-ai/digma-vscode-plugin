@@ -123,12 +123,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
         catch(e)
         {
-
-            let html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(e);
-            this.updateListView(html);
+            this.showError(e);
             return;
-
         }
+        
         try{
            
             let groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(usageResults.codeObjectStatuses);
@@ -201,7 +199,10 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this._channel?.publish(new UiMessage.Set.InsightsList(html));
     }
 
-    
+    public showError(error: any): void {
+        let html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(error);
+        this.updateListView(html);
+    }
 
     public getHtml(): string {
         return /*html*/`
