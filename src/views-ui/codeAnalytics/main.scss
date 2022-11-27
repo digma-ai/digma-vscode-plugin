@@ -39,28 +39,18 @@ vscode-panel-view {
 
 .list-item {
     padding: 3px 3px 3px 6px;
-    background: var(--vscode-list-hoverBackground);
+    background: var(--vscode-list-dropBackground);
     margin-top: 6px;
     width: 100%;
     position: relative;
     display: flex;
     font-size: var(--type-ramp-minus1-font-size);
     box-sizing: border-box;
+    border-radius: 4px;
+
     &.insight{
         flex-direction: column;
     }
-}
-
-.list-item::before {
-    background: var(--foreground);
-    content: " ";
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    opacity: 0.05;
-    border-radius: 4px;
 }
 
 .list-item-top-area {
