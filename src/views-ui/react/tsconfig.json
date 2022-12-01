@@ -1,0 +1,24 @@
+{
+  "include": ["src/**/*"],
+  "ts-node": {
+    "transpileOnly": true,
+    "moduleTypes": {
+      "webpack.config.ts": "cjs"
+    }
+  },
+  "compilerOptions": {
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["dom"],
+    "jsx": "react-jsx",
+    "sourceMap": true,
+    "outDir": "./dist/",
+    "removeComments": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "baseUrl": "./",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}

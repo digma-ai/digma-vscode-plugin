@@ -18,6 +18,7 @@
 	"exclude": [
 		"node_modules",
 		".vscode-test",
-        "src/views-ui/*/main.ts"
+    "src/views-ui/*/main.ts",
+    "src/views-ui/react/**/*.*",
 	]
 }

@@ -86,6 +86,11 @@ export class WebViewUris
         return this.getUri("out", "views-ui", this._assetSubFolderName, "build.js");
     }
 
+    public get reactJs() : vscode.Uri
+    {
+        return this.getUri("out", "views-ui", "react", "dist", "react_build.js");
+    }
+
     public image(name: string) : vscode.Uri
     {
         return this.getUri("images", name);
@@ -118,7 +123,7 @@ export class WebviewChannel implements vscode.Disposable
     //         return sub;
     //     }
     // }
-    public subscrib(value: vscode.Webview) 
+    public subscribe(value: vscode.Webview) 
     {
         if(this._webview === value) {
             return;
