@@ -88,7 +88,7 @@ export class WebViewUris
 
     public get reactJs() : vscode.Uri
     {
-        return this.getUri("out", "views-ui", "react", "dist", "react_build.js");
+        return this.getUri("out", "views-ui", "react", "react_build.js");
     }
 
     public image(name: string) : vscode.Uri
