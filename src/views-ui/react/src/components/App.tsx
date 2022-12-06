@@ -26,7 +26,7 @@ export const App = () => {
 
   // Some example data
   const insightData = {
-    title: "Breakdown duration",
+    title: "Duration breakdown",
     description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel tempus elit, sed faucibus elit. Integer risus augue, scelerisque tincidunt leo nec, auctor tempor massa. Quisque imperdiet enim nibh, a porta est efficitur id. Etiam fermentum eu lectus in tempor. Quisque rutrum magna vitae malesuada tincidunt.",
     icon: <DurationIcon height={15}/>
   }
