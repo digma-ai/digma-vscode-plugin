@@ -18,6 +18,7 @@ import { ErrorsLineDecorator } from './views/codeAnalytics/decorators/errorsLine
 import { HotspotMarkerDecorator } from './views/codeAnalytics/decorators/hotspotMarkerDecorator';
 import { EnvSelectStatusBar } from './views/codeAnalytics/StatusBar/envSelectStatusBar';
 import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatusBar';
+import { SpanDurationChangeNotificationWorker } from './services/workers/SpanDurationChangeNotificationWorker';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -64,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
-
+    context.subscriptions.push(new SpanDurationChangeNotificationWorker(analyticsProvider));
     
 }
 
