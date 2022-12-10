@@ -144,7 +144,7 @@ export class SpanItemHtmlRendering{
             const traceIdAtt = `data-trace-id="${traceIds.join(",")}"`;
 
             let linkClass = "trace";
-            if (Settings.jaegerAddress.value === "Embedded") {
+            if (Settings.jaegerMode.value === "Embedded") {
               linkClass = "jaeger";
             }
 
