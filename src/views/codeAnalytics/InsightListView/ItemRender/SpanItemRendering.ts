@@ -143,8 +143,13 @@ export class SpanItemHtmlRendering{
             const traceLabelsAtt = `data-trace-label="${traceLabels.join(",")}"`;
             const traceIdAtt = `data-trace-id="${traceIds.join(",")}"`;
 
+            let linkClass = "trace";
+            if (Settings.jaegerAddress.value === "Embedded") {
+              linkClass = "jaeger";
+            }
+
             buttons.push(/*html*/ `
-                <span  class="insight-main-value trace-link list-item-button" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span.name}" 
+                <span  class="insight-main-value ${linkClass}-link list-item-button" data-jaeger-address="${Settings.jaegerAddress.value}" data-span-name="${insight.span.name}" 
                     ${traceLabelsAtt} ${traceIdAtt} >
                 Compare
                 </span>`);

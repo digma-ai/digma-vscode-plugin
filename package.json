@@ -114,12 +114,13 @@
                     "default": "Internal",
                     "enum": [
                         "Internal",
-                        "External"
+                        "External",
+                        "Embedded"
                     ]
                 },
                 "digma.hideFramesOutsideWorkspace": {
                     "type": "bool",
-                    "defult": true
+                    "default": true
                 },
                 "digma.sourceControl": {
                     "type": "string",
@@ -153,11 +154,12 @@
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
-        "compile": "npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js",
+        "compile": "npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js && npm run copy:jaeger",
         "compile:all": "tsc -p ./",
         "compile:views": "tsc -p ./src/views-ui/codeAnalytics/tsconfig.json",
         "compile:sass": "sass ./src:./out",
         "copy:js": "copyfiles -u 1 src/**/*.js out",
+        "copy:jaeger": "copyfiles jaegerUi/**/*.* out/views-ui",
         "watch": "npm run watch:all || npm run watch:views",
         "watch:all": "tsc -watch -p ./",
         "watch:views": "tsc -watch -p ./src/views-ui/codeAnalytics/tsconfig.json",

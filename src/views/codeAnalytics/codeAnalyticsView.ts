@@ -26,6 +26,7 @@ import { SpanDurationChangesInsightCreator } from "./InsightListView/SpanDuratio
 import { Console } from "console";
 import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
+import { JaegerPanel } from "./Jaeger/JaegerPanel";
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
@@ -139,12 +140,13 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 	private _channel: WebviewChannel;
     private _tabs : Map<string, ICodeAnalyticsViewTab>;
     private _activeTab?: ICodeAnalyticsViewTab;
-    private _lastActivedTab: ICodeAnalyticsViewTab;
+    private _lastActiveTab: ICodeAnalyticsViewTab;
     private _overlay: OverlayView;
     private _currentCodeObject?: CodeObjectInfo;
     private _disposables: vscode.Disposable[] = [];
     private _webviewViewProvider: WebviewViewProvider;
     private _actions: Action[] = [];
+    public extensionUri: vscode.Uri;
 	constructor(
 		extensionUri: vscode.Uri,
 		private _analyticsProvider: AnalyticsProvider,
@@ -156,7 +158,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         private _envSelectStatusBar: EnvSelectStatusBar
 	) {
 
-
+    this.extensionUri = extensionUri;
 		this._webViewUris = new WebViewUris(
 			extensionUri,
 			"codeAnalytics",
@@ -184,9 +186,10 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
         this._channel.consume(UiMessage.Notify.OpenHistogramPanel, this.onOpenHistogramRequested.bind(this));
         this._channel.consume(UiMessage.Notify.OpenTracePanel, this.onOpenTracePanel.bind(this));
+        this._channel.consume(UiMessage.Notify.OpenJaegerPanel, this.onOpenJaegerPanel.bind(this));
 
         const listViewItemsCreator = new InsightListViewItemsCreator();
-        listViewItemsCreator.setUknownTemplate(new UnknownInsightInsight(this._webViewUris));
+        listViewItemsCreator.setUnknownTemplate(new UnknownInsightInsight(this._webViewUris));
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
@@ -226,7 +229,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         for(let tab of tabsList) {
             this._tabs.set(tab.tabId, tab);
         }
-        this._lastActivedTab = tabsList[0];
+        this._lastActiveTab = tabsList[0];
 	}
 
     dispose() {
@@ -271,6 +274,26 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         
     }
 
+    private async onOpenJaegerPanel(e: UiMessage.Notify.OpenJaegerPanel) {
+      if (e.traceIds && Object.keys(e.traceIds).length > 0 && e.span && e.jaegerAddress) {
+        let options: vscode.WebviewOptions = {
+          enableScripts: true,
+          enableCommandUris: true
+        };
+
+        const panel = vscode.window.createWebviewPanel(
+          'jaegerUI', // Identifies the type of the webview. Used internally
+          "Jaeger UI",
+          vscode.ViewColumn.One,
+          options
+        );
+        const jaegerPanel = new JaegerPanel();
+        const jaegerDiskPath = vscode.Uri.joinPath(this.extensionUri, "out", "views-ui", "jaegerUi");
+        const jaegerUri = panel.webview.asWebviewUri(jaegerDiskPath);
+        panel.webview.html = jaegerPanel.getHtml(e.traceIds, e.traceLabels, e.span, e.jaegerAddress, jaegerUri);
+      }
+    }
+
     private async onOpenHistogramRequested(e: UiMessage.Notify.OpenHistogramPanel)
     {
         let options: vscode.WebviewOptions = {
@@ -297,7 +320,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         const codeObject = await this.getCodeObjectOrShowOverlay(document, position);
         if(codeObject) { 
             if(!this._activeTab){
-                this._activeTab = this._lastActivedTab;
+                this._activeTab = this._lastActiveTab;
                 this._activeTab.onActivate(codeObject);
             }
             else{
@@ -339,7 +362,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             if(this.canChangeOverlayOnCodeSelectionChanged()) {
                 this._overlay.showUnsupportedDocumentMessage();
             }
-            this._activeTab?.onDectivate();
+            this._activeTab?.onDeactivate();
             this._activeTab = undefined;
             
             return;
@@ -352,7 +375,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         //     if(this.canChangeOverlayOnCodeSelectionChanged()) {
         //         await this._overlay.showCodeSelectionNotFoundMessage(docInfo);
         //     }
-        //     this._activeTab?.onDectivate();
+        //     this._activeTab?.onDeactivate();
         //     this._activeTab = undefined;
         //     return;
         // }
@@ -372,17 +395,17 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         const editor = vscode.window.activeTextEditor;
         if(!editor || editor.document.languageId === 'Log'){
             this._overlay.showUnsupportedDocumentMessage();
-            this._activeTab?.onDectivate();
+            this._activeTab?.onDeactivate();
             this._activeTab = undefined;
             return;
         }
 
         const codeObject = await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
         if(codeObject) {
-            this._activeTab?.onDectivate();
+            this._activeTab?.onDeactivate();
             this._activeTab = this._tabs.get(event.selectedViewId!)!;
             this._activeTab.onActivate(codeObject);
-            this._lastActivedTab = this._activeTab;
+            this._lastActiveTab = this._activeTab;
             this._overlay.hide();
         }
         this._currentCodeObject = codeObject;
@@ -432,10 +455,10 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         // }
 
         if(event.viewId && this._currentCodeObject){
-            this._activeTab?.onDectivate();
+            this._activeTab?.onDeactivate();
             this._activeTab = this._tabs.get(event.viewId)!;
             this._activeTab.onActivate(this._currentCodeObject);
-            this._lastActivedTab = this._activeTab;
+            this._lastActiveTab = this._activeTab;
             this._overlay.hide();
         }
     }

@@ -41,6 +41,10 @@ export namespace UiMessage
             constructor(public traceIds?: string[], public traceLabels?:string[],  public span?:string, public jaegerAddress?:string){}
         }
 
+        export class OpenJaegerPanel {
+          constructor(public traceIds?: string[], public traceLabels? :string[], public span?: string, public jaegerAddress?: string) {}
+        }
+
         export class OpenRawTrace {
             constructor(public content?: string) {}
         }
@@ -104,7 +108,7 @@ export namespace UiMessage
             constructor(public htmlContent?: string) {}
         }
 
-        export class CurrenStackInfo {
+        export class CurrentStackInfo {
             constructor(public stackInfo?: {
                 stackNumber: number
                 totalStacks: number
