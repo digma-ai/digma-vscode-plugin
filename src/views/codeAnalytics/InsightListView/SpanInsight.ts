@@ -169,6 +169,20 @@ export interface SpandSlowEndpointsInsight extends CodeObjectInsight{
     slowEndpoints:SlowEndpointInfo[]
 }
 
+export interface NPlusSpansInsight extends CodeObjectInsight {
+    traceId: string;
+    span: SpanInfo;
+    clientSpanName: string;
+    occurrences: number;
+    duration: Duration;
+}
+
+export interface SpanScalingInsight extends CodeObjectInsight {
+    spanName: string;
+    turningPointConcurrency: number;
+    maxConcurrency: number;
+}
+
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
     
     public constructor(private _viewUris:WebViewUris ){
@@ -408,14 +422,6 @@ P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${s
 
 }
 
-export interface NPlusSpansInsight extends CodeObjectInsight {
-    traceId: string;
-    span: SpanInfo;
-    clientSpanName: string;
-    occurrences: number;
-    duration: Duration;
-}
-
 export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCreator {
     constructor(
         private _viewUris: WebViewUris
@@ -477,3 +483,45 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
 
 }
 
+export class SpanScalingListViewItemsCreator implements IInsightListViewItemsCreator {
+    constructor(
+        private _viewUris: WebViewUris
+
+    ) {
+
+    }
+
+    public async createListViewItem(codeObjectsInsight: SpanScalingInsight): Promise<IListViewItem> {
+        
+        const template = new InsightTemplateHtml({
+            title: {
+                text:"Scaling Issue Found",
+                tooltip: ""
+            },
+            description: `Significant performance degradation at ${codeObjectsInsight.turningPointConcurrency} executions/second`,
+            icon: this._viewUris.image("scale.svg"),
+            body: `<div>
+                        Tested concurrency: ${codeObjectsInsight.maxConcurrency}
+                    </div>`,
+            insight: codeObjectsInsight,
+        }, this._viewUris);
+
+        return {
+            getHtml: () => template.renderHtml(),
+            sortIndex: 0,
+            groupId: codeObjectsInsight.spanName
+        };
+    }
+
+   
+    public async create(codeObjectsInsight: SpanScalingInsight[]): Promise<IListViewItem[]> {
+        
+        let items:IListViewItem[] = [];
+        for (const insight of codeObjectsInsight){
+            items.push(await this.createListViewItem(insight));
+
+        }
+        return items;
+    }
+
+}
