@@ -19,9 +19,14 @@ import { HotspotMarkerDecorator } from './views/codeAnalytics/decorators/hotspot
 import { EnvSelectStatusBar } from './views/codeAnalytics/StatusBar/envSelectStatusBar';
 import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatusBar';
 import { EnvironmentManager } from './services/EnvironmentManager';
+import { EventManager } from './services/EventManager';
+import { Scheduler } from './services/Scheduler';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
+    const scheduler = new Scheduler();
+    context.subscriptions.push(scheduler);
+
     const supportedLanguages = [
         new PythonLanguageExtractor(),
         new CSharpLanguageExtractor(),
@@ -61,8 +66,8 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
-    context.subscriptions.push(new SpanDurationChangeNotificationWorker(analyticsProvider));
-    
+
+    context.subscriptions.push(new EventManager(scheduler, analyticsProvider, environmentManager));
 }
 
 // this method is called when your extension is deactivated

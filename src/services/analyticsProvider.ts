@@ -575,6 +575,25 @@ export class AnalyticsProvider
         return;
     }
 
+    public async getEvents(environments: Environment[], fromDate: Date): Promise<InsightEventResponse> {
+      try {
+          const response = await this.send<InsightEventResponse>(
+            'POST',
+            `/CodeAnalytics/events/latest`,
+            undefined,
+            { environments, fromDate },
+          );
+
+          return response;
+      }
+      catch (error) {
+          Logger.error('Failed to get events', error);
+      }
+      return {
+        events: [],
+      };
+    }
+
     private createSslAgent(): https.Agent {
         // when NODE_TLS_REJECT_UNAUTHORIZED = 0, it allows allows insecure http 
         process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
@@ -642,4 +661,12 @@ export class HttpError extends Error {
         super(`Request failed with http code: [${status}] ${statusText}\nResponse: ${reponseText}`);
         Object.setPrototypeOf(this, HttpError.prototype);
     }
+}
+
+export interface InsightEvent {
+    message: string
+}
+
+export interface InsightEventResponse {
+  events: InsightEvent[]
 }
