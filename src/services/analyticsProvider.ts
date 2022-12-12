@@ -9,6 +9,7 @@ import { decimal, integer } from "vscode-languageclient";
 import * as os from 'os';
 import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
 import { WorkspaceState } from "../state";
+import { Environment } from './EnvironmentManager';
 
 
 export enum Impact 
@@ -350,7 +351,8 @@ export class AnalyticsProvider
     public constructor(private state: WorkspaceState){
 
     }
-    public async getEnvironments() : Promise<string[]> 
+
+    public async getEnvironments() : Promise<Environment[]> 
     {
         try
         {

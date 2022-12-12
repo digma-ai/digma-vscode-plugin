@@ -33,6 +33,7 @@ import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
 import { AnalyticsCodeLens } from "../../analyticsCodeLens";
 import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../../services/codeObject";
+import { EnvironmentManager } from '../../services/EnvironmentManager';
 import { Action } from "./InsightListView/Actions/Action";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
@@ -56,9 +57,8 @@ export class CodeAnalyticsView implements vscode.Disposable
         editorHelper: EditorHelper,
         workspaceState:WorkspaceState,
         codelensProvider: AnalyticsCodeLens,
-        envSelectStatusBar: EnvSelectStatusBar
-
-
+        envSelectStatusBar: EnvSelectStatusBar,
+        environmentManager: EnvironmentManager,
 	) {
 
 
@@ -84,7 +84,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 			),
             vscode.commands.registerCommand(DigmaCommands.changeEnvironmentCommand, async () => {
                 const quickPick = vscode.window.createQuickPick();
-                const environments = await analyticsProvider.getEnvironments();
+                const environments = await environmentManager.getEnvironments();
                 const iconPrefix = "$(server) ";
                 quickPick.items = environments.map(x=> ({ label: `${iconPrefix}${x}` }));
                 await quickPick.onDidChangeSelection(async selection => {
