@@ -139,7 +139,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 	private _channel: WebviewChannel;
     private _tabs : Map<string, ICodeAnalyticsViewTab>;
     private _activeTab?: ICodeAnalyticsViewTab;
-    private _lastActivedTab: ICodeAnalyticsViewTab;
+    private _lastActiveTab: ICodeAnalyticsViewTab;
     private _overlay: OverlayView;
     private _currentCodeObject?: CodeObjectInfo;
     private _disposables: vscode.Disposable[] = [];
@@ -226,7 +226,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         for(let tab of tabsList) {
             this._tabs.set(tab.tabId, tab);
         }
-        this._lastActivedTab = tabsList[0];
+        this._lastActiveTab = tabsList[0];
 	}
 
     dispose() {
@@ -297,7 +297,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         const codeObject = await this.getCodeObjectOrShowOverlay(document, position);
         if(codeObject) { 
             if(!this._activeTab){
-                this._activeTab = this._lastActivedTab;
+                this._activeTab = this._lastActiveTab;
                 this._activeTab.onActivate(codeObject);
             }
             else{
@@ -382,7 +382,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._activeTab?.onDectivate();
             this._activeTab = this._tabs.get(event.selectedViewId!)!;
             this._activeTab.onActivate(codeObject);
-            this._lastActivedTab = this._activeTab;
+            this._lastActiveTab = this._activeTab;
             this._overlay.hide();
         }
         this._currentCodeObject = codeObject;
@@ -435,7 +435,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._activeTab?.onDectivate();
             this._activeTab = this._tabs.get(event.viewId)!;
             this._activeTab.onActivate(this._currentCodeObject);
-            this._lastActivedTab = this._activeTab;
+            this._lastActiveTab = this._activeTab;
             this._overlay.hide();
         }
     }
