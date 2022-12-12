@@ -450,7 +450,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		this._view.webview.options = {
 			enableScripts: true,
 		};
-		this._channel.subscrib(webviewView.webview);
+		this._channel.subscribe(webviewView.webview);
 		this._view.webview.html = this.getCodeAnalyticsView();
 	}
 
