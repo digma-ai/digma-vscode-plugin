@@ -6,6 +6,7 @@ import { AnalyticsProvider, CodeObjectDurationChangeEvent } from './analyticsPro
 import { Scheduler } from './Scheduler';
 import { EnvironmentManager } from './EnvironmentManager';
 import { SpanSearch } from '../views/codeAnalytics/InsightListView/Common/SpanSearch';
+import { Settings } from '../settings';
 
 export class EventManager implements vscode.Disposable {
     private lastFetch = new Date();
