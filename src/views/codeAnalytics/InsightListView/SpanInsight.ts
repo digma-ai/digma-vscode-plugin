@@ -181,6 +181,8 @@ export interface SpanScalingInsight extends CodeObjectInsight {
     spanName: string;
     turningPointConcurrency: number;
     maxConcurrency: number;
+    minDuration: Duration;
+    maxDuration: Duration;
 }
 
 export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsCreator{
@@ -500,8 +502,13 @@ export class SpanScalingListViewItemsCreator implements IInsightListViewItemsCre
             },
             description: `Significant performance degradation at ${codeObjectsInsight.turningPointConcurrency} executions/second`,
             icon: this._viewUris.image("scale.svg"),
-            body: `<div>
-                        Tested concurrency: ${codeObjectsInsight.maxConcurrency}
+            body: `<div class="flex-row">
+                        <span>
+                            Tested concurrency: <b>${codeObjectsInsight.maxConcurrency}</b>
+                        </sapn>
+                        <span style="margin-left: 1em;">
+                            Duration: <b>${codeObjectsInsight.minDuration.value} ${codeObjectsInsight.minDuration.unit} - ${codeObjectsInsight.maxDuration.value} ${codeObjectsInsight.maxDuration.unit}<b/>
+                        </sapn>
                     </div>`,
             insight: codeObjectsInsight,
         }, this._viewUris);
