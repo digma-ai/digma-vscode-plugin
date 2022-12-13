@@ -172,6 +172,11 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         
     }
 
+    public uniqueLens(a: vscode.CodeLens[]) : vscode.CodeLens[] {
+        return a.filter((thing, i, arr) => a.findIndex(t => t.command?.title === thing.command?.title) === i);
+
+    }
+
     public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> 
     {
         if (!Settings.enableCodeLens.value) 
@@ -253,8 +258,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             }
             
         }
-
-        return codelens;
+        return this.uniqueLens(codelens);
     }
 
     public async resolveCodeLens(codeLens: vscode.CodeLens, token: vscode.CancellationToken) : Promise<vscode.CodeLens> 
