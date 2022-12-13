@@ -494,11 +494,12 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             </head>
             <body>
                 <script>require(['codeAnalytics/main']);</script>
-                <div id="view-overlay">${this._overlay.getInitHtml()}</div>
+                <span id="portal"></span><div id="view-overlay">${this._overlay.getInitHtml()}</div>
                 <vscode-panels id="view-tabs" activeid="tab-insights" class="analytics-nav" aria-label="With Active Tab" hidden>
                     ${this.getPanelTabs()}
                     ${this.getPanelViews()}	
                 </vscode-panels>
+                <div id="root"></div>
             </body>
             </html>`;
 	}
