@@ -52,6 +52,6 @@ export class Settings
 
     public static readonly customHeader = new SettingsKey('customHeader', '');
 
-    public static readonly enableNotificationForSpanDurationChange = new SettingsKey('enableNotificationForSpanDurationChange', false);
+    public static readonly enableNotifications = new SettingsKey('enableNotifications', false);
 
 }

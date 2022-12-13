@@ -17,7 +17,9 @@ export class EventManager implements vscode.Disposable {
         private documentInfoProvider: DocumentInfoProvider,
         private editorHelper: EditorHelper,
     ) {
-        scheduler.schedule(15, this.fetchEvents.bind(this));
+        if(Settings.enableNotifications.value) {
+            scheduler.schedule(15, this.fetchEvents.bind(this));
+        }
     }
 
     private async fetchEvents() {

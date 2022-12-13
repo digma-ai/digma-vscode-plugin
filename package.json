@@ -136,7 +136,7 @@
                     "type": "string",
                     "description": "Specify a custom header to requests sent to Digma server. Useful in case Digma is deployed behind an ingress component, and need be routed (Example: \"Host:digma.loremipsum.com\")."
                 },
-                "digma.enableNotificationForSpanDurationChange": {
+                "digma.enableNotifications": {
                     "type": "boolean",
                     "default": false
                 }
