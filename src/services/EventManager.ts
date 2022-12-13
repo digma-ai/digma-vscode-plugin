@@ -29,7 +29,7 @@ export class EventManager implements vscode.Disposable {
 
         events.forEach(async (event) => {
             const eventData = <CodeObjectDurationChangeEvent>event;
-            const message = `A possible change was detected in ${eventData?.span?.displayName}. Would you like to check it out?`;
+            const message = `A possible change was detected in "${eventData?.span?.displayName}". Would you like to check it out?`;
             const item = 'Go';
             const response = await vscode.window.showInformationMessage(message, item);
             if(response === item) {
