@@ -302,47 +302,59 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
           async message => {
             switch (message.command) {
               case "goToSpanLocation":
-                const name = message.data.operationName;
-                const tag = message.data.tags.find((tag: any) => tag.key === "otel.library.name");
-                if (name && tag) {
-                  const spanLocations = await spanSearch.searchForSpans([
-                    {
-                      name,
-                      instrumentationLibrary: tag.value
-                    }
-                  ]);
+                const span: { name: string, instrumentationLibrary: string } = message.data;
+                const spanLocation = await spanSearch.searchForSpans([
+                  {
+                    name: span.name,
+                    instrumentationLibrary: span.instrumentationLibrary
+                  }
+                ]);
 
-                  if (spanLocations[0]) {
-                    const codeUri = spanLocations[0].documentUri;
-                    const lineNumber = spanLocations[0].range.end.line + 1;
-  
-                    if (codeUri && lineNumber) {
-                      let doc = await this._editorHelper.openTextDocumentFromUri(vscode.Uri.parse(codeUri.toString()));
-                      this._editorHelper.openFileAndLine(doc, lineNumber);
-                    }
+                if (spanLocation[0]) {
+                  const codeUri = spanLocation[0].documentUri;
+                  const lineNumber = spanLocation[0].range.end.line + 1;
+
+                  if (codeUri && lineNumber) {
+                    let doc = await this._editorHelper.openTextDocumentFromUri(vscode.Uri.parse(codeUri.toString()));
+                    this._editorHelper.openFileAndLine(doc, lineNumber);
                   }
                 }
                 break;
               case 'getTraceSpansLocations':
-                const spansInfo = message.data.spans
-                  .map((span: any) => {
-                    const tag = span.tags.find((tag: any) => tag.key === "otel.library.name");
-                    
-                    return {
-                      name: span.operationName,
-                      instrumentationLibrary: tag && tag.value
-                  }})
-                  .filter((span: any) => span.instrumentationLibrary);
+                const spans: { id: string, name: string, instrumentationLibrary: string }[] = message.data;
+                const spanLocations = await spanSearch.searchForSpans(spans);
+                
+                const spanCodeObjectIds = spans.map(span => `span:${span.instrumentationLibrary}$_$${span.name}`);
+                
+                const insights = await this._analyticsProvider.getInsights(spanCodeObjectIds, true);
+                const insightGroups = insights.groupBy(x => x.codeObjectId);
 
-                const spanLocations = await spanSearch.searchForSpans(spansInfo);
-                const spanLocationsMap = message.data.spans
-                  .reduce((acc: Record<string, boolean>, span: any, i: number) => {
-                    acc[span.spanID] = Boolean(spanLocations[i]);
+                const spansInfo = spans
+                  .reduce((
+                    acc: Record<string, {
+                        hasResolvedLocation: boolean,
+                        importance?: number
+                      }
+                    >, span, i: number) => {
+                    const insightGroup = insightGroups[`${span.instrumentationLibrary}$_$${span.name}`];
+
+                    let importance;
+                    if (insightGroup) {
+                      const importanceArray: number[] = insightGroup.map(insight => insight.importance);
+                      importance = Math.min(...importanceArray);
+                    }
+                      
+                    acc[span.id] = {
+                      hasResolvedLocation: Boolean(spanLocations[i]),
+                      importance
+                    };
+
                     return acc;
                   }, {});
+
                 panel.webview.postMessage({
                   command: "setSpansWithResolvedLocation",
-                  data: spanLocationsMap
+                  data: spansInfo
                 })
                 break;
             }
