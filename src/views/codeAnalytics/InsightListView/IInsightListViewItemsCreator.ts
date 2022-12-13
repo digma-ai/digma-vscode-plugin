@@ -76,9 +76,9 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
                 items.push(...await creator.create( groupedByType[type]));
             }
             else{
-                if (this._unknownTemplate){
-                    items.push(this._unknownTemplate);
-                }
+                // if (this._unknownTemplate){
+                //     items.push(this._unknownTemplate);
+                // }
                 console.warn(`codeobject of type ${type} is not supported`);
                 //throw new Error(`codeobject of type ${type} is not supported`);
             }
