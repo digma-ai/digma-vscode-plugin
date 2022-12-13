@@ -72,7 +72,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         this.refreshListViewRequested();
 
     }
-    public onDectivate(): void {}
+    public onDeactivate(): void {}
 
     public  getHtml(): string {
         return /*html*/`

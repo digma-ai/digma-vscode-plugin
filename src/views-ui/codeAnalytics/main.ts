@@ -109,7 +109,7 @@ window.addEventListener("load", () =>
         }
     });
     
-    consume(UiMessage.Set.CurrenStackInfo, (event) => {
+    consume(UiMessage.Set.CurrentStackInfo, (event) => {
         const { stackInfo } = event;
         $(".stack-nav-current").html("" + stackInfo?.stackNumber);
         $(".stack-nav-total").html("" + stackInfo?.totalStacks);
@@ -249,6 +249,17 @@ window.addEventListener("load", () =>
         publish(new UiMessage.Notify.OpenTracePanel(traceIds,traceLabels,span, jaeger));
     });
 
+    $(document).on("click", ".jaeger-link", function () {
+      const traceIds = $(this).data("trace-id").split(",");
+      const traceLabels = $(this).data("trace-label")?.split(",");
+      
+      const span = $(this).data("span-name");
+      const jaeger = $(this).data("jaeger-address");
+
+      publish(new UiMessage.Notify.OpenJaegerPanel(traceIds, traceLabels, span, jaeger));
+    });
+
+    // TODO: remove as not used
     $(document).on("click", ".reset-link", function () {
         const traceIds = $(this).data("trace-id").split(",");
         const traceLabels = $(this).data("trace-label")?.split(",");

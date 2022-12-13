@@ -97,7 +97,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         this.refreshCodeObjectLabel(codeObject);
         vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Show, codeObject.id);
     }
-    public onDectivate(): void {
+    public onDeactivate(): void {
         vscode.commands.executeCommand(ErrorsLineDecorator.Commands.Hide);
     }
     public onUpdated(codeObject: CodeObjectInfo): void {
@@ -231,7 +231,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         const errorFlowIndex = this.calculateOffset(this._errorFlowIndex, totalErrorFlows - 1, offset);
         this._errorFlowIndex = errorFlowIndex;
 
-        this._channel.publish(new UiMessage.Set.CurrenStackInfo({
+        this._channel.publish(new UiMessage.Set.CurrentStackInfo({
             stackNumber: errorFlowIndex + 1,
             totalStacks: totalErrorFlows,
             canNavigateToPrevious: errorFlowIndex > 0,

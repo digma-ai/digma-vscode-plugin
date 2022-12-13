@@ -52,7 +52,7 @@ export interface IInsightListViewItemsCreator
 export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
 {
     _creators = new Map<string, IInsightListViewItemsCreator>();
-    _uknownTemplate: IListViewItemBase|undefined=undefined;
+    _unknownTemplate: IListViewItemBase|undefined=undefined;
 
     public add(type: string, creator: IInsightListViewItemsCreator)
     {
@@ -60,8 +60,8 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
 
     }
 
-    public setUknownTemplate(item: IListViewItemBase ){
-        this._uknownTemplate = item;
+    public setUnknownTemplate(item: IListViewItemBase ){
+        this._unknownTemplate = item;
     }
 
     public async create( codeObjectInsight: CodeObjectInsight[]): Promise<IListViewItemBase[]> {
@@ -76,8 +76,8 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
                 items.push(...await creator.create( groupedByType[type]));
             }
             else{
-                // if (this._uknownTemplate){
-                //     items.push(this._uknownTemplate);
+                // if (this._unknownTemplate){
+                //     items.push(this._unknownTemplate);
                 // }
                 console.warn(`codeobject of type ${type} is not supported`);
                 //throw new Error(`codeobject of type ${type} is not supported`);

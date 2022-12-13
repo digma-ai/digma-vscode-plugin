@@ -97,9 +97,9 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             // responseItems = await this._analyticsProvider.getInsights(codeObjectsIds,true);
             //temp ugly workaround
             var bottleneck = responseItems.find(x=>x.type ==='SlowestSpans');
-            var endpointBottlneck = responseItems.find(x=>x.type ==='SpanEndpointBottleneck');
+            var endpointBottleneck = responseItems.find(x=>x.type ==='SpanEndpointBottleneck');
 
-            if (bottleneck && endpointBottlneck){
+            if (bottleneck && endpointBottleneck){
                 responseItems=responseItems.filter(x=>x.type!=='SpanEndpointBottleneck');
             }
 
@@ -178,7 +178,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         }
     }
 
-    public onDectivate(): void {
+    public onDeactivate(): void {
     }
 
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
