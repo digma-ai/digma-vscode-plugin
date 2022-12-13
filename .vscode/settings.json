@@ -11,5 +11,6 @@
     "python.linting.enabled": true,
     "digma.environment": "DEV",
     "torque.activeProfile": "",
-    "editor.detectIndentation": false
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
 }

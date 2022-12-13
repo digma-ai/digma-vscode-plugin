@@ -9,14 +9,20 @@ This is a  [Visual Studio Code](https://code.visualstudio.com)  extension for Di
 ### 🤨 What does this extension do? 
 It provides code objects insights and runtime analytics inside the IDE. The IDE is inteded to be extensible (currentluy refactoring toward that), so that anyone would be able to define new types of insights based on the collected data. 
 
-- [Code Objects Discovery](#code-object-discovery)
-- [Pull Request Insights](#pr-insights) (WIP)
-- [Code Insights](#code-insights)
-- [Runtime Errors](#runtime-errors)
-- [Runtime Errors Drilldown](#runtime-errors-drilldown)
-- [Code Objects Annotation](#code-obj-annotation)
-- [Usage Analytics](#usage-analytics)
-- [Selecting Environments](#environment)
+- [Digma Visual Studio Code Plugin](#digma-visual-studio-code-plugin)
+    - [🤨 What does this extension do?](#-what-does-this-extension-do)
+      - [🔬 Code Object Discovery](#-code-object-discovery)
+      - [🧑‍💻 Pull Request Insights (WIP)](#-pull-request-insights-wip)
+      - [🧑‍🔬 Code Insights](#-code-insights)
+      - [🪳 Runtime Errors](#-runtime-errors)
+        - [? What is a code object flow ?](#-what-is-a-code-object-flow-)
+      - [👓 Runtime Errors Drilldown](#-runtime-errors-drilldown)
+      - [🔦 Code Objects Annotation](#-code-objects-annotation)
+      - [🎯 Usage Analytics](#-usage-analytics)
+      - [፨ Selecting Environments](#-selecting-environments)
+      - [⚙️ Extension Settings](#️-extension-settings)
+  - [How to Build](#how-to-build)
+    - [License](#license)
 
 
 #### 🔬 [Code Object Discovery](#code-object-discovery)	
@@ -115,11 +121,12 @@ Environments can be easily assigned to observability data collected via an env v
 This extension contributes the following settings:
 | Key | Description |
 | :-- | :---------- |
-| `digma.enableCodeLens` | Enable/Disable methods codelens regarding errors.|
+| `digma.enableCodeLens` | Enable/disable methods codelens regarding errors.|
 | `digma.url` | Digma api endpoint url.|
 | `digma.environment` | Filter the telemtry data by environment. <br/> Can be set from the [Context](#context-panel) panel, by selecting from the **Environment** dropdown. |
 | `digma.hideFramesOutsideWorkspace` | Show/Hide frame of files that do not belog to the opened workspace(s)<br/>Can be in [Error Flow Details](#error-flow-details-panel) panel, by checking/unchecking the **Workspace only** checkbox). |
 | `digma.sourceControl` | Workspace's source control - used to open files in specific revision.<br/>Only `git` is supported for now. |
+| `digma.enableNotifications` | Enable/disable insight event notifications.|
 
 ## How to Build
 

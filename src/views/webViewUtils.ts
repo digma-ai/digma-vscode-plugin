@@ -118,7 +118,7 @@ export class WebviewChannel implements vscode.Disposable
     //         return sub;
     //     }
     // }
-    public subscrib(value: vscode.Webview) 
+    public subscribe(value: vscode.Webview) 
     {
         if(this._webview === value) {
             return;

@@ -33,6 +33,7 @@ import { DigmaCommands } from "../../commands";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
 import { AnalyticsCodeLens } from "../../analyticsCodeLens";
 import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../../services/codeObject";
+import { EnvironmentManager } from '../../services/EnvironmentManager';
 import { Action } from "./InsightListView/Actions/Action";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
@@ -56,9 +57,8 @@ export class CodeAnalyticsView implements vscode.Disposable
         editorHelper: EditorHelper,
         workspaceState:WorkspaceState,
         codelensProvider: AnalyticsCodeLens,
-        envSelectStatusBar: EnvSelectStatusBar
-
-
+        envSelectStatusBar: EnvSelectStatusBar,
+        environmentManager: EnvironmentManager,
 	) {
 
 
@@ -84,7 +84,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 			),
             vscode.commands.registerCommand(DigmaCommands.changeEnvironmentCommand, async () => {
                 const quickPick = vscode.window.createQuickPick();
-                const environments = await analyticsProvider.getEnvironments();
+                const environments = await environmentManager.getEnvironments();
                 const iconPrefix = "$(server) ";
                 quickPick.items = environments.map(x=> ({ label: `${iconPrefix}${x}` }));
                 await quickPick.onDidChangeSelection(async selection => {
@@ -139,7 +139,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 	private _channel: WebviewChannel;
     private _tabs : Map<string, ICodeAnalyticsViewTab>;
     private _activeTab?: ICodeAnalyticsViewTab;
-    private _lastActivedTab: ICodeAnalyticsViewTab;
+    private _lastActiveTab: ICodeAnalyticsViewTab;
     private _overlay: OverlayView;
     private _currentCodeObject?: CodeObjectInfo;
     private _disposables: vscode.Disposable[] = [];
@@ -227,7 +227,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         for(let tab of tabsList) {
             this._tabs.set(tab.tabId, tab);
         }
-        this._lastActivedTab = tabsList[0];
+        this._lastActiveTab = tabsList[0];
 	}
 
     dispose() {
@@ -298,7 +298,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         const codeObject = await this.getCodeObjectOrShowOverlay(document, position);
         if(codeObject) { 
             if(!this._activeTab){
-                this._activeTab = this._lastActivedTab;
+                this._activeTab = this._lastActiveTab;
                 this._activeTab.onActivate(codeObject);
             }
             else{
@@ -383,7 +383,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._activeTab?.onDectivate();
             this._activeTab = this._tabs.get(event.selectedViewId!)!;
             this._activeTab.onActivate(codeObject);
-            this._lastActivedTab = this._activeTab;
+            this._lastActiveTab = this._activeTab;
             this._overlay.hide();
         }
         this._currentCodeObject = codeObject;
@@ -436,7 +436,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._activeTab?.onDectivate();
             this._activeTab = this._tabs.get(event.viewId)!;
             this._activeTab.onActivate(this._currentCodeObject);
-            this._lastActivedTab = this._activeTab;
+            this._lastActiveTab = this._activeTab;
             this._overlay.hide();
         }
     }
@@ -451,7 +451,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 		this._view.webview.options = {
 			enableScripts: true,
 		};
-		this._channel.subscrib(webviewView.webview);
+		this._channel.subscribe(webviewView.webview);
 		this._view.webview.html = this.getCodeAnalyticsView();
 	}
 

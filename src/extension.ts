@@ -18,9 +18,15 @@ import { ErrorsLineDecorator } from './views/codeAnalytics/decorators/errorsLine
 import { HotspotMarkerDecorator } from './views/codeAnalytics/decorators/hotspotMarkerDecorator';
 import { EnvSelectStatusBar } from './views/codeAnalytics/StatusBar/envSelectStatusBar';
 import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatusBar';
+import { EnvironmentManager } from './services/EnvironmentManager';
+import { EventManager } from './services/EventManager';
+import { Scheduler } from './services/Scheduler';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
+    const scheduler = new Scheduler();
+    context.subscriptions.push(scheduler);
+
     const supportedLanguages = [
         new PythonLanguageExtractor(),
         new CSharpLanguageExtractor(),
@@ -40,12 +46,8 @@ export async function activate(context: vscode.ExtensionContext)
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
     const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
 
-    if(!workspaceState.environment){
-        const firstEnv = (await analyticsProvider.getEnvironments()).firstOrDefault();
-        if(firstEnv) {
-            workspaceState.setEnvironment(firstEnv);
-        }
-    }
+    const environmentManager = new EnvironmentManager(analyticsProvider, workspaceState);
+    await environmentManager.initializeCurrentEnvironment();
 
     const envStatusbar = new EnvSelectStatusBar(workspaceState);
     const insightBar = new InsightsStatusBar(workspaceState,documentInfoProvider, editorHelper, context);
@@ -60,12 +62,18 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider,
-        context.extensionUri, editorHelper,workspaceState,codeLensProvider,envStatusbar));
+        context.extensionUri, editorHelper, workspaceState, codeLensProvider, envStatusbar, environmentManager));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
 
-    
+    context.subscriptions.push(new EventManager(
+        scheduler,
+        analyticsProvider,
+        environmentManager,
+        documentInfoProvider,
+        editorHelper,
+    ));
 }
 
 // this method is called when your extension is deactivated
