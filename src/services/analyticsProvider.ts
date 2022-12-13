@@ -542,9 +542,9 @@ export class AnalyticsProvider {
         return;
     }
 
-    public async getEvents(environments: Environment[], fromDate: Date): Promise<InsightEventResponse> {
+    public async getEvents(environments: Environment[], fromDate: Date): Promise<EventResponse> {
         try {
-            const response = await this.send<InsightEventResponse>(
+            const response = await this.send<EventResponse>(
                 'POST',
                 `/CodeAnalytics/events/latest`,
                 undefined,
@@ -635,10 +635,48 @@ export class HttpError extends Error {
     }
 }
 
-export interface InsightEvent {
-    message: string
+export interface EventResponse {
+    events: CodeObjectEventEntry[];
 }
 
-export interface InsightEventResponse {
-    events: InsightEvent[]
+export interface CodeObjectEventEntry {
+    eventTime?: Date;
+    eventRecognitionTime?: Date;
+    accountId?: string;
+    environment?: string;
+    codeObjectId?: string;
+    eventType?: string;
+    eventData?: CodeObjectEvent;
+}
+
+export abstract class CodeObjectEvent {
+    type?: string;
+    accountId?: string;
+    environment?: string;
+    codeObjectId?: string;
+    eventTime?: Date;
+    eventRecognitionTime?: Date;
+}
+
+export class CodeObjectDurationChangeEvent implements CodeObjectEventEntry
+{
+    eventTime?: Date;
+    eventRecognitionTime?: Date;
+    accountId?: string;
+    environment?: string;
+    codeObjectId?: string;
+    eventType?: string;
+    eventData?: CodeObjectEvent;
+
+    // public override string Type => "SpanDurationChange";
+
+    // copy from SpanDurationInsight
+    spanCodeObjectId?: string;
+
+    // copy from SpanDurationInsight
+    // Span: SpanInfo;
+    span: any;
+
+    // copy from SpanDurationInsight
+    changedDurationPercentile: any;
 }
