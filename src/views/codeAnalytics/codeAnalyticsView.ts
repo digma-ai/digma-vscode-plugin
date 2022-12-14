@@ -323,19 +323,15 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
               case 'getTraceSpansLocations':
                 const spans: { id: string, name: string, instrumentationLibrary: string }[] = message.data;
                 const spanLocations = await spanSearch.searchForSpans(spans);
-                
-                const spanCodeObjectIds = spans.map(span => `span:${span.instrumentationLibrary}$_$${span.name}`);
+                const spanWithLocations = spans.filter((span, i) => spanLocations[i]);
+                const spanCodeObjectIds = spanWithLocations
+                    .map(span => `span:${span.instrumentationLibrary}$_$${span.name}`);
                 
                 const insights = await this._analyticsProvider.getInsights(spanCodeObjectIds, true);
                 const insightGroups = insights.groupBy(x => x.codeObjectId);
 
-                const spansInfo = spans
-                  .reduce((
-                    acc: Record<string, {
-                        hasResolvedLocation: boolean,
-                        importance?: number
-                      }
-                    >, span, i: number) => {
+                const spansInfo = spanWithLocations
+                  .reduce((acc: Record<string, { importance?: number }>, span) => {
                     const insightGroup = insightGroups[`${span.instrumentationLibrary}$_$${span.name}`];
 
                     let importance;
@@ -345,13 +341,12 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
                     }
                       
                     acc[span.id] = {
-                      hasResolvedLocation: Boolean(spanLocations[i]),
                       importance
                     };
 
                     return acc;
                   }, {});
-
+                  
                 panel.webview.postMessage({
                   command: "setSpansWithResolvedLocation",
                   data: spansInfo
