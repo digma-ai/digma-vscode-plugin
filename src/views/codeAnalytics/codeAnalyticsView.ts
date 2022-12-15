@@ -281,16 +281,15 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
     private async onOpenJaegerPanel(e: UiMessage.Notify.OpenJaegerPanel) {
       if (e.traceIds && Object.keys(e.traceIds).length > 0 && e.span && e.jaegerAddress) {
-        let options: vscode.WebviewOptions = {
-          enableScripts: true,
-          enableCommandUris: true
-        };
 
         const panel = vscode.window.createWebviewPanel(
           "jaegerUI",
           "Jaeger",
           vscode.ViewColumn.One,
-          options
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true
+          }
         );
         const jaegerPanel = new JaegerPanel();
         const jaegerDiskPath = vscode.Uri.joinPath(this._extensionUri, "out", "views-ui", "jaegerUi");
