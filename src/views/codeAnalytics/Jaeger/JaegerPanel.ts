@@ -138,8 +138,8 @@ export class JaegerPanel {
     if (traceIds.length === 1) {
       startPath = `/trace/${traceIds[0]}`;
     } else if (traceIds.length === 2 && traceIdLabels != null) {
-      const trace1 = traceIds[0].toLocaleLowerCase();
-      const trace2 = traceIds[1].toLocaleLowerCase();
+      const trace1 = traceIds[0].toLowerCase();
+      const trace2 = traceIds[1].toLowerCase();
       startPath = `/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}`;
     }
 
