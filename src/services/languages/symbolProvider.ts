@@ -164,7 +164,7 @@ export class SymbolProvider
         return [];
     }
     public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
-        let tokes: Token[] = [];
+        const tokens: Token[] = [];
         try {
             //  at index `5*i`   - `deltaLine`: token line number, relative to the previous token
             //  at index `5*i+1` - `deltaStart`: token start character, relative to the previous token (relative to 0 or the previous token's start if they are on the same line)
@@ -178,7 +178,7 @@ export class SymbolProvider
                 document.languageId,
             ));
             if(!legends) {
-                return tokes;
+                return tokens;
             }
 
             let semanticTokens: vscode.SemanticTokens | undefined;
@@ -197,7 +197,7 @@ export class SymbolProvider
                 );
             }
             if(!semanticTokens) {
-                return tokes;
+                return tokens;
             }
           
             let line = 0;
@@ -221,7 +221,7 @@ export class SymbolProvider
                     new vscode.Position(line, char), 
                     new vscode.Position(line, char+length));
 
-                tokes.push({
+                tokens.push({
                     range: range,
                     text: document.getText(range),
                     type: <TokenType>(legends.tokenTypes[tokenType]),
@@ -233,7 +233,7 @@ export class SymbolProvider
             Logger.error('Failed to get tokens', e);
         }
 
-        return tokes;
+        return tokens;
     }
 
     public async getMethodPositionSelector(document: vscode.TextDocument): Promise<IMethodPositionSelector> {
