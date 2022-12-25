@@ -135,7 +135,13 @@ export class JSSpanExtractor implements ISpanExtractor {
         */
         return extractParameter(params[index]);
     }
-    async tryGetInstrumentationName(document: TextDocument,codeInspector: CodeInspector, symbolProvider: SymbolProvider, tokens: Token [], traceVariableRange: vscode.Range) : Promise<string | undefined>{
+    public async tryGetInstrumentationName(
+        document: TextDocument,
+        codeInspector: CodeInspector,
+        symbolProvider: SymbolProvider,
+        tokens: Token [],
+        traceVariableRange: vscode.Range
+    ) : Promise<string | undefined> {
         let tracerVariable = this.tryGetVariable(tokens, traceVariableRange);
         if(tracerVariable === undefined){
             return undefined;

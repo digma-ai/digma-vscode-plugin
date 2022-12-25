@@ -164,6 +164,7 @@ export class SymbolProvider
         return [];
     }
     public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
+        const { uri, languageId, getText } = document;
         const tokens: Token[] = [];
         try {
             //  at index `5*i`   - `deltaLine`: token line number, relative to the previous token
@@ -173,9 +174,9 @@ export class SymbolProvider
             //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
             
             let legends = (await this.retryOnStartup<vscode.SemanticTokensLegend>(
-                async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
+                async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', uri),
                 value => value?.tokenTypes ? true : false,
-                document.languageId,
+                languageId,
             ));
             if(!legends) {
                 return tokens;
@@ -184,16 +185,16 @@ export class SymbolProvider
             let semanticTokens: vscode.SemanticTokens | undefined;
             if(range) {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
-                    async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
+                    async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', uri, range),
                     value => !!value?.data,
-                    document.languageId,
+                    languageId,
                 );
             }
             else {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
-                    async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
+                    async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', uri),
                     value => !!value?.data,
-                    document.languageId,
+                    languageId,
                 );
             }
             if(!semanticTokens) {
@@ -222,8 +223,8 @@ export class SymbolProvider
                     new vscode.Position(line, char+length));
 
                 tokens.push({
-                    range: range,
-                    text: document.getText(range),
+                    range,
+                    text: getText(range),
                     type: <TokenType>(legends.tokenTypes[tokenType]),
                     modifiers: legends.tokenModifiers.filter((m, i) => i & tokenModifiers).map(m => m)
                 });

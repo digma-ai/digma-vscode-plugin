@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { EditorHelper } from './../../services/EditorHelper';
+import { CodeInspector } from './../../services/codeInspector';
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel, WebViewProvider as WebviewViewProvider, WebViewUris } from "../webViewUtils";
 import { ICodeAnalyticsViewTab } from "./common";
@@ -38,6 +39,7 @@ import { EnvironmentManager } from '../../services/EnvironmentManager';
 import { Action } from "./InsightListView/Actions/Action";
 import { SpanSearch } from "./InsightListView/Common/SpanSearch";
 import { SpanLocationInfo } from "../../services/languages/extractors";
+import { SpanScanner } from "./InsightListView/Common/SpanScanner";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -62,6 +64,7 @@ export class CodeAnalyticsView implements vscode.Disposable
         codelensProvider: AnalyticsCodeLens,
         envSelectStatusBar: EnvSelectStatusBar,
         environmentManager: EnvironmentManager,
+        codeInspector: CodeInspector,
 	) {
 
 
@@ -75,7 +78,8 @@ export class CodeAnalyticsView implements vscode.Disposable
             errorFlowParamDecorator,
             workspaceState,
             codelensProvider,
-            envSelectStatusBar
+            envSelectStatusBar,
+            codeInspector,
 		);
         this.extensionUrl = extensionUri;
     
@@ -158,7 +162,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         errorFlowParamDecorator: ErrorFlowParameterDecorator,
         private _workspaceState:WorkspaceState,
         private _codeLensProvider:AnalyticsCodeLens,
-        private _envSelectStatusBar: EnvSelectStatusBar
+        private _envSelectStatusBar: EnvSelectStatusBar,
+        private _codeInspector: CodeInspector,
 	) {
 
     this._extensionUri = extensionUri;
@@ -484,8 +489,15 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     }
 
     public async onTabRefreshRequested(event:UiMessage.Notify.TabRefreshRequested ){
+        Logger.info('tab refresh requested');
+        const spanScanner = new SpanScanner(
+            this._documentInfoProvider.symbolProvider,
+            this._editorHelper,
+            this._codeInspector,
+        );
+        const spanLocations = await spanScanner.scan();
+
         if (this._activeTab && this._currentCodeObject){
-            
             var doc = vscode.window.activeTextEditor?.document;
             if (doc!=null){
                 await this._documentInfoProvider.refresh(doc);
@@ -493,7 +505,6 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             
             this._activeTab.onRefreshRequested(this._currentCodeObject);
             this._envSelectStatusBar.refreshEnvironment();
-            
         }
     }
 
