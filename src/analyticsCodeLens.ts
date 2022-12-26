@@ -222,9 +222,11 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             }
 
             const endpoints = documentInfo.endpoints.filter(e => e.range.intersection(methodInfo.range) != undefined);
-            if(endpoints.length>0){
+            const uniqueEndpoints = [...new Map(endpoints.map(item =>
+                [item.id, item])).values()];
+            if(uniqueEndpoints.length>0){
                 const lenses = await this.getLensForCodeLocationObject(methodInfo,
-                                        endpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),
+                    uniqueEndpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),
                                         );
 
                 for (const lens of lenses){

@@ -39,13 +39,17 @@ export class HttpEndpointGroup {
 
         const shortRouteName = EndpointSchema.getShortRouteName(name);
         const parts = shortRouteName.split(' ');
+        var offset =1;
+        if (parts.length==3){
+            offset=0;
+        }
 
         return new GroupItem(shortRouteName, type, `
             <div class="group-item">
                 <span class="codicon codicon-symbol-interface" title="Endpoint"></span>
                 <span class="uppercase">
-                <strong>HTTP </strong>${parts[0]}&nbsp;</span>
-                <span>${parts[1]}</span>
+                <strong>HTTP </strong>${parts[1-offset]}&nbsp;</span>
+                <span>${parts[2-offset]}</span>
             </div>
         `);
     }
