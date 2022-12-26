@@ -281,87 +281,31 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
     private async onOpenJaegerPanel(e: UiMessage.Notify.OpenJaegerPanel) {
       if (e.traceIds && Object.keys(e.traceIds).length > 0 && e.span && e.jaegerAddress) {
-        let options: vscode.WebviewOptions = {
-          enableScripts: true,
-          enableCommandUris: true
-        };
+        const jaegerDiskPath = vscode.Uri.joinPath(
+            this._extensionUri, "out", "views-ui", "jaegerUi");
 
         const panel = vscode.window.createWebviewPanel(
           "jaegerUI",
           "Jaeger",
           vscode.ViewColumn.One,
-          options
-        );
-        const jaegerPanel = new JaegerPanel();
-        const jaegerDiskPath = vscode.Uri.joinPath(this._extensionUri, "out", "views-ui", "jaegerUi");
-        const jaegerUri = panel.webview.asWebviewUri(jaegerDiskPath);
-
-        let spanSearch = new SpanSearch(this._documentInfoProvider);
-        
-        panel.webview.onDidReceiveMessage(
-          async message => {
-            switch (message.command) {
-              case "goToSpanLocation":
-                const span: { name: string, instrumentationLibrary: string } = message.data;
-                const spanLocation = await spanSearch.searchForSpans([
-                  {
-                    name: span.name,
-                    instrumentationLibrary: span.instrumentationLibrary
-                  }
-                ]);
-
-                if (spanLocation[0]) {
-                  const codeUri = spanLocation[0].documentUri;
-                  const lineNumber = spanLocation[0].range.end.line + 1;
-
-                  if (codeUri && lineNumber) {
-                    let doc = await this._editorHelper.openTextDocumentFromUri(vscode.Uri.parse(codeUri.toString()));
-                    this._editorHelper.openFileAndLine(doc, lineNumber);
-                  }
-                }
-                break;
-              case 'getTraceSpansLocations':
-                const spans: { id: string, name: string, instrumentationLibrary: string }[] = message.data;
-                const spanLocations = await spanSearch.searchForSpans(spans);
-                
-                const spanCodeObjectIds = spans.map(span => `span:${span.instrumentationLibrary}$_$${span.name}`);
-                
-                const insights = await this._analyticsProvider.getInsights(spanCodeObjectIds, true);
-                const insightGroups = insights.groupBy(x => x.codeObjectId);
-
-                const spansInfo = spans
-                  .reduce((
-                    acc: Record<string, {
-                        hasResolvedLocation: boolean,
-                        importance?: number
-                      }
-                    >, span, i: number) => {
-                    const insightGroup = insightGroups[`${span.instrumentationLibrary}$_$${span.name}`];
-
-                    let importance;
-                    if (insightGroup) {
-                      const importanceArray: number[] = insightGroup.map(insight => insight.importance);
-                      importance = Math.min(...importanceArray);
-                    }
-                      
-                    acc[span.id] = {
-                      hasResolvedLocation: Boolean(spanLocations[i]),
-                      importance
-                    };
-
-                    return acc;
-                  }, {});
-
-                panel.webview.postMessage({
-                  command: "setSpansWithResolvedLocation",
-                  data: spansInfo
-                })
-                break;
-            }
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            localResourceRoots: [jaegerDiskPath]
           }
         );
 
-        panel.webview.html = jaegerPanel.getHtml(e.traceIds, e.traceLabels, e.span, e.jaegerAddress, jaegerUri);
+        const spanSearch = new SpanSearch(this._documentInfoProvider);
+        const jaegerPanel = new JaegerPanel(panel, spanSearch, this._editorHelper, this._analyticsProvider);
+        const jaegerUri = panel.webview.asWebviewUri(jaegerDiskPath);
+        
+        panel.webview.html = jaegerPanel.getHtml(
+            e.traceIds,
+            e.traceLabels,
+            e.span,
+            e.jaegerAddress,
+            jaegerUri
+        );
       }
     }
 
