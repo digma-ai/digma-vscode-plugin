@@ -21,6 +21,7 @@ import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatu
 
 export async function activate(context: vscode.ExtensionContext) 
 {
+
     const supportedLanguages = [
         new PythonLanguageExtractor(),
         new CSharpLanguageExtractor(),
@@ -65,6 +66,36 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
 
+    
+    findStartSpanWrapper(symbolProvider);    
+}
+
+async function findStartSpanWrapper(symbolProvider: SymbolProvider){
+    
+    const files = await vscode.workspace.findFiles(`**/src/trace/tracer.d.ts`);
+    if(!files.length){
+        return;
+    }
+    console.log(files[0].path);
+
+    const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(files[0].path));
+    var tree = await symbolProvider.getSymbolTree(doc);
+    var methods = tree?.find(x => x.name === "Tracer")?.children?.filter(x => x.name === "startSpan" || x.name === "startActiveSpan");
+
+    const wrapperCandidates = []; 
+    for(const method of methods ?? []){
+        const hItems: vscode.CallHierarchyItem[] = await vscode.commands.executeCommand('vscode.prepareCallHierarchy', doc.uri, method.range.start);
+        const otelCallers: vscode.CallHierarchyIncomingCall[] = await vscode.commands.executeCommand('vscode.provideIncomingCalls', hItems[0]);
+
+        for(const otelCaller of otelCallers){
+            const otelCallerUsages: vscode.CallHierarchyIncomingCall[] = await vscode.commands.executeCommand('vscode.provideIncomingCalls', otelCaller.from);
+            wrapperCandidates.push({otelCaller: otelCaller.from, usages: otelCallerUsages.length});
+        }
+    }
+
+    const leadingCandidate = wrapperCandidates.max(x => x.usages);
+
+    console.log(wrapperCandidates);
     
 }
 

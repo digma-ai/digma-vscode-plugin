@@ -23,6 +23,7 @@ declare global {
         single(predicate?: (item: T) => boolean): T;
         all(predicate: (item: T) => boolean) : boolean;
         any(predicate: (item: T) => boolean) : boolean;
+        max(predicate: (item: T) => any) : T;
         groupBy<TKey extends string | number>(predicate: (item: T) => TKey) : Dictionary<TKey, T[]>;
         toDictionary<TKey extends string | number, TValue>(keySelector: (item: T) => TKey, valueSelector: (item: T) => TValue) : Dictionary<TKey, TValue>;
     }
@@ -32,13 +33,13 @@ declare global {
 }
 Set.prototype.toArray = function(){
     return Array.from(this);
-}
+};
 Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
     return this.find(predicate || (x => true));
-}
+};
 Array.prototype.lastOrDefault = function (predicate: (item: any) => boolean) {
     return this.reverse().find(predicate || (x => true));
-}
+};
 Array.prototype.single = function (predicate: (item: any) => boolean) {
     let items = this.filter(predicate || (x => true));
     if(items.length < 1)
@@ -46,21 +47,30 @@ Array.prototype.single = function (predicate: (item: any) => boolean) {
     if(items.length > 1)
         throw new Error(`Sequence contains more than one element`);
     return items[0];
-}
+};
 Array.prototype.all = function (predicate: (item: any) => boolean) {
     for(let item of this){
         if(!predicate(item))
             return false;
     }
     return true;
-}
+};
 Array.prototype.any = function (predicate: (item: any) => boolean) {
     for(let item of this){
         if(predicate(item))
             return true;
     }
     return false;
-}
+};
+Array.prototype.max = function (selector: (item: any) => any) {
+    let maxItem = undefined;
+    for(let item of this){
+        if(maxItem === undefined || selector(item) > selector(maxItem)){
+            maxItem = item;
+        }
+    }
+    return maxItem;
+};
 Array.prototype.groupBy = function (predicate: (item: any) => any) {
     const result = this.reduce(function (r, a) {
         const key = predicate(a);
@@ -69,7 +79,7 @@ Array.prototype.groupBy = function (predicate: (item: any) => any) {
         return r;
     }, Object.create(null));
     return result;
-}
+};
 Array.prototype.toDictionary = function(keySelector: (item: any) => any, valueSelector: (item: any) => any){
     const dict: Dictionary<any, any> = {};
     
@@ -80,7 +90,7 @@ Array.prototype.toDictionary = function(keySelector: (item: any) => any, valueSe
     }
 
     return dict;
-}
+};
 Array.range = n => Array.from({length: n}, (value, key) => key);
 
 declare module "vscode" {
@@ -94,7 +104,7 @@ vscode.Uri.prototype.toModulePath = function() {
     return fileRelativePath != this.path
         ? fileRelativePath
         : '';
-}
+};
 
 export async function fileExists(uri: vscode.Uri) : Promise<boolean>
 {
@@ -116,7 +126,7 @@ export class Future<T>{
     constructor(){
         this._value = <any>null;
         this._resolved = () => {};
-        this._promise = new Promise<T>((res)=>{ this._resolved=res });
+        this._promise = new Promise<T>((res)=>{ this._resolved=res; });
     }
 
     public wait(): Promise<T> {
