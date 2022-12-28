@@ -85,9 +85,6 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         
         let lens: vscode.CodeLens[] = [];
         
-        var insightsButNoDecorator = true;
-        var environment ="";
-
         for (const insight of insights){
             if (!insight.decorators){
                 continue;
@@ -113,21 +110,9 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                     arguments: [methodInfo, insight.environment]
                 }));
 
-                insightsButNoDecorator=false;
-                environment=insight.environment;
-    
             } 
 
     
-        }
-
-        if (insightsButNoDecorator && !environmentPrefix){
-            lens.push(new vscode.CodeLens(codeObjectInfo.range, {
-                title:  "Runtime data",
-                tooltip: "Click to see this function's runtime data",
-                command: CodelensProvider.clickCommand,
-                arguments: [methodInfo, environment]
-            }));
         }
 
         return lens;
@@ -210,6 +195,17 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 const lenses = await this.getCodeLens(methodInfo,methodInfo,thisEnvInsights, documentInfo.usageData.getAll(),false);
                 for (const lens of lenses){
                     codelens.push(lens);
+                }
+
+                if (lenses.length===0 && thisEnvInsights.length>0){
+                    codelens.push(new vscode.CodeLens(methodInfo.range, {
+                            title:  "Runtime data",
+                            tooltip: "Click to see this function's runtime data",
+                            command: CodelensProvider.clickCommand,
+                            arguments: [methodInfo, this._state.environment]
+                        }));
+                    
+            
                 }
         
             }
