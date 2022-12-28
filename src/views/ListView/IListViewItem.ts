@@ -64,10 +64,10 @@ export class InsightListGroupItemsRenderer implements IItemsInGroup
             return this.group.getHtml()  + html;
 
         }
-        else if (this.emptyGroupItemtemplate){
-            html+=this.emptyGroupItemtemplate.getHtml();
-            return this.group.getHtml()  + html;
-        }
+        // else if (this.emptyGroupItemtemplate){
+        //     html+=this.emptyGroupItemtemplate.getHtml();
+        //     return this.group.getHtml()  + html;
+        // }
         return html;
 
         //+ this.codeObjectEnvironments.getUsageHtml(this.group.groupId, this.group.type, this.usageResults )

@@ -236,6 +236,7 @@ export interface CodeObjectUsageStatus {
     environment: string;
     type: string;
     name: string;
+    groupName: string;
     codeObjectId: string;
     lastRecordedTime: moment.Moment;
     firstRecordedTime: moment.Moment;

@@ -109,8 +109,10 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                     command: CodelensProvider.clickCommand,
                     arguments: [methodInfo, insight.environment]
                 }));
-    
+
             } 
+
+    
         }
 
         return lens;
@@ -181,7 +183,6 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
         if(!documentInfo)
             return [];
 
-
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
@@ -196,6 +197,16 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                     codelens.push(lens);
                 }
 
+                if (lenses.length===0 && thisEnvInsights.length>0){
+                    codelens.push(new vscode.CodeLens(methodInfo.range, {
+                            title:  "Runtime data",
+                            tooltip: "Click to see this function's runtime data",
+                            command: CodelensProvider.clickCommand,
+                            arguments: [methodInfo, this._state.environment]
+                        }));
+                    
+            
+                }
         
             }
         
@@ -222,9 +233,11 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             }
 
             const endpoints = documentInfo.endpoints.filter(e => e.range.intersection(methodInfo.range) != undefined);
-            if(endpoints.length>0){
+            const uniqueEndpoints = [...new Map(endpoints.map(item =>
+                [item.id, item])).values()];
+            if(uniqueEndpoints.length>0){
                 const lenses = await this.getLensForCodeLocationObject(methodInfo,
-                                        endpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),
+                    uniqueEndpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),
                                         );
 
                 for (const lens of lenses){
@@ -253,6 +266,8 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             }
             
         }
+
+  
 
         return codelens;
     }
