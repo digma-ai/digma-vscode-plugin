@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { DocumentInfoProvider } from './../../documentInfoProvider';
 import { CodeInspector } from '../../codeInspector';
-import { SymbolTree } from './../symbolProvider';
+import { SymbolProvider, SymbolTree } from './../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
 import { convertRange } from '../../utils';
@@ -16,7 +16,7 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
         symbolInfo: SymbolInfo[],
         tokens: Token[],
         symbolTrees: SymbolTree[] | undefined,
-        documentInfoProvider: DocumentInfoProvider,
+        symbolProvider: SymbolProvider
     ): Promise<EndpointInfo[]> {
         const results: EndpointInfo[] = [];
 
@@ -28,7 +28,7 @@ export class AspNetCoreMvcEndpointExtractor implements IEndpointExtractor {
             const derivesFromControllerBase = await this._codeInspector.derivesFrom(
                 classDefinition,
                 'ControllerBase',
-                documentInfoProvider.symbolProvider,
+                symbolProvider,
                 this.findParentToken,
             );
             if(!derivesFromControllerBase) {
