@@ -239,8 +239,11 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 const lenses = await this.getLensForCodeLocationObject(methodInfo,
                     uniqueEndpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),
                                         );
+                
+                const uniqueLenses =[...new Map(lenses.map(item =>
+                    [item.command!.title, item])).values()];
 
-                for (const lens of lenses){
+                for (const lens of uniqueLenses){
                     codelens.push(lens);
                 }         
                 
