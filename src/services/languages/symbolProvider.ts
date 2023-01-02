@@ -150,7 +150,7 @@ export class SymbolProvider
                 const extractedMethods = await Promise.all(
                     methodExtractors.map(async (x) => await x.extractMethods(document, allDocSymbols, tokens))
                 );
-                const methods = extractedMethods.flat()
+                const methods = extractedMethods.flat();
                 return methods;
             }
             else {
