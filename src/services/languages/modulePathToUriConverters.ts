@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { Settings } from '../../settings';
+import { Logger } from '../logger';
 
 export interface ModulePathInfo {
     modulePhysicalPath?: string;
@@ -34,13 +36,31 @@ export class PhysicalModulePathToUriConverter implements IModulePathToUriConvert
             const moduleRootFolder = modulePhysicalPath.split('/').firstOrDefault();
             const moduleWorkspace = vscode.workspace.workspaceFolders?.find(w => w.name === moduleRootFolder);
             if (moduleWorkspace) {
+                if (Settings.enableDebugOutput){
+                    Logger.info(`Looking in workspace folder ${moduleWorkspace}`);
+                }
                 const workspaceUri = moduleWorkspace
                     ? vscode.Uri.joinPath(moduleWorkspace.uri, '..', modulePhysicalPath)
                     : undefined;
                 return workspaceUri;
             }
             else {
+                if (Settings.enableDebugOutput){
+                    Logger.info(`Trying to find file ${modulePhysicalPath}`);
+                }
+                if (modulePhysicalPath.indexOf("site-packages")>0){
+                    return undefined;
+                }
                 const file = await (await vscode.workspace.findFiles(modulePhysicalPath)).firstOrDefault();
+                if (Settings.enableDebugOutput){
+                    if (file){
+                        Logger.info(`Found file ${file}`);
+                    }
+                    else {
+                        Logger.info(`File not found`);
+
+                    }
+                }
                 return file;
             }
         }

@@ -76,6 +76,17 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
 
     }
 
+    private async getRuntimeDataExistsLens(methodInfo: MethodInfo) :Promise<vscode.CodeLens>{
+        return new vscode.CodeLens(methodInfo.range, {
+            title:  "Runtime data",
+            tooltip: "Click to see this function's runtime data",
+            command: CodelensProvider.clickCommand,
+            arguments: [methodInfo, this._state.environment]
+            
+        
+        });
+    }
+
 
     private async getCodeLens(methodInfo: MethodInfo,
                               codeObjectInfo:CodeObjectLocationInfo, 
@@ -177,48 +188,50 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
     public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> 
     {
         if (!Settings.enableCodeLens.value) 
-            return [];
+            {return [];}
 
         const documentInfo = await this._documentInfoProvider.getDocumentInfo(document);
         if(!documentInfo)
-            return [];
+            {return [];}
 
         const codelens: vscode.CodeLens[] = [];
         for(let methodInfo of documentInfo.methods)
         {
+            const methodCodeLens: vscode.CodeLens[] = [];
+
             for (let alias of methodInfo.ids){
-                const insights = documentInfo.insights.all.filter(x=>x.codeObjectId== alias)
-                    .filter(x=>x.scope=="Function");
+                const insights = documentInfo.insights.all
+                    .filter(x=>x.codeObjectId == alias);
 
-                const thisEnvInsights = insights.filter(x=>x.environment==this._state.environment);
+                const thisEnvInsights = insights
+                    .filter(x=>x.environment == this._state.environment);
 
-                const lenses = await this.getCodeLens(methodInfo,methodInfo,thisEnvInsights, documentInfo.usageData.getAll(),false);
+                const lenses = await this.getCodeLens(methodInfo,methodInfo,
+                    thisEnvInsights.filter(x=>x.scope=="Function"),
+                    documentInfo.usageData.getAll(),false);
+                    
                 for (const lens of lenses){
-                    codelens.push(lens);
+                    methodCodeLens.push(lens);
                 }
 
-                if (lenses.length===0 && thisEnvInsights.length>0){
-                    codelens.push(new vscode.CodeLens(methodInfo.range, {
-                            title:  "Runtime data",
-                            tooltip: "Click to see this function's runtime data",
-                            command: CodelensProvider.clickCommand,
-                            arguments: [methodInfo, this._state.environment]
-                        }));
-                    
-            
+                if (methodCodeLens.length===0 && thisEnvInsights.length>0){
+                    methodCodeLens.push(await this.getRuntimeDataExistsLens(methodInfo));
                 }
         
             }
         
             let spans = documentInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
-            let duplicates = spans.filter(x=>documentInfo.spans.any(span=>span!=x && span.name==x.name && span.range!=x.range));
+            let duplicates = spans
+                .filter(x=>documentInfo.spans
+                    .any(span=>span!=x && span.name==x.name && span.range!=x.range));
+            
             spans=spans.filter(span=>!duplicates.includes(span));
 
             if(duplicates.length>0){
                 const lenses = await this.getDuplicateSpanLens(methodInfo, duplicates);
 
                 for (const lens of lenses){
-                 codelens.push(lens);
+                    methodCodeLens.push(lens);
                 }    
                     
             }
@@ -227,8 +240,8 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                                                   spans,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="Span"));
 
                 for (const lens of lenses){
-                    codelens.push(lens);
-                }         
+                    methodCodeLens.push(lens);
+                } 
                 
             }
 
@@ -240,11 +253,8 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                     uniqueEndpoints,documentInfo.usageData.getAll(),documentInfo.insights.all.filter(x=>x.scope=="EntrySpan"|| x.scope=="Span"),
                                         );
                 
-                const uniqueLenses =[...new Map(lenses.map(item =>
-                    [item.command!.title, item])).values()];
-
-                for (const lens of uniqueLenses){
-                    codelens.push(lens);
+                for (const lens of lenses){
+                    methodCodeLens.push(lens);
                 }         
                 
 
@@ -263,10 +273,16 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 const otherEnvLenses = await this.getCodeLens(methodInfo,methodInfo,otherEnvsInsights,
                      documentInfo.usageData.getAll(),true);
                 for (const lens of otherEnvLenses){
-                    codelens.push(lens);
+                    methodCodeLens.push(lens);
                 }
         
             }
+
+            const uniqueLenses =[...new Map(methodCodeLens.map(item =>
+                [item.command!.title, item])).values()];
+            
+       
+            codelens.push(...uniqueLenses);
             
         }
 

@@ -38,6 +38,8 @@ export class Settings
 
     public static readonly enableCodeLens = new SettingsKey('enableCodeLens', true);
 
+    public static readonly enableDebugOutput = new SettingsKey('enableDebugOutput', false);
+
     // public static readonly environment = new SettingsKey('environment', '');
 
     public static readonly jaegerAddress = new SettingsKey('jaegerAddress', '');
