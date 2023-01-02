@@ -24,8 +24,7 @@
         "Continuous Delivery",
         "DevOps"
     ],
-    "badges": [
-        {
+    "badges": [{
             "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
             "description": "Star Digma on Github",
             "href": "bit.ly/36LyUcr"
@@ -73,29 +72,23 @@
     "main": "./out/extension.js",
     "contributes": {
         "views": {
-            "digma": [
-                {
-                    "type": "webview",
-                    "id": "codeAnalytics",
-                    "name": "CodeAnalytics"
-                }
-            ]
+            "digma": [{
+                "type": "webview",
+                "id": "codeAnalytics",
+                "name": "CodeAnalytics"
+            }]
         },
         "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "digma",
-                    "title": "Digma",
-                    "icon": "icon.png"
-                }
-            ]
+            "activitybar": [{
+                "id": "digma",
+                "title": "Digma",
+                "icon": "icon.png"
+            }]
         },
-        "commands": [
-            {
-                "command": "digma.changeSelectedEnvironment",
-                "title": "Digma: Select deployment environment"
-            }
-        ],
+        "commands": [{
+            "command": "digma.changeSelectedEnvironment",
+            "title": "Digma: Select deployment environment"
+        }],
         "configuration": {
             "properties": {
                 "digma.enableCodeLens": {
@@ -140,6 +133,14 @@
                 "digma.enableNotifications": {
                     "type": "boolean",
                     "default": false
+                },
+
+                "digma.enableDebugOutput": {
+                    "type": "booean",
+                    "default": false,
+                    "description": "For troubleshooting only."
+
+
                 }
             }
         }

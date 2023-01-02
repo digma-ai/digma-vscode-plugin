@@ -103,7 +103,7 @@ export class OverlayView
         if(!editor || !e.line)
             return;
 
-        const range = new vscode.Range(new vscode.Position(e.line, 0), new vscode.Position(e.line, 0));
+        const range = new vscode.Range(new vscode.Position(e.line+1, 0), new vscode.Position(e.line+1, 0));
         editor.selection = new vscode.Selection(range.start, range.end);
         editor.revealRange(range, vscode.TextEditorRevealType.InCenter); 
     }
