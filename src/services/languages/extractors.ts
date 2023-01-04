@@ -100,7 +100,7 @@ export interface IEndpointExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolTrees: SymbolTree[] | undefined,
-        documentInfoProvider: DocumentInfoProvider,
+        symbolProvider: SymbolProvider
     ): Promise<EndpointInfo[]>;
 }
 

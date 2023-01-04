@@ -1,8 +1,5 @@
 # Digma Visual Studio Code Plugin
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) ![ts](https://badgen.net/badge/-/TypeScript?icon=typescript&label&labelColor=blue&color=555555) ![version](https://img.shields.io/badge/Release:%20-alpha-orange.svg) [![vsCode](https://vsmarketplacebadge.apphb.com/version-short/digma.digma.svg)](https://marketplace.visualstudio.com/items?itemName=digma.digma)
-
-
 This is a  [Visual Studio Code](https://code.visualstudio.com)  extension for Digma, providing continuous feedback to developers. With this extension, developer can see insights related to their code, derived from sources such as OpenTelemetry, right in the IDE. To read more about the Digma platform visit our [main repo](https://github.com/digma-ai/digma).
 
 ⚠️ Note that this is still a *pre-release* extension, and will probably not be very useful without a Digma backend. If we've picked your interest and you'd like to try it out please joing our our early [beta program](https://www.digma.ai/) which will be released soon! (pending feedback 🤞). Also notice that there's guaranteed to be a slew of breakign changes between now and the public release.

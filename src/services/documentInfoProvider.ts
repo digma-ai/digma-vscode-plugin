@@ -211,11 +211,13 @@ export class DocumentInfoProvider implements vscode.Disposable
                     .filter(x=>x.scope=="EntrySpan" && x.route)
                     .filter(x=>!endpoints.any(e=>e.id===x.codeObjectId));
                 
-                const uniqueEndpoints = [...new Map(endPointsDiscoveredViaServer.map(item =>
-                    [item.codeObjectId, item])).values()];
+                // const uniqueEndpoints = [...new Map(endPointsDiscoveredViaServer.map(item =>
+                //     [item.codeObjectId, item])).values()];
                     
+                const uniqueEndpoints = [...new Map(endPointsDiscoveredViaServer.map(item =>
+                    [item.route, item])).values()];
                 for ( const endpoint of uniqueEndpoints){
- 
+
                     if (endpoint.route){
 
                         const shortRouteName = EndpointSchema.getShortRouteName(endpoint.route);
@@ -591,7 +593,9 @@ export class CodeObjectInsightsAccessor{
         if (environment){
             insights = insights.filter(x=>x.environment===environment);
         }
-        return insights;
+        const uniqueInsights = [...new Map(insights.map(item =>
+            [item.type, item])).values()];
+        return uniqueInsights;
     
     }
     public get all(): CodeObjectInsight[]{

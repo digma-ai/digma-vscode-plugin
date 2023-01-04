@@ -106,8 +106,7 @@ export class SymbolProvider
         document: vscode.TextDocument,
         symbolInfos: SymbolInfo[],
         tokens: Token[],
-        symbolTrees: SymbolTree[] | undefined,
-        documentInfoProvider: DocumentInfoProvider,
+        symbolTrees: SymbolTree[] | undefined
     ): Promise<EndpointInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage) {
@@ -116,7 +115,7 @@ export class SymbolProvider
 
         const endpointExtractors = supportedLanguage.getEndpointExtractors(this._codeInspector);
         const extractedEndpoints = await Promise.all(
-            endpointExtractors.map(async (x) => await x.extractEndpoints(document, symbolInfos, tokens, symbolTrees, documentInfoProvider))
+            endpointExtractors.map(async (x) => await x.extractEndpoints(document, symbolInfos, tokens, symbolTrees,  this))
         );
         const endpoints = extractedEndpoints.flat();
         return endpoints;

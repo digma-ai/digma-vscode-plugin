@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { DocumentInfoProvider } from './../../documentInfoProvider';
-import { SymbolTree } from './../symbolProvider';
+import { SymbolProvider, SymbolTree } from './../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
 import { EndpointSchema } from '../../analyticsProvider';
@@ -12,7 +12,7 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
         symbolInfo: SymbolInfo[],
         tokens: Token[],
         symbolTrees: SymbolTree[] | undefined,
-        documentInfoProvider: DocumentInfoProvider,
+        symbolProvider: SymbolProvider,
     ): Promise<EndpointInfo[]> {
         // Ensure fastapi module was imported
         if(!tokens.any(t => t.text == 'fastapi' && t.type == TokenType.module))

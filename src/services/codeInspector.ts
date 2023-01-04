@@ -67,7 +67,7 @@ export class CodeInspector {
         return;
     }
 
-    private async getType(
+    public async getType(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
     ): Promise<Definition | undefined> {

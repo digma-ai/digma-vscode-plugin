@@ -38,7 +38,8 @@ export class HttpEndpointGroup {
     create(type: string, name: string): IListGroupItemBase {
 
         const shortRouteName = EndpointSchema.getShortRouteName(name);
-        const parts = shortRouteName.split(' ');
+        const parts = shortRouteName.replace("HTTP ","").split(' ');
+
 
         return new GroupItem(shortRouteName, type, `
             <div class="group-item">

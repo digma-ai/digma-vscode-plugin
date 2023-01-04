@@ -5,6 +5,7 @@ import { IMethodExtractor, IParametersExtractor, IEndpointExtractor, ISpanExtrac
 import { BasicParametersExtractor } from './defaultImpls';
 import { IModulePathToUriConverter } from './modulePathToUriConverters';
 import { ICodeObjectIdParser, CommonCodeObjectIdParser } from '../codeObject';
+import { FlaskEndpointExtractor } from './python/flaskEndpointExtractor';
 
 export interface ILanguageExtractor {
     requiredExtensionLoaded: boolean;
@@ -44,7 +45,7 @@ export abstract class LanguageExtractor implements ILanguageExtractor {
     }
 
     public getEndpointExtractors(codeInspector: CodeInspector): IEndpointExtractor[] {
-        return [];
+        return [new FlaskEndpointExtractor(codeInspector)];
     }
 
     public abstract getSpanExtractors(codeInspector: CodeInspector): ISpanExtractor[];

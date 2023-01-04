@@ -12,7 +12,7 @@ export class CodeObjectGroupDiscovery{
         const statusesByType =codeObjectUsagesStatus.groupBy(x=>x.type);
         const types = Object.keys(statusesByType);
         for (const type of types){
-            const constObjectsData = statusesByType[type].map(x=>x.name);
+            const constObjectsData = statusesByType[type].map(x=>x.groupName);
             const uniqueCodeObjects = [... new Set(constObjectsData)]
             for (const codeObjectGroup of uniqueCodeObjects){
                 const groupItem = await this._groupViewItemCreator.create(type, codeObjectGroup);
