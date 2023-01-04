@@ -42,7 +42,8 @@ export async function activate(context: vscode.ExtensionContext)
     const codeInspector = new CodeInspector();
     const symbolProvider = new SymbolProvider(supportedLanguages, codeInspector);
     const analyticsProvider = new AnalyticsProvider(workspaceState);
-    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState);
+    const serverDiscoveredSpans = await analyticsProvider.getSpans();
+    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState, serverDiscoveredSpans);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
     const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
 

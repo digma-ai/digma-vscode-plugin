@@ -104,11 +104,17 @@ export interface IEndpointExtractor {
     ): Promise<EndpointInfo[]>;
 }
 
+export interface ServerDiscoveredSpan {
+    name: string,
+    spanCodeObjectId: string
+}
+
 export interface ISpanExtractor {
     extractSpans(
         document: vscode.TextDocument,
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
+        serverDiscoveredSpans: ServerDiscoveredSpan[]
     ): Promise<SpanLocationInfo[]>;
 }

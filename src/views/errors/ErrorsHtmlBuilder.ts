@@ -109,11 +109,11 @@ export class ErrorsHtmlBuilder
         return /*html*/`
             <span class="error-property flex-stretch">
                 <span class="label">Started:</span>
-                <span>${error.firstOccurenceTime.fromNow()}</span>
+                <span>${error.firstOccurrenceTime.fromNow()}</span>
             </span>
             <span class="error-property flex-stretch">
                 <span class="label">Last:</span>
-                <span>${error.lastOccurenceTime.fromNow()}</span>
+                <span>${error.lastOccurrenceTime.fromNow()}</span>
             </span>`;
     }
 

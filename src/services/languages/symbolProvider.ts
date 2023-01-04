@@ -4,28 +4,31 @@ import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, SpanLocationInfo, SymbolInfo } from './extractors';
+import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, ServerDiscoveredSpan, SpanLocationInfo, SymbolInfo } from './extractors';
 import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
 import { IMethodPositionSelector, DefaultMethodPositionSelector } from './methodPositionSelector';
-import { ICodeObjectIdParser } from '../codeObject';
 
 export function trendToCodIcon(trend: number): string 
 {
-    if(trend < 0)
+    if(trend < 0) {
         return `${trend}$(arrow-down)`;
-    if(trend > 0)
+    }
+    if(trend > 0) {
         return `+${trend}$(arrow-up)`;
+    }
     return '';
 }
 
 export function trendToAsciiIcon(trend: number): string 
 {
-    if(trend < 0)
+    if(trend < 0) {
         return `${trend}\u2193`;  // \u2193 = ArrowDown
-    if(trend > 0)
+    }
+    if(trend > 0) {
         return `+${trend}\u2191`;  // \u2191 = ArrowUp
+    }
     return '';
 }
 
@@ -85,7 +88,7 @@ export class SymbolProvider
     public async getSymbolTree(document: vscode.TextDocument): Promise<SymbolTree[] | undefined> {
         const symbolTree: SymbolTree[] | undefined = await this.retryOnStartup<SymbolTree[]>(
             async () => await vscode.commands.executeCommand('vscode.executeDocumentSymbolProvider', document.uri),
-            value => value && value.length > 0 ? true : false,
+            value => Boolean(value?.length),
             document.languageId,
         );
         return symbolTree;
@@ -123,6 +126,7 @@ export class SymbolProvider
         document: vscode.TextDocument,
         symbolInfos: SymbolInfo[],
         tokens: Token[],
+        serverDiscoveredSpans: ServerDiscoveredSpan[]
     ):  Promise<SpanLocationInfo[]> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage) {
@@ -131,7 +135,7 @@ export class SymbolProvider
 
         const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInspector);
         const extractedSpans = await Promise.all(
-            spanExtractors.map(async (x) => await x.extractSpans(document, symbolInfos, tokens, this))
+            spanExtractors.map(async (x) => await x.extractSpans(document, symbolInfos, tokens, this, serverDiscoveredSpans))
         );
         const spans = extractedSpans.flat();
         return spans;
@@ -151,7 +155,7 @@ export class SymbolProvider
                 const extractedMethods = await Promise.all(
                     methodExtractors.map(async (x) => await x.extractMethods(document, allDocSymbols, tokens))
                 );
-                const methods = extractedMethods.flat()
+                const methods = extractedMethods.flat();
                 return methods;
             }
             else {
@@ -164,7 +168,7 @@ export class SymbolProvider
         return [];
     }
     public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
-        let tokes: Token[] = [];
+        const tokens: Token[] = [];
         try {
             //  at index `5*i`   - `deltaLine`: token line number, relative to the previous token
             //  at index `5*i+1` - `deltaStart`: token start character, relative to the previous token (relative to 0 or the previous token's start if they are on the same line)
@@ -172,32 +176,32 @@ export class SymbolProvider
             //  at index `5*i+3` - `tokenType`: will be looked up in `SemanticTokensLegend.tokenTypes`. We currently ask that `tokenType` < 65536.
             //  at index `5*i+4` - `tokenModifiers`: each set bit will be looked up in `SemanticTokensLegend.tokenModifiers`
             
-            let legends = (await this.retryOnStartup<vscode.SemanticTokensLegend>(
+            const legends = (await this.retryOnStartup<vscode.SemanticTokensLegend>(
                 async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokensLegend', document.uri),
-                value => value?.tokenTypes ? true : false,
+                value => Boolean(value?.tokenTypes),
                 document.languageId,
             ));
             if(!legends) {
-                return tokes;
+                return tokens;
             }
 
             let semanticTokens: vscode.SemanticTokens | undefined;
             if(range) {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentRangeSemanticTokens', document.uri, range),
-                    value => !!value?.data,
+                    value => Boolean(value?.data),
                     document.languageId,
                 );
             }
             else {
                 semanticTokens = await this.retryOnStartup<vscode.SemanticTokens>(
                     async () => await vscode.commands.executeCommand('vscode.provideDocumentSemanticTokens', document.uri),
-                    value => !!value?.data,
+                    value => Boolean(value?.data),
                     document.languageId,
                 );
             }
             if(!semanticTokens) {
-                return tokes;
+                return tokens;
             }
           
             let line = 0;
@@ -209,7 +213,7 @@ export class SymbolProvider
                 const tokenType = semanticTokens.data[i+3];
                 const tokenModifiers = semanticTokens.data[i+4];
                 
-                if(deltaLine == 0) {
+                if(deltaLine === 0) {
                     char += deltaStart;
                 }
                 else {
@@ -221,7 +225,7 @@ export class SymbolProvider
                     new vscode.Position(line, char), 
                     new vscode.Position(line, char+length));
 
-                tokes.push({
+                tokens.push({
                     range: range,
                     text: document.getText(range),
                     type: <TokenType>(legends.tokenTypes[tokenType]),
@@ -233,7 +237,7 @@ export class SymbolProvider
             Logger.error('Failed to get tokens', e);
         }
 
-        return tokes;
+        return tokens;
     }
 
     public async getMethodPositionSelector(document: vscode.TextDocument): Promise<IMethodPositionSelector> {
@@ -260,19 +264,21 @@ export class SymbolProvider
         {
             const installOption = `Install ${language.requiredExtensionId}`;
             const ignoreOption = `Ignore python files`;
-            let sel = await vscode.window.showErrorMessage(
-                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtensionId}' installed.`,
+            const sel = await vscode.window.showErrorMessage(
+                `Digma cannot process ${language.documentFilter.language || ""} files properly without '${language.requiredExtensionId}' installed.`,
                 ignoreOption,
                 installOption
-            )
-            if(sel == installOption)
-                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtensionId);
-            else if(sel == ignoreOption)
-                this.languageExtractors = this.languageExtractors.filter(x => x != language);
-            return false;
+            );
+            switch (sel) {
+              case installOption:
+                void vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtensionId);
+              case ignoreOption:
+                this.languageExtractors = this.languageExtractors.filter(x => x !== language);
+              default:
+                return false;
+            }
         }
-        if(!extension.isActive)
-        {
+        if (!extension.isActive) {
             Logger.info(`Starting activating "${extension.id}" extension`)
             await extension.activate();
             Logger.info(`Finished activating "${extension.id}" extension`)

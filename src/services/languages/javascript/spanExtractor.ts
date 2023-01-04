@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { CodeInspector } from '../../codeInspector';
-import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from '../extractors';
+import { ISpanExtractor, ServerDiscoveredSpan, SpanLocationInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { Logger } from '../../logger';
@@ -18,6 +18,7 @@ export class JSSpanExtractor implements ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
+        serverDiscoveredSpans: ServerDiscoveredSpan[]
     ): Promise<SpanLocationInfo[]> {
 
         const results: SpanLocationInfo[] = [];
@@ -26,67 +27,89 @@ export class JSSpanExtractor implements ISpanExtractor {
 
             for (let index = 0; index < methodTokens.length; index++) {
                 const startSpanToken = methodTokens[index];
-                if(startSpanToken.type !== TokenType.method || (startSpanToken.text !== "startActiveSpan" && startSpanToken.text !== "startSpan")){
-                    continue;
-                }
-                const traceVarToken = methodTokens[index-1];
-                if(traceVarToken.type !== TokenType.variable){
-                    continue;
-                }
-                //case: opentelemetry.trace.getTracer(name=insname).startActiveSpan
-                const tracerDefType = await this._codeInspector.getTypeFromSymbolProvider(document, traceVarToken.range.start, symbolProvider, (traceDefToken)=>traceDefToken.type === TokenType.interface);
-                if(tracerDefType !== "Tracer") {
-                    continue;
-                }
 
-                const traceDefinition = await this._codeInspector.getDefinitionWithTokens(document,traceVarToken.range.start,symbolProvider);
-                let instrumentationLibrary: string| undefined = undefined;
-                if(traceDefinition){
-                    let _tokens: Token [];
-                    let _range: vscode.Range;
-                    let _document: TextDocument;
-                    if(traceDefinition.location.uri.fsPath !== document.uri.fsPath) { //defined in a different document
-                        _document = await vscode.workspace.openTextDocument(traceDefinition.location.uri);
-                        _tokens = await symbolProvider.getTokens(_document);
-                    }
-                    else{
-                        _tokens = tokens;
-                        _document = document;
-                    }
-                    _range = traceDefinition.location.range;
-                    instrumentationLibrary = await this.tryGetInstrumentationName(_document, this._codeInspector, symbolProvider, _tokens, _range);
-                }
+                // Check if there are any functions with first parameter value 
+                // that matches any of server discovered spans
+                if (serverDiscoveredSpans.length > 0 && startSpanToken.type === TokenType.function) {
+                    const spanName = await this.getFunctionFirstParameterValue(document, startSpanToken, symbolProvider, tokens);
 
-                const nextTextInline = this.getNextTextInline(document, startSpanToken);
-                const nextTextInlineText = nextTextInline[0];
-                const nextTextInlineRange: vscode.Range = nextTextInline[1];
+                    if (spanName) {
+                        const discoveredSpan = serverDiscoveredSpans.find(span => span.name === spanName);
 
-                let spanParameter = nextTextInlineText.match(this.firstParameterRegex)?.[1];
-                if(!spanParameter){
-                    return undefined;
-                }
-                let spanName = spanParameter.match(this.stringRegex)?.[1];
-                if (!spanName){
-                    spanName = await this.getVariableValue(spanParameter, document, symbolProvider, tokens, nextTextInlineRange);
-                }
+                        if (discoveredSpan) {
+                            results.push(new SpanLocationInfo(
+                                discoveredSpan.spanCodeObjectId,
+                                spanName,
+                                [spanName],
+                                [],
+                                startSpanToken.range,
+                                document.uri)
+                            );
         
+                            Logger.info(`* Span found on server: ${discoveredSpan.spanCodeObjectId}`);
+                        }
+                    }
+                } else {
+                    if(startSpanToken.type !== TokenType.method || (startSpanToken.text !== "startActiveSpan" && startSpanToken.text !== "startSpan")){
+                        continue;
+                    }
+                    const traceVarToken = methodTokens[index-1];
+                    if(traceVarToken.type !== TokenType.variable){
+                        continue;
+                    }
+                    //case: opentelemetry.trace.getTracer(name=insname).startActiveSpan
+                    const tracerDefType = await this._codeInspector.getTypeFromSymbolProvider(document, traceVarToken.range.start, symbolProvider, (traceDefToken)=>traceDefToken.type === TokenType.interface);
+                    if(tracerDefType !== "Tracer") {
+                        continue;
+                    }
 
-                
-                if(spanName === undefined){
-                    Logger.info("Span discovery failed, span name could not be resolved for tracer '"+instrumentationLibrary+"'");
-                    continue;
+                    const traceDefinition = await this._codeInspector.getDefinitionWithTokens(document,traceVarToken.range.start,symbolProvider);
+                    let instrumentationLibrary: string| undefined = undefined;
+                    if(traceDefinition){
+                        let _tokens: Token [];
+                        let _range: vscode.Range;
+                        let _document: TextDocument;
+                        if(traceDefinition.location.uri.fsPath !== document.uri.fsPath) { //defined in a different document
+                            _document = await vscode.workspace.openTextDocument(traceDefinition.location.uri);
+                            _tokens = await symbolProvider.getTokens(_document);
+                        }
+                        else{
+                            _tokens = tokens;
+                            _document = document;
+                        }
+                        _range = traceDefinition.location.range;
+                        instrumentationLibrary = await this.tryGetInstrumentationName(_document, this._codeInspector, symbolProvider, _tokens, _range);
+                    }
+
+                    const nextTextInline = this.getNextTextInline(document, startSpanToken);
+                    const nextTextInlineText = nextTextInline[0];
+                    const nextTextInlineRange: vscode.Range = nextTextInline[1];
+
+                    let spanParameter = nextTextInlineText.match(this.firstParameterRegex)?.[1];
+                    if(!spanParameter){
+                        return undefined;
+                    }
+                    
+                    let spanName = spanParameter.match(this.stringRegex)?.[1];
+                    if (!spanName){
+                        spanName = await this.getVariableValue(spanParameter, document, symbolProvider, tokens, nextTextInlineRange);
+                    }
+
+                    if(spanName === undefined){
+                        Logger.info("Span discovery failed, span name could not be resolved for tracer '"+instrumentationLibrary+"'");
+                        continue;
+                    }
+                    
+                    results.push(new SpanLocationInfo(
+                        instrumentationLibrary + '$_$' + spanName,
+                        spanName,
+                        [spanName],
+                        [],
+                        startSpanToken.range,
+                        document.uri));
+
+                    Logger.info("* Span found: "+instrumentationLibrary+"/"+spanName);
                 }
-                
-                results.push(new SpanLocationInfo(
-                    instrumentationLibrary + '$_$' + spanName,
-                    spanName,
-                    [spanName],
-                    [],
-                    startSpanToken.range,
-                    document.uri));
-
-                Logger.info("* Span found: "+instrumentationLibrary+"/"+spanName);
-
             }
 
         });
@@ -245,6 +268,9 @@ export class JSSpanExtractor implements ISpanExtractor {
     async getVariableValue(variableName: string, document: TextDocument, symbolProvider: SymbolProvider, tokens : Token [], searchRange: vscode.Range):Promise<string | undefined>
     {
         const idx = tokens.findIndex(x => x.range.intersection(searchRange) && x.type === TokenType.variable && x.text === variableName);
+        if (idx === -1) {
+            return undefined;
+        }
         const nameVariableToken = tokens[idx];
 
         const variableDeclarationToken = await this._codeInspector.getDefinitionWithTokens(document,nameVariableToken.range.start,symbolProvider);
@@ -257,7 +283,22 @@ export class JSSpanExtractor implements ISpanExtractor {
         return variableDeclarationLine.text.match(extractVariableValueRegex)?.[1];
     }
 
+    async getFunctionFirstParameterValue(document: vscode.TextDocument, startSpanToken: Token, symbolProvider: SymbolProvider, tokens: Token[]): Promise<string | undefined> {
+        const nextTextInline = this.getNextTextInline(document, startSpanToken);
+        const nextTextInlineText = nextTextInline[0];
+        const nextTextInlineRange = nextTextInline[1];
 
+        let spanParameter = nextTextInlineText.match(this.firstParameterRegex)?.[1];
+        if (!spanParameter) {
+            return undefined;
+        }
+        let spanName = spanParameter.match(this.stringRegex)?.[1];
+        if (!spanName) {
+            return await this.getVariableValue(spanParameter, document, symbolProvider, tokens, nextTextInlineRange);
+        }
+
+        return spanName;
+    }
 }
 
 export async function methodSpanIterator(symbols: SymbolInfo [], tokens: Token[], methodTokenHandler: (symbolInfo: SymbolInfo, tokens: Token []) => Promise<void>) {

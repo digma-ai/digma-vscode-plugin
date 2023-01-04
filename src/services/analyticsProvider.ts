@@ -10,6 +10,7 @@ import * as os from 'os';
 import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
 import { WorkspaceState } from "../state";
 import { Environment } from './EnvironmentManager';
+import { ServerDiscoveredSpan } from "./languages/extractors";
 
 
 export enum Impact {
@@ -116,8 +117,8 @@ export interface ErrorFlowSummary {
     isNew: boolean;
     frequency: Frequency;
     impact: Impact;
-    lastOccurenceTime: moment.Moment;
-    firstOccurenceTime: moment.Moment;
+    lastOccurrenceTime: moment.Moment;
+    firstOccurrenceTime: moment.Moment;
     unhandled: boolean;
     unexpected: boolean;
     rootSpan: string;
@@ -261,8 +262,8 @@ export interface CodeObjectErrorResponse {
     characteristic: string;
     startsHere: boolean;
     endsHere: boolean;
-    firstOccurenceTime: moment.Moment;
-    lastOccurenceTime: moment.Moment;
+    firstOccurrenceTime: moment.Moment;
+    lastOccurrenceTime: moment.Moment;
 }
 
 export interface CodeObjectError {
@@ -272,8 +273,8 @@ export interface CodeObjectError {
     characteristic: string;
     startsHere: boolean;
     endsHere: boolean;
-    firstOccurenceTime: moment.Moment;
-    lastOccurenceTime: moment.Moment;
+    firstOccurrenceTime: moment.Moment;
+    lastOccurrenceTime: moment.Moment;
     dayAvg: integer;
     handledLocally: boolean;
     score: integer;
@@ -429,6 +430,19 @@ export class AnalyticsProvider {
         return response;
     }
 
+    public async getSpans(environments?: string[]): Promise<ServerDiscoveredSpan[]> {
+        let params: [string, any][] | undefined;
+        if (environments) {
+            params = environments.map(env => ["environments", env]);
+        }
+        const response: any[] = await this.send<any>(
+            'GET',
+            `/CodeAnalytics/codeObjects/spans`,
+            params
+            );
+        return response;
+    }
+
     public async setInsightCustomStartTime(
         codeObjectId: string,
         insightType: string,
@@ -524,7 +538,7 @@ export class AnalyticsProvider {
         return;
     }
 
-    public async sendInsturmentationEvent(event: integer): Promise<undefined> {
+    public async sendInstrumentationEvent(event: integer): Promise<undefined> {
         try {
             const timestamp = Date.now().toString();
             const response = await this.send<undefined>(
@@ -628,9 +642,9 @@ export class HttpError extends Error {
     constructor(
         public readonly status: number,
         public readonly statusText: string,
-        public readonly reponseText: string
+        public readonly responseText: string
     ) {
-        super(`Request failed with http code: [${status}] ${statusText}\nResponse: ${reponseText}`);
+        super(`Request failed with http code: [${status}] ${statusText}\nResponse: ${responseText}`);
         Object.setPrototypeOf(this, HttpError.prototype);
     }
 }
