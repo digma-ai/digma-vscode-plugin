@@ -248,8 +248,7 @@ export class DocumentInfoCache {
           doc,
           symbolInfos,
           tokens,
-          symbolTrees,
-          this._documentInfoProvider
+          symbolTrees
         ),
         this._symbolProvider.getParametersExtractor(doc),
         this._symbolProvider.getSymbolAliasExtractor(doc)
