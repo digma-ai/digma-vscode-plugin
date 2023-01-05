@@ -431,12 +431,12 @@ export class AnalyticsProvider {
         return response;
     }
 
-    public async getSpans(environments?: string[]): Promise<ServerDiscoveredSpan[]> {
+    public async getSpans(environments?: string[]) {
         let params: [string, any][] | undefined;
         if (environments) {
             params = environments.map(env => ["environments", env]);
         }
-        const response: any[] = await this.send<any>(
+        const response = await this.send<{ spans: ServerDiscoveredSpan[]}>(
             'GET',
             `/CodeAnalytics/codeObjects/spans`,
             params
