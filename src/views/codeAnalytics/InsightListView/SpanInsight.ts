@@ -66,11 +66,15 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
 
             let lastServiceHtml = '';
             if(flow.lastService) {
+                var lastServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
+                    spanName :flow.lastService.span,
+                    codeObjectId: flow.lastService.codeObjectId,
+                  });
                 lastServiceHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="flow-entry ellipsis" title="${flow.lastService.service}: ${flow.lastService.span}">
                         <span class="flow-service">${flow.lastService.service}:</span>
-                        <span class="flow-span">${flow.lastService.span}</span>
+                        <span class="flow-span span-name ${lastServiceLocation ? "link" : ""}" data-code-uri="${lastServiceLocation?.documentUri}" data-code-line="${lastServiceLocation?.range.end.line!+1}">${flow.lastService.span}</span>
                     </span>`;
             }
 
@@ -417,7 +421,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     }
 
     private getDescription(span: SlowEndpointInfo){
-        if (span.p95){
+        if (span.p95 && span.p95.fraction>0){
             return `Up to ~${(span.p95.fraction*100.0).toFixed(3)}% of the entire request time (${span.p95.maxDuration.value}${span.p95.maxDuration.unit}).`;
 
         }
