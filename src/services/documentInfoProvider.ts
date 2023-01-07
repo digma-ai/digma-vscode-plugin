@@ -6,10 +6,12 @@ import { SymbolProvider } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
 import { Dictionary, Future } from './utils';
 import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, IParametersExtractor, CodeObjectLocationInfo, ISymbolAliasExtractor } from './languages/extractors';
-import { InstrumentationInfo } from './EditorHelper';
+import { InstrumentationInfo, LocateEndpointInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { WorkspaceState } from '../state';
 import { CodeObjectInsight } from '../views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
+import { PathUtils } from './common/pathUtils';
+import { PossibleCodeObjectLocation } from './languages/modulePathToUriConverters';
 
 export class DocumentInfoProvider implements vscode.Disposable
 {
@@ -67,86 +69,15 @@ export class DocumentInfoProvider implements vscode.Disposable
         }
     }
 
+    public async searchForEndpoint(locationInfo: LocateEndpointInfo): Promise<SpanLocationInfo|undefined>{
 
-    public async searchForSpan(instrumentationInfo: InstrumentationInfo): Promise<SpanLocationInfo|undefined>{
-        const codeFileHint = instrumentationInfo.instrumentationName;
-        
-        if (codeFileHint ){
-            
-            //try to find code object by span name
-            if (vscode.window.activeTextEditor?.document.fileName.toLocaleLowerCase().endsWith(".go")){
+        if (locationInfo.codeObjectId){
 
-            //TODO: change to use document info we alrady scanned 
-                let regex = /(\(\*?.*\).*)/;
-                //workaround for GO
-                let match = instrumentationInfo.fullName?.match(regex)?.firstOrDefault();
-                if (match){
-                    match =match?.replace("(*","").replace(")","");
-                    let codeLocations:SymbolInformation[] =  await vscode.commands.executeCommand("vscode.executeWorkspaceSymbolProvider", match);
-                    if (codeLocations){
-                        codeLocations=codeLocations.filter(x=>x.kind===vscode.SymbolKind.Method && x.name===match);
-                        if (codeLocations.length===1){
-                            return new SpanLocationInfo(instrumentationInfo.fullName!,instrumentationInfo.spanName!, [instrumentationInfo.spanName!],[], codeLocations[0].location.range, codeLocations[0].location.uri);
-                        }
-                    }
-                }
-            }
-
-            //try to find code object by instrumentation name
-
-
-
-            if (codeFileHint==='__main__'){
-
-                let doc = vscode.window.activeTextEditor?.document;
-                if (doc){
-                    const docInfo = await this.getDocumentInfo(doc);
-                    if (docInfo){
-                        let spanInfos = docInfo.spans.filter(span => span.aliases.any(x=> x===instrumentationInfo.spanName));
-                        return spanInfos.firstOrDefault(x=>x!== undefined);
-
-                    }
-
-                }
-
-            }
-            else{
-
-                let codeHintFiles = codeFileHint.split(' ');
-                let head = codeHintFiles[0];
-                let folder = await vscode.workspace.workspaceFolders?.find(w => w.name === head);
-                let tail= codeHintFiles;
-    
-                if (folder) {
-                    tail = codeHintFiles.slice(1);
-                }
-    
-                if (codeHintFiles.length>=1){
-                    const files = await vscode.workspace.findFiles(`**/${tail.join('/')}.*`);
-    
-                    const spansPromises = files.map(async file =>{
-                        try{
-                            const doc = await vscode.workspace.openTextDocument(file);
-                            const docInfo = await this.getDocumentInfo(doc);
-                            if(docInfo){
-                                return docInfo.spans.filter(span => span.name===instrumentationInfo.spanName);
-                            }
-                        }
-                        catch(error){
-                            Logger.warn(`Searching for span "${instrumentationInfo.spanName}" skipped ${file.fsPath}`, error);
-                        }
-                        return [];
-                    });
-    
-                    const spnaInfos = (await Promise.all(spansPromises)).flat().firstOrDefault(x=>x!== undefined);
-                    return spnaInfos;
-                }
-            }
-
- 
         }
-    }
 
+        return undefined;
+    }
+        
     public async refresh(doc: vscode.TextDocument) {
 
         const docRelativePath = doc.uri.toModulePath();

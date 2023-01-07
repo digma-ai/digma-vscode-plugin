@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { EditorHelper } from './EditorHelper';
 import { DocumentInfoProvider } from './documentInfoProvider';
-import { SpanSearchInfo } from './../views/codeAnalytics/InsightListView/Common/SpanSearch';
 import { AnalyticsProvider, CodeObjectDurationChangeEvent } from './analyticsProvider';
 import { Scheduler } from './Scheduler';
 import { EnvironmentManager } from './EnvironmentManager';
-import { SpanSearch } from '../views/codeAnalytics/InsightListView/Common/SpanSearch';
 import { Settings } from '../settings';
+import { CodeObjectLocationHints } from './languages/modulePathToUriConverters';
+import { SpanLinkResolver } from './spanLinkResolver';
 
 export class EventManager implements vscode.Disposable {
     private lastFetch = new Date();
@@ -17,6 +17,7 @@ export class EventManager implements vscode.Disposable {
         private environmentManager: EnvironmentManager,
         private documentInfoProvider: DocumentInfoProvider,
         private editorHelper: EditorHelper,
+        private spanLinkResolves: SpanLinkResolver
     ) {
         if(Settings.enableNotifications.value) {
             scheduler.schedule(15, this.fetchEvents.bind(this));
@@ -36,13 +37,12 @@ export class EventManager implements vscode.Disposable {
             const item = 'Go';
             const response = await vscode.window.showInformationMessage(message, item);
             if(response === item) {
-                const span: SpanSearchInfo = {
+                const span: CodeObjectLocationHints = {
                     instrumentationLibrary: eventData.span.instrumentationLibrary,
-                    name: eventData.span.name,
+                    spanName: eventData.span.name,
+                    codeObjectId: undefined
                 };
-                const spanSearch = new SpanSearch(this.documentInfoProvider);
-                const spanLocations = await spanSearch.searchForSpans([span]);
-                const spanLocation = spanLocations[0];
+                const spanLocation = await this.spanLinkResolves.searchForSpanByHints(span);
                 if(spanLocation !== undefined) {
                     const uri = spanLocation.documentUri;
                     const line = spanLocation.range.end.line + 1;
