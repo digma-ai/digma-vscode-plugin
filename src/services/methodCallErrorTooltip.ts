@@ -81,7 +81,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
 
     private async getMethodMarkdown(methodInfo: MethodInfo): Promise<vscode.MarkdownString | undefined>
     {
-        const errors = await this._documentInfoProvider.analyticsProvider.getCodeObjectsErrors([methodInfo.symbol.id]);
+        const errors = await this._documentInfoProvider.analyticsProvider.getCodeObjectsErrors(methodInfo.idsWithType);
         if(!errors?.length)
             return;
         

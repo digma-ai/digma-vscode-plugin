@@ -23,35 +23,45 @@ export interface SpanUsagesInsight extends CodeObjectInsight
         percentage: Number,
         firstService:{
             service: string,
-            span: string
+            span: string,
+            codeObjectId: string
         },
         intermediateSpan: string | undefined,
         lastService:{
             service: string,
-            span: string
+            span: string,
+            codeObjectId: string
+
         } | undefined,
         lastServiceSpan: string | undefined
     }[]
 }
 export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public constructor(private _viewUris:WebViewUris){
+    public constructor(private _viewUris:WebViewUris,
+        private _spanLinkResolver: SpanLinkResolver){
 
     }
     public async create( codeObjectsInsight: SpanUsagesInsight []): Promise<IListViewItemBase []>
     {
-        return codeObjectsInsight.map(x=>this.createListViewItem(x));
+        const result = await await Promise.all(codeObjectsInsight.map(async x=> await this.createListViewItem(x)));
+        return result;
     }
 
-    public createListViewItem(insight: SpanUsagesInsight) : IListViewItem
+    public async createListViewItem(insight: SpanUsagesInsight) : Promise<IListViewItem>
     {
+        
         // <span class="codicon codicon-server-process" style="margin-right: 3px;"></span>
-        const usages = insight.flows.map(flow => {
+        const usages = await Promise.all( insight.flows.map(async flow => {
 
+            var firstServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
+                  spanName :flow.firstService.span,
+                  codeObjectId: flow.firstService.codeObjectId,
+                });
             let firstServiceHtml = /*html*/`
                 <span class="flow-entry ellipsis" title="${flow.firstService.service}: ${flow.firstService.span}">
                     <span class="flow-service">${flow.firstService.service}:</span>
-                    <span class="flow-span">${flow.firstService.span}</span>
+                    <span class="flow-span span-name ${firstServiceLocation ? "link" : ""}" data-code-uri="${firstServiceLocation?.documentUri}" data-code-line="${firstServiceLocation?.range.end.line!+1}">${flow.firstService.span}</span>
                 </span>`;
 
             let lastServiceHtml = '';
@@ -89,7 +99,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     ${traceHtml}
                 </span>
             </div>`;
-        });
+        }));
 
         const template = new InsightTemplateHtml({
             title: "Top Usage",
@@ -138,6 +148,7 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
 export interface SpanDurationBreakdownEntry {
     spanName: string,
     spanDisplayName: string,
+    codeObjectId:string,
     spanInstrumentationLibrary: string,
     spanCodeObjectId: string,
     percentiles: {
@@ -239,7 +250,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
             return {
                 instrumentationLibrary:o.spanInstrumentationLibrary,
                 spanName: o.spanName,
-                codeObjectId: undefined,
+                codeObjectId: o.codeObjectId,
                 breakdownEntry: o
             };
         });

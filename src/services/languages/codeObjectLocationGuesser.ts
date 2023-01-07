@@ -2,7 +2,7 @@ import { PossibleCodeObjectLocation,  CodeObjectLocationHints, ICodeObjectLocati
 
 export class GuessLocationByDefaultCodeObjectIdSchema implements ICodeObjectLocationGuesser {
     
-    constructor(private extension:string){
+    constructor(private extension:string, private _defaultLogical:boolean){
 
     }
     async guessLocation(codeObjectInfo: CodeObjectLocationHints ): Promise<PossibleCodeObjectLocation> {
@@ -12,11 +12,27 @@ export class GuessLocationByDefaultCodeObjectIdSchema implements ICodeObjectLoca
             let idType="method";
 
             if (codeObjectParts.length!==2){
-                return {};
+                
+                let codeObjectPath = codeObjectInfo.codeObjectId;
+                if (this._defaultLogical){
+                    codeObjectPath= codeObjectInfo.codeObjectId.replaceAll(":",".");
+                    return {
+                        modulePhysicalPath:  undefined,
+                        spanName: codeObjectInfo.spanName,
+                        moduleLogicalPath: codeObjectPath
+                    };
+                }
+                else{
+                    return {
+                        modulePhysicalPath:  codeObjectPath,
+                        spanName: codeObjectInfo.spanName,
+                        moduleLogicalPath: undefined
+                    };
+                }
             }
 
             let codeObjectPath = codeObjectParts[0];
-
+        
             const codeObjectIdAndType =codeObjectPath.split(`:`);
             if (codeObjectIdAndType.length===2){
                 idType = codeObjectIdAndType[0];
@@ -26,16 +42,19 @@ export class GuessLocationByDefaultCodeObjectIdSchema implements ICodeObjectLoca
             if (idType==='span'){
                 if (codeObjectParts.length===2){
                     return {
-                        modulePhysicalPath: codeObjectParts[0].replaceAll(`.`,`/`)+this.extension,
-                        spanName: codeObjectParts[1]
+                        modulePhysicalPath: !this._defaultLogical ?
+                            codeObjectParts[0].replaceAll(`.`,`/`)+this.extension : undefined,
+                        spanName: codeObjectParts[1],
+                        moduleLogicalPath: this._defaultLogical ? codeObjectParts[0] : undefined
                     }; 
                 }
             }
 
             else if (idType==='method'){
                 return {
-                    modulePhysicalPath: codeObjectParts[0],
-                    methodName: codeObjectParts[1]
+                    modulePhysicalPath: !this._defaultLogical ? codeObjectParts[0] : undefined,
+                    methodName: codeObjectParts[1],
+                    moduleLogicalPath: this._defaultLogical? codeObjectParts[0] : undefined
                 }; 
                  
             }
@@ -46,12 +65,12 @@ export class GuessLocationByDefaultCodeObjectIdSchema implements ICodeObjectLoca
     }
 }
 
-export class GuessLocationIfInstrumentationLibraryIsRootSymbol implements ICodeObjectLocationGuesser {
+export class GuessLocationIfInstrumentationLibraryIsClass implements ICodeObjectLocationGuesser {
     
     async guessLocation(codeObjectInfo: CodeObjectLocationHints ): Promise<PossibleCodeObjectLocation> {
         
         return {
-            moduleLogicalPath: codeObjectInfo.instrumentationLibrary?.replace(" ", "/"),
+            moduleLogicalPath: codeObjectInfo.instrumentationLibrary,
             spanName: codeObjectInfo.spanName
         }; 
 

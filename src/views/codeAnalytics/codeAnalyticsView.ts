@@ -197,7 +197,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.setUnknownTemplate(new UnknownInsightInsight(this._webViewUris));
         listViewItemsCreator.add("HotSpot", new HotspotListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator(this._webViewUris));
-        listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
+        listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris, this._spanLinkResolver));
         listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanDurationBreakdown", new SpanDurationBreakdownListViewItemsCreator(this._webViewUris, _spanLinkResolver));
         listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel,_spanLinkResolver));

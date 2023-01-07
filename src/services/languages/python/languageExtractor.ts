@@ -15,7 +15,7 @@ import { DocumentInfoProvider } from '../../documentInfoProvider';
 export class PythonLanguageExtractor extends LanguageExtractor {
     public get guessCodeObjectLocation(): ICodeObjectLocationGuesser[] {
         return [
-            new GuessLocationByDefaultCodeObjectIdSchema(PythonConstants.pythonFileSuffix),
+            new GuessLocationByDefaultCodeObjectIdSchema(PythonConstants.pythonFileSuffix,false),
             new GuessLocationByInstrumentationLibrary()
         ];
     }

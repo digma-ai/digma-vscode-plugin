@@ -56,7 +56,7 @@ export class GoLanguageExtractor extends LanguageExtractor {
 
     public async getModulePathToUriConverters(docInfoProvider: DocumentInfoProvider): Promise<IModulePathToUriConverter[]> {
         return [
-            new LogicalModulePathToUriConverter(),
+            new LogicalModulePathToUriConverter(docInfoProvider),
             new PhysicalModulePathToUriConverter([],docInfoProvider),
         ];
     }

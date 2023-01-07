@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
 import { DocumentInfo, DocumentInfoProvider } from '../../documentInfoProvider';
+import { GuessLocationByDefaultCodeObjectIdSchema, GuessLocationIfInstrumentationLibraryIsClass } from '../codeObjectLocationGuesser';
 import { IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
 import { ICodeObjectLocationGuesser, IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
+import { GuessLocationByInstrumentationLibrary } from '../python/codeObjectLocationGuesser';
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
@@ -11,8 +13,10 @@ import { CSharpSpanExtractor } from './spanExtractor';
 
 export class CSharpLanguageExtractor extends LanguageExtractor {
     
+    readonly defaultExtension=".cs";
     public get guessCodeObjectLocation(): ICodeObjectLocationGuesser[] {
-        throw new Error('Method not implemented.');
+       return [new GuessLocationByDefaultCodeObjectIdSchema(this.defaultExtension, true), 
+        new GuessLocationIfInstrumentationLibraryIsClass()];
     }
     public requiredExtensionLoaded: boolean = false;
 
@@ -48,7 +52,7 @@ export class CSharpLanguageExtractor extends LanguageExtractor {
 
     public async getModulePathToUriConverters(docInfoProvider: DocumentInfoProvider): Promise<IModulePathToUriConverter[]> {
         return [
-            new LogicalModulePathToUriConverter(),
+            new LogicalModulePathToUriConverter(docInfoProvider),
             new PhysicalModulePathToUriConverter([],docInfoProvider),
         ];
     }
