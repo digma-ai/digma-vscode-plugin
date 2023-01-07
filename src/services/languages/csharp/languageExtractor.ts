@@ -1,14 +1,19 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
+import { DocumentInfo, DocumentInfoProvider } from '../../documentInfoProvider';
 import { IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
-import { IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
+import { ICodeObjectLocationGuesser, IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
 // import { AspNetCoreMvcEndpointExtractor } from './AspNetCoreMvcEndpointExtractor';
 
 export class CSharpLanguageExtractor extends LanguageExtractor {
+    
+    public get guessCodeObjectLocation(): ICodeObjectLocationGuesser[] {
+        throw new Error('Method not implemented.');
+    }
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
@@ -41,10 +46,10 @@ export class CSharpLanguageExtractor extends LanguageExtractor {
         ];
     }
 
-    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+    public async getModulePathToUriConverters(docInfoProvider: DocumentInfoProvider): Promise<IModulePathToUriConverter[]> {
         return [
             new LogicalModulePathToUriConverter(),
-            new PhysicalModulePathToUriConverter(),
+            new PhysicalModulePathToUriConverter([],docInfoProvider),
         ];
     }
 }

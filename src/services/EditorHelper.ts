@@ -5,7 +5,8 @@ import { Logger } from './logger';
 import { SourceControl } from './sourceControl';
 import { DocumentInfoProvider } from './documentInfoProvider';
 import { Settings } from './../settings';
-import { ModulePathInfo } from './languages/modulePathToUriConverters';
+import { CodeObjectLocationInfo } from './languages/extractors';
+import { PossibleCodeObjectLocation } from './languages/modulePathToUriConverters';
 
 export interface EditorInfo {
     workspaceUri?: vscode.Uri;
@@ -18,9 +19,15 @@ export interface EditorInfo {
 }
 
 export interface InstrumentationInfo {
-    instrumentationName?: string;
-    spanName?: string;
-    fullName?: string
+    instrumentationName: string;
+    spanName: string;
+    fullName?: string;
+    codeObjectId: string | undefined;
+
+}
+
+export interface LocateEndpointInfo extends InstrumentationInfo {
+    route?: string;
 }
 
 export class EditorHelper {
@@ -143,7 +150,7 @@ export class EditorHelper {
     }
 
     public async getWorkspaceFileUri(
-        pathInfo: ModulePathInfo,
+        pathInfo: PossibleCodeObjectLocation,
         document?: vscode.TextDocument,
     ) : Promise<vscode.Uri | undefined> {
         if(!document) {
@@ -155,11 +162,11 @@ export class EditorHelper {
             return;
         }
 
-        const converters = await languageExtractor.getModulePathToUriConverters();
+        const converters = await languageExtractor.getModulePathToUriConverters(this._documentInfoProvider);
         let uri: vscode.Uri | undefined;
         for (let index = 0; !uri && index < converters.length; index++) {
             const converter = converters[index];
-            uri = await converter.convert(pathInfo);
+            uri = (await converter.convert(pathInfo))?.uri;
         }
 
         return uri;

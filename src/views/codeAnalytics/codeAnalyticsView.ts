@@ -15,7 +15,6 @@ import { InsightListViewItemsCreator } from "./InsightListView/IInsightListViewI
 import { NPlusSpansListViewItemsCreator, SpanDurationsListViewItemsCreator, SpanEndpointBottlenecksListViewItemsCreator, SpanUsagesListViewItemsCreator, SpanDurationBreakdownListViewItemsCreator, SpanScalingListViewItemsCreator} from "./InsightListView/SpanInsight";
 import { HighUsageListViewItemsCreator, LowUsageListViewItemsCreator, NormalUsageListViewItemsCreator, EPNPlusSpansListViewItemsCreator, SlowEndpointListViewItemsCreator, SlowestSpansListViewItemsCreator, UsageViewItemsTemplate } from "./InsightListView/EndpointInsight";
 import { Logger } from "../../services/logger";
-import { Settings } from "../../settings";
 import { CodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
 import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
 import { EndpointGroup } from "./CodeObjectGroups/EndpointGroup";
@@ -23,7 +22,6 @@ import { UnknownInsightInsight } from "./AdminInsights/adminInsights";
 import { TopErrorsInsightCreator } from "./InsightListView/TopErrorsInsight";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { SpanDurationChangesInsightCreator } from "./InsightListView/SpanDurationChangesInsight";
-import { Console } from "console";
 import { HistogramPanel } from "./Histogram/histogramPanel";
 import { TracePanel } from "./Traces/tracePanel";
 import { JaegerPanel } from "./Jaeger/JaegerPanel";
@@ -36,8 +34,7 @@ import { AnalyticsCodeLens } from "../../analyticsCodeLens";
 import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../../services/codeObject";
 import { EnvironmentManager } from '../../services/EnvironmentManager';
 import { Action } from "./InsightListView/Actions/Action";
-import { SpanSearch } from "./InsightListView/Common/SpanSearch";
-import { SpanLocationInfo } from "../../services/languages/extractors";
+import { SpanLinkResolver } from "../../services/spanLinkResolver";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -62,6 +59,7 @@ export class CodeAnalyticsView implements vscode.Disposable
         codelensProvider: AnalyticsCodeLens,
         envSelectStatusBar: EnvSelectStatusBar,
         environmentManager: EnvironmentManager,
+        spanLinkResolver: SpanLinkResolver
 	) {
 
 
@@ -75,7 +73,8 @@ export class CodeAnalyticsView implements vscode.Disposable
             errorFlowParamDecorator,
             workspaceState,
             codelensProvider,
-            envSelectStatusBar
+            envSelectStatusBar,
+            spanLinkResolver
 		);
         this.extensionUrl = extensionUri;
     
@@ -158,7 +157,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         errorFlowParamDecorator: ErrorFlowParameterDecorator,
         private _workspaceState:WorkspaceState,
         private _codeLensProvider:AnalyticsCodeLens,
-        private _envSelectStatusBar: EnvSelectStatusBar
+        private _envSelectStatusBar: EnvSelectStatusBar,
+        private _spanLinkResolver: SpanLinkResolver
 	) {
 
     this._extensionUri = extensionUri;
@@ -177,6 +177,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
                 return this._view;
             }
         };
+
 
         this._channel = new WebviewChannel();
         this._overlay = new OverlayView(this._webViewUris, this._analyticsProvider, this._channel,this._workspaceState);
@@ -198,17 +199,17 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         listViewItemsCreator.add("Errors", new ErrorsListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanUsages", new SpanUsagesListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanDurations", new SpanDurationsListViewItemsCreator(this._webViewUris));
-        listViewItemsCreator.add("SpanDurationBreakdown", new SpanDurationBreakdownListViewItemsCreator(this._webViewUris, _documentInfoProvider));
-        listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
+        listViewItemsCreator.add("SpanDurationBreakdown", new SpanDurationBreakdownListViewItemsCreator(this._webViewUris, _spanLinkResolver));
+        listViewItemsCreator.add("SlowestSpans", new SlowestSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel,_spanLinkResolver));
         const usageTemplate = new UsageViewItemsTemplate(this._webViewUris);
         listViewItemsCreator.add("LowUsage", new LowUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("NormalUsage", new NormalUsageListViewItemsCreator(usageTemplate));
         listViewItemsCreator.add("HighUsage", new HighUsageListViewItemsCreator(usageTemplate));
-        listViewItemsCreator.add("EndpointSpaNPlusOne", new EPNPlusSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel));
+        listViewItemsCreator.add("EndpointSpaNPlusOne", new EPNPlusSpansListViewItemsCreator(this._webViewUris, editorHelper,_documentInfoProvider,this._channel,_spanLinkResolver));
         listViewItemsCreator.add("SpaNPlusOne", new NPlusSpansListViewItemsCreator(this._webViewUris));
         listViewItemsCreator.add("SpanScaling", new SpanScalingListViewItemsCreator(this._webViewUris));
 
-        listViewItemsCreator.add("SpanEndpointBottleneck", new SpanEndpointBottlenecksListViewItemsCreator(this._webViewUris,editorHelper,_documentInfoProvider,this._channel));
+        listViewItemsCreator.add("SpanEndpointBottleneck", new SpanEndpointBottlenecksListViewItemsCreator(this._webViewUris,editorHelper,this._channel,_spanLinkResolver));
         listViewItemsCreator.add("SlowEndpoint", new SlowEndpointListViewItemsCreator(this._webViewUris));
 
         const groupItemViewCreator = new CodeObjectScopeGroupCreator();
@@ -217,7 +218,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         
         const globalInsightItemrCreator = new InsightListViewItemsCreator();
         globalInsightItemrCreator.add("TopErrorFlows", new TopErrorsInsightCreator());
-        globalInsightItemrCreator.add("SpanDurationChange", new SpanDurationChangesInsightCreator(this._webViewUris, this._documentInfoProvider));
+        globalInsightItemrCreator.add("SpanDurationChange", new SpanDurationChangesInsightCreator(this._webViewUris, _spanLinkResolver));
 
 
         let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
@@ -295,8 +296,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
           }
         );
 
-        const spanSearch = new SpanSearch(this._documentInfoProvider);
-        const jaegerPanel = new JaegerPanel(panel, spanSearch, this._editorHelper, this._analyticsProvider);
+        const jaegerPanel = new JaegerPanel(panel, this._spanLinkResolver, this._editorHelper, this._analyticsProvider);
         const jaegerUri = panel.webview.asWebviewUri(jaegerDiskPath);
         
         panel.webview.html = jaegerPanel.getHtml(

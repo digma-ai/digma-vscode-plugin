@@ -1,13 +1,21 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
+import { DocumentInfoProvider } from '../../documentInfoProvider';
 import { Logger } from '../../logger';
 import { IMethodExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
-import { IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
+import { ICodeObjectLocationGuesser, IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
+import { GuessLocationByGoCodeObject } from './codeObjectLocationGuesser';
 import { GoMethodExtractor } from './methodExtractor';
 import { GoSpanExtractor } from './spanExtractor';
 
 export class GoLanguageExtractor extends LanguageExtractor {
+    
+    public get guessCodeObjectLocation(): ICodeObjectLocationGuesser[] {
+        return [
+            new GuessLocationByGoCodeObject()
+        ];
+    }
     public requiredExtensionLoaded: boolean = false;
 
     public get requiredExtensionId(): string {
@@ -46,10 +54,10 @@ export class GoLanguageExtractor extends LanguageExtractor {
         }
     }
 
-    public async getModulePathToUriConverters(): Promise<IModulePathToUriConverter[]> {
+    public async getModulePathToUriConverters(docInfoProvider: DocumentInfoProvider): Promise<IModulePathToUriConverter[]> {
         return [
             new LogicalModulePathToUriConverter(),
-            new PhysicalModulePathToUriConverter(),
+            new PhysicalModulePathToUriConverter([],docInfoProvider),
         ];
     }
 }

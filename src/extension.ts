@@ -21,6 +21,7 @@ import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatu
 import { EnvironmentManager } from './services/EnvironmentManager';
 import { EventManager } from './services/EventManager';
 import { Scheduler } from './services/Scheduler';
+import { SpanLinkResolver } from './services/spanLinkResolver';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -45,7 +46,7 @@ export async function activate(context: vscode.ExtensionContext)
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
     const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
-
+    const spanLinkResolver = new SpanLinkResolver(symbolProvider,documentInfoProvider);
     const environmentManager = new EnvironmentManager(analyticsProvider, workspaceState);
     await environmentManager.initializeCurrentEnvironment();
 
@@ -62,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider,
-        context.extensionUri, editorHelper, workspaceState, codeLensProvider, envStatusbar, environmentManager));
+        context.extensionUri, editorHelper, workspaceState, codeLensProvider, envStatusbar, environmentManager,spanLinkResolver));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
@@ -73,6 +74,7 @@ export async function activate(context: vscode.ExtensionContext)
         environmentManager,
         documentInfoProvider,
         editorHelper,
+        spanLinkResolver
     ));
 }
 

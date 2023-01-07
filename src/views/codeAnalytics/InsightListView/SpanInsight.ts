@@ -4,10 +4,10 @@ import { EndpointSchema } from "../../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { SpanLocationInfo } from "../../../services/languages/extractors";
+import { SpanLinkResolver } from "../../../services/spanLinkResolver";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
-import { SpanSearch } from "./Common/SpanSearch";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
@@ -153,8 +153,11 @@ export interface SpanDurationBreakdownInsight extends CodeObjectInsight {
 
 export interface EndpointInfo {
     route: string,
-    serviceName: string
-    instrumentationLibrary: string
+    serviceName: string,
+    instrumentationLibrary: string,
+    codeObjectId: string
+    spanName: string
+
 }
 export interface SlowEndpointInfo{
     
@@ -213,7 +216,8 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
 export class SpanDurationBreakdownListViewItemsCreator implements IInsightListViewItemsCreator {
 
     private static readonly p50: number =  0.50;
-    public constructor(private _viewUris:WebViewUris, private _documentInfoProvider: DocumentInfoProvider) {
+    public constructor(private _viewUris:WebViewUris, 
+        private _spanLinkResolver: SpanLinkResolver) {
 
     }
 
@@ -229,17 +233,20 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
 
     public async createListViewItem(insight: SpanDurationBreakdownInsight) : Promise<IListViewItem> {
 
-        let spanSearch = new SpanSearch(this._documentInfoProvider);
         const validBreakdownEntries = insight.breakdownEntries.filter(o=>o.percentiles.any(o=>o.percentile ===SpanDurationBreakdownListViewItemsCreator.p50))
                                         .sort((a,b)=>this.getValueOfPercentile(b, SpanDurationBreakdownListViewItemsCreator.p50)!-this.getValueOfPercentile(a, SpanDurationBreakdownListViewItemsCreator.p50)!);
         const spansToSearch = validBreakdownEntries.map(o=>{
             return {
                 instrumentationLibrary:o.spanInstrumentationLibrary,
-                name: o.spanName,
+                spanName: o.spanName,
+                codeObjectId: undefined,
                 breakdownEntry: o
             };
         });
-        const spanLocations = await spanSearch.searchForSpans(spansToSearch);
+
+    
+        const spanLocations = await this._spanLinkResolver.searchForSpansByHints(spansToSearch);
+
         let entries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] = [];
         validBreakdownEntries.forEach( (entry,index) => {
             entries.push({breakdownEntry:entry, location:spanLocations[index]});
@@ -331,8 +338,8 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     constructor(
         private _viewUris: WebViewUris,
         private _editorHelper: EditorHelper,
-        private _documentInfoProvider: DocumentInfoProvider,
         private _channel: WebviewChannel,
+        private _spanLinkResolver: SpanLinkResolver
 
     ) {
         this._channel.consume(UiMessage.Notify.GoToFileAndLine, e => this.goToFileAndLine(e.file!, e.line!));
@@ -350,7 +357,11 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
         var spansLocations = endpoints.map(ep=> 
                                              { return {
                                                 slowspaninfo : ep, 
-                                                spanSearchResult : this._documentInfoProvider.searchForSpan({ instrumentationName : ep.endpointInfo.instrumentationLibrary.split(".").join( " "), spanName :ep.endpointInfo.route })
+                                                spanSearchResult : this._spanLinkResolver.searchForSpanByHints(
+                                                    { instrumentationLibrary : ep.endpointInfo.instrumentationLibrary, 
+                                                      spanName :ep.endpointInfo.route,
+                                                      codeObjectId: ep.endpointInfo.codeObjectId,
+                                                    })
                                                 };
                                              }); 
         

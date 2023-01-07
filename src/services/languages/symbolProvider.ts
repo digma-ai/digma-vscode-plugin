@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { SymbolInformation, DocumentSymbol } from 'vscode-languageclient';
-import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
@@ -9,7 +8,6 @@ import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
 import { IMethodPositionSelector, DefaultMethodPositionSelector } from './methodPositionSelector';
-import { ICodeObjectIdParser } from '../codeObject';
 
 export function trendToCodIcon(trend: number): string 
 {
@@ -162,6 +160,7 @@ export class SymbolProvider
         
         return [];
     }
+    
     public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
         let tokes: Token[] = [];
         try {
