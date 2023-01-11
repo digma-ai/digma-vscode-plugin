@@ -28,10 +28,9 @@ export class JSSpanExtractor implements ISpanExtractor {
 
             for (let index = 0; index < methodTokens.length; index++) {
                 const startSpanToken = methodTokens[index];
-
+               
                 if (serverDiscoveredSpans.length > 0 && startSpanToken.type === TokenType.function) {
                     // Get function parameters
-                    
                     const startSpanTokenArguments = this.getFunctionArguments(document, startSpanToken);
                     if (!startSpanTokenArguments) {
                       continue;
@@ -40,18 +39,18 @@ export class JSSpanExtractor implements ISpanExtractor {
                     const stringArguments: string[] = [];
                     const functionArguments: {text: string, token: Token}[] = [];
 
-                    startSpanTokenArguments.forEach((argument) => {
-                        const matches = argument.match(this.stringRegex);
+                    for (let i = 0; i < startSpanTokenArguments.length; i++) {
+                        const matches = startSpanTokenArguments[i].match(this.stringRegex);
                         if (matches) {
                             stringArguments.push(matches[1]);
                         } else {
-                            const token = tokens.find(token => startSpanTokenArguments.includes(token.text) && token.type === TokenType.function);
+                            // Check if argument is a function
+                            const token = tokens.find(token => token.text === startSpanTokenArguments[i] && token.type === TokenType.function);
                             if (token) {
-                                functionArguments.push({text: argument, token: token});
+                                functionArguments.push({text: startSpanTokenArguments[i], token: token});
                             }
                         }
-                    });
-                    
+                    }
 
                     // Case:
                     //  Preconditions:

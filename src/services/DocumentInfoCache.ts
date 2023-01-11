@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider } from "./analyticsProvider";
-import { DocumentInfoProvider, MethodInfo } from "./documentInfoProvider";
+import { MethodInfo } from "./documentInfoProvider";
 import {
   CodeObjectLocationInfo,
   EndpointInfo,
