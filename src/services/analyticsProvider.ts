@@ -33,6 +33,8 @@ export enum EndpointType {
     CONSUMER
 }
 
+type QueryParams = [string, any][] | undefined;
+
 export class EndpointSchema {
     public static readonly HTTP: string = "epHTTP:";
     public static readonly RPC: string = "epRPC:";
@@ -432,9 +434,9 @@ export class AnalyticsProvider {
     }
 
     public async getSpans(environments?: string[]) {
-        let params: [string, any][] | undefined;
+        let params: QueryParams;
         if (environments) {
-            params = environments.map(env => ["environments", env]);
+            params = environments.map(env => ['environments', env]);
         }
         const response = await this.send<{ spans: ServerDiscoveredSpan[]}>(
             'GET',
@@ -585,7 +587,7 @@ export class AnalyticsProvider {
     private async send<TResponse>(
         method: string,
         relativePath: string,
-        queryParams?: [string, any][],
+        queryParams?: QueryParams,
         body?: any,
         respondAsJsonObject: boolean = true
     ): Promise<TResponse> {
@@ -632,7 +634,7 @@ export class AnalyticsProvider {
     private async sendAndResponseBodyAsString(
         method: string,
         relativePath: string,
-        queryParams?: [string, any][],
+        queryParams?: QueryParams,
         body?: any
     ): Promise<string> {
         return this.send<string>(method, relativePath, queryParams, body, false);

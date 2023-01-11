@@ -9,25 +9,25 @@
         "vscode": "^1.63.0"
     },
     "keywords": [
-        "Opentelemetry",
+        "OpenTelemetry",
         "Observability",
-        "Intellisense",
-        "Intellicode",
+        "IntelliSense",
+        "IntelliCode",
         "Flask",
-        "FastApi",
+        "FastAPI",
         "ASP.NET",
         "C#",
-        "Ebpf",
+        "eBPF",
         "Jaeger",
         "Python",
-        "Dotnet",
+        "dotnet",
         "Continuous Delivery",
         "DevOps"
     ],
     "badges": [
         {
             "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
-            "description": "Star Digma on Github",
+            "description": "Star Digma on GitHub",
             "href": "bit.ly/36LyUcr"
         },
         {
@@ -47,7 +47,7 @@
         },
         {
             "url": "https://img.shields.io/badge/Blog-black?style=flat&logo=medium&logoColor=white&link=https://medium.com/@roni-dover",
-            "description": "Watch a Digma demo video",
+            "description": "Read Digma blog",
             "href": "https://medium.com/@roni-dover"
         }
     ],
@@ -142,7 +142,7 @@
                     "default": false
                 },
                 "digma.enableDebugOutput": {
-                    "type": "booean",
+                    "type": "boolean",
                     "default": false,
                     "description": "For troubleshooting only."
                 }
@@ -174,7 +174,22 @@
         "watch:views": "tsc -watch -p ./src/views-ui/codeAnalytics/tsconfig.json",
         "pretest": "npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
-        "test": "node ./out/test/runTest.js"
+        "lint:eslint": "eslint --cache .",
+        "lint:stylelint": "stylelint 'src/**/*.scss'",
+        "fix:prettier": "prettier --write '**/*.{js,json,ts,scss,md}' '.vscode/*'",
+        "test": "node ./out/test/runTest.js",
+        "precommit": "lint-staged"
+    },
+    "lint-staged": {
+        "*.{js,ts}": [
+            "eslint --cache"
+        ],
+        "src/**/*.scss": [
+            "stylelint"
+        ],
+        "*.{js,json,ts,css,md}": [
+            "prettier"
+        ]
     },
     "devDependencies": {
         "@types/chai": "^4.3.0",
@@ -191,8 +206,16 @@
         "concurrently": "^7.0.0",
         "copyfiles": "^2.4.1",
         "eslint": "^8.1.0",
+        "eslint-config-prettier": "^8.6.0",
         "glob": "^7.1.7",
+        "husky": "^8.0.3",
+        "lint-staged": "^13.1.0",
         "mocha": "^9.1.3",
+        "prettier": "^2.8.1",
+        "stylelint": "^14.16.1",
+        "stylelint-config-prettier-scss": "^0.0.1",
+        "stylelint-config-recommended-scss": "^8.0.0",
+        "stylelint-scss": "^4.3.0",
         "typescript": "^4.4.4"
     },
     "__metadata": {

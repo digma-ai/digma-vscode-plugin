@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
-import { CodeInspector } from '../../codeInspector';
+import { CodeInspector, DefinitionWithTokens } from '../../codeInspector';
 import { ISpanExtractor, ServerDiscoveredSpan, SpanLocationInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
@@ -9,6 +9,7 @@ import { Logger } from '../../logger';
 export class JSSpanExtractor implements ISpanExtractor {
     readonly stringRegex =  /(?:\"|\'|\`)(.*?)(?:\"|\'|\`)/;
     readonly paramsRegex = /\((.*?)\)/;
+    readonly strictParamsRegex = /^\((.*?)\)\s*;?$/;
     readonly firstParameterRegex = /\((.*?)(?:,|\))/; //("some name",... or ("some name") should return "some name"
     constructor(private _codeInspector: CodeInspector) {}
 
@@ -28,26 +29,91 @@ export class JSSpanExtractor implements ISpanExtractor {
             for (let index = 0; index < methodTokens.length; index++) {
                 const startSpanToken = methodTokens[index];
 
-                // Check if there are any functions with first parameter value 
-                // that matches any of server discovered spans
                 if (serverDiscoveredSpans.length > 0 && startSpanToken.type === TokenType.function) {
-                    const spanName = await this.getFunctionFirstParameterValue(document, startSpanToken, symbolProvider, tokens);
+                    // Get function parameters
+                    
+                    const startSpanTokenArguments = this.getFunctionArguments(document, startSpanToken);
+                    if (!startSpanTokenArguments) {
+                      continue;
+                    }
 
-                    if (spanName) {
-                        const discoveredSpan = serverDiscoveredSpans.find(span => span.name === spanName);
+                    const stringArguments: string[] = [];
+                    const functionArguments: {text: string, token: Token}[] = [];
 
-                        if (discoveredSpan) {
-                            results.push(new SpanLocationInfo(
-                                discoveredSpan.spanCodeObjectId,
-                                spanName,
-                                [spanName],
-                                [],
-                                startSpanToken.range,
-                                document.uri)
-                            );
-        
-                            Logger.info(`* Span found on server: ${discoveredSpan.spanCodeObjectId}`);
+                    startSpanTokenArguments.forEach((argument) => {
+                        const matches = argument.match(this.stringRegex);
+                        if (matches) {
+                            stringArguments.push(matches[1]);
+                        } else {
+                            const token = tokens.find(token => startSpanTokenArguments.includes(token.text) && token.type === TokenType.function);
+                            if (token) {
+                                functionArguments.push({text: argument, token: token});
+                            }
                         }
+                    });
+                    
+
+                    // Case:
+                    //  Preconditions:
+                    //  Discovered span name on server: "customSpanName"
+                    //
+                    //  Code example:
+                    //  wrappedStartSpan(..., startSpanFunc, customSpanName, ...)
+
+                    // Check if there is a string argument with the same name as any of the spans
+                    const discoveredSpan = serverDiscoveredSpans.find(span => stringArguments.includes(span.name));
+                    // Check if there are function arguments,
+                    // get the first one and find its definition by name
+                    if (discoveredSpan && functionArguments.length > 0) {
+                        for (let i = 0; i < functionArguments.length; i++) {
+                            const functionDefinition = await this.getFunctionDefinition(document, functionArguments[i].token, symbolProvider);
+                            if (functionDefinition) {
+                                results.push(new SpanLocationInfo(
+                                    discoveredSpan.spanCodeObjectId,
+                                    discoveredSpan.name,
+                                    [discoveredSpan.name],
+                                    [],
+                                    functionDefinition.location.range,
+                                    functionDefinition.document.uri)
+                                );
+                        
+                                Logger.info(`* Span found on server: ${discoveredSpan.spanCodeObjectId}`);
+                                break;
+                            }
+                        }
+                    }
+
+
+                    // Case
+                    //  Preconditions:
+                    //  Discovered span name on server: "spanFunc"
+                    //
+                    // Code example:
+                    // wrapperFunc(spanFunc, spanFunc2, ...)
+
+                    if (stringArguments.length === 0) {
+                        // Check if there is function parameter with the same name as any of the spans
+                        const discoveredSpan = serverDiscoveredSpans.find(
+                            span => functionArguments.map(argument => argument.text).includes(span.name)
+                        );
+                        if (discoveredSpan) {
+                            for (let i = 0; i < functionArguments.length; i++) {
+                                const functionDefinition = await this.getFunctionDefinition(document, functionArguments[i].token, symbolProvider);
+                                if (functionDefinition) {
+                                    results.push(new SpanLocationInfo(
+                                        discoveredSpan.spanCodeObjectId,
+                                        discoveredSpan.name,
+                                        [discoveredSpan.name],
+                                        [],
+                                        functionDefinition.location.range,
+                                        functionDefinition.document.uri)
+                                    );
+                            
+                                    Logger.info(`* Span found on server: ${discoveredSpan.spanCodeObjectId}`);
+                                    break;
+                                }
+                            }
+                        } 
                     }
                 } else {
                     if(startSpanToken.type !== TokenType.method || (startSpanToken.text !== "startActiveSpan" && startSpanToken.text !== "startSpan")){
@@ -298,6 +364,64 @@ export class JSSpanExtractor implements ISpanExtractor {
         }
 
         return spanName;
+    }
+
+    getFunctionArguments(document: vscode.TextDocument, functionToken: Token): string[] | undefined {
+        let parametersLine = functionToken.range.end.line;
+        const lineText = document.lineAt(parametersLine);
+        let startPosition = functionToken.range.end;
+        let endPosition = new vscode.Position(parametersLine, lineText.range.end.character);
+        let restOfLineText = document.getText(new vscode.Range(
+            startPosition, 
+            endPosition
+        ));
+
+        const matches = restOfLineText.match(this.paramsRegex);
+        if (!matches) {
+            return undefined;
+        }
+
+        // TODO: add support for whitespace between function name and the brackets
+        // code example:
+        //  func   (param1, param2);
+        
+        // TODO: add support for multiline function calls
+        // code example:
+        //  func(
+        //    param1,
+        //    param2
+        //  )
+
+        // TODO: add support for nested function call arguments
+        // code example:
+        //   func(nestedFunc(param1, param2))
+
+        // TODO: add support for array literal arguments
+        // code example:
+        //  func([param1, param2])
+
+        return matches[1].split(",").map(x => x.trim());
+    }
+    
+    async getFunctionDefinition(document: vscode.TextDocument, functionToken: Token, symbolProvider: SymbolProvider): Promise<DefinitionWithTokens | undefined> {
+        let functionDefinition = await this._codeInspector.getDefinitionWithTokens(document, functionToken.range.start, symbolProvider);
+        if (!functionDefinition) {
+            return;
+        }
+
+        // if location is unknown search through the tokens of the document with definition
+        if (!functionDefinition.location.range) {
+            const functionDefinitionToken = functionDefinition.tokens.find(token => token.text === functionToken.text && token.type === TokenType.function);
+            if (!functionDefinitionToken) {
+                return;
+            }
+            functionDefinition = await this._codeInspector.getDefinitionWithTokens(functionDefinition.document, functionDefinitionToken.range.start, symbolProvider);
+        
+            if (!functionDefinition) {
+                return;
+            }
+        }
+        return functionDefinition;
     }
 }
 

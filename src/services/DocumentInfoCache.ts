@@ -15,12 +15,12 @@ import { Token, TokenType } from "./languages/tokens";
 
 type DocumentCacheInfo = {
   uri: vscode.Uri;
-  tokens: Token[],
-  symbolInfos: SymbolInfo[],
-  endpoints: EndpointInfo[],
+  tokens: Token[];
+  symbolInfos: SymbolInfo[];
+  endpoints: EndpointInfo[];
   spans: SpanLocationInfo[];
-  paramsExtractor: IParametersExtractor,
-  symbolAliasExtractor: ISymbolAliasExtractor,
+  paramsExtractor: IParametersExtractor;
+  symbolAliasExtractor: ISymbolAliasExtractor;
   methodInfos: MethodInfo[];
 };
 
@@ -42,29 +42,24 @@ export class DocumentInfoCache {
     "cjs",
     "mjs"
   ];
-  static commonExcludedFolders = [
-    "bower_components",
-    "node_modules"
-  ];
-  
+  static commonExcludedFolders = ["bower_components", "node_modules"];
+
   private _fileSystemWatcher: vscode.FileSystemWatcher;
-  private _documentInfoProvider: DocumentInfoProvider;
   private _symbolProvider: SymbolProvider;
+  private _analyticsProvider: AnalyticsProvider;
   private _serverDiscoveredSpans: ServerDiscoveredSpan[];
   private documents: Record<string, DocumentCacheInfo>;
 
   constructor(
-    documentInfoProvider: DocumentInfoProvider,
     symbolProvider: SymbolProvider,
     analyticsProvider: AnalyticsProvider,
-    serverDiscoveredSpans: ServerDiscoveredSpan[]
   ) {
-    this._documentInfoProvider = documentInfoProvider;
     this._symbolProvider = symbolProvider;
-    this._serverDiscoveredSpans = serverDiscoveredSpans;
+    this._analyticsProvider = analyticsProvider;
     this.documents = {};
+    this._serverDiscoveredSpans = [];
 
-    // Create file watcher for all files in workspace
+    // Create file watcher for all supported files in workspace
     this._fileSystemWatcher = vscode.workspace.createFileSystemWatcher(
       `**/*.{${DocumentInfoCache.supportedFileExtensions.join(",")}}`
     );
@@ -131,33 +126,31 @@ export class DocumentInfoCache {
   }
 
   private isInsideExcludedFolder(uri: vscode.Uri): boolean {
-   return DocumentInfoCache.commonExcludedFolders.some(
-      folderName => uri.fsPath.includes(`${folderName}/`)
+    return DocumentInfoCache.commonExcludedFolders.some((folderName) =>
+      uri.fsPath.includes(`${folderName}/`)
     );
-   
   }
 
   private hasSupportedFileExtension(uri: vscode.Uri): boolean {
-    return DocumentInfoCache.supportedFileExtensions.some(
-      extension => uri.fsPath.endsWith(`.${extension}`)
+    return DocumentInfoCache.supportedFileExtensions.some((extension) =>
+      uri.fsPath.endsWith(`.${extension}`)
     );
   }
 
   private async init() {
-    console.log("spans from server");
-    console.log(this._serverDiscoveredSpans);
-
+    this._serverDiscoveredSpans = (await this._analyticsProvider.getSpans()).spans;
     await this.scanOpenedDocuments();
-    
+
     void this.scanFilesInBackground();
   }
 
   private async scanOpenedDocuments() {
     const docInfosPromises = vscode.workspace.textDocuments
-      .filter((doc) =>
-        this.hasSupportedFileExtension(doc.uri) &&
-        !this.isInsideExcludedFolder(doc.uri) &&
-        this._symbolProvider.supportsDocument(doc)
+      .filter(
+        (doc) =>
+          this.hasSupportedFileExtension(doc.uri) &&
+          !this.isInsideExcludedFolder(doc.uri) &&
+          this._symbolProvider.supportsDocument(doc)
       )
       .map((doc) => this.getDocumentInfo(doc));
 
@@ -171,12 +164,16 @@ export class DocumentInfoCache {
   }
 
   private async scanFilesInBackground() {
-    const includePatter = `**/*.{${DocumentInfoCache.supportedFileExtensions.join(",")}}`;
-    const excludePattern = `**/{${DocumentInfoCache.commonExcludedFolders.join(",")}}/**`;
+    const includePattern = `**/*.{${DocumentInfoCache.supportedFileExtensions.join(
+      ","
+    )}}`;
+    const excludePattern = `**/{${DocumentInfoCache.commonExcludedFolders.join(
+      ","
+    )}}/**`;
 
     let files: vscode.Uri[] = [];
     try {
-      files = await vscode.workspace.findFiles(includePatter, excludePattern);
+      files = await vscode.workspace.findFiles(includePattern, excludePattern);
     } catch (e) {
       console.error("Failed to find files");
       console.error(e);
@@ -184,7 +181,7 @@ export class DocumentInfoCache {
 
     const statusBar = vscode.window.createStatusBarItem(
       vscode.StatusBarAlignment.Left,
-      DocumentInfoCache.statusBarPriority,
+      DocumentInfoCache.statusBarPriority
     );
     statusBar.text = "$(sync~spin) Scanning files for spans";
     statusBar.show();
@@ -193,16 +190,15 @@ export class DocumentInfoCache {
       const filesToScan = files
         .splice(0, DocumentInfoCache.batchSize)
         .filter((uri) => !this.documents[uri.fsPath]);
-      
+
       const docPromises = filesToScan.map((file) =>
         vscode.workspace.openTextDocument(file)
       );
       const docsPromisesResults = await Promise.allSettled(docPromises);
-      const docs = getValuesOfFulfilledPromises(docsPromisesResults)
-        .filter((doc) =>
-          this._symbolProvider.supportsDocument(doc)
-        );
-      
+      const docs = getValuesOfFulfilledPromises(docsPromisesResults).filter(
+        (doc) => this._symbolProvider.supportsDocument(doc)
+      );
+
       const docInfosResults = await Promise.allSettled(
         docs.map((doc) => this.getDocumentInfo(doc))
       );
@@ -217,7 +213,9 @@ export class DocumentInfoCache {
     statusBar.hide();
   }
 
-  public async getDocumentCachedInfo(doc: vscode.TextDocument): Promise<DocumentCacheInfo> {
+  public async getDocumentCachedInfo(
+    doc: vscode.TextDocument
+  ): Promise<DocumentCacheInfo> {
     const filePath = doc.uri.toModulePath();
     let cachedInfo = this.documents[filePath];
 
@@ -241,7 +239,12 @@ export class DocumentInfoCache {
       tokens,
       symbolTrees
     );
-    const spans = await this._symbolProvider.getSpans(doc, symbolInfos, tokens, this._serverDiscoveredSpans);
+    const spans = await this._symbolProvider.getSpans(
+      doc,
+      symbolInfos,
+      tokens,
+      this._serverDiscoveredSpans
+    );
     const [endpoints, paramsExtractor, symbolAliasExtractor] =
       await Promise.all([
         this._symbolProvider.getEndpoints(
@@ -272,7 +275,7 @@ export class DocumentInfoCache {
       spans,
       paramsExtractor,
       symbolAliasExtractor,
-      methodInfos,
+      methodInfos
     };
   }
 

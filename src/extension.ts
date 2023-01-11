@@ -21,6 +21,7 @@ import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatu
 import { EnvironmentManager } from './services/EnvironmentManager';
 import { EventManager } from './services/EventManager';
 import { Scheduler } from './services/Scheduler';
+import { DocumentInfoCache } from './services/DocumentInfoCache';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -42,8 +43,8 @@ export async function activate(context: vscode.ExtensionContext)
     const codeInspector = new CodeInspector();
     const symbolProvider = new SymbolProvider(supportedLanguages, codeInspector);
     const analyticsProvider = new AnalyticsProvider(workspaceState);
-    const serverDiscoveredSpans = await analyticsProvider.getSpans();
-    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState, serverDiscoveredSpans.spans);
+    const documentInfoCache = new DocumentInfoCache(symbolProvider, analyticsProvider);
+    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState, documentInfoCache);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
     const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
 

@@ -41,7 +41,7 @@ export class DocumentInfoProvider implements vscode.Disposable
         public analyticsProvider: AnalyticsProvider,
         public symbolProvider: SymbolProvider,
         private workspaceState: WorkspaceState,
-        private serverDiscoveredSpans: ServerDiscoveredSpan[],
+        documentInfoCache: DocumentInfoCache
         ) 
     {
         this._disposables.push(vscode.workspace.onDidCloseTextDocument((doc: vscode.TextDocument) => this.removeDocumentInfo(doc)));
@@ -50,7 +50,7 @@ export class DocumentInfoProvider implements vscode.Disposable
             () => this.pruneOldDocumentInfos(),     
             1000*60 /* 1 min */);
 
-        this._documentInfoCache = new DocumentInfoCache(this, symbolProvider, analyticsProvider, this.serverDiscoveredSpans);
+        this._documentInfoCache = documentInfoCache;
     }
 
     public async getDocumentInfo(doc: vscode.TextDocument): Promise<DocumentInfo | undefined>
