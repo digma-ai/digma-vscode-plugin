@@ -278,11 +278,10 @@ export class SymbolProvider
               default:
                 return false;
             }
-        }
-        if (!extension.isActive) {
-            Logger.info(`Starting activating "${extension.id}" extension`)
+        } else if (!extension.isActive) {
+            Logger.info(`Starting activating "${extension.id}" extension`);
             await extension.activate();
-            Logger.info(`Finished activating "${extension.id}" extension`)
+            Logger.info(`Finished activating "${extension.id}" extension`);
         }
             
 
