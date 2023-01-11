@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { SymbolInformation, DocumentSymbol } from 'vscode-languageclient';
-import { DocumentInfoProvider } from './../documentInfoProvider';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
@@ -166,6 +165,7 @@ export class SymbolProvider
         
         return [];
     }
+    
     public async getTokens(document: vscode.TextDocument, range?: vscode.Range): Promise<Token[]> {
         const tokens: Token[] = [];
         try {

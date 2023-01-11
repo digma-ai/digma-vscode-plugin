@@ -6,6 +6,7 @@ import { CodeInspector } from '../../codeInspector';
 import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
+import { PythonConstants } from './constants';
 
 export class PythonSpanExtractor implements ISpanExtractor {
     constructor(private _codeInspector: CodeInspector) {}
@@ -114,20 +115,17 @@ export class PythonSpanExtractor implements ISpanExtractor {
 
     private async extractNameTypeTrace(filePath: string) : Promise<string> {
 
-        const pythonFileSuffix = ".py";
-        const specialFolders = ["venv","site-packages"];
-
         let folder = vscode.workspace.workspaceFolders?.filter(f=> filePath.startsWith(f.uri.fsPath))
             .map(f=>f.uri.path).firstOrDefault();
 
         if (!folder){
-            folder = specialFolders.filter(x=>filePath.indexOf(x)>0).firstOrDefault();
+            folder = PythonConstants.specialFolders.filter(x=>filePath.indexOf(x)>0).firstOrDefault();
         }
 
         if (folder){
             let relativePath = filePath.substring(filePath.indexOf(folder)+ folder.length+1);
-            if (relativePath.endsWith(pythonFileSuffix)){
-                relativePath=relativePath.substring(0,relativePath.length-pythonFileSuffix.length);
+            if (relativePath.endsWith(PythonConstants.pythonFileSuffix)){
+                relativePath=relativePath.substring(0,relativePath.length-PythonConstants.pythonFileSuffix.length);
             }
 
             relativePath=this.replaceAll(relativePath,"/",".");

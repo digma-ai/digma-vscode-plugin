@@ -1,6 +1,6 @@
 import { dirname, join } from 'path';
 import * as vscode from 'vscode';
-import { IModulePathToUriConverter, ModulePathInfo } from '../modulePathToUriConverters';
+import { IModulePathToUriConverter, PossibleCodeObjectLocation } from '../modulePathToUriConverters';
 import { JSCodeObjectIdParser } from './codeObjectIdParser';
 
 export class JSPackageToUriConverter implements IModulePathToUriConverter {
@@ -12,17 +12,16 @@ export class JSPackageToUriConverter implements IModulePathToUriConverter {
     ) {
     }
 
-    async convert(pathInfo: ModulePathInfo): Promise<vscode.Uri | undefined> {
-        const { codeObjectId, modulePhysicalPath } = pathInfo;
-        if(codeObjectId && modulePhysicalPath) {
-            const info = this.codeObjectIdParser.parse(codeObjectId);
+    async convert(pathInfo: PossibleCodeObjectLocation): Promise<vscode.Location | undefined> {
+        if(pathInfo.codeObjectId && pathInfo.modulePhysicalPath) {
+            const info = this.codeObjectIdParser.parse(pathInfo.codeObjectId);
             const { packageName } = info;
             const packageUri = this.packagesMap.get(packageName);
             if(packageUri) {
                 const basePath = dirname(packageUri.fsPath);
-                const path = join(basePath, modulePhysicalPath);
+                const path = join(basePath, pathInfo.modulePhysicalPath);
                 const uri = vscode.Uri.file(path);
-                return uri;
+                return new vscode.Location(uri,new vscode.Position(1,1));
             }
         }
     }

@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider } from "../../../services/analyticsProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
-import { SpanSearch } from "../InsightListView/Common/SpanSearch";
+import { CodeObjectLocationHints } from "../../../services/languages/modulePathToUriConverters";
+import { SpanLinkResolver } from "../../../services/spanLinkResolver";
 
 interface Message {
   command: string;
@@ -21,6 +22,7 @@ interface GetTraceSpansLocationsMessage extends Message {
     id: string;
     name: string;
     instrumentationLibrary: string;
+    codeObjectId: string|undefined;
   }[];
 }
 
@@ -31,17 +33,17 @@ type SetSpansWithResolvedLocationMessageData = Record<
 
 export class JaegerPanel {
   private _panel: vscode.WebviewPanel;
-  private _spanSearch: SpanSearch;
+  private _spanLinkResolver: SpanLinkResolver;
   private _editorHelper: EditorHelper;
   private _analyticsProvider: AnalyticsProvider;
   constructor(
     panel: vscode.WebviewPanel,
-    spanSearch: SpanSearch,
+    spanLinkResolver: SpanLinkResolver,
     editorHelper: EditorHelper,
     analyticsProvider: AnalyticsProvider
   ) {
     this._panel = panel;
-    this._spanSearch = spanSearch;
+    this._spanLinkResolver = spanLinkResolver;
     this._editorHelper = editorHelper;
     this._analyticsProvider = analyticsProvider;
 
@@ -59,10 +61,11 @@ export class JaegerPanel {
 
   private async onGoToSpanLocation(message: GoToSpanLocationMessage) {
     const span = message.data;
-    const spanLocation = await this._spanSearch.searchForSpans([
+    const spanLocation = await this._spanLinkResolver.searchForSpansByHints([
       {
-        name: span.name,
+        spanName: span.name,
         instrumentationLibrary: span.instrumentationLibrary,
+        codeObjectId: undefined
       },
     ]);
 
@@ -84,7 +87,14 @@ export class JaegerPanel {
   ) {
     console.log("onGetTraceSpansLocations received");
     const spans = message.data;
-    const spanLocations = await this._spanSearch.searchForSpans(spans);
+    const hints:CodeObjectLocationHints[] = spans.map(s=>{
+        return {
+            spanName: s.name,
+            codeObjectId:s.codeObjectId,
+            instrumentationLibrary:s.instrumentationLibrary
+        };
+    });
+    const spanLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
     const spanWithLocations = spans.filter((span, i) => spanLocations[i]);
     const spanCodeObjectIds = spanWithLocations.map(
       (span) => `span:${span.instrumentationLibrary}$_$${span.name}`

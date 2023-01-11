@@ -4,10 +4,10 @@ import { EndpointSchema } from "../../../services/analyticsProvider";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { SpanLocationInfo } from "../../../services/languages/extractors";
+import { SpanLinkResolver } from "../../../services/spanLinkResolver";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { IListViewItem, IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
-import { SpanSearch } from "./Common/SpanSearch";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
@@ -23,44 +23,58 @@ export interface SpanUsagesInsight extends CodeObjectInsight
         percentage: Number,
         firstService:{
             service: string,
-            span: string
+            span: string,
+            codeObjectId: string
         },
         intermediateSpan: string | undefined,
         lastService:{
             service: string,
-            span: string
+            span: string,
+            codeObjectId: string
+
         } | undefined,
         lastServiceSpan: string | undefined
     }[]
 }
 export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCreator
 {
-    public constructor(private _viewUris:WebViewUris){
+    public constructor(private _viewUris:WebViewUris,
+        private _spanLinkResolver: SpanLinkResolver){
 
     }
     public async create( codeObjectsInsight: SpanUsagesInsight []): Promise<IListViewItemBase []>
     {
-        return codeObjectsInsight.map(x=>this.createListViewItem(x));
+        const result = await await Promise.all(codeObjectsInsight.map(async x=> await this.createListViewItem(x)));
+        return result;
     }
 
-    public createListViewItem(insight: SpanUsagesInsight) : IListViewItem
+    public async createListViewItem(insight: SpanUsagesInsight) : Promise<IListViewItem>
     {
+        
         // <span class="codicon codicon-server-process" style="margin-right: 3px;"></span>
-        const usages = insight.flows.map(flow => {
+        const usages = await Promise.all( insight.flows.map(async flow => {
 
+            var firstServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
+                  spanName :flow.firstService.span,
+                  codeObjectId: flow.firstService.codeObjectId,
+                });
             let firstServiceHtml = /*html*/`
                 <span class="flow-entry ellipsis" title="${flow.firstService.service}: ${flow.firstService.span}">
                     <span class="flow-service">${flow.firstService.service}:</span>
-                    <span class="flow-span">${flow.firstService.span}</span>
+                    <span class="flow-span span-name ${firstServiceLocation ? "link" : ""}" data-code-uri="${firstServiceLocation?.documentUri}" data-code-line="${firstServiceLocation?.range.end.line!+1}">${flow.firstService.span}</span>
                 </span>`;
 
             let lastServiceHtml = '';
             if(flow.lastService) {
+                var lastServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
+                    spanName :flow.lastService.span,
+                    codeObjectId: flow.lastService.codeObjectId,
+                  });
                 lastServiceHtml = /*html*/`
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="flow-entry ellipsis" title="${flow.lastService.service}: ${flow.lastService.span}">
                         <span class="flow-service">${flow.lastService.service}:</span>
-                        <span class="flow-span">${flow.lastService.span}</span>
+                        <span class="flow-span span-name ${lastServiceLocation ? "link" : ""}" data-code-uri="${lastServiceLocation?.documentUri}" data-code-line="${lastServiceLocation?.range.end.line!+1}">${flow.lastService.span}</span>
                     </span>`;
             }
 
@@ -89,7 +103,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     ${traceHtml}
                 </span>
             </div>`;
-        });
+        }));
 
         const template = new InsightTemplateHtml({
             title: "Top Usage",
@@ -138,6 +152,7 @@ export interface SpanDurationsInsight extends CodeObjectInsight{
 export interface SpanDurationBreakdownEntry {
     spanName: string,
     spanDisplayName: string,
+    codeObjectId:string,
     spanInstrumentationLibrary: string,
     spanCodeObjectId: string,
     percentiles: {
@@ -153,8 +168,11 @@ export interface SpanDurationBreakdownInsight extends CodeObjectInsight {
 
 export interface EndpointInfo {
     route: string,
-    serviceName: string
-    instrumentationLibrary: string
+    serviceName: string,
+    instrumentationLibrary: string,
+    codeObjectId: string
+    spanName: string
+
 }
 export interface SlowEndpointInfo{
     
@@ -213,7 +231,8 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
 export class SpanDurationBreakdownListViewItemsCreator implements IInsightListViewItemsCreator {
 
     private static readonly p50: number =  0.50;
-    public constructor(private _viewUris:WebViewUris, private _documentInfoProvider: DocumentInfoProvider) {
+    public constructor(private _viewUris:WebViewUris, 
+        private _spanLinkResolver: SpanLinkResolver) {
 
     }
 
@@ -229,17 +248,20 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
 
     public async createListViewItem(insight: SpanDurationBreakdownInsight) : Promise<IListViewItem> {
 
-        let spanSearch = new SpanSearch(this._documentInfoProvider);
         const validBreakdownEntries = insight.breakdownEntries.filter(o=>o.percentiles.any(o=>o.percentile ===SpanDurationBreakdownListViewItemsCreator.p50))
                                         .sort((a,b)=>this.getValueOfPercentile(b, SpanDurationBreakdownListViewItemsCreator.p50)!-this.getValueOfPercentile(a, SpanDurationBreakdownListViewItemsCreator.p50)!);
         const spansToSearch = validBreakdownEntries.map(o=>{
             return {
                 instrumentationLibrary:o.spanInstrumentationLibrary,
-                name: o.spanName,
+                spanName: o.spanName,
+                codeObjectId: o.codeObjectId,
                 breakdownEntry: o
             };
         });
-        const spanLocations = await spanSearch.searchForSpans(spansToSearch);
+
+    
+        const spanLocations = await this._spanLinkResolver.searchForSpansByHints(spansToSearch);
+
         let entries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] = [];
         validBreakdownEntries.forEach( (entry,index) => {
             entries.push({breakdownEntry:entry, location:spanLocations[index]});
@@ -331,8 +353,8 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     constructor(
         private _viewUris: WebViewUris,
         private _editorHelper: EditorHelper,
-        private _documentInfoProvider: DocumentInfoProvider,
         private _channel: WebviewChannel,
+        private _spanLinkResolver: SpanLinkResolver
 
     ) {
         this._channel.consume(UiMessage.Notify.GoToFileAndLine, e => this.goToFileAndLine(e.file!, e.line!));
@@ -350,7 +372,11 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
         var spansLocations = endpoints.map(ep=> 
                                              { return {
                                                 slowspaninfo : ep, 
-                                                spanSearchResult : this._documentInfoProvider.searchForSpan({ instrumentationName : ep.endpointInfo.instrumentationLibrary.split(".").join( " "), spanName :ep.endpointInfo.route })
+                                                spanSearchResult : this._spanLinkResolver.searchForSpanByHints(
+                                                    { instrumentationLibrary : ep.endpointInfo.instrumentationLibrary, 
+                                                      spanName :ep.endpointInfo.route,
+                                                      codeObjectId: ep.endpointInfo.codeObjectId,
+                                                    })
                                                 };
                                              }); 
         
@@ -395,7 +421,7 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
     }
 
     private getDescription(span: SlowEndpointInfo){
-        if (span.p95){
+        if (span.p95 && span.p95.fraction>0){
             return `Up to ~${(span.p95.fraction*100.0).toFixed(3)}% of the entire request time (${span.p95.maxDuration.value}${span.p95.maxDuration.unit}).`;
 
         }

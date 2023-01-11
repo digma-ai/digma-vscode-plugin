@@ -1,8 +1,8 @@
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
+import { SpanLinkResolver } from "../../../services/spanLinkResolver";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
 import { GlobalInsightListTemplate } from "./Common/GlobalInsightList";
-import { SpanSearch } from "./Common/SpanSearch";
 import { IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 import { SpanDurationsInsight } from "./SpanInsight";
@@ -12,7 +12,8 @@ export interface SpanDurationChangesInsight extends Insight{
 }
 
 export class SpanDurationChangesInsightCreator implements IInsightListViewItemsCreator {
-    constructor(private _viewUris: WebViewUris, private _documentInfoProvider: DocumentInfoProvider){
+    constructor(private _viewUris: WebViewUris,
+        private _spanLinkResolver: SpanLinkResolver){
 
 
     }
@@ -20,10 +21,12 @@ export class SpanDurationChangesInsightCreator implements IInsightListViewItemsC
         let codeObjectInsight = codeObjectsInsight.single();
         let spanDurationHtml: string[] = [];
         let renderer = new SpanItemHtmlRendering(this._viewUris);
-        let spanSearch = new SpanSearch(this._documentInfoProvider);
         const spans = codeObjectInsight.spanDurationChanges.map(x=>x.span);
-        const spanLocations = await spanSearch.searchForSpans(spans
-            .filter(x=>x));
+
+        const hints = 
+            this._spanLinkResolver.codeHintsFromSpans(spans);
+        
+        const spanLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
 
         await codeObjectInsight.spanDurationChanges.forEach( async (spanChange,index) => {
 

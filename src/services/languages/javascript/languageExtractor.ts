@@ -4,7 +4,7 @@ import { IMethodExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
 import { IMethodPositionSelector } from '../methodPositionSelector';
 import { JSMethodPositionSelector } from './methodPositionSelector';
-import { IModulePathToUriConverter } from '../modulePathToUriConverters';
+import { ICodeObjectLocationGuesser, IModulePathToUriConverter } from '../modulePathToUriConverters';
 import { JSMethodExtractor } from './methodExtractor';
 import { JSSpanExtractor } from './spanExtractor';
 import { JSPackageReader } from './packageReader';
@@ -13,6 +13,9 @@ import { ICodeObjectIdParser } from '../../codeObject';
 import { JSCodeObjectIdParser } from './codeObjectIdParser';
 
 export class JSLanguageExtractor extends LanguageExtractor {
+    public get guessCodeObjectLocation(): ICodeObjectLocationGuesser[] {
+        throw new Error('Method not implemented.');
+    }
     private packageReader: JSPackageReader = new JSPackageReader();
     public requiredExtensionLoaded: boolean = false;
 

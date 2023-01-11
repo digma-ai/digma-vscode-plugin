@@ -19,6 +19,8 @@ export interface CodeObjectLocationInfo extends CodeObjectInfo {
     documentUri: vscode.Uri;
 }
 
+
+
 export class EndpointInfo implements CodeObjectLocationInfo {
     constructor(
         public id: string,
@@ -84,8 +86,6 @@ export class EmptySymbolAliasExtractor implements ISymbolAliasExtractor {
     }
    
 }
-
-
 
 export interface IParametersExtractor {
     extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]>;

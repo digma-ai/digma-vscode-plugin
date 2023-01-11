@@ -284,9 +284,10 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
 
                     const workspaceUri = await this._editorHelper.getWorkspaceFileUri(
                         {
-                            codeObjectId,
-                            moduleLogicalPath,
-                            modulePhysicalPath,
+                            codeObjectId: codeObjectId,
+                            lineNumber: lineNumber,
+                            moduleLogicalPath: moduleLogicalPath,
+                            modulePhysicalPath: modulePhysicalPath            
                         },
                         document,
                     );

@@ -10,11 +10,12 @@ import { Uri } from "vscode";
 import path = require("path");
 import moment = require("moment");
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
-import { SpanSearch } from "./Common/SpanSearch";
 import { decimal, integer } from "vscode-languageclient";
 import { Settings } from "../../../settings";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
+import { SpanLinkResolver } from "../../../services/spanLinkResolver";
+import { CodeObjectLocationHints } from '../../../services/languages/modulePathToUriConverters';
 
 
 export interface EndpointInsight extends CodeObjectInsight {
@@ -169,6 +170,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         private _editorHelper: EditorHelper,
         private _documentInfoProvider: DocumentInfoProvider,
         private _channel: WebviewChannel,
+        private _spanLinkResolver : SpanLinkResolver
 
     ) {
         this._channel.consume(UiMessage.Notify.GoToFileAndLine, e => this.goToFileAndLine(e.file!, e.line!));
@@ -183,7 +185,9 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         
         var spans = codeObjectsInsight.spans;
 
-        var spansLocations = await new SpanSearch(this._documentInfoProvider).searchForSpans(spans.map(x=>x.spanInfo));
+        const hints:CodeObjectLocationHints[] = 
+            this._spanLinkResolver.codeHintsFromSpans(spans.map(x=>x.spanInfo));
+        var spansLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
 
         var items :string[] = [];
                         
@@ -262,6 +266,7 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
         private _editorHelper: EditorHelper,
         private _documentInfoProvider: DocumentInfoProvider,
         private _channel: WebviewChannel,
+        private _spanLinkResolver: SpanLinkResolver
 
     ) {
         this._channel.consume(UiMessage.Notify.GoToFileAndLine, e => this.goToFileAndLine(e.file!, e.line!));
@@ -276,7 +281,10 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
         
         var spans = codeObjectsInsight.spans.filter(x=>x.internalSpan);
 
-        var spansLocations = await new SpanSearch(this._documentInfoProvider).searchForSpans(spans.map(x=>x.internalSpan));
+        const hints:CodeObjectLocationHints[] = 
+            this._spanLinkResolver.codeHintsFromSpans(spans.map(x=>x.internalSpan));
+        
+        var spansLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
 
         var items :string[] = [];
                         
