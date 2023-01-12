@@ -1,6 +1,6 @@
 import { setInterval, clearInterval } from 'timers';
 import * as vscode from 'vscode';
-import { AnalyticsProvider, CodeObjectSummary, EndpointSchema, MethodCodeObjectSummary, SpanCodeObjectSummary, UsageStatusResults } from './analyticsProvider';
+import { AnalyticsProvider, CodeObjectSummary, CodeObjectUsageStatus, EndpointCodeObjectSummary, EndpointSchema, MethodCodeObjectSummary, SpanCodeObjectSummary, UsageStatusResults } from './analyticsProvider';
 import { Logger } from "./logger";
 import { SymbolProvider, SymbolTree } from './languages/symbolProvider';
 import { Token, TokenType } from './languages/tokens';
@@ -196,14 +196,14 @@ export class DocumentInfoProvider implements vscode.Disposable
                     }
                 }
                
-                const newMethodInfos = await this.createMethodInfos(doc, paramsExtractor, symbolAliasExtractor, symbolInfos, tokens, spans, endpoints);
+                const newMethodInfos = await this._documentInfoCache.createMethodInfos(doc, paramsExtractor, symbolAliasExtractor, symbolInfos, tokens, spans, endpoints);
                 methodInfos=newMethodInfos;
                 const insights = new CodeObjectInsightsAccessor(insightsResult);
                 //const lines:LineInfo[] = [];
                 
                 for (const span of spans){
-                    span.duplicates = spans.filter(x => span !== x && span.id === x.id && 
-                        (span.documentUri !== x.documentUri || span.range !== x.range));
+                    span.duplicates = spans.filter(x => span != x && span.id == x.id && 
+                        (span.documentUri != x.documentUri || span.range != x.range));
                 }
                 
                 const lines = this.createLineInfos(doc, errorSummaries, methodInfos,this.workspaceState);
@@ -245,79 +245,13 @@ export class DocumentInfoProvider implements vscode.Disposable
             return await latestVersionInfo.wait();
         }
     }
- 
-    private async createMethodInfos(
-        document: vscode.TextDocument,
-        parametersExtractor: IParametersExtractor,
-        symbolAliasExtractor: ISymbolAliasExtractor,
-        symbols: SymbolInfo[],
-        tokens: Token[], 
-        spans: SpanLocationInfo[],
-        endpoints: EndpointInfo[],
-    ): Promise<MethodInfo[]> {
-        let methods: MethodInfo[] = [];
-        for(let symbol of symbols) {
-            const aliases = symbolAliasExtractor.extractAliases(symbol);
-            const method = new MethodInfo(
-                symbol.id,
-                symbol.name,
-                undefined,
-                symbol.displayName,
-                symbol.range,
-                [],
-                symbol,
-                aliases,
-                ([] as CodeObjectLocationInfo[])
-                    .concat(spans.filter(s => s.range.intersection(symbol.range)))
-                    .concat(endpoints.filter(e => e.range.intersection(symbol.range))),
-                document.uri
-            );
-            methods.push(method);
-
-            const methodTokens = tokens.filter(t => symbol.range.contains(t.range.start));
-            for(let token of methodTokens) {
-                const name = token.text;// document.getText(token.range);
-  
-                if(
-                    (token.type === TokenType.method || token.type === TokenType.function || token.type === TokenType.member)
-                    && !method.nameRange
-                    && name === symbol.name
-                ) {
-                    method.nameRange = token.range;
-                }
-            }
-            method.parameters = await parametersExtractor.extractParameters(symbol.name, methodTokens);
-
-            if (parametersExtractor.needToAddParametersToCodeObjectId()) {
-                this.modifyMethodCodeObjectId(method);
-            }
-        }
-
-        return methods;
-    }
-
-    protected modifyMethodCodeObjectId(method: MethodInfo) {
-        if (method.id.endsWith(")")) {
-            return;
-        }
-
-        if (method.parameters.length > 0) {
-            const argsPart: string = "("
-                + method.parameters.map(x => x.type).join(',')
-                + ")";
-
-            const newId = method.id + argsPart;
-            method.id = newId;
-            method.symbol.id = newId;
-        }
-    }
 
     public createLineInfos(document: vscode.TextDocument, methodSummaries: MethodCodeObjectSummary[], methods: MethodInfo[], state:WorkspaceState): ElementsByEnv<LineInfo>
     {
         const lineInfosByEnv: ElementsByEnv<LineInfo> = new ElementsByEnv<LineInfo>(state);
         for(let method of methods)
         {
-            const codeObjectSummary = methodSummaries.find(x=>method.ids.any(a => a === x.codeObjectId));
+            const codeObjectSummary = methodSummaries.find(x=>method.ids.any(a => a == x.codeObjectId));
             if (!codeObjectSummary) {
                 continue;
             }
@@ -387,7 +321,7 @@ export class UsageDataAccessor{
     public getForCodeObjectIds(codeObjectIds:string[]) : UsageStatusResults{
         return {
             codeObjectStatuses: this._state
-                .codeObjectStatuses.filter(x => codeObjectIds.any(y => y === x.codeObjectId)),
+                .codeObjectStatuses.filter(x => codeObjectIds.any(y => y == x.codeObjectId)),
             environmentStatuses: this._state.environmentStatuses  
         };
 
@@ -475,8 +409,8 @@ export class CodeObjectInsightsAccessor{
     public get(type: string, codeObjectId: string):CodeObjectInsight[] | undefined
     {
         return this._codeObjectInsights
-                .filter(s => s.codeObjectId === codeObjectId)
-                .filter(s => s.type === type);
+                .filter(s => s.codeObjectId == codeObjectId)
+                .filter(s => s.type == type);
        
     }
 
@@ -499,7 +433,7 @@ export class CodeObjectInsightsAccessor{
         for (const method of doc.methods){
             const methodInsights = this.forMethod(method,env);
             for (const methodInsight of methodInsights){
-                let relatedCodeObject = method.relatedCodeObjects.find(x => x.id === methodInsight.codeObjectId);
+                let relatedCodeObject = method.relatedCodeObjects.find(x => x.id == methodInsight.codeObjectId);
                 if (!relatedCodeObject){
                     relatedCodeObject=method;
                 }
@@ -520,7 +454,7 @@ export class CodeObjectInsightsAccessor{
 
     public  forMethod(methodInfo: MethodInfo, environment: string|undefined){
         const codeObjectsIds = methodInfo.getIds(true,false);
-        let insights = this._codeObjectInsights.filter(x=>codeObjectsIds.any(o => o === x.codeObjectId));
+        let insights = this._codeObjectInsights.filter(x=>codeObjectsIds.any(o => o == x.codeObjectId));
         if (environment){
             insights = insights.filter(x=>x.environment===environment);
         }

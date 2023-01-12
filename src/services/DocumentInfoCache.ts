@@ -12,6 +12,7 @@ import {
 } from "./languages/extractors";
 import { SymbolProvider } from "./languages/symbolProvider";
 import { Token, TokenType } from "./languages/tokens";
+import { Logger } from "./logger";
 
 type DocumentCacheInfo = {
   uri: vscode.Uri;
@@ -64,41 +65,8 @@ export class DocumentInfoCache {
       `**/*.{${DocumentInfoCache.supportedFileExtensions.join(",")}}`
     );
 
-    // Scan file on its creation
-    this._fileSystemWatcher.onDidCreate(async (uri) => {
-      try {
-        if (this.isInsideExcludedFolder(uri)) {
-          return;
-        }
-        const doc = await vscode.workspace.openTextDocument(uri);
-        if (doc && symbolProvider.supportsDocument(doc)) {
-          const docInfo = await this.getDocumentInfo(doc);
-          this.documents[uri.toModulePath()] = docInfo;
-        }
-      } catch (e) {
-        console.error("Unable to get document info on file create");
-        console.error(e);
-      }
-    });
-
-    // Scan file on its change
-    this._fileSystemWatcher.onDidChange(async (uri) => {
-      try {
-        if (this.isInsideExcludedFolder(uri)) {
-          return;
-        }
-        const doc = await vscode.workspace.openTextDocument(uri);
-        if (doc && symbolProvider.supportsDocument(doc)) {
-          const docInfo = await this.getDocumentInfo(doc);
-          this.documents[uri.toModulePath()] = docInfo;
-        }
-      } catch (e) {
-        console.error("Unable to get document info on file change");
-        console.error(e);
-      }
-    });
-
-    // Delete file from cache on its deletion
+    this._fileSystemWatcher.onDidCreate(this.scanAndCacheFile);
+    this._fileSystemWatcher.onDidChange(this.scanAndCacheFile);
     this._fileSystemWatcher.onDidDelete((uri) => {
       delete this.documents[uri.toModulePath()];
     });
@@ -111,18 +79,35 @@ export class DocumentInfoCache {
           const filePath = document.uri.toModulePath();
           if (
             !this.documents[filePath] &&
-            this.hasSupportedFileExtension(document.uri) &&
-            !this.isInsideExcludedFolder(document.uri) &&
-            symbolProvider.supportsDocument(document)
+            this.isCacheable(document)
           ) {
-            const docInfo = await this.getDocumentInfo(document);
-            this.documents[filePath] = docInfo;
+            this.addToCache(await this.getDocumentInfo(document));
           }
         })
       );
     });
 
     this.init();
+  }
+
+  private addToCache(documentInfo: DocumentCacheInfo) {
+    const filePath = documentInfo.uri.toModulePath();
+    this.documents[filePath] = documentInfo;
+  }
+
+  private async scanAndCacheFile(uri: vscode.Uri) {
+    try {
+      if (this.isInsideExcludedFolder(uri)) {
+        return;
+      }
+      const doc = await vscode.workspace.openTextDocument(uri);
+      if (doc && this._symbolProvider.supportsDocument(doc)) {
+        this.addToCache(await this.getDocumentInfo(doc));
+      }
+    } catch (e) {
+      Logger.error("Unable to scan file info on its create/change");
+      Logger.error((e as Error).message);
+    }
   }
 
   private isInsideExcludedFolder(uri: vscode.Uri): boolean {
@@ -137,8 +122,19 @@ export class DocumentInfoCache {
     );
   }
 
+  private isCacheable(doc: vscode.TextDocument): boolean {
+    return this.hasSupportedFileExtension(doc.uri) &&
+    !this.isInsideExcludedFolder(doc.uri) &&
+    this._symbolProvider.supportsDocument(doc);
+  }
+
   private async init() {
     this._serverDiscoveredSpans = (await this._analyticsProvider.getSpans()).spans;
+    Logger.info(
+      `Server discovered spans: ${
+        JSON.stringify(this._serverDiscoveredSpans.map(span => span.name)
+      )}`
+    );
     await this.scanOpenedDocuments();
 
     void this.scanFilesInBackground();
@@ -146,21 +142,13 @@ export class DocumentInfoCache {
 
   private async scanOpenedDocuments() {
     const docInfosPromises = vscode.workspace.textDocuments
-      .filter(
-        (doc) =>
-          this.hasSupportedFileExtension(doc.uri) &&
-          !this.isInsideExcludedFolder(doc.uri) &&
-          this._symbolProvider.supportsDocument(doc)
-      )
+      .filter(this.isCacheable)
       .map((doc) => this.getDocumentInfo(doc));
 
     const docInfosPromisesResults = await Promise.allSettled(docInfosPromises);
     const docInfos = getValuesOfFulfilledPromises(docInfosPromisesResults);
 
-    docInfos.forEach((docInfo) => {
-      const filePath = docInfo.uri.toModulePath();
-      this.documents[filePath] = docInfo;
-    });
+    docInfos.forEach(this.addToCache);
   }
 
   private async scanFilesInBackground() {
@@ -204,10 +192,7 @@ export class DocumentInfoCache {
       );
       const docInfos = getValuesOfFulfilledPromises(docInfosResults);
 
-      docInfos.forEach((docInfo) => {
-        const filePath = docInfo.uri.toModulePath();
-        this.documents[filePath] = docInfo;
-      });
+      docInfos.forEach(this.addToCache);
     }
 
     statusBar.hide();
@@ -220,8 +205,7 @@ export class DocumentInfoCache {
     let cachedInfo = this.documents[filePath];
 
     if (!cachedInfo) {
-      cachedInfo = await this.getDocumentInfo(doc);
-      this.documents[filePath] = cachedInfo;
+      this.addToCache(await this.getDocumentInfo(doc));
     }
 
     return this.documents[filePath];
@@ -279,7 +263,7 @@ export class DocumentInfoCache {
     };
   }
 
-  private async createMethodInfos(
+  public async createMethodInfos(
     document: vscode.TextDocument,
     parametersExtractor: IParametersExtractor,
     symbolAliasExtractor: ISymbolAliasExtractor,

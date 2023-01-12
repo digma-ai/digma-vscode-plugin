@@ -348,23 +348,6 @@ export class JSSpanExtractor implements ISpanExtractor {
         return variableDeclarationLine.text.match(extractVariableValueRegex)?.[1];
     }
 
-    async getFunctionFirstParameterValue(document: vscode.TextDocument, startSpanToken: Token, symbolProvider: SymbolProvider, tokens: Token[]): Promise<string | undefined> {
-        const nextTextInline = this.getNextTextInline(document, startSpanToken);
-        const nextTextInlineText = nextTextInline[0];
-        const nextTextInlineRange = nextTextInline[1];
-
-        let spanParameter = nextTextInlineText.match(this.firstParameterRegex)?.[1];
-        if (!spanParameter) {
-            return undefined;
-        }
-        let spanName = spanParameter.match(this.stringRegex)?.[1];
-        if (!spanName) {
-            return await this.getVariableValue(spanParameter, document, symbolProvider, tokens, nextTextInlineRange);
-        }
-
-        return spanName;
-    }
-
     getFunctionArguments(document: vscode.TextDocument, functionToken: Token): string[] | undefined {
         let parametersLine = functionToken.range.end.line;
         const lineText = document.lineAt(parametersLine);

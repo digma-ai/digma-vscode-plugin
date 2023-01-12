@@ -212,7 +212,7 @@ export class SymbolProvider
                 const tokenType = semanticTokens.data[i+3];
                 const tokenModifiers = semanticTokens.data[i+4];
                 
-                if(deltaLine === 0) {
+                if(deltaLine == 0) {
                     char += deltaStart;
                 }
                 else {
@@ -263,22 +263,19 @@ export class SymbolProvider
         {
             const installOption = `Install ${language.requiredExtensionId}`;
             const ignoreOption = `Ignore python files`;
-            const sel = await vscode.window.showErrorMessage(
-                `Digma cannot process ${language.documentFilter.language || 'unrecognized language'} files properly without '${language.requiredExtensionId}' installed.`,
+            let sel = await vscode.window.showErrorMessage(
+                `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtensionId}' installed.`,
                 ignoreOption,
                 installOption
             );
-            switch (sel) {
-              case installOption:
-                void vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtensionId);
-                break;
-              case ignoreOption:
-                this.languageExtractors = this.languageExtractors.filter(x => x !== language);
-                break;
-              default:
-                return false;
+            if (sel == installOption) {
+                vscode.commands.executeCommand('workbench.extensions.installExtension', language.requiredExtensionId);
+            } else if (sel == ignoreOption) {
+                this.languageExtractors = this.languageExtractors.filter(x => x != language);
             }
-        } else if (!extension.isActive) {
+            return false;
+        }
+        if (!extension.isActive) {
             Logger.info(`Starting activating "${extension.id}" extension`);
             await extension.activate();
             Logger.info(`Finished activating "${extension.id}" extension`);
