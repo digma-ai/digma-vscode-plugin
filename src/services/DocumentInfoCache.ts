@@ -65,8 +65,8 @@ export class DocumentInfoCache {
             `**/*.{${DocumentInfoCache.supportedFileExtensions.join(",")}}`
         );
 
-        this._fileSystemWatcher.onDidCreate(this.scanAndCacheFile);
-        this._fileSystemWatcher.onDidChange(this.scanAndCacheFile);
+        this._fileSystemWatcher.onDidCreate((uri) => this.scanAndCacheFile(uri));
+        this._fileSystemWatcher.onDidChange((uri) => this.scanAndCacheFile(uri));
         this._fileSystemWatcher.onDidDelete((uri) => {
             delete this.documents[uri.toModulePath()];
         });
@@ -143,13 +143,13 @@ export class DocumentInfoCache {
 
     private async scanOpenedDocuments() {
         const docInfosPromises = vscode.workspace.textDocuments
-            .filter(this.isCacheable)
+            .filter((doc) => this.isCacheable(doc))
             .map((doc) => this.getDocumentInfo(doc));
 
         const docInfosPromisesResults = await Promise.allSettled(docInfosPromises);
         const docInfos = getValuesOfFulfilledPromises(docInfosPromisesResults);
 
-        docInfos.forEach(this.addToCache);
+        docInfos.forEach((doc) => this.addToCache(doc));
     }
 
     private async scanFilesInBackground() {
@@ -193,7 +193,7 @@ export class DocumentInfoCache {
             );
             const docInfos = getValuesOfFulfilledPromises(docInfosResults);
 
-            docInfos.forEach(this.addToCache);
+            docInfos.forEach(doc => this.addToCache(doc));
         }
 
         statusBar.hide();
