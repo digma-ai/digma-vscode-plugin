@@ -3,7 +3,7 @@ import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInspector, Definition } from '../../codeInspector';
 import { Logger } from '../../logger';
-import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from "../extractors";
+import { ISpanExtractor, SpanExtractorResult, SpanLocationInfo, SymbolInfo } from "../extractors";
 import { Token, TokenType } from '../tokens';
 import { SymbolProvider } from './../symbolProvider';
 
@@ -35,7 +35,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-    ): Promise<SpanLocationInfo[]> {
+    ): Promise<SpanExtractorResult> {
         const results: SpanLocationInfo[] = [];
 
 
@@ -123,7 +123,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
             }
         }
 
-        return results;
+        return { spans: results, relatedSpans: [] };
     }
 
     private isCallToStartActivity(tokens: Token[], i: number) {

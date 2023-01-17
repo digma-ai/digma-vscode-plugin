@@ -92,17 +92,17 @@ export class DocumentInfoCache {
         this.documents[filePath] = documentInfo;
     }
 
-    private async scanAndCacheFile(uri: vscode.Uri) {
+    private async scanAndCacheFile(uri: vscode.Uri, additionalSpans?: SpanLocationInfo[]) {
         try {
             if (this.isInsideExcludedFolder(uri)) {
                 return;
             }
             const doc = await vscode.workspace.openTextDocument(uri);
             if (doc && this._symbolProvider.supportsDocument(doc)) {
-                this.addToCache(await this.getDocumentInfo(doc));
+                this.addToCache(await this.getDocumentInfo(doc, additionalSpans));
             }
         } catch (e) {
-            Logger.error("Unable to scan file info on its create/change");
+            Logger.error(`Unable to scan file ${uri.toModulePath()}`);
             Logger.error((e as Error).message);
         }
     }
@@ -130,7 +130,11 @@ export class DocumentInfoCache {
     private async init() {
         this._serverDiscoveredSpans = (
             await this._analyticsProvider.getSpans()
-        ).spans;
+        ).spans.map(span => ({
+            ...span,
+            spanCodeObjectId: span.spanCodeObjectId.startsWith("span:") ?
+                span.spanCodeObjectId.slice(5) : span.spanCodeObjectId
+        }));
         Logger.info(
             `Server discovered spans: ${JSON.stringify(
                 this._serverDiscoveredSpans.map((span) => span.name)
@@ -142,17 +146,20 @@ export class DocumentInfoCache {
     }
 
     private async scanOpenedDocuments() {
-        const docInfosPromises = vscode.workspace.textDocuments
-            .filter((doc) => this.isCacheable(doc))
-            .map((doc) => this.getDocumentInfo(doc));
+        Logger.info("Scanning of opened documents started");
+        let docs = vscode.workspace.textDocuments
+            .filter((doc) => this.isCacheable(doc));
 
+        const docInfosPromises = docs.map((doc) => this.getDocumentInfo(doc));
         const docInfosPromisesResults = await Promise.allSettled(docInfosPromises);
         const docInfos = getValuesOfFulfilledPromises(docInfosPromisesResults);
 
         docInfos.forEach((doc) => this.addToCache(doc));
+        Logger.info("Scanning of opened documents completed");
     }
 
     private async scanFilesInBackground() {
+        Logger.info("Background scanning started");
         const includePattern = `**/*.{${DocumentInfoCache.supportedFileExtensions.join(
             ","
         )}}`;
@@ -178,7 +185,7 @@ export class DocumentInfoCache {
         while (files.length) {
             const filesToScan = files
                 .splice(0, DocumentInfoCache.batchSize)
-                .filter((uri) => !this.documents[uri.fsPath]);
+                .filter((uri) => !this.documents[uri.toModulePath()]);
 
             const docPromises = filesToScan.map((file) =>
                 vscode.workspace.openTextDocument(file)
@@ -196,6 +203,7 @@ export class DocumentInfoCache {
             docInfos.forEach(doc => this.addToCache(doc));
         }
 
+        Logger.info("Background scanning completed");
         statusBar.hide();
     }
 
@@ -213,8 +221,10 @@ export class DocumentInfoCache {
     }
 
     private async getDocumentInfo(
-        doc: vscode.TextDocument
+        doc: vscode.TextDocument,
+        additionalSpans?: SpanLocationInfo[]
     ): Promise<DocumentCacheInfo> {
+        Logger.info(`Scanning of ${doc.uri.toModulePath()}...`);
         const [symbolTrees, tokens] = await Promise.all([
             this._symbolProvider.getSymbolTree(doc),
             this._symbolProvider.getTokens(doc)
@@ -224,12 +234,27 @@ export class DocumentInfoCache {
             tokens,
             symbolTrees
         );
-        const spans = await this._symbolProvider.getSpans(
+        let { spans, relatedSpans } = await this._symbolProvider.getSpans(
             doc,
             symbolInfos,
             tokens,
             this._serverDiscoveredSpans
         );
+        
+        if (additionalSpans) {
+            spans.push(...additionalSpans);
+        }
+
+        if (relatedSpans) {
+            const relatedSpansMap = relatedSpans.groupBy(x => x.documentUri.fsPath);
+            for (const fsPath in relatedSpansMap) {
+                const spans = relatedSpansMap[fsPath];
+                const uri = vscode.Uri.file(fsPath);
+                Logger.info(`Scanning of ${doc.uri.toModulePath()} with related spans...`);
+                await this.scanAndCacheFile(uri, spans);
+            }
+        }
+
         const [endpoints, paramsExtractor, symbolAliasExtractor] =
             await Promise.all([
                 this._symbolProvider.getEndpoints(

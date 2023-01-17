@@ -3,7 +3,7 @@ import { SymbolInformation, DocumentSymbol } from 'vscode-languageclient';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, ServerDiscoveredSpan, SpanLocationInfo, SymbolInfo } from './extractors';
+import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, ServerDiscoveredSpan, SpanExtractorResult, SpanLocationInfo, SymbolInfo } from './extractors';
 import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
@@ -125,18 +125,24 @@ export class SymbolProvider
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         serverDiscoveredSpans: ServerDiscoveredSpan[]
-    ):  Promise<SpanLocationInfo[]> {
+    ):  Promise<SpanExtractorResult> {
         const supportedLanguage = await this.getSupportedLanguageExtractor(document);
         if(!supportedLanguage) {
-            return [];
+            return {
+                spans: [],
+                relatedSpans: []
+            };
         }
 
         const spanExtractors = supportedLanguage.getSpanExtractors(this._codeInspector);
-        const extractedSpans = await Promise.all(
+        const extractedSpanResults = await Promise.all(
             spanExtractors.map(async (x) => await x.extractSpans(document, symbolInfos, tokens, this, serverDiscoveredSpans))
         );
-        const spans = extractedSpans.flat();
-        return spans;
+        
+        return extractedSpanResults.reduce((acc, result) => ({
+            spans: [...acc.spans, ...result.spans],
+            relatedSpans: [...acc.relatedSpans, ...result.relatedSpans]
+        }), {spans: [], relatedSpans: []});
     }
 
     public async getMethods(document: vscode.TextDocument, tokens: Token [], symbolTrees: SymbolTree[] | undefined) : Promise<SymbolInfo[]> {

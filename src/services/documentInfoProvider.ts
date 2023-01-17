@@ -9,7 +9,7 @@ import { EndpointInfo, SpanLocationInfo as SpanLocationInfo, SymbolInfo, IParame
 import { InstrumentationInfo, LocateEndpointInfo } from './EditorHelper';
 import { SymbolInformation } from 'vscode';
 import { WorkspaceState } from '../state';
-import { CodeObjectInsight } from '../views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
+import { CodeObjectInsight, InsightImporance } from '../views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 import { PathUtils } from './common/pathUtils';
 import { PossibleCodeObjectLocation } from './languages/modulePathToUriConverters';
 import { DocumentInfoCache } from './DocumentInfoCache';
@@ -459,7 +459,7 @@ export class CodeObjectInsightsAccessor{
             insights = insights.filter(x=>x.environment===environment);
         }
         const uniqueInsights = [...new Map(insights.map(item =>
-            [item.type, item])).values()];
+            [`${item.codeObjectId}-${item.type}`, item])).values()];
         return uniqueInsights;
     
     }

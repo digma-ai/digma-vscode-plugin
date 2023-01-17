@@ -14,7 +14,8 @@ import { JSCodeObjectIdParser } from './codeObjectIdParser';
 
 export class JSLanguageExtractor extends LanguageExtractor {
     public get guessCodeObjectLocation(): ICodeObjectLocationGuesser[] {
-        throw new Error('Method not implemented.');
+        // TODO:
+        return [];
     }
     private packageReader: JSPackageReader = new JSPackageReader();
     public requiredExtensionLoaded: boolean = false;

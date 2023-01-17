@@ -109,12 +109,19 @@ export interface ServerDiscoveredSpan {
     spanCodeObjectId: string
 }
 
+export interface SpanExtractorResult {
+    spans: SpanLocationInfo[],
+    /** Spans that were found outside of its original document
+     * (e.g. via imports) */
+    relatedSpans: SpanLocationInfo[]
+}
+
 export interface ISpanExtractor {
     extractSpans(
         document: vscode.TextDocument,
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-        serverDiscoveredSpans: ServerDiscoveredSpan[]
-    ): Promise<SpanLocationInfo[]>;
+        serverDiscoveredSpans?: ServerDiscoveredSpan[]
+    ): Promise<SpanExtractorResult>;
 }

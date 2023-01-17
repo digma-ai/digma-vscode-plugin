@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { CodeInspector, DefinitionWithTokens } from '../../codeInspector';
-import { ISpanExtractor, ServerDiscoveredSpan, SpanLocationInfo, SymbolInfo } from '../extractors';
+import { ISpanExtractor, ServerDiscoveredSpan, SpanExtractorResult, SpanLocationInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { Logger } from '../../logger';
@@ -20,9 +20,9 @@ export class JSSpanExtractor implements ISpanExtractor {
         tokens: Token[],
         symbolProvider: SymbolProvider,
         serverDiscoveredSpans: ServerDiscoveredSpan[]
-    ): Promise<SpanLocationInfo[]> {
-
+    ): Promise<SpanExtractorResult> {
         const results: SpanLocationInfo[] = [];
+        let relatedResults: SpanLocationInfo[] = [];
         await methodSpanIterator(symbolInfos, tokens, async (symbol, methodTokens) => {
             Logger.info(`Span discovering for function: ${symbol.displayName} (${symbol.id})`);
 
@@ -67,7 +67,7 @@ export class JSSpanExtractor implements ISpanExtractor {
                         for (let i = 0; i < functionArguments.length; i++) {
                             const functionDefinition = await this.getFunctionDefinition(document, functionArguments[i].token, symbolProvider);
                             if (functionDefinition) {
-                                results.push(new SpanLocationInfo(
+                                relatedResults.push(new SpanLocationInfo(
                                     discoveredSpan.spanCodeObjectId,
                                     discoveredSpan.name,
                                     [discoveredSpan.name],
@@ -99,7 +99,7 @@ export class JSSpanExtractor implements ISpanExtractor {
                             for (let i = 0; i < functionArguments.length; i++) {
                                 const functionDefinition = await this.getFunctionDefinition(document, functionArguments[i].token, symbolProvider);
                                 if (functionDefinition) {
-                                    results.push(new SpanLocationInfo(
+                                    relatedResults.push(new SpanLocationInfo(
                                         discoveredSpan.spanCodeObjectId,
                                         discoveredSpan.name,
                                         [discoveredSpan.name],
@@ -177,8 +177,17 @@ export class JSSpanExtractor implements ISpanExtractor {
                 }
             }
 
+            // filter from duplicates
+            relatedResults = relatedResults.filter((span, i, arr) =>
+                i === arr.findIndex((x) => (
+                    span.id === x.id &&
+                    span.documentUri.fsPath === x.documentUri.fsPath &&
+                    span.range.start.line === x.range.start.line &&
+                    span.range.start.character === x.range.start.character
+                ))
+            );
         });
-        return results;
+        return {spans: results, relatedSpans: relatedResults};
     }
     
     tryGetVariable(tokens: Token[], range: vscode.Range): [Token, number]| undefined{

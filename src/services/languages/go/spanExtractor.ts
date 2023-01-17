@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { CodeInspector } from '../../codeInspector';
-import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from '../extractors';
+import { ISpanExtractor, SpanExtractorResult, SpanLocationInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { Logger } from '../../logger';
@@ -112,7 +112,7 @@ export class GoSpanExtractor implements ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-    ): Promise<SpanLocationInfo[]> {
+    ): Promise<SpanExtractorResult> {
         const results: SpanLocationInfo[] = [];
 
         for(var symbol of symbolInfos){
@@ -199,7 +199,7 @@ export class GoSpanExtractor implements ISpanExtractor {
                 Logger.error('Span discovery failed with error', error);
             }
         }
-        return results;
+        return { spans: results, relatedSpans: [] };
     }
 
 
