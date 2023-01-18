@@ -7,7 +7,7 @@ export class HistogramPanel {
     constructor(private _analyticsProvider: AnalyticsProvider, private _workspaceState: WorkspaceState) {
     }
 
-    public async getHtml(spanName: string, instrumentationLibrary: string, codeObjectId: string): Promise<string> {
+    public async getHtml(spanName: string, instrumentationLibrary: string): Promise<string> {
         let theme;
         if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark){
             theme = 'dark';
@@ -16,7 +16,7 @@ export class HistogramPanel {
             theme = 'light';
         }
         const html = await this._analyticsProvider.getHtmlGraphForSpanPercentiles(
-            spanName, instrumentationLibrary, codeObjectId, this._workspaceState.environment, theme);
+            spanName, instrumentationLibrary, this._workspaceState.environment, theme);
 
         return html;
     }

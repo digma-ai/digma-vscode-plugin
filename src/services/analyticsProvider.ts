@@ -387,7 +387,7 @@ export class AnalyticsProvider {
         return response;
     }
 
-    public async getHtmlGraphForSpanPercentiles(spanName: string, instrumentationLib: string, codeObjectId: string, environment: string, theme?: string): Promise<string> {
+    public async getHtmlGraphForSpanPercentiles(spanName: string, instrumentationLib: string, environment: string, theme?: string): Promise<string> {
         const response: string = await this.sendAndResponseBodyAsString(
             'POST',
             `/Graphs/graphForSpanPercentiles`,
@@ -397,7 +397,6 @@ export class AnalyticsProvider {
                 environment: environment,
                 spanName: spanName,
                 instrumentationLibrary: instrumentationLib,
-                codeObjectId: codeObjectId,
                 theme: theme
             });
         return response;
