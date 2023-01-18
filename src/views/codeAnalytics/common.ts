@@ -82,7 +82,10 @@ export class HtmlHelper
 
     public static getInitializationStatus(status: ScanningStatus): string{
         return /*html*/ status.isInProgress ? `
-            ${this.getLoadingMessage("Initializing...")}` : "<div></div>";
+            <div class="initializing-message">
+                <vscode-progress-ring></vscode-progress-ring>
+                <span>Digma initializing...</span>
+            </div>` : "<div></div>";
     }
 
     public static getErrorName(
