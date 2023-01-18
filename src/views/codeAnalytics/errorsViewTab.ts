@@ -24,6 +24,7 @@ import { ListViewRender } from "../ListView/ListViewRender";
 import { WorkspaceState } from "../../state";
 import { ErrorsLineDecorator } from "./decorators/errorsLineDecorator";
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
+import { ScanningStatus } from "../../services/DocumentInfoCache";
 
 export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     private _viewedCodeObjectId?: string = undefined;
@@ -74,6 +75,11 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         }));
     
     }
+
+    onInitializationStatusChange(status: ScanningStatus): void {
+        this.refreshInitializationStatus(status);
+    }
+
     onRefreshRequested(codeObject: CodeObjectInfo): void {
         this._viewedCodeObjectId = undefined;
         this.refreshList(codeObject);
@@ -109,6 +115,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     public getHtml(): string 
     {
         return /*html*/`
+            <div class="initialization-status"></div>
             <div class="errors-view">
                 <div class="codeobject-selection"></div>
                 <div id="error-list" class="list"></div>
@@ -118,6 +125,13 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     public showError(error: any): void {
         let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(error);
         this._channel.publish(new UiMessage.Set.ErrorsList(html));
+    }
+
+    private refreshInitializationStatus(status: ScanningStatus) {
+        let html = HtmlHelper.getInitializationStatus(status);
+        this._channel?.publish(
+            new UiMessage.Set.InitializationStatus(html)
+        );
     }
 
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 

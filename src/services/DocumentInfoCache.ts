@@ -14,6 +14,11 @@ import { SymbolProvider } from "./languages/symbolProvider";
 import { Token, TokenType } from "./languages/tokens";
 import { Logger } from "./logger";
 
+export type ScanningStatus = {
+    isInProgress: boolean;
+    isCompleted: boolean;
+};
+
 type DocumentCacheInfo = {
     uri: vscode.Uri;
     tokens: Token[];
@@ -50,6 +55,7 @@ export class DocumentInfoCache {
     private _analyticsProvider: AnalyticsProvider;
     private _serverDiscoveredSpans: ServerDiscoveredSpan[];
     private documents: Record<string, DocumentCacheInfo>;
+    public scanningStatus: ScanningStatus;
 
     constructor(
         symbolProvider: SymbolProvider,
@@ -59,6 +65,10 @@ export class DocumentInfoCache {
         this._analyticsProvider = analyticsProvider;
         this.documents = {};
         this._serverDiscoveredSpans = [];
+        this.scanningStatus = {
+            isInProgress: false,
+            isCompleted: false
+        };
 
         // Create file watcher for all supported files in workspace
         this._fileSystemWatcher = vscode.workspace.createFileSystemWatcher(
@@ -179,6 +189,12 @@ export class DocumentInfoCache {
             vscode.StatusBarAlignment.Left,
             DocumentInfoCache.statusBarPriority
         );
+
+        this.scanningStatus = {
+            ...this.scanningStatus,
+            isInProgress: true
+        };
+
         statusBar.text = "$(sync~spin) Scanning files for spans";
         statusBar.show();
 
@@ -202,6 +218,11 @@ export class DocumentInfoCache {
 
             docInfos.forEach(doc => this.addToCache(doc));
         }
+
+        this.scanningStatus = {
+            isInProgress: false,
+            isCompleted: true
+        };
 
         Logger.info("Background scanning completed");
         statusBar.hide();

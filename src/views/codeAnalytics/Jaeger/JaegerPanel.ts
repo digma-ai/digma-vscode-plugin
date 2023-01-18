@@ -85,7 +85,6 @@ export class JaegerPanel {
   private async onGetTraceSpansLocations(
     message: GetTraceSpansLocationsMessage
   ) {
-    console.log("onGetTraceSpansLocations received");
     const spans = message.data;
     const hints:CodeObjectLocationHints[] = spans.map(s=>{
         return {

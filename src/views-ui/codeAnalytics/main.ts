@@ -132,6 +132,13 @@ window.addEventListener("load", () =>
         });
     }
 
+    consume(UiMessage.Set.InitializationStatus, (event) => {
+        const html = event.htmlContent;
+        if (html) {
+            $(".initialization-status").html(html);
+        }
+    });
+
     consume(UiMessage.Set.InsightsList, (event) => {
         
         if (event.htmlContent !== undefined) {
@@ -165,6 +172,7 @@ window.addEventListener("load", () =>
         }
     });
 
+    // TODO: test and remove as a duplicate
     consume(UiMessage.Set.SpanObjectLabel, (event) => {
         if (event.htmlContent !== undefined) {
             $("#spanScope").html(event.htmlContent);

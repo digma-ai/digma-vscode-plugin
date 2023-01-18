@@ -128,6 +128,10 @@ export namespace UiMessage
         export class Overlay {
             constructor(public htmlContent?: string, public id?: string) {}
         }
+
+        export class InitializationStatus {
+            constructor(public htmlContent?: string) {}
+        }
     }
 }
 

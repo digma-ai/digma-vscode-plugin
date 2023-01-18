@@ -35,6 +35,7 @@ import { CodeObjectInfo, MinimalCodeObjectInfo, EmptyCodeObjectInfo } from "../.
 import { EnvironmentManager } from '../../services/EnvironmentManager';
 import { Action } from "./InsightListView/Actions/Action";
 import { SpanLinkResolver } from "../../services/spanLinkResolver";
+import { DocumentInfoCache, ScanningStatus } from "../../services/DocumentInfoCache";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -59,7 +60,8 @@ export class CodeAnalyticsView implements vscode.Disposable
         codelensProvider: AnalyticsCodeLens,
         envSelectStatusBar: EnvSelectStatusBar,
         environmentManager: EnvironmentManager,
-        spanLinkResolver: SpanLinkResolver
+        spanLinkResolver: SpanLinkResolver,
+        documentInfoCache: DocumentInfoCache
 	) {
 
 
@@ -74,7 +76,8 @@ export class CodeAnalyticsView implements vscode.Disposable
             workspaceState,
             codelensProvider,
             envSelectStatusBar,
-            spanLinkResolver
+            spanLinkResolver,
+            documentInfoCache
 		);
         this.extensionUrl = extensionUri;
     
@@ -149,6 +152,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     private _actions: Action[] = [];
     private _extensionUri: vscode.Uri;
     private _editorHelper: EditorHelper;
+    private initializationStatus: ScanningStatus;
 	constructor(
 		extensionUri: vscode.Uri,
 		private _analyticsProvider: AnalyticsProvider,
@@ -158,9 +162,11 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         private _workspaceState:WorkspaceState,
         private _codeLensProvider:AnalyticsCodeLens,
         private _envSelectStatusBar: EnvSelectStatusBar,
-        private _spanLinkResolver: SpanLinkResolver
+        private _spanLinkResolver: SpanLinkResolver,
+        private _documentInfoCache: DocumentInfoCache
 	) {
 
+    this.initializationStatus = this._documentInfoCache.scanningStatus;
     this._extensionUri = extensionUri;
     this._editorHelper = editorHelper;
 		this._webViewUris = new WebViewUris(
@@ -236,6 +242,20 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._tabs.set(tab.tabId, tab);
         }
         this._lastActiveTab = tabsList[0];
+
+        const timer = setInterval(() => {
+            if (this._activeTab &&
+                (this.initializationStatus.isInProgress !== this._documentInfoCache.scanningStatus.isInProgress)
+            ) {
+                this.initializationStatus = this._documentInfoCache.scanningStatus;
+                this._activeTab.onInitializationStatusChange(this.initializationStatus);
+            }
+
+            if (this._documentInfoCache.scanningStatus.isCompleted) {
+                this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
+                clearInterval(timer);
+            }
+        }, 1000);
 	}
 
     dispose() {
