@@ -73,6 +73,21 @@ ul.tree{
     }
 }
 
+.initializing-message {
+    display: flex;
+    align-items: center;
+    margin: 4px 0;
+
+    vscode-progress-ring {
+        width: 16px;
+        height: 16px;
+    }
+
+    span {
+        margin-left: 10px;
+    }
+}
+
 .loading-message{
     display: flex;
     flex-direction: column;
