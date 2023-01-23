@@ -106,7 +106,8 @@ export interface IEndpointExtractor {
 
 export interface ServerDiscoveredSpan {
     name: string,
-    spanCodeObjectId: string
+    spanCodeObjectId: string,
+    environments: string[]
 }
 
 export interface SpanExtractorResult {

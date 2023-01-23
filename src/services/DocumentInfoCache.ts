@@ -137,22 +137,86 @@ export class DocumentInfoCache {
         );
     }
 
-    private async init() {
-        this._serverDiscoveredSpans = (
-            await this._analyticsProvider.getSpans()
-        ).spans.map(span => ({
-            ...span,
-            spanCodeObjectId: span.spanCodeObjectId.startsWith("span:") ?
-                span.spanCodeObjectId.slice(5) : span.spanCodeObjectId
-        }));
-        Logger.info(
-            `Server discovered spans: ${JSON.stringify(
-                this._serverDiscoveredSpans.map((span) => span.name)
-            )}`
+    private async getServerDiscoveredSpans() {
+        try {
+            const spans = (await this._analyticsProvider.getSpans()).spans.map(span => ({
+                ...span,
+                spanCodeObjectId: span.spanCodeObjectId.startsWith("span:") ?
+                    span.spanCodeObjectId.slice(5) : span.spanCodeObjectId
+            }));
+            Logger.info(
+                `Server discovered spans: ${JSON.stringify(
+                    spans.map((span) => span.name)
+                )}`
+            );
+            return spans;
+        }
+        catch (e) {
+            Logger.error("Failed to get spans", (e as Error).message);
+        }
+    }
+
+    private compareServerDiscoveredSpans(
+        curSpans: ServerDiscoveredSpan[],
+        newSpans: ServerDiscoveredSpan[]
+        ): { removed: ServerDiscoveredSpan[], added: ServerDiscoveredSpan[] } | undefined {
+        const areSpansEqual = ((a: ServerDiscoveredSpan, b: ServerDiscoveredSpan) => {
+            return a.name === b.name &&
+            a.spanCodeObjectId === b.spanCodeObjectId &&
+            a.environments.length === b.environments.length &&
+            a.environments.every((env, i) => env === b.environments[i]);
+        });
+
+        const removedSpans = curSpans.filter(curSpan =>
+            !newSpans.find(newSpan => areSpansEqual(curSpan, newSpan))
         );
+
+        const addedSpans = newSpans.filter(newSpan =>
+            !curSpans.find(curSpan => areSpansEqual(curSpan, newSpan))
+        );
+
+        if (removedSpans.length > 0 || addedSpans.length > 0) {
+            return {
+                removed: removedSpans,
+                added: addedSpans
+            };
+        }
+    }
+
+    public async refreshServerDiscoveredSpans() {
+        const newSpans = await this.getServerDiscoveredSpans();
+        if (newSpans) {
+            this._serverDiscoveredSpans = newSpans;
+        }
+    }
+
+    private async init() {
+        await this.refreshServerDiscoveredSpans();
         await this.scanOpenedDocuments();
 
         void this.scanFilesInBackground();
+    }
+
+    public async refresh() {
+        const newSpans = await this.getServerDiscoveredSpans();
+        if (!newSpans) {
+            return;
+        }
+        const diff = this.compareServerDiscoveredSpans(this._serverDiscoveredSpans, newSpans);
+        if (!diff) {
+            return;
+        }
+
+        this._serverDiscoveredSpans = newSpans;
+
+        // reset cache
+        this.documents = {};
+        this.scanningStatus = {
+            ...this.scanningStatus,
+            isCompleted: false
+        };
+
+        await this.scanFilesInBackground();
     }
 
     private async scanOpenedDocuments() {
@@ -216,7 +280,7 @@ export class DocumentInfoCache {
             );
             const docInfos = getValuesOfFulfilledPromises(docInfosResults);
 
-            docInfos.forEach(doc => this.addToCache(doc));
+            docInfos.forEach(doc => !this.documents[doc.uri.toModulePath()] && this.addToCache(doc));
         }
 
         this.scanningStatus = {
@@ -266,12 +330,12 @@ export class DocumentInfoCache {
             spans.push(...additionalSpans);
         }
 
-        if (relatedSpans) {
+        if (relatedSpans.length > 0) {
             const relatedSpansMap = relatedSpans.groupBy(x => x.documentUri.fsPath);
             for (const fsPath in relatedSpansMap) {
                 const spans = relatedSpansMap[fsPath];
                 const uri = vscode.Uri.file(fsPath);
-                Logger.info(`Scanning of ${doc.uri.toModulePath()} with related spans...`);
+                Logger.info(`Scanning of ${uri.toModulePath()} with related spans...`);
                 await this.scanAndCacheFile(uri, spans);
             }
         }

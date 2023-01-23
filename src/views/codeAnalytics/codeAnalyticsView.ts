@@ -243,17 +243,17 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         }
         this._lastActiveTab = tabsList[0];
 
-        const timer = setInterval(() => {
+        setInterval(() => {
             if (this._activeTab &&
                 (this.initializationStatus.isInProgress !== this._documentInfoCache.scanningStatus.isInProgress)
             ) {
-                this.initializationStatus = this._documentInfoCache.scanningStatus;
-                this._activeTab.onInitializationStatusChange(this.initializationStatus);
-            }
+                this._activeTab.onInitializationStatusChange(this._documentInfoCache.scanningStatus);
 
-            if (this._documentInfoCache.scanningStatus.isCompleted) {
-                this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
-                clearInterval(timer);
+                if (this.initializationStatus.isCompleted !== this._documentInfoCache.scanningStatus.isCompleted) {
+                    this.onTabRefreshRequested(new UiMessage.Notify.TabRefreshRequested());
+                }
+
+                this.initializationStatus = this._documentInfoCache.scanningStatus;
             }
         }, 1000);
 	}
@@ -452,6 +452,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             
             var doc = vscode.window.activeTextEditor?.document;
             if (doc!=null){
+                await this._documentInfoCache.refresh();
                 await this._documentInfoProvider.refresh(doc);
             }
             

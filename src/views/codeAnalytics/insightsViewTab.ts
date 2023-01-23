@@ -8,7 +8,7 @@ import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "../../services/codeObject";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
-import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
+import { CodeObjectInsight, IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { ListViewRender } from "../ListView/ListViewRender";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
@@ -66,7 +66,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.updateListView(HtmlHelper.getLoadingMessage("Loading insights..."));
         this.updateSpanListView("");
         this.clearSpanLabel();
-        let responseItems: any [] | undefined = undefined;
+        let responseItems: CodeObjectInsight[] | undefined = undefined;
         let usageResults: UsageStatusResults;
         let duplicateSpansItems : DuplicateSpanInsight[]=[];
         try {

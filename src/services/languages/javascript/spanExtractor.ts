@@ -83,7 +83,7 @@ export class JSSpanExtractor implements ISpanExtractor {
                     }
 
 
-                    // Case
+                    // Case:
                     //  Preconditions:
                     //  Discovered span name on server: "spanFunc"
                     //
