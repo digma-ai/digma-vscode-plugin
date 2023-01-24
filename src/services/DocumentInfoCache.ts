@@ -83,6 +83,10 @@ export class DocumentInfoCache {
         this._fileSystemWatcher.onDidCreate((uri) => this.scanAndCacheFile(uri));
         this._fileSystemWatcher.onDidChange((uri) => this.scanAndCacheFile(uri));
         this._fileSystemWatcher.onDidDelete(async (uri) => {
+            if (this.isInsideExcludedFolder(uri)) {
+                return;
+            }
+            
             const fsPath = uri.fsPath;
             
             // Rescan other documents where related spans are present
@@ -318,6 +322,7 @@ export class DocumentInfoCache {
 
         Logger.info("Background scanning completed");
         statusBar.hide();
+        console.log(this.documents);
     }
 
     public async getDocumentCachedInfo(
