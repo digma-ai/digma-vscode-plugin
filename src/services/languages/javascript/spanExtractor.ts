@@ -406,11 +406,9 @@ export class JSSpanExtractor implements ISpanExtractor {
             if (!functionDefinitionToken) {
                 return;
             }
-            functionDefinition = await this._codeInspector.getDefinitionWithTokens(functionDefinition.document, functionDefinitionToken.range.start, symbolProvider);
-        
-            if (!functionDefinition) {
-                return;
-            }
+
+            // look up recursively in other documents
+            functionDefinition = await this.getFunctionDefinition(functionDefinition.document, functionDefinitionToken, symbolProvider);
         }
         return functionDefinition;
     }

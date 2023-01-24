@@ -323,7 +323,6 @@ export class DocumentInfoCache {
 
         Logger.info("Background scanning completed");
         statusBar.hide();
-        console.log(this.documents);
     }
 
     public async getDocumentCachedInfo(
