@@ -83,24 +83,7 @@ export class DocumentInfoCache {
         this._fileSystemWatcher.onDidCreate((uri) => this.scanAndCacheFile(uri));
         this._fileSystemWatcher.onDidChange((uri) => this.scanAndCacheFile(uri));
         this._fileSystemWatcher.onDidDelete(async (uri) => {
-            if (this.isInsideExcludedFolder(uri)) {
-                return;
-            }
-            
-            const fsPath = uri.fsPath;
-            
-            // Rescan other documents where related spans are present
-            for (const [key, data] of Object.entries(this.documents)) {
-                if (this.documents[key].additionalSpans[fsPath]) {
-                    delete this.documents[key].additionalSpans[fsPath];
-                    if (data.documentInfo) {
-                        Logger.info(`Rescanning of ${key} on file deletion...`);
-                        const doc = await vscode.workspace.openTextDocument(data.documentInfo.uri);
-                        this.addToCache(await this.getDocumentInfo(doc));
-                    }
-                }
-            }
-
+            this.resetAdditionalSpansInOtherDocuments(uri);
             delete this.documents[uri.toModulePath()];
         });
 
@@ -120,6 +103,25 @@ export class DocumentInfoCache {
         this.init();
     }
 
+    private async resetAdditionalSpansInOtherDocuments(uri: vscode.Uri) {
+        if (this.isInsideExcludedFolder(uri)) {
+            return;
+        }
+        
+        const fsPath = uri.fsPath;
+        
+        for (const [key, data] of Object.entries(this.documents)) {
+            if (this.documents[key].additionalSpans[fsPath]) {
+                delete this.documents[key].additionalSpans[fsPath];
+                if (data.documentInfo) {
+                    Logger.info(`Rescanning of ${key} after change with ${uri.toModulePath()}...`);
+                    const doc = await vscode.workspace.openTextDocument(data.documentInfo.uri);
+                    this.addToCache(await this.getDocumentInfo(doc));
+                }
+            }
+        }
+    }
+
     private addToCache(documentInfo: DocumentCacheInfo) {
         const filePath = documentInfo.uri.toModulePath();
         if (!this.documents[filePath]) {
@@ -130,9 +132,8 @@ export class DocumentInfoCache {
 
     private async scanAndCacheFile(uri: vscode.Uri) {
         try {
-            if (this.isInsideExcludedFolder(uri)) {
-                return;
-            }
+            this.resetAdditionalSpansInOtherDocuments(uri);
+
             const doc = await vscode.workspace.openTextDocument(uri);
             if (doc && this._symbolProvider.supportsDocument(doc)) {
                 this.addToCache(await this.getDocumentInfo(doc));
