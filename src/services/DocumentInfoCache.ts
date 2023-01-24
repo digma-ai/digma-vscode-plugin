@@ -54,7 +54,12 @@ export class DocumentInfoCache {
     private _symbolProvider: SymbolProvider;
     private _analyticsProvider: AnalyticsProvider;
     private _serverDiscoveredSpans: ServerDiscoveredSpan[];
-    private documents: Record<string, DocumentCacheInfo>;
+    private documents: Record<
+        string,
+        {
+            documentInfo?: DocumentCacheInfo,
+            additionalSpans: Record<string, SpanLocationInfo[]>,
+        }>;
     public scanningStatus: ScanningStatus;
 
     constructor(
@@ -77,7 +82,21 @@ export class DocumentInfoCache {
 
         this._fileSystemWatcher.onDidCreate((uri) => this.scanAndCacheFile(uri));
         this._fileSystemWatcher.onDidChange((uri) => this.scanAndCacheFile(uri));
-        this._fileSystemWatcher.onDidDelete((uri) => {
+        this._fileSystemWatcher.onDidDelete(async (uri) => {
+            const fsPath = uri.fsPath;
+            
+            // Rescan other documents where related spans are present
+            for (const [key, data] of Object.entries(this.documents)) {
+                if (this.documents[key].additionalSpans[fsPath]) {
+                    delete this.documents[key].additionalSpans[fsPath];
+                    if (data.documentInfo) {
+                        Logger.info(`Rescanning of ${key} on file deletion...`);
+                        const doc = await vscode.workspace.openTextDocument(data.documentInfo.uri);
+                        this.addToCache(await this.getDocumentInfo(doc));
+                    }
+                }
+            }
+
             delete this.documents[uri.toModulePath()];
         });
 
@@ -87,7 +106,7 @@ export class DocumentInfoCache {
                 editors.map(async (editor) => {
                     const document = editor.document;
                     const filePath = document.uri.toModulePath();
-                    if (!this.documents[filePath] && this.isCacheable(document)) {
+                    if (!this.documents[filePath] || !this.documents[filePath].documentInfo && this.isCacheable(document)) {
                         this.addToCache(await this.getDocumentInfo(document));
                     }
                 })
@@ -99,17 +118,20 @@ export class DocumentInfoCache {
 
     private addToCache(documentInfo: DocumentCacheInfo) {
         const filePath = documentInfo.uri.toModulePath();
-        this.documents[filePath] = documentInfo;
+        if (!this.documents[filePath]) {
+            this.documents[filePath] = { additionalSpans: {}};
+        }
+        this.documents[filePath].documentInfo = documentInfo;
     }
 
-    private async scanAndCacheFile(uri: vscode.Uri, additionalSpans?: SpanLocationInfo[]) {
+    private async scanAndCacheFile(uri: vscode.Uri) {
         try {
             if (this.isInsideExcludedFolder(uri)) {
                 return;
             }
             const doc = await vscode.workspace.openTextDocument(uri);
             if (doc && this._symbolProvider.supportsDocument(doc)) {
-                this.addToCache(await this.getDocumentInfo(doc, additionalSpans));
+                this.addToCache(await this.getDocumentInfo(doc));
             }
         } catch (e) {
             Logger.error(`Unable to scan file ${uri.toModulePath()}`);
@@ -265,7 +287,10 @@ export class DocumentInfoCache {
         while (files.length) {
             const filesToScan = files
                 .splice(0, DocumentInfoCache.batchSize)
-                .filter((uri) => !this.documents[uri.toModulePath()]);
+                .filter((uri) => 
+                    !this.documents[uri.toModulePath()] ||
+                    !this.documents[uri.toModulePath()].documentInfo
+                );
 
             const docPromises = filesToScan.map((file) =>
                 vscode.workspace.openTextDocument(file)
@@ -280,7 +305,10 @@ export class DocumentInfoCache {
             );
             const docInfos = getValuesOfFulfilledPromises(docInfosResults);
 
-            docInfos.forEach(doc => !this.documents[doc.uri.toModulePath()] && this.addToCache(doc));
+            docInfos.forEach(doc => (
+                !this.documents[doc.uri.toModulePath()] ||
+                !this.documents[doc.uri.toModulePath()].documentInfo
+            ) && this.addToCache(doc));
         }
 
         this.scanningStatus = {
@@ -296,18 +324,18 @@ export class DocumentInfoCache {
         doc: vscode.TextDocument
     ): Promise<DocumentCacheInfo> {
         const filePath = doc.uri.toModulePath();
-        let cachedInfo = this.documents[filePath];
+        let docInfo = this.documents[filePath]?.documentInfo;
 
-        if (!cachedInfo) {
-            this.addToCache(await this.getDocumentInfo(doc));
+        if (!docInfo) {
+            docInfo = await this.getDocumentInfo(doc);
+            this.addToCache(docInfo);
         }
 
-        return this.documents[filePath];
+        return docInfo;
     }
 
     private async getDocumentInfo(
         doc: vscode.TextDocument,
-        additionalSpans?: SpanLocationInfo[]
     ): Promise<DocumentCacheInfo> {
         Logger.info(`Scanning of ${doc.uri.toModulePath()}...`);
         const [symbolTrees, tokens] = await Promise.all([
@@ -325,18 +353,27 @@ export class DocumentInfoCache {
             tokens,
             this._serverDiscoveredSpans
         );
-        
-        if (additionalSpans) {
-            spans.push(...additionalSpans);
-        }
 
+        let additionalSpansMap: Record<string, SpanLocationInfo[]> = {};
+        const cachedData = this.documents[doc.uri.toModulePath()];
+        if (cachedData) {
+            additionalSpansMap = cachedData.additionalSpans;
+        }
+        spans.push(...Object.values(additionalSpansMap).flat());
+
+        let relatedSpansMap: Record<string, SpanLocationInfo[]> = {};
         if (relatedSpans.length > 0) {
-            const relatedSpansMap = relatedSpans.groupBy(x => x.documentUri.fsPath);
+            relatedSpansMap = relatedSpans.groupBy(x => x.documentUri.fsPath);
             for (const fsPath in relatedSpansMap) {
                 const spans = relatedSpansMap[fsPath];
                 const uri = vscode.Uri.file(fsPath);
-                Logger.info(`Scanning of ${uri.toModulePath()} with related spans...`);
-                await this.scanAndCacheFile(uri, spans);
+                const relativePath = uri.toModulePath();
+                Logger.info(`Rescanning of ${relativePath} with additional spans...`);
+                if (!this.documents[relativePath]) {
+                    this.documents[relativePath] = { additionalSpans: {} };
+                }
+                this.documents[relativePath].additionalSpans[doc.uri.fsPath] = spans;
+                await this.scanAndCacheFile(uri);
             }
         }
 
