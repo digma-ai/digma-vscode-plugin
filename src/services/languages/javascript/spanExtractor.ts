@@ -358,30 +358,57 @@ export class JSSpanExtractor implements ISpanExtractor {
     }
 
     getFunctionArguments(document: vscode.TextDocument, functionToken: Token): string[] | undefined {
-        let parametersLine = functionToken.range.end.line;
-        const lineText = document.lineAt(parametersLine);
+        let lineNumber = functionToken.range.end.line;
         let startPosition = functionToken.range.end;
-        let endPosition = new vscode.Position(parametersLine, lineText.range.end.character);
-        let restOfLineText = document.getText(new vscode.Range(
+        let line = document.lineAt(lineNumber);
+        let endPosition = new vscode.Position(lineNumber, line.range.end.character);
+        let lineText = document.getText(new vscode.Range(
             startPosition, 
             endPosition
         ));
 
-        const matches = restOfLineText.match(this.paramsRegex);
-        if (!matches) {
-            return undefined;
+        let funcArguments: string[] = [];
+
+        let isOpenParenthesisFound = false;
+        let isCloseParenthesisFound = false;
+
+        while (lineNumber <= document.lineCount - 1) {
+            let offset = 0;
+            if (lineNumber === startPosition.line) {
+                offset = startPosition.character;
+            }
+
+            const openParenthesis = lineText.indexOf("(");
+            if (openParenthesis >= 0) {
+                isOpenParenthesisFound = true;
+                startPosition = new vscode.Position(lineNumber, openParenthesis + offset + 1);
+            }
+            
+            const closeParenthesis = lineText.indexOf(")");
+            if (closeParenthesis >= 0) {
+                isCloseParenthesisFound = true;
+                endPosition = new vscode.Position(lineNumber, closeParenthesis + offset);
+                break;
+            }
+
+            lineNumber++;
+            lineText = document.lineAt(lineNumber).text;
         }
 
-        // TODO: add support for whitespace between function name and the brackets
+        if (isOpenParenthesisFound && isCloseParenthesisFound) {
+            let argumentsText = document.getText(new vscode.Range(
+                startPosition, 
+                endPosition
+            ));
+            funcArguments = argumentsText.replace(/\s/g, "").split(",");
+        }
+
+        // TODO: ignore commented arguments
         // code example:
-        //  func   (param1, param2);
-        
-        // TODO: add support for multiline function calls
-        // code example:
-        //  func(
-        //    param1,
+        //   func(
+        //    // param1,
         //    param2
-        //  )
+        //   ))
 
         // TODO: add support for nested function call arguments
         // code example:
@@ -391,7 +418,7 @@ export class JSSpanExtractor implements ISpanExtractor {
         // code example:
         //  func([param1, param2])
 
-        return matches[1].split(",").map(x => x.trim());
+        return funcArguments;
     }
     
     async getFunctionDefinition(document: vscode.TextDocument, functionToken: Token, symbolProvider: SymbolProvider): Promise<DefinitionWithTokens | undefined> {
