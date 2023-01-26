@@ -73,11 +73,11 @@ export class ErrorFlowStackRenderer {
 
                             <div class="property-col" style?="margin-right:4px;">
                                 <span class="label">First: </span>
-                                <span class="value" title="${summary.firstOccurenceTime}">${summary.firstOccurenceTime.fromNow()}</span>
+                                <span class="value" title="${summary.firstOccurrenceTime}">${summary.firstOccurrenceTime.fromNow()}</span>
                             </div>
                             <div class="property-col" style="margin-right:4px;">
                                 <span class="label">Last: </span>
-                                <span class="value" title="${summary.lastOccurenceTime}">${summary.lastOccurenceTime.fromNow()}</span>
+                                <span class="value" title="${summary.lastOccurrenceTime}">${summary.lastOccurrenceTime.fromNow()}</span>
                             </div>
                             <div class="property-col" >
                                 <span class="label">Frequency: </span>

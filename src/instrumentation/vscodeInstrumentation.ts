@@ -18,10 +18,10 @@ export class VsCodeDebugInstrumentation implements vscode.Disposable{
                     async m => {
                         if (m.event ==='continued'){
                             console.log('continued');
-                            await _analyticsProvider.sendInsturmentationEvent(1);
+                            await _analyticsProvider.sendInstrumentationEvent(1);
                         }
                         if (m.event==='stopped'){
-                            await _analyticsProvider.sendInsturmentationEvent(0);
+                            await _analyticsProvider.sendInstrumentationEvent(0);
                         }
                 }
               };

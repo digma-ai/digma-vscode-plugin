@@ -3,7 +3,7 @@ import * as path from 'path';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInspector } from '../../codeInspector';
-import { ISpanExtractor, SpanLocationInfo, SymbolInfo } from '../extractors';
+import { ISpanExtractor, SpanExtractorResult, SpanLocationInfo, SymbolInfo } from '../extractors';
 import { SymbolProvider } from '../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { PythonConstants } from './constants';
@@ -16,7 +16,7 @@ export class PythonSpanExtractor implements ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-    ): Promise<SpanLocationInfo[]> {
+    ): Promise<SpanExtractorResult> {
         const results: SpanLocationInfo[] = [];
 
         var strippedText = document.getText().replace("\n","").replace(/\s+/g,"").replace(/"/g, '\'');
@@ -108,7 +108,7 @@ export class PythonSpanExtractor implements ISpanExtractor {
 
         }
 
-        return results;
+        return { spans: results, relatedSpans: [] };
     }
 
 

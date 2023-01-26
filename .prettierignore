@@ -1,0 +1,6 @@
+jaegerUi/
+out/
+package.json
+package-lock.json
+src/views-ui/common/jquery-3.6.0.min.js
+src/views-ui/common/require-2.3.6.min.js

@@ -8,8 +8,9 @@ import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExcepti
 import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "../../services/codeObject";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
-import { ICodeAnalyticsViewTab } from "./common";
+import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
+import { ScanningStatus } from "../../services/DocumentInfoCache";
 
 export class UsagesViewTab implements ICodeAnalyticsViewTab 
 {
@@ -41,6 +42,19 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
         
     
     }
+
+    public onInitializationStatusChange(status: ScanningStatus): void {
+        this.refreshInitializationStatus(status);
+    }
+    
+
+    private refreshInitializationStatus(status: ScanningStatus) {
+        let html = HtmlHelper.getInitializationStatus(status);
+        this._channel?.publish(
+            new UiMessage.Set.InitializationStatus(html)
+        );
+    }
+
     public async refreshListViewRequested() {
         let insights: any [] | undefined = undefined;
         let usageResults: UsageStatusResults;
@@ -76,6 +90,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
 
     public  getHtml(): string {
         return /*html*/`
+            <div class="initialization-status"></div>
             <div id="insightList" class="list"></div>
 
 

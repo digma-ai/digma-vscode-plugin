@@ -3,47 +3,6 @@ body {
     padding-right: 5px;
 }
 
-ul.tree{
-    list-style-type: none;
-    padding-left: 0;
-    margin-top: 0;
-
-    ul{
-        list-style-type: none;
-        padding-left: 1em;
-    }
-    .collapsed {
-        display: none;
-    }
-    .has-items{
-        cursor: pointer;
-        user-select: none;
-    }
-    .line{
-        padding-left: 1.4em;
-        padding-top: 0.2em;
-        padding-bottom: 0.3em;
-        position: relative;
-        border-radius: 2px;
-        &:hover{
-            background-color: var(--vscode-list-hoverBackground);
-        }
-        &:hover{
-            background-color: var(--vscode-list-hoverBackground);
-        }
-        &.selected {
-            background: var(--vscode-list-inactiveSelectionBackground);
-        }
-        &>.codicon:first-of-type{
-            position: absolute;
-            left: 0;
-        }
-        &.has-items.active + * {
-            display: block;
-        }
-    }
-}
-
 .info-message{
     display: flex;
     flex-direction: column;
@@ -76,6 +35,59 @@ ul.tree{
     }
 }
 
+ul.tree{
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 0;
+
+    ul{
+        list-style-type: none;
+        padding-left: 1em;
+    }
+    .collapsed {
+        display: none;
+    }
+    .has-items{
+        cursor: pointer;
+        user-select: none;
+    }
+    .line{
+        padding-left: 1.4em;
+        padding-top: 0.2em;
+        padding-bottom: 0.3em;
+        position: relative;
+        border-radius: 2px;
+        &:hover{
+            background-color: var(--vscode-list-hoverBackground);
+        }
+        &.selected {
+            background: var(--vscode-list-inactiveSelectionBackground);
+        }
+        &>.codicon:first-of-type{
+            position: absolute;
+            left: 0;
+        }
+        &.has-items.active + * {
+            display: block;
+        }
+    }
+}
+
+.initializing-message {
+    display: flex;
+    align-items: center;
+    margin: 4px 0;
+
+    vscode-progress-ring {
+        width: 16px;
+        height: 16px;
+    }
+
+    span {
+        margin-left: 10px;
+    }
+}
+
 .loading-message{
     display: flex;
     flex-direction: column;
@@ -103,11 +115,13 @@ ul.tree{
     text-overflow: ellipsis;
 }
 .right-ellipsis{
+    /* stylelint-disable-next-line scss/at-extend-no-missing-placeholder */
     @extend .ellipsis;
     direction: rtl;
     unicode-bidi: plaintext;
 }
 .left-ellipsis{
+    /* stylelint-disable-next-line scss/at-extend-no-missing-placeholder */
     @extend .ellipsis;
     direction: rtl;
     text-align: left;

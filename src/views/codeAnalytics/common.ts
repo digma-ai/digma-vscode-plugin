@@ -1,6 +1,7 @@
 import { Disposable } from "vscode";
 import { WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "../../services/codeObject";
+import { ScanningStatus } from "../../services/DocumentInfoCache";
 
 export interface ICodeAnalyticsViewTab extends Disposable
 {
@@ -12,6 +13,7 @@ export interface ICodeAnalyticsViewTab extends Disposable
     onReset(): void;
     onActivate(codeObject: CodeObjectInfo): void ;
     onDeactivate(): void ;
+    onInitializationStatusChange(status: ScanningStatus): void;
     onRefreshRequested(codeObject: CodeObjectInfo):void;
     onUpdated(codeObject: CodeObjectInfo): void ;
     showError(error: any): void;
@@ -76,6 +78,14 @@ export class HtmlHelper
                 <vscode-progress-ring></vscode-progress-ring>
                 <div>${text}</div>
             </div>`;
+    }
+
+    public static getInitializationStatus(status: ScanningStatus): string{
+        return /*html*/ status.isInProgress ? `
+            <div class="initializing-message">
+                <vscode-progress-ring></vscode-progress-ring>
+                <span>Digma initializing...</span>
+            </div>` : "<div></div>";
     }
 
     public static getErrorName(

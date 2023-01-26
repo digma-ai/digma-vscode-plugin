@@ -39,9 +39,9 @@ suite('CSharpSpanExtractor', () => {
 
             test('should return zero spans', () => {
                 // @ts-ignore
-                const spans = extractor.extractSpans(undefined, undefined, tokens);
+                const spans = await extractor.extractSpans(undefined, undefined, tokens);
 
-                expect(spans).to.have.lengthOf(0);
+                expect(spans.spans).to.have.lengthOf(0);
             });
         });
 
@@ -151,14 +151,14 @@ suite('CSharpSpanExtractor', () => {
                 // @ts-ignore
                 const spans = await extractor.extractSpans(undefined, symbolInfos, tokens);
 
-                expect(spans[0].name).to.equal(expectedSpan.name);
+                expect(spans.spans[0].name).to.equal(expectedSpan.name);
             });
 
             test('should calculate the code object id using the name of the activity source and span name', async () => {
                 // @ts-ignore
                 const spans = await extractor.extractSpans(undefined, symbolInfos, tokens);
 
-                expect(spans[0].id).to.equal(expectedSpan.id);
+                expect(spans.spans[0].id).to.equal(expectedSpan.id);
             });
         });
 

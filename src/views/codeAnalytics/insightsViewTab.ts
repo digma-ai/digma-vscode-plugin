@@ -8,7 +8,7 @@ import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "../../services/codeObject";
 import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
-import { IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
+import { CodeObjectInsight, IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { ListViewRender } from "../ListView/ListViewRender";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
@@ -21,6 +21,7 @@ import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExcepti
 import { WorkspaceState } from "../../state";
 import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
 import { DuplicateSpanInsight } from "./AdminInsights/adminInsights";
+import { ScanningStatus } from "../../services/DocumentInfoCache";
 
 
 
@@ -41,6 +42,9 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             this._channel.consume(UiMessage.Notify.SetInsightCustomStartTime, this.onSetInsightCustomStartTime.bind(this));
     }
     
+    onInitializationStatusChange(status: ScanningStatus): void {
+        this.refreshInitializationStatus(status);
+    }
     
     onRefreshRequested(codeObject: CodeObjectInfo): void {
 
@@ -62,7 +66,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.updateListView(HtmlHelper.getLoadingMessage("Loading insights..."));
         this.updateSpanListView("");
         this.clearSpanLabel();
-        let responseItems: any [] | undefined = undefined;
+        let responseItems: CodeObjectInsight[] | undefined = undefined;
         let usageResults: UsageStatusResults;
         let duplicateSpansItems : DuplicateSpanInsight[]=[];
         try {
@@ -181,6 +185,13 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     public onDeactivate(): void {
     }
 
+    private refreshInitializationStatus(status: ScanningStatus) {
+        let html = HtmlHelper.getInitializationStatus(status);
+        this._channel?.publish(
+            new UiMessage.Set.InitializationStatus(html)
+        );
+    }
+
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
         let html = HtmlHelper.getCodeObjectLabel(this._viewUris, codeObject.displayName);
         this._channel?.publish(
@@ -209,6 +220,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
     public getHtml(): string {
         return /*html*/`
+            <div class="initialization-status"></div>
             <div id="codeObjectScope" class="codeobject-selection"></div>
             <div id="insightList" class="list"></div>
             <div class="spacer" style="height:15px"></div>

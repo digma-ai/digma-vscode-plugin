@@ -21,6 +21,7 @@ import { InsightsStatusBar } from './views/codeAnalytics/StatusBar/insightsStatu
 import { EnvironmentManager } from './services/EnvironmentManager';
 import { EventManager } from './services/EventManager';
 import { Scheduler } from './services/Scheduler';
+import { DocumentInfoCache } from './services/DocumentInfoCache';
 import { SpanLinkResolver } from './services/spanLinkResolver';
 
 export async function activate(context: vscode.ExtensionContext) 
@@ -43,7 +44,8 @@ export async function activate(context: vscode.ExtensionContext)
     const codeInspector = new CodeInspector();
     const symbolProvider = new SymbolProvider(supportedLanguages, codeInspector);
     const analyticsProvider = new AnalyticsProvider(workspaceState);
-    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState);
+    const documentInfoCache = new DocumentInfoCache(symbolProvider, analyticsProvider);
+    const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState, documentInfoCache);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
     const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
     const spanLinkResolver = new SpanLinkResolver(symbolProvider,documentInfoProvider);
@@ -63,7 +65,7 @@ export async function activate(context: vscode.ExtensionContext)
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider,
-        context.extensionUri, editorHelper, workspaceState, codeLensProvider, envStatusbar, environmentManager,spanLinkResolver));
+        context.extensionUri, editorHelper, workspaceState, codeLensProvider, envStatusbar, environmentManager,spanLinkResolver, documentInfoCache));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));

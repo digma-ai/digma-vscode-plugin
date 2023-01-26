@@ -104,7 +104,18 @@ export interface IEndpointExtractor {
     ): Promise<EndpointInfo[]>;
 }
 
+export interface ServerDiscoveredSpan {
+    name: string,
+    spanCodeObjectId: string,
+    environments: string[]
+}
 
+export interface SpanExtractorResult {
+    spans: SpanLocationInfo[],
+    /** Spans that were found outside of its original document
+     * (e.g. via imports) */
+    relatedSpans: SpanLocationInfo[]
+}
 
 export interface ISpanExtractor {
     extractSpans(
@@ -112,5 +123,6 @@ export interface ISpanExtractor {
         symbolInfos: SymbolInfo[],
         tokens: Token[],
         symbolProvider: SymbolProvider,
-    ): Promise<SpanLocationInfo[]>;
+        serverDiscoveredSpans?: ServerDiscoveredSpan[]
+    ): Promise<SpanExtractorResult>;
 }
