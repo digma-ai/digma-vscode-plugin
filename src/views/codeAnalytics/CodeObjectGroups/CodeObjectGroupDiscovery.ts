@@ -1,4 +1,4 @@
-import { CodeObjectUsageStatus, UsageStatusResults } from "../../../services/analyticsProvider";
+import { CodeObjectUsageStatus } from "../../../services/analyticsProvider";
 import { IListGroupItemBase } from "../../ListView/IListViewGroupItem";
 import { ICodeObjectScopeGroupCreator } from "./ICodeObjectScopeGroupCreator";
 
@@ -13,7 +13,7 @@ export class CodeObjectGroupDiscovery{
         const types = Object.keys(statusesByType);
         for (const type of types){
             const constObjectsData = statusesByType[type].map(x=>x.groupName);
-            const uniqueCodeObjects = [... new Set(constObjectsData)]
+            const uniqueCodeObjects = [... new Set(constObjectsData)];
             for (const codeObjectGroup of uniqueCodeObjects){
                 const groupItem = await this._groupViewItemCreator.create(type, codeObjectGroup);
                 if (groupItem){

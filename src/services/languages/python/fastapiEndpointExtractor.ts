@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { DocumentInfoProvider } from './../../documentInfoProvider';
 import { SymbolProvider, SymbolTree } from './../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
@@ -15,8 +14,9 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
         symbolProvider: SymbolProvider,
     ): Promise<EndpointInfo[]> {
         // Ensure fastapi module was imported
-        if(!tokens.any(t => t.text == 'fastapi' && t.type == TokenType.module))
+        if(!tokens.some(t => t.text == 'fastapi' && t.type == TokenType.module)) {
             return [];
+        }
         
         let prefix = '';
 
@@ -58,39 +58,43 @@ export class FastapiEndpointExtractor implements IEndpointExtractor
             }
                 
 
-            if ((appToken.text != 'app' && appToken.text != 'router') || appToken.type != TokenType.variable || methodToken.type != TokenType.method)
+            if ((appToken.text != 'app' && appToken.text != 'router') || appToken.type != TokenType.variable || methodToken.type != TokenType.method) {
                 continue;
+            }
 
             const method = methodToken.text;
-            if (!['post', 'get', 'put', 'delete', 'options', 'head', 'patch', 'trace'].includes(method))
+            if (!['post', 'get', 'put', 'delete', 'options', 'head', 'patch', 'trace'].includes(method)) {
                 continue;
+            }
             
             const lineText = document.getText(new vscode.Range(
                 appToken.range.start, 
                 new vscode.Position(methodToken.range.end.line, 1000)));
             
             let index = 2;
-            let match = new RegExp(`^(app|router)\\.${method}\\(["'](\/.*?)["']`).exec(lineText);
+            let match = new RegExp(`^(app|router)\\.${method}\\(["'](/.*?)["']`).exec(lineText);
             if (!match){
                 //Different regex for optional params (named)
                 match  =  new RegExp(`^(app|router)\\.${method}\\((.*=.*,\\s*)*path=\\s*["'](\\/.*?)["'](ֿֿֿ\\s*,.*=.*)*\\)`).exec(lineText);
                 index =3;
             }
 
-            if (!match)
+            if (!match) {
                 continue;
+            }
             
-            const relevantFunc = symbolInfo.firstOrDefault(s => s.range.contains(methodToken.range))
-            if (!relevantFunc)
+            const relevantFunc = symbolInfo.firstOrDefault(s => s.range.contains(methodToken.range));
+            if (!relevantFunc) {
                 continue;
+            }
             
             const path = match[index];
-            let folder = vscode.workspace.getWorkspaceFolder(document.uri);
-            let folderPrefix = folder?.uri.path.split('/').slice(0,-1).join('/');
-            let relevantPath = document.uri.path.substring(folderPrefix!.length);
-            let pathParts = relevantPath.split('/').filter(x=>x);
+            const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+            const folderPrefix = folder?.uri.path.split('/').slice(0,-1).join('/');
+            const relevantPath = document.uri.path.substring(folderPrefix!.length);
+            const pathParts = relevantPath.split('/').filter(x=>x);
             for (let j=0;j<pathParts.length-1;j++){
-                let possibleRoot = pathParts[j];
+                const possibleRoot = pathParts[j];
                 results.push(new EndpointInfo(
                     possibleRoot + '$_$' + EndpointSchema.HTTP + method.toUpperCase() + ' ' + prefix + path,
                     method, 

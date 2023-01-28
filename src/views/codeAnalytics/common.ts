@@ -92,7 +92,7 @@ export class HtmlHelper
         errorType: string,
         errorSourceCodeObjectId: string,
         errorSourceUID: string,
-        link: boolean = true,
+        link = true,
     )
     {
         return /*html*/ `

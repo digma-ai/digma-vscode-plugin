@@ -1,17 +1,15 @@
-import { integer } from "vscode-languageclient";
-
 export class DecimalRounder 
 {
     public getRoundedString(number: number): string{
         
-        let asString = String(number);
-        let firstDigit = asString[0];
+        const asString = String(number);
+        const firstDigit = asString[0];
         if (asString.length<=3){
             return asString;
         }
         else{
-            let closestRoundedUp = Number(firstDigit) * Math.pow(10,asString.length-1);
-            let closestRoundedDown = (Number(firstDigit)-1) * Math.pow(10,asString.length-1);
+            const closestRoundedUp = Number(firstDigit) * Math.pow(10,asString.length-1);
+            const closestRoundedDown = (Number(firstDigit)-1) * Math.pow(10,asString.length-1);
     
             let closestNumber = closestRoundedDown;
             if ((closestRoundedUp-number)<(number-closestRoundedDown)){
@@ -35,7 +33,7 @@ export class DecimalRounder
           { value: 1e18, symbol: "E" }
         ];
         const rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-        var item = lookup.slice().reverse().find(function(item) {
+        const item = lookup.slice().reverse().find(function(item) {
           return num >= item.value;
         });
         return item ? (num / item.value).toFixed(digits).replace(rx, "$1") + item.symbol : "0";

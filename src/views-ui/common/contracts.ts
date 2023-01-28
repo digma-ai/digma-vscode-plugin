@@ -1,5 +1,5 @@
 
-declare var acquireVsCodeApi: any;
+declare const acquireVsCodeApi: any;
 export const vscode = acquireVsCodeApi();
 
 window.addEventListener("load", main);
@@ -9,7 +9,7 @@ function main() {
 
         const message = <IMessage>event.data; // The JSON data our extension sent
         
-        for(let consumer of consumers){
+        for(const consumer of consumers){
             if(message.type === consumer.messageType){
                 consumer.handler(message.data);
             }

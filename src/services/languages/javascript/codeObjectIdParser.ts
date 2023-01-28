@@ -1,4 +1,4 @@
-import { CodeObjectId, CodeObjectInfo, ICodeObjectIdParser } from './../../codeObject';
+import { CodeObjectInfo, ICodeObjectIdParser } from './../../codeObject';
 
 export class JSCodeObjectInfo implements CodeObjectInfo {    
     constructor(
@@ -24,7 +24,7 @@ export class JSCodeObjectInfo implements CodeObjectInfo {
 
 export class JSCodeObjectIdParser implements ICodeObjectIdParser {
     parse(codeObjectId: string): JSCodeObjectInfo {
-        const pattern = /([\w\@/-]+):(.+)\$_\$(.*)/;
+        const pattern = /([\w@/-]+):(.+)\$_\$(.*)/;
         const matches = codeObjectId.match(pattern);
         const [ , packageName, modulePath, symbol ] = matches ?? ['', '', '', ''];
         return new JSCodeObjectInfo(

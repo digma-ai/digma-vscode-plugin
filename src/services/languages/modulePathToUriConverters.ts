@@ -4,7 +4,6 @@ import { Logger } from '../logger';
 import { PathUtils } from '../common/pathUtils';
 import { integer } from 'vscode-languageclient';
 import { DocumentInfo, DocumentInfoProvider } from '../documentInfoProvider';
-import path = require('path');
 
 export interface PossibleCodeObjectLocation {
 
@@ -41,7 +40,7 @@ export interface IModulePathToUriConverter {
 }
 
 export class LogicalModulePathToUriConverter implements IModulePathToUriConverter {
-    readonly _commonLogic: CommonConverterLogic = new CommonConverterLogic()
+    readonly _commonLogic: CommonConverterLogic = new CommonConverterLogic();
 
     public constructor(private _documentInfoProvider: DocumentInfoProvider){
 
@@ -70,7 +69,7 @@ export class LogicalModulePathToUriConverter implements IModulePathToUriConverte
                 }
             }       
              
-            var methodMatches = 
+            let methodMatches = 
                 symbols.filter(symbol=>(symbol.kind===vscode.SymbolKind.Function ||
                 symbol.kind===vscode.SymbolKind.Method));
             
@@ -119,17 +118,17 @@ export class CommonConverterLogic{
                 new vscode.Position(pathInfo.lineNumber+1,0));
         }
         else if (pathInfo.spanName){
-            var span = docInfo?.spans.filter(x=>x.name==pathInfo.spanName).firstOrDefault();
+            const span = docInfo?.spans.filter(x=>x.name==pathInfo.spanName).firstOrDefault();
             if (span){
                 range=new vscode.Range(new vscode.Position(span.range.start.line+1, span.range.start.character),
                       new vscode.Position(span.range.start.line+2,span.range.start.character+1));                }
         }
 
         else if (pathInfo.methodName){
-            var method = docInfo?.methods.filter(x=>{
-               const methoId = x.id.split("$_$").lastOrDefault();
-               if (!methoId){return false};
-               return methoId===pathInfo.methodName;
+            const method = docInfo?.methods.filter(x=>{
+               const methodId = x.id.split("$_$").lastOrDefault();
+               if (!methodId){return false;};
+               return methodId===pathInfo.methodName;
             }).firstOrDefault();
             if (method){
                 range=new vscode.Range(new vscode.Position(method.range.start.line+1, method.range.start.character),
@@ -143,7 +142,7 @@ export class CommonConverterLogic{
 
 export class PhysicalModulePathToUriConverter implements IModulePathToUriConverter {
     
-    readonly _commonLogic: CommonConverterLogic = new CommonConverterLogic()
+    readonly _commonLogic: CommonConverterLogic = new CommonConverterLogic();
     constructor(
         private _specialFolders: string[],
         private _documentInfoProvider: DocumentInfoProvider){
@@ -156,8 +155,8 @@ export class PhysicalModulePathToUriConverter implements IModulePathToUriConvert
         const fileName = await PathUtils.getFileName(path);
         const specialFoldersGlob = this._specialFolders.map(x=>`**/${x}/**`).join(",");
         const files = await vscode.workspace.findFiles(`**/${fileName}}`, `{${specialFoldersGlob}}`);
-        var relevantFiles = files.filter(x=>x.fsPath.endsWith(modulePhysicalPathWithoutRoot));
-        let fileUri: vscode.Uri | undefined = undefined ;
+        const relevantFiles = files.filter(x=>x.fsPath.endsWith(modulePhysicalPathWithoutRoot));
+        const fileUri: vscode.Uri | undefined = undefined ;
 
         //This is a workaround, in case of multiple matches we find the one closest to us
         //todo: find a better way

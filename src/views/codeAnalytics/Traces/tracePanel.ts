@@ -1,10 +1,7 @@
 
-import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
+// import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { WebviewChannel } from "../../webViewUtils";
-import fetch from "node-fetch";
-import { htmlPrefilter } from "jquery";
-import { settings } from "cluster";
-import { Settings } from "../../../settings";
+// import fetch from "node-fetch";
 
 export class TracePanel {
 

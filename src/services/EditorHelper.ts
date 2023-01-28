@@ -5,7 +5,6 @@ import { Logger } from './logger';
 import { SourceControl } from './sourceControl';
 import { DocumentInfoProvider } from './documentInfoProvider';
 import { Settings } from './../settings';
-import { CodeObjectLocationInfo } from './languages/extractors';
 import { PossibleCodeObjectLocation } from './languages/modulePathToUriConverters';
 
 export interface EditorInfo {
@@ -55,7 +54,7 @@ export class EditorHelper {
                 doc = await vscode.workspace.openTextDocument(workspaceUri);
 
                 const txtLine = doc.lineAt(lineNumber-1);
-                let fileChanged:boolean = false;
+                let fileChanged = false;
                 if (editorInfo.executedCode) {
                     fileChanged = (txtLine.text.trim() !== editorInfo.executedCode);
                 }
@@ -80,7 +79,7 @@ export class EditorHelper {
                 else {
                     const docInfo = await this._documentInfoProvider.getDocumentInfo(doc);
                     const methodInfos = docInfo?.methods || [];
-                    if(methodInfos.all(m => m.symbol.name != editorInfo.functionName)) {
+                    if(methodInfos.every(m => m.symbol.name != editorInfo.functionName)) {
                         doc = await this.askAndOpenFromSourceControl(editorInfo);
                     }
                 }
@@ -92,12 +91,12 @@ export class EditorHelper {
         }
         catch(error) {
             Logger.error(`Failed to open file: ${editorInfo.modulePhysicalPath}`, error);
-            vscode.window.showErrorMessage(`Failed to open file: ${editorInfo.modulePhysicalPath}`)
+            vscode.window.showErrorMessage(`Failed to open file: ${editorInfo.modulePhysicalPath}`);
         }
     }
 
     public async openTextDocumentFromUri(uri: vscode.Uri) : Promise<vscode.TextDocument> {
-        let doc = await vscode.workspace.openTextDocument(uri);
+        const doc = await vscode.workspace.openTextDocument(uri);
         return doc;
     }
 
@@ -108,7 +107,7 @@ export class EditorHelper {
         vscode.window.activeTextEditor!.revealRange(line.range, vscode.TextEditorRevealType.InCenter);
     }
 
-    public async openDocument(content: string, language: string = 'text') {
+    public async openDocument(content: string, language = 'text') {
         const doc = await vscode.workspace.openTextDocument({ language, content });
         return await vscode.window.showTextDocument(doc);
     }
@@ -123,7 +122,7 @@ export class EditorHelper {
             }
         }
         else {
-            let sel = await vscode.window.showWarningMessage(
+            const sel = await vscode.window.showWarningMessage(
                 `File version is different from the version recorded in this flow, would you like to open the remote version of the file' installed.`,
                 'yes'
             );

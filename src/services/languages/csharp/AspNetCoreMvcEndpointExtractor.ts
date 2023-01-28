@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { DocumentInfoProvider } from './../../documentInfoProvider';
 import { CodeInspector } from '../../codeInspector';
 import { SymbolProvider, SymbolTree } from './../symbolProvider';
 import { Token, TokenType } from '../tokens';

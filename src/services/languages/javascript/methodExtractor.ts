@@ -52,7 +52,7 @@ export class JSMethodExtractor implements IMethodExtractor {
         const symbolInfos: SymbolInfo[] = [];
 
         /*
-        declation example:
+        declaration example:
         const getUsers = async () => {
             let a=1
         }

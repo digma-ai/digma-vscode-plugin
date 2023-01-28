@@ -18,12 +18,12 @@ export class NoCodeObjectMessage{
         const links = [];
 
         const codeObjects = docInfo.methods.flatMap(o=>o.getIds(true, true));
-        var usageStatuses =  await this._analyticsProvider.getUsageStatus(codeObjects);
+        const usageStatuses =  await this._analyticsProvider.getUsageStatus(codeObjects);
 
         for(const method of docInfo.methods){
             const relatedInsights = docInfo.insights.all.filter(s => 
-                method.ids.any(x=>x==s.codeObjectId) ||
-                method.relatedCodeObjects.any(r => r.id === s.codeObjectId));
+                method.ids.some(x=>x==s.codeObjectId) ||
+                method.relatedCodeObjects.some(r => r.id === s.codeObjectId));
             if(relatedInsights.length !==0){
                     links.push(/*html*/`<vscode-link class="codeobject-link" data-line="${method.range.start.line}">${method.displayName}</vscode-link>`);
             }

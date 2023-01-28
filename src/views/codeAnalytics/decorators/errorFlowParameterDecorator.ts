@@ -6,7 +6,7 @@ import { ErrorFlowStackViewModel } from '../errorFlowStackRenderer';
 export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
 {
     public _errorFlow?: ErrorFlowStackViewModel;
-    private _enabled: boolean = false;
+    private _enabled = false;
     constructor(private _documentInfoProvider: DocumentInfoProvider)
     {
         //"\uebe2".replace('uebe2','eabd')
@@ -37,27 +37,31 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
 
     protected async getParameters(document: vscode.TextDocument): Promise<IParameter[]> 
     {
-        let parameters: IParameter[] = [];
+        const parameters: IParameter[] = [];
 
         const frames = this.errorFlow?.stacks?.flatMap(s => s.frames) || [];
-        if(!frames)
+        if(!frames) {
             return [];
+        }
 
         const docInfo = await this._documentInfoProvider.getDocumentInfo(document);
-        if(!docInfo)
+        if(!docInfo) {
             return [];
+        }
 
-        for(let methodInfo of docInfo.methods)
+        for(const methodInfo of docInfo.methods)
         {
             const frame = frames.firstOrDefault(f => f.codeObjectId == methodInfo.symbol.id);
-            if(!frame)
+            if(!frame) {
                 continue;
+            }
             
-            for(let parameterInfo of methodInfo.parameters)
+            for(const parameterInfo of methodInfo.parameters)
             {
                 const parameterStats = frame.parameters.firstOrDefault(p => p.paramName == parameterInfo.name);
-                if(!parameterStats || !parameterStats.alwaysNoneValue)
+                if(!parameterStats || !parameterStats.alwaysNoneValue) {
                     continue;
+                }
                 
                 parameters.push({
                     name: parameterInfo.name,
@@ -73,7 +77,7 @@ export class ErrorFlowParameterDecorator extends ParameterDecorator<IParameter>
     private getParameterHover(parameter: ParameterInfo): vscode.MarkdownString
     {
         const html = /*html*/ `<code>${parameter.name}</code> is always <code>None</code>`;
-        let m = new vscode.MarkdownString(html);
+        const m = new vscode.MarkdownString(html);
         m.supportHtml = true;
         m.isTrusted = true;
         return m;

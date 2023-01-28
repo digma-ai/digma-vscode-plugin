@@ -20,9 +20,9 @@ window.addEventListener("load", () =>
         publish(new UiMessage.Notify.OverlayVisibilityChanged(overlayVisibility, overlayId));
     }
     function moveToTab(tabId: string){
-        let tabsElement: any = $(".analytics-nav")[0];
+        const tabsElement: any = $(".analytics-nav")[0];
         const group = tabsElement.tabs;
-        let tab = group.find(o=>o.id === tabId);
+        const tab = group.find(o=>o.id === tabId);
         tabsElement.moveToTabByIndex(group, group.indexOf(tab));
     }
 
@@ -204,13 +204,13 @@ window.addEventListener("load", () =>
     
 
     $(document).on("click", ".error-name.link", function () {
-        let errorSourceUID = $(this).data("error-source-uid");
+        const errorSourceUID = $(this).data("error-source-uid");
         publish(new UiMessage.Get.ErrorDetails(errorSourceUID));
     });
 
     $(document).on("click", ".span-name.link", function () {
-        let codeUri = $(this).data("code-uri");
-        let line = $(this).data("code-line");
+        const codeUri = $(this).data("code-uri");
+        const line = $(this).data("code-line");
 
         publish(new UiMessage.Notify.GoToFileAndLine(codeUri,Number(line)));
     });
@@ -279,12 +279,12 @@ window.addEventListener("load", () =>
     });
 
     $(document).on("click",".pagination-nav .prev", function(){
-        var paginationListElement = $(this).closest('.pagination-list');
+        const paginationListElement = $(this).closest('.pagination-list');
         prevPage(paginationListElement);
 
     });
     $(document).on("click",".pagination-nav .next", function(){
-        var paginationListElement = $(this).closest('.pagination-list');
+        const paginationListElement = $(this).closest('.pagination-list');
         nextPage(paginationListElement);
 
     });

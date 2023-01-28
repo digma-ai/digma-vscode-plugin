@@ -1,5 +1,5 @@
 import { IListGroupItemBase } from "./IListViewGroupItem";
-import { IItemsInGroup, IListViewItem, IListViewItemBase, InsightItemGroupRendererFactory, InsightListGroupItemsRenderer, sort } from "./IListViewItem";
+import { IItemsInGroup, IListViewItem, IListViewItemBase, InsightItemGroupRendererFactory, sort } from "./IListViewItem";
 
 export class ListViewRender
 {

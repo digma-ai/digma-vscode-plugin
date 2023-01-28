@@ -14,14 +14,14 @@ export class PythonMethodExtractor implements IMethodExtractor
     private extractFunctions(uri: vscode.Uri, filePath: string, parentSymPath: string, symbols: DocumentSymbol[]): SymbolInfo[] {
         let symbolInfos: SymbolInfo[] = [];
 
-        for (let sym of symbols)
+        for (const sym of symbols)
         {
-            let symPath = (parentSymPath ? parentSymPath + '.' : '') + sym.name;
+            const symPath = (parentSymPath ? parentSymPath + '.' : '') + sym.name;
 
             if (sym.kind + 1 == SymbolKind.Function ||
                 sym.kind + 1 == SymbolKind.Method)
             {
-                let range = new vscode.Range(
+                const range = new vscode.Range(
                     new vscode.Position(sym.range.start.line, sym.range.start.character),
                     new vscode.Position(sym.range.end.line, sym.range.end.character));
 

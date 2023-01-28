@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
-import { CodeInspector, Definition } from '../../codeInspector';
+import { CodeInspector } from '../../codeInspector';
 import { Logger } from '../../logger';
 import { ISpanExtractor, SpanExtractorResult, SpanLocationInfo, SymbolInfo } from "../extractors";
 import { Token, TokenType } from '../tokens';
@@ -40,7 +40,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
 
 
 
-        for (var symbol of symbolInfos) {
+        for (const symbol of symbolInfos) {
             Logger.info("Span discovering for function: " + symbol.displayName);
 
             const funcStartTokenIndex = tokens.findIndex(x => x.range.intersection(symbol.range));
@@ -75,8 +75,8 @@ export class CSharpSpanExtractor implements ISpanExtractor {
                     continue;
                 }
 
-                var spanName: string | undefined = undefined;
-                var spanNameToken: Token | undefined = undefined;
+                let spanName: string | undefined = undefined;
+                let spanNameToken: Token | undefined = undefined;
 
                 if (startIndex === endIndex - 1) {  //Activity.StartActivity() in this case span name equals to method name
                     spanName = symbol.name;
@@ -141,7 +141,7 @@ export class CSharpSpanExtractor implements ISpanExtractor {
     }
 
     private cleanSpanName(text: string): string {
-        return text.replace(/\"/g, '');
+        return text.replace(/"/g, '');
     }
 
     private getStatementIndexes(tokens: Token[], cursorLocation: vscode.Location): { cursorIndex: integer, endIndex: integer } {
@@ -151,13 +151,13 @@ export class CSharpSpanExtractor implements ISpanExtractor {
     }
 
     private getEndOfMethodCall(tokens: Token[], startIdx: integer): integer | undefined {
-        var i = startIdx;
+        let i = startIdx;
         if (tokens[i].type !== TokenType.punctuation || tokens[i].text !== '(') {
             return;
         }
 
         i++;
-        var parenthesesBalance = 1;
+        let parenthesesBalance = 1;
         for (; i < tokens.length; i++) {
             if (tokens[i].type === TokenType.punctuation) {
                 if (tokens[i].text === '(') {
@@ -186,8 +186,9 @@ export class CSharpSpanExtractor implements ISpanExtractor {
     private detectByArgumentsOrder(tokens: Token[], startIdx: integer, endIdx: integer): Token | undefined {
         for (let i = startIdx; i < endIdx; i++) {
             const catitade = this.detectStringOrNameof(tokens, i);
-            if (catitade)
+            if (catitade) {
                 return catitade;
+            }
         }
     }
 
@@ -197,18 +198,21 @@ export class CSharpSpanExtractor implements ISpanExtractor {
             if (tokens[i + 0].type === TokenType.parameter && tokens[i + 0].text === 'name' &&
                 tokens[i + 1].type === TokenType.punctuation && tokens[i + 1].text === ':') {
                 const catitade = this.detectStringOrNameof(tokens, i + 2);
-                if (catitade)
+                if (catitade) {
                     return catitade;
+                }
             }
         }
     }
 
     private detectStringOrNameof(tokens: Token[], index: integer): Token | undefined {
-        if (tokens[index].type == TokenType.string)
+        if (tokens[index].type == TokenType.string) {
             return tokens[index];
+        }
         if (tokens[index + 0].type == TokenType.plainKeyword && tokens[index + 0].text == 'nameof' &&
             tokens[index + 1].type == TokenType.punctuation && tokens[index + 1].text == '(' &&
-            tokens[index + 3].type == TokenType.punctuation && tokens[index + 3].text == ')')
+            tokens[index + 3].type == TokenType.punctuation && tokens[index + 3].text == ')') {
             return tokens[index + 2];
+        }
     }
 }

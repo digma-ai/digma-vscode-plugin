@@ -3,7 +3,7 @@ import { SymbolInformation, DocumentSymbol } from 'vscode-languageclient';
 import { delay } from '../utils';
 import { Logger } from '../logger';
 import { CodeInspector } from '../codeInspector';
-import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, ServerDiscoveredSpan, SpanExtractorResult, SpanLocationInfo, SymbolInfo } from './extractors';
+import { EmptySymbolAliasExtractor, EndpointInfo, IParametersExtractor, ISymbolAliasExtractor, ServerDiscoveredSpan, SpanExtractorResult, SymbolInfo } from './extractors';
 import { ILanguageExtractor } from './languageExtractor';
 import { Token, TokenType } from './tokens';
 import { BasicParametersExtractor } from './defaultImpls';
@@ -44,7 +44,7 @@ export class SymbolProvider
     }
 
     public supportsDocument(document: vscode.TextDocument): boolean{
-        return this.languageExtractors.any(x => vscode.languages.match(x.documentFilter, document) > 0);
+        return this.languageExtractors.some(x => vscode.languages.match(x.documentFilter, document) > 0);
     }
 
     /**
@@ -269,7 +269,7 @@ export class SymbolProvider
         {
             const installOption = `Install ${language.requiredExtensionId}`;
             const ignoreOption = `Ignore python files`;
-            let sel = await vscode.window.showErrorMessage(
+            const sel = await vscode.window.showErrorMessage(
                 `Digma cannot process ${language.documentFilter.language} files properly without '${language.requiredExtensionId}' installed.`,
                 ignoreOption,
                 installOption

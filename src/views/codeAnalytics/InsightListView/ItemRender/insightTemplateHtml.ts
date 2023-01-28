@@ -62,7 +62,7 @@ export class InsightTemplateHtml
             const formattedStartTime = actualStartTime?.fromNow() || '';
             const identicalStartTimes = actualStartTime?.valueOf() === customStartTime?.valueOf();
             
-            const timeInfoVisibilityClass = !!customStartTime ? '' : 'hidden';
+            const timeInfoVisibilityClass = customStartTime ? '' : 'hidden';
             const refreshButtonVisibilityClass = identicalStartTimes ? 'hidden' : '';
             const timeInfoMessage = identicalStartTimes
                 ? `Age of data: ${formattedStartTime}`

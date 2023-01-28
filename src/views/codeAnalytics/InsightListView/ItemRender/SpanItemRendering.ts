@@ -1,4 +1,4 @@
-import moment = require("moment");
+import * as moment from "moment";
 import { Settings } from "../../../../settings";
 import { WebViewUris } from "../../../webViewUtils";
 import { Duration } from "../CommonInsightObjects";
@@ -13,7 +13,7 @@ export class SpanItemHtmlRendering{
     }
 
     public getBestUnit(previousDuration: Duration, currentDuration: Duration ){
-        let change = moment.duration(Math.abs(previousDuration.raw-currentDuration.raw)/1000000,"ms");
+        const change = moment.duration(Math.abs(previousDuration.raw-currentDuration.raw)/1000000,"ms");
         if (change.seconds()<60 && change.seconds()>=1){
              return `${change.seconds().toFixed(1)} sec`;
         }
@@ -55,8 +55,8 @@ export class SpanItemHtmlRendering{
         //todo move to file settings
         const tolerationConstant = 10000;
 
-        let traceIds: string[] = [];
-        let traceLabels: string[] = [];
+        const traceIds: string[] = [];
+        const traceLabels: string[] = [];
 
         for(const item of insight.percentiles){
             
@@ -76,7 +76,7 @@ export class SpanItemHtmlRendering{
                     const rawDiff= Math.abs(item.currentDuration.raw-item.previousDuration.raw);
                     changeMeaningfulEnough = rawDiff/item.previousDuration.raw > 0.1 && rawDiff>tolerationConstant;
                     if (changeMeaningfulEnough){
-                        let verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
+                        const verb = item.previousDuration.raw > item.currentDuration.raw ? 'dropped.png' : 'rose.png';
 
                         percentileHtmls.push(/*html*/ `
                             <div class="flex-row">
@@ -109,7 +109,7 @@ export class SpanItemHtmlRendering{
 
         }
 
-        let newHtml = `
+        const newHtml = `
         <div class="periodic-percentiles-grid">
         <div class="grid-header"></div>
         <div class="grid-header">Recent</div>

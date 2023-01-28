@@ -5,7 +5,6 @@ import { IMethodExtractor, IParametersExtractor, IEndpointExtractor, ISpanExtrac
 import { BasicParametersExtractor } from './defaultImpls';
 import { ICodeObjectLocationGuesser as ICodeObjectLocationGuesser, IModulePathToUriConverter } from './modulePathToUriConverters';
 import { ICodeObjectIdParser, CommonCodeObjectIdParser } from '../codeObject';
-import { FlaskEndpointExtractor } from './python/flaskEndpointExtractor';
 import { DocumentInfoProvider } from '../documentInfoProvider';
 
 export interface ILanguageExtractor {

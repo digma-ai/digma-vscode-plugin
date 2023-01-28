@@ -21,7 +21,7 @@ export class EnvSelectStatusBar implements vscode.Disposable  {
 
     }
     dispose() {
-        for (let dis of this._disposables)
+        for (const dis of this._disposables)
 		{
 			dis.dispose();
 		}    

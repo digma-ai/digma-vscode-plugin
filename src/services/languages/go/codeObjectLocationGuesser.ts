@@ -1,6 +1,6 @@
-import { ICodeObjectLocationGuesser, IModulePathToUriConverter, CodeObjectLocationHints, PossibleCodeObjectLocation } from "../modulePathToUriConverters";
-import * as vscode from 'vscode';
-import path = require("path");
+import { ICodeObjectLocationGuesser, CodeObjectLocationHints, PossibleCodeObjectLocation } from "../modulePathToUriConverters";
+// import * as vscode from 'vscode';
+
 
 
 export class GuessLocationByGoCodeObject implements ICodeObjectLocationGuesser {
@@ -8,14 +8,14 @@ export class GuessLocationByGoCodeObject implements ICodeObjectLocationGuesser {
     async guessLocation(locationHints: CodeObjectLocationHints): Promise<PossibleCodeObjectLocation> {
         
         if (locationHints.codeObjectId){
-            var codeObjectPath = await this.convertGoPath(locationHints.codeObjectId);
+            const codeObjectPath = await this.convertGoPath(locationHints.codeObjectId);
             if (codeObjectPath){
                 return codeObjectPath;
             }
         }
         //workaround for GO
         if (locationHints.spanName){
-            var possibleLocation = await this.convertGoPath(locationHints.spanName);
+            const possibleLocation = await this.convertGoPath(locationHints.spanName);
             if (possibleLocation){
                return possibleLocation;
             }
@@ -27,7 +27,7 @@ export class GuessLocationByGoCodeObject implements ICodeObjectLocationGuesser {
     readonly regex = /(\(\*?.*\).*)/;
 
     private async convertGoPath(path:string): Promise<PossibleCodeObjectLocation | undefined> {
-        let match = path?.match(this.regex)?.firstOrDefault();
+        const match = path?.match(this.regex)?.firstOrDefault();
         if (match){
 
             const matchSearchString = match.replace("(*","").replace(")","");

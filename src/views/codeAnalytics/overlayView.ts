@@ -1,6 +1,5 @@
-import { Console } from "console";
 import * as vscode from "vscode";
-import { AnalyticsProvider, MethodCodeObjectSummary } from "../../services/analyticsProvider";
+import { AnalyticsProvider } from "../../services/analyticsProvider";
 import { DocumentInfo } from "../../services/documentInfoProvider";
 import { WorkspaceState } from "../../state";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
@@ -15,7 +14,7 @@ export class OverlayView
     public static UnsupportedDocumentOverlayId = "UnsupportedDocument";
     public static CodeSelectionNotFoundOverlayId = "CodeSelectionNotFound";
 
-    public isVisible: boolean = false;
+    public isVisible = false;
     public overlayId: string| undefined = undefined;
     constructor(
         private _viewUris: WebViewUris,
@@ -55,13 +54,13 @@ export class OverlayView
         const links = [];
 
         const codeObjects = docInfo.methods.flatMap(o=>o.getIds(true, true));
-        var usageStatuses =  await this._analyticsProvider.getUsageStatus(codeObjects);
+        const usageStatuses =  await this._analyticsProvider.getUsageStatus(codeObjects);
 
 
         for(const method of docInfo.methods){
             const relatedSummaries = docInfo.insights.all.filter(s => 
                 method.id === s.codeObjectId ||
-                method.relatedCodeObjects.any(r => r.id === s.codeObjectId));
+                method.relatedCodeObjects.some(r => r.id === s.codeObjectId));
             if(relatedSummaries.length==0){
                     links.push(/*html*/`<vscode-link class="codeobject-link" data-line="${method.range.start.line}">${method.displayName}</vscode-link>`);
             }
@@ -100,8 +99,9 @@ export class OverlayView
 
     private onGoToLine(e: UiMessage.Notify.GoToLine){
         const editor = vscode.window.activeTextEditor;
-        if(!editor || !e.line)
+        if(!editor || !e.line) {
             return;
+        }
 
         const range = new vscode.Range(new vscode.Position(e.line+1, 0), new vscode.Position(e.line+1, 0));
         editor.selection = new vscode.Selection(range.start, range.end);

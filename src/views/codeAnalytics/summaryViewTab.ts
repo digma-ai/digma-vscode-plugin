@@ -1,6 +1,4 @@
-import { AnalyticsProvider, HttpError, UsageStatusResults } from "../../services/analyticsProvider";
-import { Logger } from "../../services/logger";
-import { Settings } from "../../settings";
+import { AnalyticsProvider, UsageStatusResults } from "../../services/analyticsProvider";
 import { WorkspaceState } from "../../state";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { sort } from "../ListView/IListViewItem";
@@ -49,7 +47,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     
 
     private refreshInitializationStatus(status: ScanningStatus) {
-        let html = HtmlHelper.getInitializationStatus(status);
+        const html = HtmlHelper.getInitializationStatus(status);
         this._channel?.publish(
             new UiMessage.Set.InitializationStatus(html)
         );
@@ -112,7 +110,7 @@ export class UsagesViewTab implements ICodeAnalyticsViewTab
     }
 
     public showError(error: any): void {
-        let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(error);
+        const html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(error);
         this.updateListView(html);
     }
 }

@@ -1,7 +1,6 @@
-import moment = require("moment");
+import * as moment from "moment";
 import { Uri } from "vscode";
 import { EndpointSchema } from "../../../services/analyticsProvider";
-import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { SpanLocationInfo } from "../../../services/languages/extractors";
 import { SpanLinkResolver } from "../../../services/spanLinkResolver";
@@ -13,14 +12,14 @@ import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
-const entities = require("entities");
+import * as entities from "entities";
 
 export interface SpanUsagesInsight extends CodeObjectInsight
 {
     span: string,
     flows:{
         sampleTraceIds:string[],
-        percentage: Number,
+        percentage: number,
         firstService:{
             service: string,
             span: string,
@@ -54,11 +53,11 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
         // <span class="codicon codicon-server-process" style="margin-right: 3px;"></span>
         const usages = await Promise.all( insight.flows.map(async flow => {
 
-            var firstServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
+            const firstServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
                   spanName :flow.firstService.span,
                   codeObjectId: flow.firstService.codeObjectId,
                 });
-            let firstServiceHtml = /*html*/`
+                const firstServiceHtml = /*html*/`
                 <span class="flow-entry ellipsis" title="${flow.firstService.service}: ${flow.firstService.span}">
                     <span class="flow-service">${flow.firstService.service}:</span>
                     <span class="flow-span span-name ${firstServiceLocation ? "link" : ""}" data-code-uri="${firstServiceLocation?.documentUri}" data-code-line="${firstServiceLocation?.range.end.line!+1}">${flow.firstService.span}</span>
@@ -66,7 +65,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
 
             let lastServiceHtml = '';
             if(flow.lastService) {
-                var lastServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
+                const lastServiceLocation = await this._spanLinkResolver.searchForSpanByHints({
                     spanName :flow.lastService.span,
                     codeObjectId: flow.lastService.codeObjectId,
                   });
@@ -74,7 +73,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     <span class="codicon codicon-arrow-small-right"></span>
                     <span class="flow-entry ellipsis" title="${flow.lastService.service}: ${flow.lastService.span}">
                         <span class="flow-service">${flow.lastService.service}:</span>
-                        <span class="flow-span span-name ${lastServiceLocation ? "link" : ""}" data-code-uri="${lastServiceLocation?.documentUri}" data-code-line="${lastServiceLocation?.range.end.line!+1}">${flow.lastService.span}</span>
+                        <span class="flow-span span-name ${lastServiceLocation ? "link" : ""}" data-code-uri="${lastServiceLocation?.documentUri}" data-code-line="${firstServiceLocation?.range.end.line!+1}">${flow.lastService.span}</span>
                     </span>`;
             }
 
@@ -91,7 +90,7 @@ export class SpanUsagesListViewItemsCreator implements IInsightListViewItemsCrea
                     <span class="ellipsis" title="${flow.lastServiceSpan}">${flow.lastServiceSpan}</span>`;
             }
 
-            let traceHtml = renderTraceLink(flow.sampleTraceIds?.firstOrDefault(), insight.span);
+            const traceHtml = renderTraceLink(flow.sampleTraceIds?.firstOrDefault(), insight.span);
     
             return /*html*/`<div class="flow-row flex-row item">
                 <span class="flow-percent">${flow.percentage.toFixed(1)}%</span>
@@ -218,7 +217,7 @@ export class SpanDurationsListViewItemsCreator implements IInsightListViewItemsC
     public createListViewItem(insight: SpanDurationsInsight) : IListViewItem
     {
 
-        let renderer = new SpanItemHtmlRendering(this._viewUris);
+        const renderer = new SpanItemHtmlRendering(this._viewUris);
 
         return {
             getHtml: ()=> renderer.spanDurationItemHtml(insight).renderHtml(), 
@@ -237,7 +236,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
     }
 
     public async create( codeObjectsInsight: SpanDurationBreakdownInsight[]): Promise<IListViewItem []> {
-        let items:IListViewItem[] = [];
+        const items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
             items.push(await this.createListViewItem(insight));
 
@@ -248,7 +247,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
 
     public async createListViewItem(insight: SpanDurationBreakdownInsight) : Promise<IListViewItem> {
 
-        const validBreakdownEntries = insight.breakdownEntries.filter(o=>o.percentiles.any(o=>o.percentile ===SpanDurationBreakdownListViewItemsCreator.p50))
+        const validBreakdownEntries = insight.breakdownEntries.filter(o=>o.percentiles.some(o=>o.percentile ===SpanDurationBreakdownListViewItemsCreator.p50))
                                         .sort((a,b)=>this.getValueOfPercentile(b, SpanDurationBreakdownListViewItemsCreator.p50)!-this.getValueOfPercentile(a, SpanDurationBreakdownListViewItemsCreator.p50)!);
         const spansToSearch = validBreakdownEntries.map(o=>{
             return {
@@ -262,7 +261,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
     
         const spanLocations = await this._spanLinkResolver.searchForSpansByHints(spansToSearch);
 
-        let entries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] = [];
+        const entries: {breakdownEntry:SpanDurationBreakdownEntry, location: SpanLocationInfo| undefined} [] = [];
         validBreakdownEntries.forEach( (entry,index) => {
             entries.push({breakdownEntry:entry, location:spanLocations[index]});
         });
@@ -305,7 +304,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
         insight: Insight,
     ): InsightTemplateHtml {        
         const htmlRecords: string[] = [];
-        const recordsPerPage: number = 3;
+        const recordsPerPage = 3;
         breakdownEntries.forEach((entry, index) => {
             const p50 = this.getDisplayValueOfPercentile(entry.breakdownEntry, SpanDurationBreakdownListViewItemsCreator.p50);
             const spanLocation = entry.location;
@@ -314,7 +313,7 @@ export class SpanDurationBreakdownListViewItemsCreator implements IInsightListVi
             const spanName = spanDisplayName;
           //  const visibilityClass = index<itemsPerPage ? '': 'hide';
 
-            const htmlRecord: string = /*html*/ `
+            const htmlRecord = /*html*/ `
             <div data-index=${index} class="item flow-row flex-row">
                 <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
                 <span class="flex-row flex-wrap ellipsis">
@@ -361,15 +360,15 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
 
     }
     private async goToFileAndLine(file: string , line: number ) {
-        let doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
+        const doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
         this._editorHelper.openFileAndLine( doc,line );
     }
 
     public async createListViewItem(codeObjectsInsight: SpandSlowEndpointsInsight): Promise<IListViewItem> {
         
-        var endpoints = codeObjectsInsight.slowEndpoints;
+        const endpoints = codeObjectsInsight.slowEndpoints;
 
-        var spansLocations = endpoints.map(ep=> 
+        const spansLocations = endpoints.map(ep=> 
                                              { return {
                                                 slowspaninfo : ep, 
                                                 spanSearchResult : this._spanLinkResolver.searchForSpanByHints(
@@ -380,13 +379,13 @@ export class SpanEndpointBottlenecksListViewItemsCreator implements IInsightList
                                                 };
                                              }); 
         
-        let uriPromises = spansLocations.map(x=>x.spanSearchResult);
+        const uriPromises = spansLocations.map(x=>x.spanSearchResult);
         await Promise.all(uriPromises);
 
-        var items :string[] = [];
+        const items :string[] = [];
                         
         for (let i=0;i<spansLocations.length;i++){
-            let result = await spansLocations[i].spanSearchResult;
+            const result = await spansLocations[i].spanSearchResult;
             const slowSpan = spansLocations[i].slowspaninfo;
             const shortRouteName = EndpointSchema.getShortRouteName(slowSpan.endpointInfo.route); 
 
@@ -440,7 +439,7 @@ P99:    ${(span.p99.fraction*100).toFixed(0)}% ~${span.p99.maxDuration.value}${s
     
     public async create( codeObjectsInsight: SpandSlowEndpointsInsight[]): Promise<IListViewItem[]> {
         
-        let items:IListViewItem[] = [];
+        const items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
             items.push(await this.createListViewItem(insight));
 
@@ -460,9 +459,9 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
 
     public async createListViewItem(codeObjectsInsight: NPlusSpansInsight): Promise<IListViewItem> {
            
-        let traceHtml =renderTraceLink(codeObjectsInsight.traceId,codeObjectsInsight.span.name);
+        const traceHtml =renderTraceLink(codeObjectsInsight.traceId,codeObjectsInsight.span.name);
         
-        let statsHtml = `
+        const statsHtml = `
         <div style="margin-top:0.5em" class="flex-row">
                             
             <span class="error-property flex-stretch">
@@ -501,7 +500,7 @@ export class NPlusSpansListViewItemsCreator implements IInsightListViewItemsCrea
    
     public async create( codeObjectsInsight: NPlusSpansInsight[]): Promise<IListViewItem[]> {
         
-        let items:IListViewItem[] = [];
+        const items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
             items.push(await this.createListViewItem(insight));
 
@@ -549,7 +548,7 @@ export class SpanScalingListViewItemsCreator implements IInsightListViewItemsCre
    
     public async create(codeObjectsInsight: SpanScalingInsight[]): Promise<IListViewItem[]> {
         
-        let items:IListViewItem[] = [];
+        const items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
             items.push(await this.createListViewItem(insight));
 

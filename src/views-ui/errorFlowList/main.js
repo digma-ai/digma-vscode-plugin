@@ -16,7 +16,7 @@ window.addEventListener('message', event => {
 });
 function main() 
 {
-    $('.span-filter-option').click(e=>{
+    $('.span-filter-option').on("click", e=>{
 
         let selectedStatus = !(e.target.attributes['aria-selected'].value=='true');
         vscode.postMessage({
@@ -30,9 +30,9 @@ function main()
 
     });
 
-    $('.unhandled-filter').change(e=>{
+    $('.unhandled-filter').on("change", e=>{
 
-        var attr = e.target.checked;
+        const attr = e.target.checked;
 
         vscode.postMessage({
             command: 'toggleUnhandledOnly',
@@ -40,25 +40,25 @@ function main()
         });
     });
     
-    $('.error-name').click(function() {
+    $('.error-name').on("click", function() {
         vscode.postMessage({
             command: 'showForErrorFlow',
             errorFlowId: $(this).data('error-id')
         });
     });
-    $('.error-name').dblclick(function() {
+    $('.error-name').on("dblclick", function() {
         vscode.postMessage({
             command: 'showForErrorFlowAndFocus',
             errorFlowId: $(this).data('error-id')
         });
     });    
-    $('.filter-tag-close').click(function() {
+    $('.filter-tag-close').on("click", function() {
         vscode.postMessage({
             command: 'clearFilter'
         });
     });
-    $('.eventlist-start-filter').change(e=>{
-        var dayFilter='';
+    $('.eventlist-start-filter').on("change", e=>{
+        let dayFilter='';
         for (let i=0; i<e.target.children.length; i++){
             if (e.target.children[i].selected){
                 dayFilter=e.target.children[i].attributes["id"].value;    
@@ -74,7 +74,7 @@ function main()
 
     });
     
-    $('.errorlist-nav').change(e => 
+    $('.errorlist-nav').on("change", e => 
         {
             const tabId = e.originalEvent.detail.id;
             if (tabId){
@@ -86,7 +86,7 @@ function main()
 
         });
 
-    $('.sort-dropdown').change(e => 
+    $('.sort-dropdown').on("change", e => 
     {
         const parameter = $(e.target).find('vscode-option:selected').attr('id'); 
         vscode.postMessage({

@@ -19,7 +19,7 @@ export class PythonLanguageExtractor extends LanguageExtractor {
             new GuessLocationByInstrumentationLibrary()
         ];
     }
-    public requiredExtensionLoaded: boolean = false;
+    public requiredExtensionLoaded = false;
 
     public get requiredExtensionId(): string {
         return 'ms-python.python';

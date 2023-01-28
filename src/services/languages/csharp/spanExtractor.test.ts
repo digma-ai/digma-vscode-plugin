@@ -81,7 +81,7 @@ suite('CSharpSpanExtractor', () => {
                 },
                 {
                     range: range(26, 53, 26, 71),
-                    text: `\"${ spanName }\"`,
+                    text: `"${ spanName }"`,
                     type: TokenType.string,
                     modifiers: [
                     ],

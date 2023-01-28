@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import { DecorationRangeBehavior } from 'vscode';
-import { MethodCodeObjectSummary } from '../../../services/analyticsProvider';
 import { DocumentInfoProvider } from '../../../services/documentInfoProvider';
 import { Dictionary } from '../../../services/utils';
 import { HotspotInsight } from '../InsightListView/HotspotInsight';
@@ -34,7 +32,7 @@ export class HotspotMarkerDecorator implements vscode.Disposable
     }
 
     private createType(level: number, indent: number){
-        const conf = vscode.workspace.getConfiguration('editor')
+        const conf = vscode.workspace.getConfiguration('editor');
         const fontSize = conf.get('fontSize');
         const fontFamily = conf.get('fontFamily');
         const fontWeight = conf.get('fontWeight');
@@ -52,18 +50,21 @@ export class HotspotMarkerDecorator implements vscode.Disposable
 
     private async refresh(editor?: vscode.TextEditor)
     {
-        if(!editor)
+        if(!editor) {
             return;
+        }
         
         const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
-        if(!docInfo)
+        if(!docInfo) {
             return;
+        }
         
         const rangesByLevel: Dictionary<number, vscode.Range[]> = {};
-        for(let methodInfo of docInfo.methods)
+        for(const methodInfo of docInfo.methods)
         {
-            if (!methodInfo.nameRange)
+            if (!methodInfo.nameRange) {
                 continue;
+            }
 
             const hotspotInsight = docInfo.insights.get("Hotspot", methodInfo.symbol.id)?.firstOrDefault() as HotspotInsight;
             if (hotspotInsight==null){
@@ -71,17 +72,18 @@ export class HotspotMarkerDecorator implements vscode.Disposable
             }
 
             const score = hotspotInsight?.score ?? 0;
-            if(score < 70)
+            if(score < 70) {
                 continue;
+            }
             
             const level = Math.floor((score/101)*this.LEVELS); // [0-100] => [0-9]
             //const decorationType = this._decorationTypes[level];
-            var s =new vscode.Position(methodInfo.nameRange!.end.line+1,
+            const s =new vscode.Position(methodInfo.nameRange.end.line+1,
                 0);
-            var e = new vscode.Position(methodInfo.range.end.line,
+            const e = new vscode.Position(methodInfo.range.end.line,
                 0);
 
-            var decoration = 
+            const decoration = 
             {   range: new vscode.Range(s,e), 
                 hoverMessage: 'Error Hotspot' 
             };
@@ -107,7 +109,8 @@ export class HotspotMarkerDecorator implements vscode.Disposable
     }
     
     public dispose() {
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 }

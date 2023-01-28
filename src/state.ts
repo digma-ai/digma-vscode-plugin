@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 export class WorkspaceState {
     
-    environmentKey:string = "environment";
+    environmentKey = "environment";
     
     public constructor(private state: vscode.Memento){
         
@@ -18,7 +18,7 @@ export class WorkspaceState {
         }
     }
 
-    public async setEnvironment(environmet: string) {
-        await this.state.update(this.environmentKey, environmet);
+    public async setEnvironment(environment: string) {
+        await this.state.update(this.environmentKey, environment);
     }
 }

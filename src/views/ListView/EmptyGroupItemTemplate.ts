@@ -1,7 +1,6 @@
-import { Settings } from "../../settings";
 import { WorkspaceState } from "../../state";
 import { WebViewUris } from "../webViewUtils";
-import { IListViewItemBase } from "./IListViewItem"
+import { IListViewItemBase } from "./IListViewItem";
 
 export class EmptyGroupItemTemplate implements IListViewItemBase {
     

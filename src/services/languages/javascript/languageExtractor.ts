@@ -18,7 +18,7 @@ export class JSLanguageExtractor extends LanguageExtractor {
         return [];
     }
     private packageReader: JSPackageReader = new JSPackageReader();
-    public requiredExtensionLoaded: boolean = false;
+    public requiredExtensionLoaded = false;
 
     public get requiredExtensionId(): string {
         return 'dbaeumer.vscode-eslint';

@@ -65,7 +65,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 	) {
 
 
-        let errorFlowParamDecorator = new ErrorFlowParameterDecorator(documentInfoProvider);
+        const errorFlowParamDecorator = new ErrorFlowParameterDecorator(documentInfoProvider);
 
 		this._provider = new CodeAnalyticsViewProvider(
 			extensionUri,
@@ -129,7 +129,7 @@ export class CodeAnalyticsView implements vscode.Disposable
 
 	public dispose() 
     {
-		for (let dis of this._disposables)
+		for (const dis of this._disposables)
 		{
 			dis.dispose();
 		}
@@ -222,23 +222,23 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
         groupItemViewCreator.add("Span", new SpanGroup());
         groupItemViewCreator.add("Endpoint", new EndpointGroup());
         
-        const globalInsightItemrCreator = new InsightListViewItemsCreator();
-        globalInsightItemrCreator.add("TopErrorFlows", new TopErrorsInsightCreator());
-        globalInsightItemrCreator.add("SpanDurationChange", new SpanDurationChangesInsightCreator(this._webViewUris, _spanLinkResolver));
+        const globalInsightItemsCreator = new InsightListViewItemsCreator();
+        globalInsightItemsCreator.add("TopErrorFlows", new TopErrorsInsightCreator());
+        globalInsightItemsCreator.add("SpanDurationChange", new SpanDurationChangesInsightCreator(this._webViewUris, _spanLinkResolver));
 
 
-        let noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
-        let noEnvironmentSelectedMessage = new NoEnvironmentSelectedMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
+        const noCodeObjectMessage = new NoCodeObjectMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
+        const noEnvironmentSelectedMessage = new NoEnvironmentSelectedMessage(_analyticsProvider,this._webViewUris, this._workspaceState);
 
         const tabsList = [
             new InsightsViewTab(this._channel, this._analyticsProvider,groupItemViewCreator, listViewItemsCreator, _documentInfoProvider, this._webViewUris,noCodeObjectMessage, this._workspaceState, noEnvironmentSelectedMessage),
             new ErrorsViewTab(this._channel, this._analyticsProvider, this._documentInfoProvider, editorHelper, errorFlowParamDecorator, this._overlay, this._webviewViewProvider, this._webViewUris,noCodeObjectMessage, groupItemViewCreator, this._workspaceState),
-            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider, globalInsightItemrCreator, this._workspaceState)
+            new UsagesViewTab(this._channel, this._webViewUris, this._analyticsProvider, globalInsightItemsCreator, this._workspaceState)
         ];
 
         this._disposables.concat(tabsList);
         this._tabs = new Map<string, ICodeAnalyticsViewTab>();
-        for(let tab of tabsList) {
+        for(const tab of tabsList) {
             this._tabs.set(tab.tabId, tab);
         }
         this._lastActiveTab = tabsList[0];
@@ -265,7 +265,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     private async onOverlayVisibilityChanged(e: UiMessage.Notify.OverlayVisibilityChanged)
     {
         if(e.visible === false && this._currentCodeObject === undefined){
-            let editor = vscode.window.activeTextEditor;
+            const editor = vscode.window.activeTextEditor;
             if(editor && editor.document.languageId !== 'Log')
             {
                 await this.getCodeObjectOrShowOverlay(editor.document, editor.selection.anchor);
@@ -278,7 +278,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     {
         if (e.traceIds && Object.keys(e.traceIds).length>0 && e.span && e.jaegerAddress){
 
-            let options: vscode.WebviewOptions = {
+            const options: vscode.WebviewOptions = {
                 enableScripts: true,
                 localResourceRoots: undefined,
                 enableForms: true,
@@ -331,7 +331,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
 
     private async onOpenHistogramRequested(e: UiMessage.Notify.OpenHistogramPanel)
     {
-        let options: vscode.WebviewOptions = {
+        const options: vscode.WebviewOptions = {
             enableScripts: true,
             localResourceRoots: undefined
         };
@@ -450,7 +450,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
     public async onTabRefreshRequested(event:UiMessage.Notify.TabRefreshRequested ){
         if (this._activeTab && this._currentCodeObject){
             
-            var doc = vscode.window.activeTextEditor?.document;
+            const doc = vscode.window.activeTextEditor?.document;
             if (doc!=null){
                 await this._documentInfoCache.refresh();
                 await this._documentInfoProvider.refresh(doc);
@@ -545,7 +545,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
                 <link rel="stylesheet" href="${this._webViewUris.mainCss}">
                 <script type="module" src="${this._webViewUris.jQueryJs}"></script>
                 <script type="module" src="${this._webViewUris.toolkitJs}"></script>
-                <script type="module" src="${this._webViewUris.hosverIntentJs}"></script>
+                <script type="module" src="${this._webViewUris.hoverIntentJs}"></script>
                 <script type="module" src="${this._webViewUris.superfishJs}"></script>
                 <script src="${this._webViewUris.requireJs}"></script>
                 <script src="${this._webViewUris.buildJs}"></script>

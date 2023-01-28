@@ -34,7 +34,7 @@ export class SpanLinkResolver{
       
     public async searchForSpanByHints(locationHints: CodeObjectLocationHints): Promise<SpanLocationInfo|undefined>{
         
-        let possibleLocations: PossibleCodeObjectLocation[] = [];
+        const possibleLocations: PossibleCodeObjectLocation[] = [];
         const doc = vscode.window.activeTextEditor?.document;
         if (!doc){
             return undefined;
@@ -42,8 +42,8 @@ export class SpanLinkResolver{
         const extractor = await this.symbolProvider.getSupportedLanguageExtractor(doc);
         const guessers =  extractor?.guessCodeObjectLocation;
         if (guessers){
-            for (var guesser of guessers){
-                var possibleLocation = await guesser.guessLocation({
+            for (const guesser of guessers){
+                const possibleLocation = await guesser.guessLocation({
                     instrumentationLibrary:locationHints.instrumentationLibrary,
                     codeObjectId: locationHints.codeObjectId,
                     spanName: locationHints.spanName
@@ -61,8 +61,8 @@ export class SpanLinkResolver{
         for (let index = 0; !uri && index < converters.length; index++) {
             
             const converter = converters[index];
-            for (var possibleLocation of possibleLocations){
-                let location = (await converter.convert(possibleLocation));
+            for (const possibleLocation of possibleLocations){
+                const location = (await converter.convert(possibleLocation));
                 if (location){
 
                     return new SpanLocationInfo(locationHints.spanName,locationHints.spanName,[],[],location.range,location.uri);

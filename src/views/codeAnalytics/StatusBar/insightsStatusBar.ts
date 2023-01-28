@@ -1,8 +1,7 @@
 import * as vscode from "vscode";
-import { DigmaCommands } from "../../../commands";
 import { DocumentInfo, DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { WorkspaceState } from "../../../state";
-import { CodeObjectInsight, InsightImporance } from "../InsightListView/IInsightListViewItemsCreator";
+import { CodeObjectInsight, InsightImportance } from "../InsightListView/IInsightListViewItemsCreator";
 import { QuickPickItem } from "vscode";
 import { CodeObjectLocationInfo } from "../../../services/languages/extractors";
 import { EditorHelper } from "../../../services/EditorHelper";
@@ -14,7 +13,7 @@ export class InsightsStatusBar implements vscode.Disposable  {
 
     private _disposables: vscode.Disposable[] = [];
     private _statusBar : vscode.StatusBarItem;
-    private  selecFromDocInsightsCommand: string ="digma.selecFromDocInsightsCommand";
+    private  selectFromDocInsightsCommand ="digma.selectFromDocInsightsCommand";
     private  importEmoji = '❗️';
     private  interestingEmoji = '🔎';
 
@@ -26,13 +25,13 @@ export class InsightsStatusBar implements vscode.Disposable  {
         { subscriptions }: vscode.ExtensionContext ){
 
   
-        this._statusBar =  vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10000)
+        this._statusBar =  vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 10000);
         this._disposables = [
-            vscode.commands.registerCommand(this.selecFromDocInsightsCommand, async (x:any)=>{
+            vscode.commands.registerCommand(this.selectFromDocInsightsCommand, async (x:any)=>{
                 const doc = vscode.window.activeTextEditor?.document;
 
                 if (doc!=null){
-                    const docInfo = await _documentInfoProvider.getDocumentInfo(doc)
+                    const docInfo = await _documentInfoProvider.getDocumentInfo(doc);
                     const insightsByMethod = (docInfo)?.insights.byMethod(_state.environment,docInfo);
                     
                     if (insightsByMethod!=null){
@@ -44,7 +43,7 @@ export class InsightsStatusBar implements vscode.Disposable  {
                             detail: `method: ${x.method.name}`,
                             location: x.codeObject
                         }));
-                        await quickPick.onDidChangeSelection(async selection => {
+                        quickPick.onDidChangeSelection(async selection => {
                             if (selection[0]) {
                                 const item = selection[0] as InsightPickItem;
                                 const file = await _editorHelper.openTextDocumentFromUri(item.location.documentUri);
@@ -70,7 +69,7 @@ export class InsightsStatusBar implements vscode.Disposable  {
         ];
         this._statusBar.text=`Loading insights data`;
 
-        this._statusBar.command = this.selecFromDocInsightsCommand;
+        this._statusBar.command = this.selectFromDocInsightsCommand;
         this._statusBar.show();
         subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async doc=>{
             if (doc && doc.document){
@@ -86,7 +85,7 @@ export class InsightsStatusBar implements vscode.Disposable  {
 
     }
     dispose() {
-        for (let dis of this._disposables)
+        for (const dis of this._disposables)
 		{
 			dis.dispose();
 		}    
@@ -115,22 +114,22 @@ export class InsightsStatusBar implements vscode.Disposable  {
     }
     private isInteresting(insight:CodeObjectInsight) :boolean{
 
-        return insight.importance<=InsightImporance.interesting && 
-                insight.importance>=InsightImporance.important;
+        return insight.importance<=InsightImportance.interesting && 
+                insight.importance>=InsightImportance.important;
     }
 
     private isImportant(insight:CodeObjectInsight) :boolean{
 
-        return insight.importance<=InsightImporance.highlyImportant && 
-                insight.importance>=InsightImporance.critical;
+        return insight.importance<=InsightImportance.highlyImportant && 
+                insight.importance>=InsightImportance.critical;
     }
 
-    public async refreshFromDocInfo(docInfo:DocumentInfo){
+    public refreshFromDocInfo(docInfo:DocumentInfo){
 
         const insights = docInfo?.insights.forEnv(this._state.environment);
-        var interesting = insights?.filter(x=>this.isInteresting(x));
+        const interesting = insights?.filter(x=>this.isInteresting(x));
             
-        var important = insights?.filter(x=>this.isImportant(x));
+        const important = insights?.filter(x=>this.isImportant(x));
             
         this._statusBar.text=`$(warning) ${important?.length} $(search) ${interesting?.length}`;
         

@@ -12,7 +12,7 @@ export class HandleDigmaBackendExceptions{
 
     }
     public getExceptionMessageHtml(e:any): string{
-        let fetchError = e as FetchError;
+        const fetchError = e as FetchError;
 
         if (fetchError && fetchError.code && fetchError.code==='ECONNREFUSED'){
             let html ='<div id="insightList" class="list">';
@@ -21,7 +21,7 @@ export class HandleDigmaBackendExceptions{
             return html;
 
         }
-        let httpError = e as HttpError;
+        const httpError = e as HttpError;
         if (httpError && httpError.status === 404){
 
             Logger.error(`Incompatible API `, e);

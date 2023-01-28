@@ -9,7 +9,7 @@ export class ErrorsHtmlBuilder
 {
     public static createListViewItem(errors: CodeObjectErrorResponse []) : IListViewItem [] {
         const items: IListViewItem [] = [];
-        for(let error of errors){
+        for(const error of errors){
             const html = /*html*/ `
             <div class="list-item">
                     <div class="list-item-content-area">
@@ -87,20 +87,23 @@ export class ErrorsHtmlBuilder
 
     private static buildScoreTooltip(error?: CodeObjectErrorResponse): string{
         let tooltip = '';
-        for(let prop in error?.scoreInfo.scoreParams || {}){
-            let value = error?.scoreInfo.scoreParams[prop]; 
-            if(value > 0)
+        for(const prop in error?.scoreInfo.scoreParams || {}){
+            const value = error?.scoreInfo.scoreParams[prop]; 
+            if(value > 0) {
                 tooltip += `${prop}: +${error?.scoreInfo.scoreParams[prop]}\n`;
+            }
         }
         return tooltip;
     }
 
     private static getErrorIcons(error: CodeObjectErrorResponse): string{
         let html = '';
-        if(error.startsHere)
+        if(error.startsHere) {
             html += /*html*/`<span class="codicon codicon-debug-step-out" title="Raised here"></span>`;
-        if(error.endsHere)
+        }
+        if(error.endsHere) {
             html += /*html*/`<span class="codicon codicon-debug-step-into" title="Handled here"></span>`;
+        }
             
         return /*html*/`<div class="list-item-icons-row">${html}</div>`;
     }

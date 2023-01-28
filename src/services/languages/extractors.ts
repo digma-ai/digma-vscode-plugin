@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { DocumentSymbol } from 'vscode-languageclient';
 import { CodeObjectInfo } from '../codeObject';
-import { DocumentInfoProvider, ParameterInfo } from '../documentInfoProvider';
+import { ParameterInfo } from '../documentInfoProvider';
 import { SymbolProvider, SymbolTree } from './symbolProvider';
 import { Token } from './tokens';
 
