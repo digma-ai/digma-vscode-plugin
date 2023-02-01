@@ -10,7 +10,7 @@ import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { Logger } from "../../services/logger";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 import { ListViewRender } from "../ListView/ListViewRender";
-import { DocumentInfoProvider } from "../../services/documentInfoProvider";
+import { DocumentInfoProvider, MethodInfo } from "../../services/documentInfoProvider";
 import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
 import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
 import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
@@ -86,7 +86,25 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 return;
             }
             
-            const methodInfo = docInfo.methods.single(x => x.id == codeObject.id);
+            let methodInfo: MethodInfo;
+            const methodInfos = docInfo.methods.filter(x => x.id === codeObject.id);
+            if(methodInfos.length === 0) {
+                throw new Error(`no method infos were found for code object id ${codeObject.id}`);
+            }
+            else {
+                methodInfo = methodInfos[0];
+                
+                if(methodInfos.length > 1) {
+                    const methodInfoData = methodInfos
+                        .map((methodInfo: MethodInfo) =>
+                            `\tname: ${methodInfo.name}, displayName: ${methodInfo.displayName}, documetUri: ${methodInfo.documentUri}, nameRange: ${methodInfo.nameRange?.start.line}:${methodInfo.nameRange?.start.character}-${methodInfo.nameRange?.end.line}:${methodInfo.nameRange?.end.character}, symbol: ${methodInfo.symbol.name}@${methodInfo.symbol.codeLocation}`
+                        )
+                        .join('\n');
+                    Logger.warn(`refreshListViewRequested: found too many method infos with the same code object id: ${codeObject.id}\n${methodInfoData}`);
+                    methodInfo = methodInfos[0];
+                }
+            }
+
             const codeObjectsIds = methodInfo.getIds(true, true);
  
             Logger.info('Insight codeobjectIds:\n'+codeObjectsIds.join('\n'));
@@ -96,7 +114,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 relevantInsight=[];
             }
 
-             responseItems =relevantInsight;
+            responseItems =relevantInsight;
 
             // responseItems = await this._analyticsProvider.getInsights(codeObjectsIds,true);
             //temp ugly workaround
@@ -112,10 +130,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             for (const duplicate of duplicates){
                 duplicateSpansItems.push(new DuplicateSpanInsight(duplicate, this._viewUris));
                 responseItems=responseItems.filter(x=>x.codeObjectId!=duplicate.id);
-
-
             }
-      
 
             usageResults = docInfo.usageData.getForCodeObjectIds(codeObjectsIds);
             if (!this._workspaceState.environment && 
