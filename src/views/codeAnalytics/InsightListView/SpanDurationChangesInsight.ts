@@ -1,4 +1,3 @@
-import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { SpanLinkResolver } from "../../../services/spanLinkResolver";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { WebViewUris } from "../../webViewUtils";
@@ -18,9 +17,9 @@ export class SpanDurationChangesInsightCreator implements IInsightListViewItemsC
 
     }
     public async create( codeObjectsInsight: SpanDurationChangesInsight[]): Promise<IListViewItemBase[]> {
-        let codeObjectInsight = codeObjectsInsight.single();
-        let spanDurationHtml: string[] = [];
-        let renderer = new SpanItemHtmlRendering(this._viewUris);
+        const codeObjectInsight = codeObjectsInsight.single();
+        const spanDurationHtml: string[] = [];
+        const renderer = new SpanItemHtmlRendering(this._viewUris);
         const spans = codeObjectInsight.spanDurationChanges.map(x=>x.span);
 
         const hints = 
@@ -30,7 +29,7 @@ export class SpanDurationChangesInsightCreator implements IInsightListViewItemsC
 
         await codeObjectInsight.spanDurationChanges.forEach( async (spanChange,index) => {
 
-            let changedPercentiles = spanChange.percentiles.filter(x=>x.changeTime && x.previousDuration).firstOrDefault();
+            const changedPercentiles = spanChange.percentiles.filter(x=>x.changeTime && x.previousDuration).firstOrDefault();
             let detailsHtml ="";
             let unverified ="";
 
@@ -42,13 +41,13 @@ export class SpanDurationChangesInsightCreator implements IInsightListViewItemsC
                 changedPercentiles.changeTime && 
                 Math.abs(changedPercentiles.currentDuration.raw-changedPercentiles.previousDuration.raw)/changedPercentiles.previousDuration.raw > 0.1)
             {
-                let verb = changedPercentiles.previousDuration.raw > changedPercentiles.currentDuration.raw ? 'dropped.png' : 'rose.png';
+                const verb = changedPercentiles.previousDuration.raw > changedPercentiles.currentDuration.raw ? 'dropped.png' : 'rose.png';
                 detailsHtml=(/*html*/ `<span class="change"> 
                                                     <img class="insight-main-image" style="align-self:center;" src="${this._viewUris.image(verb)}" width="8" height="8"> 
                                                     ${renderer.getBestUnit(changedPercentiles.previousDuration, changedPercentiles.currentDuration)}, ${changedPercentiles.changeTime.fromNow()}</span>`);
             
                 const result = spanLocations[index];
-                let html = ` 
+                const html = ` 
                 <div class="summary-list-item">
                     <div class="list-item-content-area">
                         <div class="span-name flex-v-center ${result ? "link" : ""}" data-code-uri="${result?.documentUri}" data-code-line="${result?.range.end.line!+1}">

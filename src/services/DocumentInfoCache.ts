@@ -248,7 +248,7 @@ export class DocumentInfoCache {
 
     private async scanOpenedDocuments() {
         Logger.info("Scanning of opened documents started");
-        let docs = vscode.workspace.textDocuments
+        const docs = vscode.workspace.textDocuments
             .filter((doc) => this.isCacheable(doc));
 
         const docInfosPromises = docs.map((doc) => this.getDocumentInfo(doc));
@@ -352,7 +352,7 @@ export class DocumentInfoCache {
             tokens,
             symbolTrees
         );
-        let { spans, relatedSpans } = await this._symbolProvider.getSpans(
+        const { spans, relatedSpans } = await this._symbolProvider.getSpans(
             doc,
             symbolInfos,
             tokens,

@@ -16,7 +16,7 @@ export class GoLanguageExtractor extends LanguageExtractor {
             new GuessLocationByGoCodeObject()
         ];
     }
-    public requiredExtensionLoaded: boolean = false;
+    public requiredExtensionLoaded = false;
 
     public get requiredExtensionId(): string {
         return 'golang.go';

@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { DocumentInfoProvider } from './../../documentInfoProvider';
 import { SymbolProvider, SymbolTree } from './../symbolProvider';
 import { Token, TokenType } from '../tokens';
 import { EndpointInfo, IEndpointExtractor, SymbolInfo } from '../extractors';
@@ -24,8 +23,9 @@ export class FlaskEndpointExtractor implements IEndpointExtractor
     ): Promise<EndpointInfo[]> {
 
         // Ensure flask module was imported
-        if(!tokens.any(t => t.text == 'flask' && t.type == TokenType.module))
+        if(!tokens.some(t => t.text == 'flask' && t.type == TokenType.module)) {
             return [];
+        }
         
         // Search for "@app.get" decorators
         const results: EndpointInfo[] = [];
@@ -45,7 +45,7 @@ export class FlaskEndpointExtractor implements IEndpointExtractor
                     new vscode.Position(methodToken.range.end.line, 1000)));
                     
                 //extract the prefix
-                let match = new RegExp(`^(?:${appToken.text}.(route|get|post|update|patch))\\s*\\((?:'|")(.*?)(?:'|")(?:.*[\\s,]*\\bmethods\\b\\s*=\\s*\\[(.*?)\\])?`).exec(routerLine);
+                const match = new RegExp(`^(?:${appToken.text}.(route|get|post|update|patch))\\s*\\((?:'|")(.*?)(?:'|")(?:.*[\\s,]*\\bmethods\\b\\s*=\\s*\\[(.*?)\\])?`).exec(routerLine);
 
                 if (!match || match.length<3){
                     return [];
@@ -87,15 +87,15 @@ export class FlaskEndpointExtractor implements IEndpointExtractor
                 continue;
             }
             
-            let folder = vscode.workspace.getWorkspaceFolder(document.uri);
-            let folderPrefix = folder?.uri.path.replaceAll('\\',"/").split('/').slice(0,-1).join('/');
-            let relevantPath = document.uri.path.substring(folderPrefix!.length);
-            let pathParts = relevantPath.split('/').filter(x=>x);
+            const folder = vscode.workspace.getWorkspaceFolder(document.uri);
+            const folderPrefix = folder?.uri.path.replaceAll('\\',"/").split('/').slice(0,-1).join('/');
+            const relevantPath = document.uri.path.substring(folderPrefix!.length);
+            const pathParts = relevantPath.split('/').filter(x=>x);
             const methods = method.split(",").map(x=>x.toUpperCase().trim());
 
-            for (var apiMethod of methods){
+            for (const apiMethod of methods){
                 for (let j=0;j<pathParts.length-1;j++){
-                    let possibleRoot = pathParts[j];
+                    const possibleRoot = pathParts[j];
                     results.push(new EndpointInfo(
                         possibleRoot + '$_$' + EndpointSchema.HTTP + "HTTP " + apiMethod + ' ' + route,
                         apiMethod, 

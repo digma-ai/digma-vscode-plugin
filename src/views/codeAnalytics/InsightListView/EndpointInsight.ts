@@ -1,17 +1,14 @@
 import { IListViewItem } from "../../ListView/IListViewItem";
 import { CodeObjectInsight, IInsightListViewItemsCreator } from "./IInsightListViewItemsCreator";
-import { EndpointSchema, UsageStatusResults } from '../../../services/analyticsProvider';
+import { EndpointSchema } from '../../../services/analyticsProvider';
 import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { DecimalRounder } from "../../utils/valueFormatting";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { UiMessage } from "../../../views-ui/codeAnalytics/contracts";
 import { Uri } from "vscode";
-import path = require("path");
-import moment = require("moment");
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
-import { decimal, integer } from "vscode-languageclient";
-import { Settings } from "../../../settings";
+import { decimal } from "vscode-languageclient";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanLinkResolver } from "../../../services/spanLinkResolver";
@@ -177,23 +174,23 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
 
     }
     private async goToFileAndLine(file: string , line: number ) {
-        let doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
+        const doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
         this._editorHelper.openFileAndLine( doc,line );
     }
 
     public async createListViewItem(codeObjectsInsight: SlowestSpansInsight): Promise<IListViewItem> {
         
-        var spans = codeObjectsInsight.spans;
+        const spans = codeObjectsInsight.spans;
 
         const hints:CodeObjectLocationHints[] = 
             this._spanLinkResolver.codeHintsFromSpans(spans.map(x=>x.spanInfo));
-        var spansLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
+        const spansLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
 
-        var items :string[] = [];
+        const items :string[] = [];
                         
         for (let i=0;i<spansLocations.length;i++){
 
-            let result = spansLocations[i];
+            const result = spansLocations[i];
             const slowSpan = spans[i];
 
             items.push(`
@@ -230,10 +227,12 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
         }
         else // Obsolete
         {
-            if(span.p50.fraction > 0.4)
+            if(span.p50.fraction > 0.4) {
                 return `50% of the users by up to ${span.p50.maxDuration.value}${span.p50.maxDuration.unit}`;
-            if(span.p95.fraction > 0.4)
+            }
+            if(span.p95.fraction > 0.4) {
                 return `5% of the users by up to ${span.p95.maxDuration.value}${span.p95.maxDuration.unit}`;
+            }
             return `1% of the users by up to ${span.p99.maxDuration.value}${span.p99.maxDuration.unit}`;
         }
     }
@@ -250,7 +249,7 @@ export class SlowestSpansListViewItemsCreator implements IInsightListViewItemsCr
     
     public async create( codeObjectsInsight: SlowestSpansInsight[]): Promise<IListViewItem[]> {
         
-        let items:IListViewItem[] = [];
+        const items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
             items.push(await this.createListViewItem(insight));
 
@@ -273,24 +272,24 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
 
     }
     private async goToFileAndLine(file: string , line: number ) {
-        let doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
+        const doc = await this._editorHelper.openTextDocumentFromUri(Uri.parse(file));
         this._editorHelper.openFileAndLine( doc,line );
     }
 
     public async createListViewItem(codeObjectsInsight: EPNPlusSpansInsight): Promise<IListViewItem> {
         
-        var spans = codeObjectsInsight.spans.filter(x=>x.internalSpan);
+        const spans = codeObjectsInsight.spans.filter(x=>x.internalSpan);
 
         const hints:CodeObjectLocationHints[] = 
             this._spanLinkResolver.codeHintsFromSpans(spans.map(x=>x.internalSpan));
         
-        var spansLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
+        const spansLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
 
-        var items :string[] = [];
+        const items :string[] = [];
                         
         for (let i=0;i<spansLocations.length;i++){  
 
-            let result = spansLocations[i];
+            const result = spansLocations[i];
             const slowSpan = spans[i];
 
             items.push(`
@@ -301,7 +300,7 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
                 </div>`);
         }
 
-        let traceHtml=renderTraceLink(codeObjectsInsight.spans.firstOrDefault()?.traceId,codeObjectsInsight.endpointSpan);
+        const traceHtml=renderTraceLink(codeObjectsInsight.spans.firstOrDefault()?.traceId,codeObjectsInsight.endpointSpan);
 
         let fractionSt='';
         const fraction =codeObjectsInsight.spans.firstOrDefault()?.fraction;
@@ -311,7 +310,7 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
         else{
             fractionSt=`${fraction.toPrecision(1)} of request` ;
         }
-        let statsHtml = `
+        const statsHtml = `
         <div style="margin-top:0.5em" class="flex-row">
                             
             <span class="error-property flex-stretch">
@@ -350,7 +349,7 @@ export class EPNPlusSpansListViewItemsCreator implements IInsightListViewItemsCr
    
     public async create( codeObjectsInsight: EPNPlusSpansInsight[]): Promise<IListViewItem[]> {
         
-        let items:IListViewItem[] = [];
+        const items:IListViewItem[] = [];
         for (const insight of codeObjectsInsight){
             items.push(await this.createListViewItem(insight));
 
@@ -418,7 +417,7 @@ export function adjustHttpRouteIfNeeded(route: string): string {
     if (origValue.startsWith(EndpointSchema.CONSUMER)) {
         return origValue;
     }
-    // default behaviour, to be backword compatible, where did not have the scheme part of the route, so adding it as HTTP one
+    // default behaviour, to be backward compatible, where did not have the scheme part of the route, so adding it as HTTP one
     return EndpointSchema.HTTP + origValue;
 }
 

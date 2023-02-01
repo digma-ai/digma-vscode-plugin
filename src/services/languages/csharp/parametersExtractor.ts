@@ -11,10 +11,10 @@ export class CSharpParametersExtractor implements IParametersExtractor {
     }
 
     public async extractParameters(methodName: string, methodTokens: Token[]): Promise<ParameterInfo[]> {
-        var params: ParameterInfo[] = new Array();
+        const params: ParameterInfo[] = [];
 
         // skip the method attributes, etc...
-        var methodNameIx = methodTokens.length;
+        let methodNameIx = methodTokens.length;
         for (let ix = 0; ix < methodTokens.length; ix++) {
             const token = methodTokens[ix];
             if ((token.type === TokenType.method
@@ -26,8 +26,8 @@ export class CSharpParametersExtractor implements IParametersExtractor {
             }
         }
 
-        var firstParameter: boolean = true;
-        var parameterStartIx: integer = -1;
+        let firstParameter = true;
+        let parameterStartIx: integer = -1;
 
         for (let ix = methodNameIx + 1; ix < methodTokens.length; ix++) {
             const token = methodTokens[ix];
@@ -63,8 +63,8 @@ export class CSharpParametersExtractor implements IParametersExtractor {
     protected processSingleParameter(methodTokens: Token[], parameterStartIx: integer, parameterEndIx: integer): ParameterInfo | undefined {
         const state = new TypeParsingState();
         for (let ix = parameterStartIx; ix <= parameterEndIx; ix++) {
-            let token = methodTokens[ix];
-            let txt = token.text;
+            const token = methodTokens[ix];
+            const txt = token.text;
             if (token.type === TokenType.parameter) {
                 return this.buildParamInfo(state, token);
                 //break;
@@ -146,16 +146,16 @@ export class CSharpParametersExtractor implements IParametersExtractor {
 
 
 export class TypeParsingState {
-    withinArray: boolean = false;
-    withinAttribute: boolean = false; // Dotnet Attribute is equivalent to Java Annotation
-    withinBrackets: boolean = false; // any kind of bracket (array, attribute, or other)
+    withinArray = false;
+    withinAttribute = false; // Dotnet Attribute is equivalent to Java Annotation
+    withinBrackets = false; // any kind of bracket (array, attribute, or other)
     genericsLevel: integer = 0;
     genericsCount: integer = 0;
     multiDimensionalArrayDelimiterCount: integer = 0;
 
-    kindStr: string = "";
-    typeNameStr: string = "";
-    arraysPart: string[] = new Array;
+    kindStr = "";
+    typeNameStr = "";
+    arraysPart: string[] = [];
 
     public reset() {
         this.withinArray = false;
@@ -166,7 +166,7 @@ export class TypeParsingState {
         this.multiDimensionalArrayDelimiterCount = 0;
         this.kindStr = "";
         this.typeNameStr = "";
-        this.arraysPart = new Array;
+        this.arraysPart = [];
     }
 
     constructor() {
@@ -204,13 +204,13 @@ export class TypeParsingState {
     static readonly MULTI_DIMENSIONAL_ARRAY_DELIMITER: string = ";";
 
     public arrayEnd() {
-        var singleArrayPart: string = "[]";
+        let singleArrayPart = "[]";
         if (this.multiDimensionalArrayDelimiterCount > 0) {
             singleArrayPart = "["
                 + TypeParsingState.MULTI_DIMENSIONAL_ARRAY_DELIMITER.repeat(this.multiDimensionalArrayDelimiterCount)
                 + "]";
         }
-        this.arraysPart.push(singleArrayPart)
+        this.arraysPart.push(singleArrayPart);
 
         this.withinArray = false;
         this.multiDimensionalArrayDelimiterCount = 0;
@@ -228,9 +228,9 @@ export class TypeParsingState {
     }
 
     public typeNameShortOnly(): string {
-        var typeFqn = BuiltIn.resolveIfPossible(this.typeNameStr);
+        const typeFqn = BuiltIn.resolveIfPossible(this.typeNameStr);
         // take only the last part
-        var shortName: string;
+        let shortName: string;
         const lastIndexOfDot = typeFqn.lastIndexOf('.');
         if (lastIndexOfDot >= 0) {
             shortName = typeFqn.substring(lastIndexOfDot + 1);
@@ -261,13 +261,13 @@ export class TypeParsingState {
         }
         // reversing the array - since thats how dotnet refers it.
         // for example, when parameter is written as long[,,][,,,][][,] 
-        // the actual is reveresed and looks like    long[,][][,,,][,,]
+        // the actual is reversed and looks like    long[,][][,,,][,,]
         const localArraysPart: string[] = this.arraysPart.slice(); // make a local copy since reverse method changes the array itself
         return localArraysPart.reverse().join("");
     }
 
     public evalType(): string {
-        var theVal: string = "";
+        let theVal = "";
         theVal += this.typeNameShortOnly();
         theVal += this.genericsSignIfNeeded();
         theVal += this.arraysPartIfNeeded();
@@ -305,7 +305,7 @@ class BuiltIn {
     }
 
     public static resolveIfPossible(shortName: string): string {
-        var resolved = BuiltIn.primitiveMap.get(shortName);
+        const resolved = BuiltIn.primitiveMap.get(shortName);
         if (resolved) {
             return resolved;
         }

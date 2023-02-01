@@ -1,11 +1,10 @@
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../codeInspector';
-import { DocumentInfo, DocumentInfoProvider } from '../../documentInfoProvider';
+import { DocumentInfoProvider } from '../../documentInfoProvider';
 import { GuessLocationByDefaultCodeObjectIdSchema, GuessLocationIfInstrumentationLibraryIsClass } from '../codeObjectLocationGuesser';
 import { IMethodExtractor, IParametersExtractor, ISpanExtractor } from '../extractors';
 import { LanguageExtractor } from '../languageExtractor';
 import { ICodeObjectLocationGuesser, IModulePathToUriConverter, LogicalModulePathToUriConverter, PhysicalModulePathToUriConverter } from '../modulePathToUriConverters';
-import { GuessLocationByInstrumentationLibrary } from '../python/codeObjectLocationGuesser';
 import { CSharpMethodExtractor } from './methodExtractor';
 import { CSharpParametersExtractor } from './parametersExtractor';
 import { CSharpSpanExtractor } from './spanExtractor';
@@ -18,7 +17,7 @@ export class CSharpLanguageExtractor extends LanguageExtractor {
        return [new GuessLocationByDefaultCodeObjectIdSchema(this.defaultExtension, true), 
         new GuessLocationIfInstrumentationLibraryIsClass()];
     }
-    public requiredExtensionLoaded: boolean = false;
+    public requiredExtensionLoaded = false;
 
     public get requiredExtensionId(): string {
         return 'ms-dotnettools.csharp';

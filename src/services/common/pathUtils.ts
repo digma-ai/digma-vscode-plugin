@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 
 export class PathUtils{
 
@@ -13,8 +12,7 @@ export class PathUtils{
     }
 
     public static async getFileName(path:string): Promise<string>{
-        let name = path.split('/').lastOrDefault();
-        return name;
+        return path.split('/').lastOrDefault();
     }
 
     public static async flexibleFileSearch(path:string, specialFolders: string[]): Promise<vscode.Uri|undefined>{
@@ -24,8 +22,8 @@ export class PathUtils{
 
         const specialFoldersGlob = specialFolders.map(x=>`**/${x}/**`).join(",");
         const files = await vscode.workspace.findFiles(`**/${fileName}}`, `{${specialFoldersGlob}}`);
-        var relevantFiles = files.filter(x=>x.fsPath.endsWith(modulePhysicalPathWithoutRoot));
-        let fileUri: vscode.Uri | undefined = undefined ;
+        const relevantFiles = files.filter(x=>x.fsPath.endsWith(modulePhysicalPathWithoutRoot));
+        const fileUri: vscode.Uri | undefined = undefined ;
 
         //This is a workaround, in case of multiple matches we find the one closest to us
         //todo: find a better way

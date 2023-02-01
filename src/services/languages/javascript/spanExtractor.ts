@@ -7,7 +7,7 @@ import { Token, TokenType } from '../tokens';
 import { Logger } from '../../logger';
 
 export class JSSpanExtractor implements ISpanExtractor {
-    readonly stringRegex =  /(?:\"|\'|\`)(.*?)(?:\"|\'|\`)/;
+    readonly stringRegex =  /(?:"|'|`)(.*?)(?:"|'|`)/;
     readonly paramsRegex = /\((.*?)\)/;
     readonly strictParamsRegex = /^\((.*?)\)\s*;?$/;
     readonly firstParameterRegex = /\((.*?)(?:,|\))/; //("some name",... or ("some name") should return "some name"
@@ -132,7 +132,6 @@ export class JSSpanExtractor implements ISpanExtractor {
                     let instrumentationLibrary: string| undefined = undefined;
                     if(traceDefinition){
                         let _tokens: Token [];
-                        let _range: vscode.Range;
                         let _document: TextDocument;
                         if(traceDefinition.location.uri.fsPath !== document.uri.fsPath) { //defined in a different document
                             _document = await vscode.workspace.openTextDocument(traceDefinition.location.uri);
@@ -142,7 +141,7 @@ export class JSSpanExtractor implements ISpanExtractor {
                             _tokens = tokens;
                             _document = document;
                         }
-                        _range = traceDefinition.location.range;
+                        const _range: vscode.Range = traceDefinition.location.range;
                         instrumentationLibrary = await this.tryGetInstrumentationName(_document, this._codeInspector, symbolProvider, _tokens, _range);
                     }
 
@@ -150,7 +149,7 @@ export class JSSpanExtractor implements ISpanExtractor {
                     const nextTextInlineText = nextTextInline[0];
                     const nextTextInlineRange: vscode.Range = nextTextInline[1];
 
-                    let spanParameter = nextTextInlineText.match(this.firstParameterRegex)?.[1];
+                    const spanParameter = nextTextInlineText.match(this.firstParameterRegex)?.[1];
                     if(!spanParameter){
                         return undefined;
                     }
@@ -199,17 +198,17 @@ export class JSSpanExtractor implements ISpanExtractor {
     }
 
     getNextTextInline(document: TextDocument, token: Token): [string, vscode.Range]{
-        const line = token!.range.end.line;
+        const line = token.range.end.line;
         const textLine = document.lineAt(line);
         const range = new vscode.Range(
-            token!.range.end, 
+            token.range.end, 
             new vscode.Position(line, textLine.range.end.character)
         );
         return [document.getText(range).trim(), range];
     }
     getParameterByIndex(parametersString: string, index:number): string| undefined{
         const extractParameter = (function(param: string): string|undefined{
-            let parts = param.split("=");
+            const parts = param.split("=");
             if(parts.length === 1){      //traceName,version="1"
                 return parts[0];
             }
@@ -222,7 +221,7 @@ export class JSSpanExtractor implements ISpanExtractor {
             return undefined;
         }
 
-        let match: string | undefined= undefined;
+        const match: string | undefined= undefined;
         /*
             name=traceName,version="1" or 
             version="1",name=traceName or
@@ -233,16 +232,16 @@ export class JSSpanExtractor implements ISpanExtractor {
         return extractParameter(params[index]);
     }
     async tryGetInstrumentationName(document: TextDocument,codeInspector: CodeInspector, symbolProvider: SymbolProvider, tokens: Token [], traceVariableRange: vscode.Range) : Promise<string | undefined>{
-        let tracerVariable = this.tryGetVariable(tokens, traceVariableRange);
+        const tracerVariable = this.tryGetVariable(tokens, traceVariableRange);
         if(tracerVariable === undefined){
             return undefined;
         }
-        let referencedDefinitionIdx = tracerVariable[1];
+        const referencedDefinitionIdx = tracerVariable[1];
         const searchIterationLimit = 10;
         let getTracerToken: Token | undefined = undefined;
        
-        for (let i:number = 0; i < searchIterationLimit; i++) {
-            let currIndex = referencedDefinitionIdx+1+i;
+        for (let i = 0; i < searchIterationLimit; i++) {
+            const currIndex = referencedDefinitionIdx+1+i;
             if(currIndex >= tokens.length){
                 break;
             }
@@ -258,9 +257,9 @@ export class JSSpanExtractor implements ISpanExtractor {
             return undefined;
         }
 
-        let getTracerParametersLine = getTracerToken!.range.end.line;
+        let getTracerParametersLine = getTracerToken.range.end.line;
         const textLine = document.lineAt(getTracerParametersLine);
-        let startPosition:vscode.Position = getTracerToken!.range.end;
+        const startPosition:vscode.Position = getTracerToken.range.end;
         let endPosition:vscode.Position = new vscode.Position(getTracerParametersLine, textLine.range.end.character);
         let getTracerParametersText = document.getText(new vscode.Range(
             startPosition, 
@@ -284,7 +283,7 @@ export class JSSpanExtractor implements ISpanExtractor {
             let found = false;
             let iteration = 0;
             while(!found && iteration<5){
-                let currLine = document.lineAt(++getTracerParametersLine);
+                const currLine = document.lineAt(++getTracerParametersLine);
                 getTracerParametersText += currLine.text.trim();
                 parameters = getTracerParametersText.match(this.paramsRegex)?.[1];
                 if (parameters){
@@ -309,13 +308,13 @@ export class JSSpanExtractor implements ISpanExtractor {
             return undefined;
         }
 
-        let traceNameParam: string | undefined = this.getParameterByIndex(parameters, 0);
+        const traceNameParam: string | undefined = this.getParameterByIndex(parameters, 0);
         
         if(traceNameParam === undefined){
             return undefined;
         }
 
-        let instrumentationName = traceNameParam.match(this.stringRegex)?.[1];
+        const instrumentationName = traceNameParam.match(this.stringRegex)?.[1];
         if (instrumentationName){
              /*
             @example1
@@ -360,7 +359,7 @@ export class JSSpanExtractor implements ISpanExtractor {
     getFunctionArguments(document: vscode.TextDocument, functionToken: Token): string[] | undefined {
         let lineNumber = functionToken.range.end.line;
         let startPosition = functionToken.range.end;
-        let line = document.lineAt(lineNumber);
+        const line = document.lineAt(lineNumber);
         let endPosition = new vscode.Position(lineNumber, line.range.end.character);
         let lineText = document.getText(new vscode.Range(
             startPosition, 
@@ -396,7 +395,7 @@ export class JSSpanExtractor implements ISpanExtractor {
         }
 
         if (isOpenParenthesisFound && isCloseParenthesisFound) {
-            let argumentsText = document.getText(new vscode.Range(
+            const argumentsText = document.getText(new vscode.Range(
                 startPosition, 
                 endPosition
             ));
@@ -442,8 +441,8 @@ export class JSSpanExtractor implements ISpanExtractor {
 }
 
 export async function methodSpanIterator(symbols: SymbolInfo [], tokens: Token[], methodTokenHandler: (symbolInfo: SymbolInfo, tokens: Token []) => Promise<void>) {
-    for(var symbol of symbols){
-        var methodTokens: Token[] = [];
+    for(const symbol of symbols){
+        const methodTokens: Token[] = [];
         const funcStartTokenIndex = tokens.findIndex(x => x.range.intersection(symbol.range));
         for (let index = funcStartTokenIndex; index < tokens.length; index++) {
             if(!tokens[index].range.intersection(symbol.range)){

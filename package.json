@@ -119,7 +119,7 @@
                     ]
                 },
                 "digma.hideFramesOutsideWorkspace": {
-                    "type": "bool",
+                    "type": "boolean",
                     "default": true
                 },
                 "digma.sourceControl": {
@@ -150,33 +150,34 @@
         }
     },
     "dependencies": {
-        "@types/jquery": "^3.5.14",
         "@vscode/codicons": "0.0.20",
         "@vscode/webview-ui-toolkit": "^0.8.5",
         "entities": "^4.4.0",
-        "https": "^1.0.0",
-        "moment": "^2.29.3",
+        "moment": "^2.29.4",
         "node-fetch": "^2.6.6",
-        "sass": "^1.54.4",
         "superfish": "^1.7.10",
         "vscode-languageclient": "^7.0.0"
     },
     "scripts": {
         "vscode:prepublish": "npm run compile",
-        "compile": "npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js && npm run copy:jaeger",
-        "compile:all": "tsc -p ./",
+        "clean": "rimraf ./out",
+        "compile": "npm run clean && npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js && npm run copy:jaeger",
+        "compile:all": "tsc",
         "compile:views": "tsc -p ./src/views-ui/codeAnalytics/tsconfig.json",
-        "compile:sass": "sass ./src:./out",
-        "copy:js": "copyfiles -u 1 src/**/*.js out",
-        "copy:jaeger": "copyfiles jaegerUi/**/*.* out/views-ui",
-        "watch": "npm run watch:all || npm run watch:views",
-        "watch:all": "tsc -watch -p ./",
-        "watch:views": "tsc -watch -p ./src/views-ui/codeAnalytics/tsconfig.json",
+        "compile:sass": "sass --no-source-map ./src:./out",
+        "copy:js": "copy-and-watch src/**/*.js out",
+        "copy:jaeger": "copy-and-watch jaegerUi/**/*.{css,js,svg} out/views-ui",
+        "watch": "npm run watch:all || npm run watch:views || npm run watch:sass || npm run watch:js || npm run watch:jaeger",
+        "watch:all": "tsc -w -p ./tsconfig.dev.json",
+        "watch:views": "tsc -w -p ./src/views-ui/codeAnalytics/tsconfig.dev.json",
+        "watch:sass": "sass --watch ./src:./out",
+        "watch:js": "copy-and-watch --watch src/**/*.js out",
+        "watch:jaeger": "copy-and-watch --watch jaegerUi/**/* out/views-ui",
         "pretest": "npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
         "lint:eslint": "eslint --cache .",
         "lint:stylelint": "stylelint 'src/**/*.scss'",
-        "fix:prettier": "prettier --write '**/*.{js,json,ts,scss,md}' '.vscode/*'",
+        "fix:prettier": "prettier --write '**/*.{js,json,ts,scss}'",
         "test": "node ./out/test/runTest.js",
         "precommit": "lint-staged"
     },
@@ -187,13 +188,14 @@
         "src/**/*.scss": [
             "stylelint"
         ],
-        "*.{js,json,ts,css,md}": [
-            "prettier"
+        "*.{js,json,ts,scss}": [
+            "prettier --write"
         ]
     },
     "devDependencies": {
         "@types/chai": "^4.3.0",
         "@types/glob": "^7.1.4",
+        "@types/jquery": "^3.5.14",
         "@types/mocha": "^9.0.0",
         "@types/node": "14.x",
         "@types/node-fetch": "^2.5.10",
@@ -204,7 +206,7 @@
         "@vscode/test-electron": "^1.6.2",
         "chai": "^4.3.6",
         "concurrently": "^7.0.0",
-        "copyfiles": "^2.4.1",
+        "copy-and-watch": "^0.1.6",
         "eslint": "^8.1.0",
         "eslint-config-prettier": "^8.6.0",
         "glob": "^7.1.7",
@@ -212,6 +214,8 @@
         "lint-staged": "^13.1.0",
         "mocha": "^9.1.3",
         "prettier": "^2.8.1",
+        "rimraf": "^3.0.2",
+        "sass": "^1.54.4",
         "stylelint": "^14.16.1",
         "stylelint-config-prettier-scss": "^0.0.1",
         "stylelint-config-recommended-scss": "^8.0.0",

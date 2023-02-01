@@ -11,12 +11,12 @@ export interface TopErrorFlowsInsight extends Insight{
 
 export class TopErrorsInsightCreator implements IInsightListViewItemsCreator {
     public async create( codeObjectsInsight: TopErrorFlowsInsight[]): Promise<IListViewItemBase[]> {
-        let codeObjectInsight = codeObjectsInsight.single();
-        let errorsHtml: string[] = [];
+        const codeObjectInsight = codeObjectsInsight.single();
+        const errorsHtml: string[] = [];
         
         codeObjectInsight.errors.forEach((err) => {
 
-           let html = ` <div class="summary-list-item">
+            const html = ` <div class="summary-list-item">
             <div class="list-item-content-area">
                 <div class="flex-v-center">
                     ${HtmlHelper.getErrorName( err.name, err.sourceCodeObjectId, err.uid)}
@@ -39,7 +39,7 @@ export class TopErrorsInsightCreator implements IInsightListViewItemsCreator {
 
     private getCharacteric(error: CodeObjectError):string{
 
-        let maxScore = Math.max(error.scoreMovingAvg, error.scoreRecency,error.scoreTrendSlope);
+        const maxScore = Math.max(error.scoreMovingAvg, error.scoreRecency,error.scoreTrendSlope);
         if (error.scoreRecency === maxScore)
         {
             return `Recent`;

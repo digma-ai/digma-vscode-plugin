@@ -1,5 +1,3 @@
-import { decimal } from "vscode-languageclient";
-
 export namespace UiMessage
 {
     export namespace Notify

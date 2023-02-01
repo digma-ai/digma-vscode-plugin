@@ -17,7 +17,7 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
 
     }
     public async create( codeObjectsInsight: HotspotInsight []): Promise<IListViewItemBase []> {
-        let result =  codeObjectsInsight.filter(o=>o.score >=70)
+        const result =  codeObjectsInsight.filter(o=>o.score >=70)
                 .map(o=>{
                     let groupId = undefined;
                     if(CodeObjectId.isSpan(o.codeObjectId)){
@@ -25,7 +25,7 @@ export class HotspotListViewItemsCreator implements IInsightListViewItemsCreator
                     }
                     const template = new InsightTemplateHtml({
                         title: "This is an error hotspot",
-                        description: "Major errors occur or propogate through this function.",
+                        description: "Major errors occur or propagate through this function.",
                         icon: this.viewUris.image("hotspot.svg"),
                         insight: o,
                     }, this.viewUris);

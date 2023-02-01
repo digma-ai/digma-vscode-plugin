@@ -4,7 +4,7 @@ window.addEventListener("load", main);
 
 function main() {
 
-    $(".frame-trace-toggle").change(function(e) 
+    $(".frame-trace-toggle").on("change", function(e) 
     {
         if (e.target.checked){
             $(".error-traces-tree").show();
@@ -17,7 +17,7 @@ function main() {
   
     });
 
-    $(".workspace-only-checkbox").change(function() 
+    $(".workspace-only-checkbox").on("change", function() 
     {
         vscode.postMessage({
             command: "setWorkspaceOnly",
@@ -25,7 +25,7 @@ function main() {
         });
     });
 
-    $("vscode-link").click(function()
+    $("vscode-link").on("click", function()
     {
         vscode.postMessage({
             command: "goToFileAndLine",
@@ -33,7 +33,7 @@ function main() {
         });
     });
 
-    $('.view-rows-btn').click(function(){
+    $('.view-rows-btn').on("click", function(){
         vscode.postMessage({
             command: "viewRaw"
         });

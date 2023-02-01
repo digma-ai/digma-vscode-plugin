@@ -1,4 +1,4 @@
-import moment = require('moment');
+import * as moment from 'moment';
 import * as vscode from 'vscode';
 import { SymbolInfo } from './languages/extractors';
 
@@ -42,7 +42,7 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
 
     protected async refreshAll()
     {
-        for(let editor of vscode.window.visibleTextEditors)
+        for(const editor of vscode.window.visibleTextEditors)
         {
             await this.refreshParametersCache(editor.document);
         }
@@ -58,20 +58,22 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
 
     private async refreshParametersCache(document: vscode.TextDocument)
     {   
-        if(vscode.languages.match(this._documentSelector, document) <= 0)
+        if(vscode.languages.match(this._documentSelector, document) <= 0) {
             return;
+        }
 
         const editor = vscode.window.visibleTextEditors.find(e => e.document == document); 
-        if(!editor)
+        if(!editor) {
             return;
+        }
         
         if(this.isEnabled()) {
-            let parameters = await this.getParameters(document);
+            const parameters = await this.getParameters(document);
             const decorationOptions: vscode.DecorationOptions[] = parameters
-                .map(p => {return {
+                .map(p => ({
                     hoverMessage: p.hover, 
                     range: p.range
-                }});
+                }));
             editor.setDecorations(this._decorationType, decorationOptions);
         }
         else{
@@ -104,8 +106,9 @@ export abstract class ParameterDecorator<TParameter extends IParameter> implemen
     // return new vscode.Hover(markdown);
     
     public dispose() {
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 
 }
@@ -122,7 +125,7 @@ export class TimeSeriesGraphBuilder
 
     public toSvg(width: number, height: number, color: string) : string
     {
-        let data = [...this._data];
+        const data = [...this._data];
         data.sort(x => x.timestamp);
 
         // Normalize timestamps from 0 to width
@@ -138,7 +141,7 @@ export class TimeSeriesGraphBuilder
         // build SVG
         let lines = '';
         let lastItem: DataPoint = data[0];
-        for(let item of data.splice(1))
+        for(const item of data.splice(1))
         {
             lines += /*xml*/ ` <line x1="${lastItem.timestamp}" y1="${lastItem.value}" x2="${item.timestamp}" y2="${item.value}" stroke="${color}" />\n`;
             lastItem = item;

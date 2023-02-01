@@ -56,7 +56,7 @@ export class Logger {
 		return padLeft(now.getUTCHours() + '', 2, '0')
 			+ ':' + padLeft(now.getUTCMinutes() + '', 2, '0')
 			+ ':' + padLeft(now.getUTCSeconds() + '', 2, '0')
-            + '.' + padRight(now.getMilliseconds() + '', 3, '0')
+            + '.' + padRight(now.getMilliseconds() + '', 3, '0');
 	}
 }
 

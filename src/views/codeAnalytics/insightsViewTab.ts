@@ -14,7 +14,7 @@ import { DocumentInfoProvider } from "../../services/documentInfoProvider";
 import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
 import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
 import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
-import { InsightItemGroupRendererFactory, InsightListGroupItemsRenderer } from "../ListView/IListViewItem";
+import { InsightItemGroupRendererFactory } from "../ListView/IListViewItem";
 import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
@@ -68,7 +68,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
         this.clearSpanLabel();
         let responseItems: CodeObjectInsight[] | undefined = undefined;
         let usageResults: UsageStatusResults;
-        let duplicateSpansItems : DuplicateSpanInsight[]=[];
+        const duplicateSpansItems : DuplicateSpanInsight[]=[];
         try {
             const editor = vscode.window.activeTextEditor;
             if(!editor) {
@@ -79,7 +79,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 return;
             }
             if (!codeObject || !codeObject.id) {
-                let html = await this._noCodeObjectsMessage.showCodeSelectionNotFoundMessage(docInfo);
+                const html = await this._noCodeObjectsMessage.showCodeSelectionNotFoundMessage(docInfo);
                 this.updateListView(html);
                 this.updateSpanListView("");
                 this._viewedCodeObjectId=undefined;
@@ -100,15 +100,15 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
 
             // responseItems = await this._analyticsProvider.getInsights(codeObjectsIds,true);
             //temp ugly workaround
-            var bottleneck = responseItems.find(x=>x.type ==='SlowestSpans');
-            var endpointBottleneck = responseItems.find(x=>x.type ==='SpanEndpointBottleneck');
+            const bottleneck = responseItems.find(x=>x.type ==='SlowestSpans');
+            const endpointBottleneck = responseItems.find(x=>x.type ==='SpanEndpointBottleneck');
 
             if (bottleneck && endpointBottleneck){
                 responseItems=responseItems.filter(x=>x.type!=='SpanEndpointBottleneck');
             }
 
-            var relevantSpans = docInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
-            var duplicates = relevantSpans.filter(x=>x.duplicates.length>0);
+            const relevantSpans = docInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
+            const duplicates = relevantSpans.filter(x=>x.duplicates.length>0);
             for (const duplicate of duplicates){
                 duplicateSpansItems.push(new DuplicateSpanInsight(duplicate, this._viewUris));
                 responseItems=responseItems.filter(x=>x.codeObjectId!=duplicate.id);
@@ -120,7 +120,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             usageResults = docInfo.usageData.getForCodeObjectIds(codeObjectsIds);
             if (!this._workspaceState.environment && 
                 (usageResults.codeObjectStatuses.length>0 || usageResults.environmentStatuses.length>0) ){
-                    let html = await this._noEnvironmentSelectedMessage.showNoEnvironmentSelectedMessage(usageResults);
+                    const html = await this._noEnvironmentSelectedMessage.showNoEnvironmentSelectedMessage(usageResults);
                     this.updateListView(html);
                     this.updateSpanListView("");
                     this._viewedCodeObjectId=undefined;
@@ -151,7 +151,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
                 this.updateListView(html);
             }
             else{
-                html+=HtmlHelper.getInfoMessage("No insights about this code object yet.")
+                html+=HtmlHelper.getInfoMessage("No insights about this code object yet.");
                 this.updateListView(html);
             }
         }
@@ -186,14 +186,14 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     private refreshInitializationStatus(status: ScanningStatus) {
-        let html = HtmlHelper.getInitializationStatus(status);
+        const html = HtmlHelper.getInitializationStatus(status);
         this._channel?.publish(
             new UiMessage.Set.InitializationStatus(html)
         );
     }
 
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) {
-        let html = HtmlHelper.getCodeObjectLabel(this._viewUris, codeObject.displayName);
+        const html = HtmlHelper.getCodeObjectLabel(this._viewUris, codeObject.displayName);
         this._channel?.publish(
             new UiMessage.Set.CodeObjectLabel(html)
         );
@@ -214,7 +214,7 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     public showError(error: any): void {
-        let html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(error);
+        const html = new HandleDigmaBackendExceptions(this._viewUris).getExceptionMessageHtml(error);
         this.updateListView(html);
     }
 

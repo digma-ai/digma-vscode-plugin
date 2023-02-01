@@ -1,4 +1,3 @@
-import { NONAME } from 'dns';
 import * as vscode from 'vscode';
 import { Disposable } from 'vscode-languageclient';
 import { AnalyticsProvider } from '../services/analyticsProvider';

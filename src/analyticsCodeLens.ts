@@ -3,10 +3,9 @@ import { Settings } from './settings';
 import { DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { WorkspaceState } from './state';
-import { CodeObjectInsight, InsightImporance } from './views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
+import { CodeObjectInsight, InsightImportance } from './views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 import { CodeObjectLocationInfo } from './services/languages/extractors';
-import { CodeObjectUsageStatus, UsageStatusResults } from './services/analyticsProvider';
-
+import { UsageStatusResults } from './services/analyticsProvider';
 
 export class AnalyticsCodeLens implements vscode.Disposable
 {
@@ -20,8 +19,9 @@ export class AnalyticsCodeLens implements vscode.Disposable
         this._provider = new CodelensProvider(documentInfoProvider,state);
 
         this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (methodInfo: MethodInfo, environment:string) => {
-            if(vscode.window.activeTextEditor)
+            if(vscode.window.activeTextEditor) {
                 vscode.window.activeTextEditor.selection = new vscode.Selection(methodInfo.range.start, methodInfo.range.start);
+            }
 
             await vscode.commands.executeCommand(CodeAnalyticsView.Commands.Show, environment);
         }));
@@ -42,8 +42,9 @@ export class AnalyticsCodeLens implements vscode.Disposable
     }
 
     public dispose() {
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 }
 class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens> 
@@ -65,7 +66,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
     private async getNoDataCodeLens(methodInfo: MethodInfo,
         codeObjectInfo:CodeObjectLocationInfo): Promise<vscode.CodeLens[]> {
 
-        let lens: vscode.CodeLens[] = [];
+        const lens: vscode.CodeLens[] = [];
         lens.push(new vscode.CodeLens(codeObjectInfo.range, {
             title:  "Never reached",
             tooltip: "This code was never reached",
@@ -94,7 +95,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                               state: UsageStatusResults,
                               environmentPrefix: boolean): Promise<vscode.CodeLens[]> {
         
-        let lens: vscode.CodeLens[] = [];
+        const lens: vscode.CodeLens[] = [];
         
         for (const insight of insights){
             if (!insight.decorators){
@@ -108,11 +109,11 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 } 
     
                 let priorityEmoji = "";
-                if (insight.importance<InsightImporance.important){
+                if (insight.importance<InsightImportance.important){
                     priorityEmoji='❗️'; 
                 }
     
-                let title = `${priorityEmoji}${decorator.title} ${envComponent}`;
+                const title = `${priorityEmoji}${decorator.title} ${envComponent}`;
     
                 lens.push(new vscode.CodeLens(codeObjectInfo.range, {
                     title:  title,
@@ -143,12 +144,12 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
     public async getLensForCodeLocationObject(methodInfo: MethodInfo, codeObjects: CodeObjectLocationInfo[], 
         usageStatus:UsageStatusResults, allInsights: CodeObjectInsight[] ) :Promise<vscode.CodeLens[]> {
         
-            let codelens: vscode.CodeLens[] = [];
+            const codelens: vscode.CodeLens[] = [];
             
             const relevantCodeObjects 
                 = codeObjects.filter(e => e.range.intersection(methodInfo.range) != undefined);
             
-            for (let codeObject of relevantCodeObjects){
+            for (const codeObject of relevantCodeObjects){
                 const insights =  allInsights.filter(x=>x.codeObjectId== codeObject.id);
                 const codeObjectUsage = usageStatus.codeObjectStatuses.filter(x=>x.codeObjectId==codeObject.id);
                 if (insights.length==0 &&
@@ -172,8 +173,8 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                 const otherEnvsInsightsToShow 
                     = insights
                         .filter(x=>x.environment!=this._state.environment)
-                        .filter(x=>x.decorators && x.importance<InsightImporance.important)
-                        .filter(x=>!currentEnvInsights.any(i=>i.type==x.type && i.importance==x.importance));
+                        .filter(x=>x.decorators && x.importance<InsightImportance.important)
+                        .filter(x=>!currentEnvInsights.some(i=>i.type==x.type && i.importance==x.importance));
 
                 const otherEnvLenses = await this.getCodeLens(methodInfo,codeObject,otherEnvsInsightsToShow, usageStatus,true);
                 for (const lens of otherEnvLenses){
@@ -195,11 +196,11 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             {return [];}
 
         const codelens: vscode.CodeLens[] = [];
-        for(let methodInfo of documentInfo.methods)
+        for(const methodInfo of documentInfo.methods)
         {
             const methodCodeLens: vscode.CodeLens[] = [];
 
-            for (let alias of methodInfo.ids){
+            for (const alias of methodInfo.ids){
                 const insights = documentInfo.insights.all
                     .filter(x=>x.codeObjectId == alias);
 
@@ -221,9 +222,9 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             }
         
             let spans = documentInfo.spans.filter(e => e.range.intersection(methodInfo.range) != undefined);
-            let duplicates = spans
+            const duplicates = spans
                 .filter(x=>documentInfo.spans
-                    .any(span=>span!=x && span.name==x.name && span.range!=x.range));
+                    .some(span=>span!=x && span.name==x.name && span.range!=x.range));
             
             spans=spans.filter(span=>!duplicates.includes(span));
 
@@ -261,14 +262,14 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
 
             }
 
-            for (let alias of methodInfo.ids){
+            for (const alias of methodInfo.ids){
                 const insights = documentInfo.insights.all.filter(x=>x.codeObjectId== alias)
                     .filter(x=>x.scope=="Function");
 
                 const otherEnvsInsights=
                      insights
                         .filter(x=>x.environment!=this._state.environment)
-                        .filter(x=>x.decorators && x.importance<InsightImporance.important);
+                        .filter(x=>x.decorators && x.importance<InsightImportance.important);
 
                 const otherEnvLenses = await this.getCodeLens(methodInfo,methodInfo,otherEnvsInsights,
                      documentInfo.usageData.getAll(),true);

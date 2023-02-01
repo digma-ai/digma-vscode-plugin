@@ -1,5 +1,4 @@
 import { AnalyticsProvider, UsageStatusResults } from "../../../services/analyticsProvider";
-import { DocumentInfo } from "../../../services/documentInfoProvider";
 import { WorkspaceState } from "../../../state";
 import { WebViewUris } from "../../webViewUtils";
 import { CodeObjectGroupEnvironments } from "../CodeObjectGroups/CodeObjectGroupEnvUsage";

@@ -50,7 +50,7 @@ export class ErrorFlowStackRenderer {
         let summaryHtml = '';
         const summary = this._viewModel?.summary;
         if(summary !== undefined) {
-            let frequencyString = `${summary.frequency.avg}/${summary.frequency.unit}`;
+            const frequencyString = `${summary.frequency.avg}/${summary.frequency.unit}`;
             
             summaryHtml = `
                 <div class="property-row" style="min-height:25px">
@@ -116,7 +116,7 @@ export class ErrorFlowStackRenderer {
 
     private getFrameSpanToggleHtml():string{
 
-        let disabledState = (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0) ? 'disabled' : ''; 
+        const disabledState = (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0) ? 'disabled' : ''; 
 
         return `
         <div style="float:right;min-width:100px;"> 
@@ -136,8 +136,8 @@ export class ErrorFlowStackRenderer {
 
         function getTree(affectedPath: AffectedPathViewModel, level: any): string
         {
-            let pathPart = affectedPath.path[level];
-            let exceptionIcon = pathPart.serviceName == errorService && errorSpanNames.includes(pathPart.spanName) 
+            const pathPart = affectedPath.path[level];
+            const exceptionIcon = pathPart.serviceName == errorService && errorSpanNames.includes(pathPart.spanName) 
                 ? '<span style="color: var(--vscode-charts-red);vertical-align: middle;" class="codicon codicon-symbol-event"> </span>'
                 : '';
 
@@ -172,7 +172,7 @@ export class ErrorFlowStackRenderer {
         }
 
         let trees = '';
-        for(let affectedPath of this._viewModel?.affectedSpanPaths) 
+        for(const affectedPath of this._viewModel?.affectedSpanPaths) 
         {
             if(affectedPath.path.length > 1)
             {
@@ -226,15 +226,15 @@ export class ErrorFlowStackRenderer {
 
     public static getFlowStackHtml(stacks: StackViewModel[])
     {
-        // if(Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri))
+        // if(Settings.hideFramesOutsideWorkspace.value && stack.frames.every(f => !f.workspaceUri))
         //     return '';
 
         let html = '';
 
         for (const stack of stacks) {
             let stackHtml = '';
-            const allOutsideWorkspaceClass = stack.frames.all(f => !f.workspaceUri) ? "all-outside-workspace" : "";
-            const hidden = Settings.hideFramesOutsideWorkspace.value && stack.frames.all(f => !f.workspaceUri) ? "hidden" : "";
+            const allOutsideWorkspaceClass = stack.frames.every(f => !f.workspaceUri) ? "all-outside-workspace" : "";
+            const hidden = Settings.hideFramesOutsideWorkspace.value && stack.frames.every(f => !f.workspaceUri) ? "hidden" : "";
             const frames = stack.frames;
                 //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
             let lastSpan = '';
@@ -281,7 +281,7 @@ export class ErrorFlowStackRenderer {
         const disabledClass = frame.workspaceUri ? "" : "disabled";
         const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
         const showExceptionIcon = frame.internalIndex===0;
-        let exceptionHtml = '<span style="color:#f14c4c;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
+        const exceptionHtml = '<span style="color:#f14c4c;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
         let executedCodeHtml = '';
         if(frame.executedCode){
             executedCodeHtml = frame.workspaceUri

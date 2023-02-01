@@ -7,7 +7,6 @@ import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
 import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { Logger } from "../../services/logger";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
-import moment = require('moment');
 import { ErrorFlowStackViewModel, FrameViewModel, StackViewModel } from './errorFlowStackRenderer';
 import { EditorHelper, EditorInfo } from "../../services/EditorHelper";
 import { Settings } from "../../settings";
@@ -31,7 +30,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     private _stackViewModel?: ErrorFlowStackViewModel = undefined;
     private _disposables: vscode.Disposable[] = [];
     private _stackViewModels?: ErrorFlowStackViewModel[] = [];
-    private _errorFlowIndex: number = 0;
+    private _errorFlowIndex = 0;
 
     public static Commands = class {
         public static readonly ShowErrorView = `digma.ErrorView.show`;
@@ -85,7 +84,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         this.refreshList(codeObject);
     }
     dispose() {
-        for (let dis of this._disposables)
+        for (const dis of this._disposables)
 		{
 			dis.dispose();
 		}
@@ -123,12 +122,12 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
     }    
 
     public showError(error: any): void {
-        let html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(error);
+        const html = new HandleDigmaBackendExceptions(this._webViewUris).getExceptionMessageHtml(error);
         this._channel.publish(new UiMessage.Set.ErrorsList(html));
     }
 
     private refreshInitializationStatus(status: ScanningStatus) {
-        let html = HtmlHelper.getInitializationStatus(status);
+        const html = HtmlHelper.getInitializationStatus(status);
         this._channel?.publish(
             new UiMessage.Set.InitializationStatus(html)
         );
@@ -136,7 +135,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
 
     private refreshCodeObjectLabel(codeObject: CodeObjectInfo) 
     {
-        let html = HtmlHelper.getCodeObjectLabel(this._webViewUris, codeObject.displayName);
+        const html = HtmlHelper.getCodeObjectLabel(this._webViewUris, codeObject.displayName);
         this._channel?.publish(new UiMessage.Set.CodeObjectLabel(html));
     }
     private async refreshList(codeObject: CodeObjectInfo) 
@@ -146,14 +145,14 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
             return;
         }
         const document = editor.document;
-        let docInfo = await this._documentInfoProvider.getDocumentInfo(document);
+        const docInfo = await this._documentInfoProvider.getDocumentInfo(document);
         if (!docInfo) {
             return;
         }
         
         if (!codeObject || !codeObject.id) {
             
-            let html = await this._noCodeObjectMessage.showCodeSelectionNotFoundMessage(docInfo);
+            const html = await this._noCodeObjectMessage.showCodeSelectionNotFoundMessage(docInfo);
             this._channel.publish(new UiMessage.Set.ErrorsList(html));
             this._viewedCodeObjectId=undefined;
             return;
@@ -193,7 +192,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
 
                 return;
             }
-            var codeObjectStatuses =usageResults.codeObjectStatuses.filter(o=>o.type === "Span");
+            const codeObjectStatuses =usageResults.codeObjectStatuses.filter(o=>o.type === "Span");
             const groupItems = await new CodeObjectGroupDiscovery(this._groupViewItemCreator).getGroups(codeObjectStatuses);
             const listViewItems = ErrorsHtmlBuilder.createListViewItem(errors);
             const groupRenderer = new InsightItemGroupRendererFactory(undefined);
@@ -229,7 +228,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
         }
     }
 
-    private async navigateErrorFlow(offset: number = 0) {
+    private async navigateErrorFlow(offset = 0) {
         const stackViewModel = this._stackViewModel;
         if(!stackViewModel) {
             return;
@@ -257,7 +256,7 @@ export class ErrorsViewTab implements ICodeAnalyticsViewTab {
        // this.updateEditorDecorations(stack);
     }
 
-    private calculateOffset(current: number = 0, max: number = 0, offset: number = 0) {
+    private calculateOffset(current = 0, max = 0, offset = 0) {
         let result = current + offset;
         if(result > max) {
             result = max;

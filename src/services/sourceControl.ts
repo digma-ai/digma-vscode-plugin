@@ -1,6 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import * as fs from 'fs';
 import { GitExtension  } from './git';
 import { Settings, SourceControlType } from '../settings';
 
@@ -18,7 +16,7 @@ export class SourceControl implements vscode.Disposable
 
     constructor(public supportedSourceControls: ISupportedSourceControl[])
     {
-        for(let sc of supportedSourceControls)
+        for(const sc of supportedSourceControls)
         {
             this._disposables.push(
                 vscode.workspace.registerTextDocumentContentProvider(sc.fileScheme, sc.textDocumentContentProvider)
@@ -32,8 +30,9 @@ export class SourceControl implements vscode.Disposable
 
     public dispose() 
     {
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 }
 
@@ -60,12 +59,14 @@ export class Git implements ISupportedSourceControl
             async provideTextDocumentContent(uri: vscode.Uri): Promise<string> 
             {
                 const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git')?.exports;
-                if(!gitExtension)
+                if(!gitExtension) {
                     return '';
+                }
         
                 const gitRepo = gitExtension.getAPI(1).repositories.firstOrDefault();
-                if(!gitRepo)
+                if(!gitRepo) {
                     return '';
+                }
                 
                 const path = uri.fsPath;
                 const ref = uri.query;    
@@ -73,6 +74,6 @@ export class Git implements ISupportedSourceControl
 
                 return txt;
             }
-        }
+        };
 	}
 }
