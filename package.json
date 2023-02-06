@@ -73,18 +73,32 @@
     "main": "./out/extension.js",
     "contributes": {
         "views": {
-            "digma": [
+            "codeAnalytics": [
                 {
                     "type": "webview",
                     "id": "codeAnalytics",
-                    "name": "CodeAnalytics"
+                    "name": "Code Analytics"
+                }
+            ],
+            "recentActivity": [
+                {
+                    "type": "webview",
+                    "id": "recentActivity",
+                    "name": "Recent Activity"
                 }
             ]
         },
         "viewsContainers": {
             "activitybar": [
                 {
-                    "id": "digma",
+                    "id": "codeAnalytics",
+                    "title": "Digma",
+                    "icon": "icon.png"
+                }
+            ],
+            "panel": [
+                {
+                    "id": "recentActivity",
                     "title": "Digma",
                     "icon": "icon.png"
                 }
@@ -161,18 +175,20 @@
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "clean": "rimraf ./out",
-        "compile": "npm run clean && npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js && npm run copy:jaeger",
+        "compile": "npm run clean && npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js && npm run copy:jaeger && npm run copy:digma-ui",
         "compile:all": "tsc",
         "compile:views": "tsc -p ./src/views-ui/codeAnalytics/tsconfig.json",
         "compile:sass": "sass --no-source-map ./src:./out",
-        "copy:js": "copy-and-watch src/**/*.js out",
-        "copy:jaeger": "copy-and-watch jaegerUi/**/*.{css,js,svg} out/views-ui",
-        "watch": "npm run watch:all || npm run watch:views || npm run watch:sass || npm run watch:js || npm run watch:jaeger",
+        "copy:js": "copy-and-watch 'src/**/*.js' out",
+        "copy:jaeger": "copy-and-watch 'jaegerUi/**/*.{css,js,svg}' out/views-ui/jaegerUi",
+        "copy:digma-ui": "copy-and-watch 'digmaUi/**/*.{js,ttf}' out/views-ui/digmaUi",
+        "watch": "npm run watch:all || npm run watch:views || npm run watch:sass || npm run watch:js || npm run watch:jaeger || num run watch:digma-ui",
         "watch:all": "tsc -w -p ./tsconfig.dev.json",
         "watch:views": "tsc -w -p ./src/views-ui/codeAnalytics/tsconfig.dev.json",
         "watch:sass": "sass --watch ./src:./out",
-        "watch:js": "copy-and-watch --watch src/**/*.js out",
-        "watch:jaeger": "copy-and-watch --watch jaegerUi/**/* out/views-ui",
+        "watch:js": "copy-and-watch --watch 'src/**/*.js' out",
+        "watch:jaeger": "copy-and-watch --watch 'jaegerUi/**/*' out/views-ui/jaegerUi",
+        "watch:digma-ui": "copy-and-watch --watch 'digmaUi/**/*' out/views-ui/digmaUi",
         "pretest": "npm run compile && npm run lint",
         "lint": "eslint src --ext ts",
         "lint:eslint": "eslint --cache .",
