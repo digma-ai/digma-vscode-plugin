@@ -1,19 +1,19 @@
-import fetch from "node-fetch";
 import * as https from "https";
-import * as vscode from "vscode";
-import { Settings } from "../settings";
-import { Logger } from "./logger";
-import { Dictionary, momentJsDateParser } from "./utils";
 import * as moment from "moment";
-import { decimal, integer } from "vscode-languageclient";
+import fetch from "node-fetch";
 import * as os from "os";
-import {
-    SpanInfo,
-    Duration
-} from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
+import * as vscode from "vscode";
+import { decimal, integer } from "vscode-languageclient";
+import { Settings } from "../settings";
 import { WorkspaceState } from "../state";
+import {
+    Duration,
+    SpanInfo
+} from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
 import { Environment } from "./EnvironmentManager";
 import { ServerDiscoveredSpan } from "./languages/extractors";
+import { Logger } from "./logger";
+import { Dictionary, momentJsDateParser } from "./utils";
 
 export enum Impact {
     High = "High",

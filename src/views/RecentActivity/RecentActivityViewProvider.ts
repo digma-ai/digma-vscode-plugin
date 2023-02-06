@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 import { AnalyticsProvider, EntrySpan } from "../../services/analyticsProvider";
-import { WorkspaceState } from "../../state";
-import { TracePanel } from "../codeAnalytics/Traces/tracePanel";
-import { JaegerPanel } from "../codeAnalytics/Jaeger/JaegerPanel";
-import { Settings } from "../../settings";
-import { SpanLinkResolver } from "../../services/spanLinkResolver";
 import { EditorHelper } from "../../services/EditorHelper";
 import { CodeObjectLocationHints } from "../../services/languages/modulePathToUriConverters";
+import { SpanLinkResolver } from "../../services/spanLinkResolver";
+import { Settings } from "../../settings";
+import { WorkspaceState } from "../../state";
+import { JaegerPanel } from "../codeAnalytics/Jaeger/JaegerPanel";
+import { TracePanel } from "../codeAnalytics/Traces/tracePanel";
 
 export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "recentActivity";
@@ -123,7 +123,7 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
         };
         const panel = vscode.window.createWebviewPanel(
             "traceData",
-            `${span.displayText}`,
+            span.displayText,
             vscode.ViewColumn.One,
             options
         );
@@ -147,7 +147,7 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
 
         const panel = vscode.window.createWebviewPanel(
             "jaegerUI",
-            "Jaeger",
+            span.displayText,
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -241,6 +241,7 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
     }
 }
 
+// TODO: move to utils
 function getNonce() {
     let text = "";
     const possible =
