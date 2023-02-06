@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { DocumentInfoProvider, LineInfo } from '../../../services/documentInfoProvider';
 import { WorkspaceState } from '../../../state';
+import { SpanDurationsInsight } from '../InsightListView/SpanInsight';
 
 export class PerformanceDecorator implements vscode.Disposable
 {
@@ -13,7 +14,9 @@ export class PerformanceDecorator implements vscode.Disposable
     private _textDecorationType: vscode.TextEditorDecorationType;
     private _disposables: vscode.Disposable[] = [];
 
-    constructor(private _documentInfoProvider: DocumentInfoProvider)
+    constructor(private _documentInfoProvider: DocumentInfoProvider,
+        private _workspaceState: WorkspaceState
+        )
     {
         this._iconDecorationType = vscode.window.createTextEditorDecorationType({
             after:{
@@ -34,11 +37,9 @@ export class PerformanceDecorator implements vscode.Disposable
         this._disposables.push(vscode.commands.registerCommand(PerformanceDecorator.Commands.Hide, this.onHide.bind(this)));
     }
 
-    private async onShow(codeObjectId?: string) 
+    private async onShow() 
     {
-        if(!codeObjectId)
-            return;
-
+       
         const editor = vscode.window.activeTextEditor;
         if(!editor)
             return;
@@ -47,35 +48,67 @@ export class PerformanceDecorator implements vscode.Disposable
         if(!docInfo)
             return;
         
-        const method = docInfo.methods.firstOrDefault(m => m.symbol.id == codeObjectId);
-        if(!method)
-            return;
-        
-        const lines = docInfo.lines.getAllByCurrentEnv().filter(l => method.range.contains(l.range.start));
-        if(!lines)
-            return;
+        let decorators : vscode.DecorationOptions[] = [];
 
-        const textDecorationOptions: vscode.DecorationOptions[] = lines
-            .map(lineInfo => {
-                return <vscode.DecorationOptions>{
-                    hoverMessage: this.getTooltip(lineInfo),
+        for (const method of docInfo.methods){
+            
+            const insights = docInfo.insights.forMethod(method,this._workspaceState.environment)
+                .filter(x=>x.name=="Performance Stats");
+            
+            const percentileInfo = insights.map(x=>x as SpanDurationsInsight)
+                .flatMap(x=>x.percentiles).filter(x=>x.currentDuration);
+             
+            const totalDuration =  percentileInfo.filter(x=>x.percentile==0.5).map(x=>x.currentDuration.raw)
+                .reduce((acc, val)=>acc + val,0);
+
+            const lines = docInfo.lines.getAllByCurrentEnv().filter(l => method.range.contains(l.range.start));
+            for (const lineInfo of lines ){
+                decorators.push({
+                    hoverMessage: "",
                     range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
                     renderOptions: {
                         after:{
-                            contentText: [...new Set( lineInfo.exceptions.map(e => e.type))].join('\xB7')
+                            contentText: `Duration: ${totalDuration}`
                         }
                     }
-                }
-            });
-        const iconDecorationOptions = lines
-            .map(lineInfo => {
-                return <vscode.DecorationOptions>{
-                    range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
-                }
-            });
+    
+                })
+            }
+           
+           
+                
+                    //             hoverMessage: this.getTooltip(lineInfo),
+                    //             range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
+                    //             renderOptions: {
+                    //                 after:{
+                    //                     contentText: [...new Set( lineInfo.exceptions.map(e => e.type))].join('\xB7')
+                    //                 }
+                    //             }
+                    //         }
 
-        editor.setDecorations(this._iconDecorationType, iconDecorationOptions);
-        editor.setDecorations(this._textDecorationType, textDecorationOptions);
+        }
+       
+        // const textDecorationOptions: vscode.DecorationOptions[] = lines
+        //     .map(lineInfo => {
+        //         return <vscode.DecorationOptions>{
+        //             hoverMessage: this.getTooltip(lineInfo),
+        //             range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
+        //             renderOptions: {
+        //                 after:{
+        //                     contentText: [...new Set( lineInfo.exceptions.map(e => e.type))].join('\xB7')
+        //                 }
+        //             }
+        //         }
+        //     });
+        // const iconDecorationOptions = lines
+        //     .map(lineInfo => {
+        //         return <vscode.DecorationOptions>{
+        //             range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
+        //         }
+        //     });
+
+        editor.setDecorations(this._iconDecorationType, decorators);
+        //editor.setDecorations(this._textDecorationType, textDecorationOptions);
     }
 
     private async onHide()
