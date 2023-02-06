@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 import { TextDocument } from "vscode";
 import { integer } from 'vscode-languageclient';
 import { CodeInspector } from '../../codeInspector';
@@ -19,8 +18,8 @@ export class PythonSpanExtractor implements ISpanExtractor {
     ): Promise<SpanExtractorResult> {
         const results: SpanLocationInfo[] = [];
 
-        var strippedText = document.getText().replace("\n","").replace(/\s+/g,"").replace(/"/g, '\'');
-        var mainDeclared = strippedText.indexOf("if__name__=='__main__'")>=0;
+        const strippedText = document.getText().replace("\n","").replace(/\s+/g,"").replace(/"/g, '\'');
+        const mainDeclared = strippedText.indexOf("if__name__=='__main__'")>=0;
 
         for(const [index, token] of tokens.entries()) {
             if(index < 1) {
@@ -77,15 +76,16 @@ export class PythonSpanExtractor implements ISpanExtractor {
             }
             const tracerName =  match[1];
             
-            let instLibraryOptions = []
+            const instLibraryOptions = [];
             if (tracerName === '__name__'){
-                if (mainDeclared)
+                if (mainDeclared) {
                     instLibraryOptions.push('__main__');  
+                }
                 
-                let fileName = await this.extractNameTypeTrace(tracerDefinition.document.uri.fsPath);
+                const fileName = await this.extractNameTypeTrace(tracerDefinition.document.uri.fsPath);
                 instLibraryOptions.push(fileName );
                 if (fileName.includes(".")){
-                    let unrootedForm = fileName.split(".").slice(1).join(".");
+                    const unrootedForm = fileName.split(".").slice(1).join(".");
                     instLibraryOptions.push(unrootedForm);
                 }
             } 
@@ -151,7 +151,7 @@ export class PythonSpanExtractor implements ISpanExtractor {
     }
 
     private cleanSpanName(text: string): string {
-        return text.replace(/\"/g, '');
+        return text.replace(/"/g, '');
     }
 
     private getStatementIndexes(tokens: Token[], cursorLocation: vscode.Location): { cursorIndex: integer, endIndex: integer } {

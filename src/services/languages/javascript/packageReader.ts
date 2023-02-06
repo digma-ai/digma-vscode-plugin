@@ -34,7 +34,7 @@ export class JSPackageReader {
         return packageName;
     }
 
-    public async loadPackagesMap(force: boolean = false): Promise<PackagesMap> {
+    public async loadPackagesMap(force = false): Promise<PackagesMap> {
         if(force) {
             this.packagesMap.clear();
         }

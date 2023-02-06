@@ -16,7 +16,7 @@ module.exports = {
   parserOptions: {
     tsconfigRootDir: __dirname,
     project: "./tsconfig.eslint.json",
-    ecmaVersion: 12,
+    ecmaVersion: 13,
     sourceType: "module"
   },
   plugins: ["@typescript-eslint"],

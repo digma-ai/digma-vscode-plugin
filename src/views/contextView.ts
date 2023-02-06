@@ -1,7 +1,5 @@
 import * as vscode from 'vscode';
-import * as os from 'os';
 import { WebViewUris } from "./webViewUtils";
-import { Settings } from '../settings';
 import { AnalyticsProvider } from '../services/analyticsProvider';
 import { WorkspaceState } from '../state';
 
@@ -24,8 +22,9 @@ export class ContextView implements vscode.Disposable
     {
         this._provider.dispose();
 
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 }
 
@@ -85,7 +84,7 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
         if(!environments.includes(selectedEnv)){
             options += `<vscode-option id="${selectedEnv}" selected>${selectedEnv} (custom)</vscode-option>`;
         }
-        for(let env of environments){
+        for(const env of environments){
             const selected = env == selectedEnv ? "selected" : "";
             options += `<vscode-option id="${env}" ${selected}>${env}</vscode-option>`;
         }
@@ -118,7 +117,8 @@ class ContextViewProvider implements vscode.WebviewViewProvider, vscode.Disposab
 
     public dispose() 
     {
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 }

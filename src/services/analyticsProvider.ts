@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import { Settings } from "../settings";
 import { Logger } from "./logger";
 import { Dictionary, momentJsDateParser } from "./utils";
-import moment = require("moment");
+import * as moment from 'moment';
 import { decimal, integer } from "vscode-languageclient";
 import * as os from 'os';
 import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
@@ -161,32 +161,32 @@ export interface CodeObjectSummary {
 }
 
 export class MethodCodeObjectSummary implements CodeObjectSummary {
-    type: string = 'MethodSummary';
-    codeObjectId: string = '';
-    environment: string = '';
+    type = 'MethodSummary';
+    codeObjectId = '';
+    environment = '';
     insightsCount: integer = 0;
     errorsCount: integer = 0;
     score: integer = 0;
     executedCodes: ExecutedCodeSummary[] = [];
 }
 export class EndpointCodeObjectSummary implements CodeObjectSummary {
-    type: string = 'EndpointSummary';
-    codeObjectId: string = '';
+    type = 'EndpointSummary';
+    codeObjectId = '';
     insightsCount: integer = 0;
     errorsCount: integer = 0;
-    highUsage: boolean = false;
-    lowUsage: boolean = false;
-    slow: boolean = false;
+    highUsage = false;
+    lowUsage = false;
+    slow = false;
 
     maxCallsIn1Min: integer = 0;
-    route: string = '';
+    route = '';
 }
 export class SpanCodeObjectSummary implements CodeObjectSummary {
-    type: string = 'SpanSummary';
-    codeObjectId: string = '';
+    type = 'SpanSummary';
+    codeObjectId = '';
     insightsCount: integer = 0;
     errorsCount: integer = 0;
-    isBottleneck: boolean = false;
+    isBottleneck = false;
 }
 
 export interface ExecutedCodeSummary {
@@ -361,7 +361,7 @@ export class AnalyticsProvider {
     }
 
     public async getCodeObjectsErrors(codeObjectIds: string[]): Promise<CodeObjectErrorResponse[]> {
-        let params: [string, any][  ] = [["environment", this.state.environment]];
+        const params: [string, any][] = [["environment", this.state.environment]];
         codeObjectIds.forEach(o => params.push(["codeObjectId", o]));
 
         const response = await this.send<CodeObjectErrorResponse[]>(
@@ -500,7 +500,7 @@ export class AnalyticsProvider {
 
     public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> {
         try {
-            let params: [string, any][] = [["environment", this.state.environment]];
+            const params: [string, any][] = [["environment", this.state.environment]];
 
             if (sort) {
                 params.push(["sort", sort]);
@@ -588,7 +588,7 @@ export class AnalyticsProvider {
         relativePath: string,
         queryParams?: QueryParams,
         body?: any,
-        respondAsJsonObject: boolean = true
+        respondAsJsonObject = true
     ): Promise<TResponse> {
         let url = vscode.Uri.joinPath(vscode.Uri.parse(Settings.url.value), relativePath).toString();
         const agent = url.startsWith('https')
@@ -605,12 +605,12 @@ export class AnalyticsProvider {
         if (Settings.token.value !== undefined && Settings.token.value.trim() !== "") {
             requestHeaders['Authorization'] = `Token ${Settings.token.value}`;
         }
-        let customHeaderMatch = new RegExp(`^ *([^ ]+) *: *(.+[^ ]) *$`).exec(Settings.customHeader.value ?? '');
+        const customHeaderMatch = new RegExp(`^ *([^ ]+) *: *(.+[^ ]) *$`).exec(Settings.customHeader.value ?? '');
         if (customHeaderMatch) {
             requestHeaders[customHeaderMatch[1]] = customHeaderMatch[2];
         }
 
-        let response = await fetch(
+        const response = await fetch(
             url,
             {
                 agent: agent,

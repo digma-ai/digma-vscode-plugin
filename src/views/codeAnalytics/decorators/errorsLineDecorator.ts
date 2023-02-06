@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { DocumentInfoProvider, LineInfo } from '../../../services/documentInfoProvider';
-import { WorkspaceState } from '../../../state';
 
 export class ErrorsLineDecorator implements vscode.Disposable
 {
@@ -36,24 +35,29 @@ export class ErrorsLineDecorator implements vscode.Disposable
 
     private async onShow(codeObjectId?: string) 
     {
-        if(!codeObjectId)
+        if(!codeObjectId) {
             return;
+        }
 
         const editor = vscode.window.activeTextEditor;
-        if(!editor)
+        if(!editor) {
             return;
+        }
         
         const docInfo = await this._documentInfoProvider.getDocumentInfo(editor.document);
-        if(!docInfo)
+        if(!docInfo) {
             return;
+        }
         
         const method = docInfo.methods.firstOrDefault(m => m.symbol.id == codeObjectId);
-        if(!method)
+        if(!method) {
             return;
+        }
         
         const lines = docInfo.lines.getAllByCurrentEnv().filter(l => method.range.contains(l.range.start));
-        if(!lines)
+        if(!lines) {
             return;
+        }
 
         const textDecorationOptions: vscode.DecorationOptions[] = lines
             .map(lineInfo => {
@@ -65,13 +69,13 @@ export class ErrorsLineDecorator implements vscode.Disposable
                             contentText: [...new Set( lineInfo.exceptions.map(e => e.type))].join('\xB7')
                         }
                     }
-                }
+                };
             });
         const iconDecorationOptions = lines
             .map(lineInfo => {
                 return <vscode.DecorationOptions>{
                     range: new vscode.Range(lineInfo.range.end, lineInfo.range.end),
-                }
+                };
             });
 
         editor.setDecorations(this._iconDecorationType, iconDecorationOptions);
@@ -81,8 +85,9 @@ export class ErrorsLineDecorator implements vscode.Disposable
     private async onHide()
     {
         const editor = vscode.window.activeTextEditor;
-        if(!editor)
+        if(!editor) {
             return;
+        }
 
         editor.setDecorations(this._iconDecorationType, []);
         editor.setDecorations(this._textDecorationType, []);
@@ -90,10 +95,10 @@ export class ErrorsLineDecorator implements vscode.Disposable
 
     private getTooltip(lineInfo: LineInfo): vscode.MarkdownString
     {
-        let markdown = new vscode.MarkdownString('', true);
+        const markdown = new vscode.MarkdownString('', true);
         markdown.appendText('Throws:\n');
-        let typesShown : string[] = []; 
-        for(let exception of lineInfo.exceptions)
+        const typesShown : string[] = []; 
+        for(const exception of lineInfo.exceptions)
         {
             if (typesShown.includes(exception.type)){
                 continue;
@@ -117,7 +122,8 @@ export class ErrorsLineDecorator implements vscode.Disposable
     }
 
     public dispose() {
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 } 

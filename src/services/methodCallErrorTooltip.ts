@@ -10,7 +10,7 @@ export class MethodCallErrorTooltip implements vscode.Disposable
 {
     public static Commands = class {
         public static readonly ShowErrorView = `digma.errorHover.showErrorView`;
-    }
+    };
     private _disposables: vscode.Disposable[] = [];
 
     constructor(
@@ -29,8 +29,9 @@ export class MethodCallErrorTooltip implements vscode.Disposable
 
     public dispose() 
     {
-        for(let dis of this._disposables)
+        for(const dis of this._disposables) {
             dis.dispose();
+        }
     }
 }
 
@@ -46,14 +47,16 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
     public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined> 
     {
         const sourceDocInfo = await this._documentInfoProvider.getDocumentInfo(document);
-        if(!sourceDocInfo)
+        if(!sourceDocInfo) {
             return;
+        }
         
         let methodInfo: MethodInfo | undefined = sourceDocInfo?.methods.firstOrDefault((m) => m.nameRange?.contains(position) ?? false);
         let remoteDoc: DocumentInfo | undefined = undefined;
         if(!methodInfo){
-            if(!sourceDocInfo.tokens.any(t => (t.type == TokenType.function || t.type == TokenType.method) && t.range.contains(position)))
+            if(!sourceDocInfo.tokens.some(t => (t.type == TokenType.function || t.type == TokenType.method) && t.range.contains(position))) {
                 return;
+            }
             methodInfo = await this._codeInspector.getExecuteDefinitionMethodInfo(document, position, this._documentInfoProvider);
             if(!methodInfo) {
                 return;
@@ -131,11 +134,12 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
             
         }
         const errors = await this._documentInfoProvider.analyticsProvider.getCodeObjectsErrors(methodInfo.idsWithType);
-        if(!errors?.length)
+        if(!errors?.length) {
             return;
+        }
         
         markdown.appendText('Throws:\n');
-        for(let error of errors)
+        for(const error of errors)
         {
             markdown.appendMarkdown(`- \`${error.name}\``);
             markdown.appendMarkdown(` \u00B7 <span style="color:#cca700;"><i>${error.characteristic}</i></span>`);

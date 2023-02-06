@@ -30,8 +30,8 @@ export class ErrorsListViewItemsCreator
     public async create(
         codeObjectsInsight: ErrorsInsight[]
     ): Promise<IListViewItemBase[]> {
-        let result = codeObjectsInsight.map((o) => {
-            let errorsHtml: string[] = [];
+        const result = codeObjectsInsight.map((o) => {
+            const errorsHtml: string[] = [];
             o.topErrors.forEach((err) => {
                 errorsHtml.push(
                     `<div class="flex-row">${HtmlHelper.getErrorName(

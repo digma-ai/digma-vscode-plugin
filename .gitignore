@@ -1,8 +1,9 @@
-node_modules
-out/**
+.vscode-test/
+node_modules/
+out/
+.eslintcache
 *.vsix
-.vscode-test/**
+
 .DS_Store
 
 .idea/
-.eslintcache

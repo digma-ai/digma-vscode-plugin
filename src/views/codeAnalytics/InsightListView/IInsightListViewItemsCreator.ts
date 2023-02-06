@@ -1,16 +1,14 @@
 import { Moment } from "moment";
-import { decimal, integer } from "vscode-languageclient";
-import { UsageStatusResults } from "../../../services/analyticsProvider";
+import { decimal } from "vscode-languageclient";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
-import { WebViewUris } from "../../webViewUtils";
-import { EndpointInsight, adjustHttpRouteIfNeeded, adjustHttpInsightIfNeeded } from "./EndpointInsight";
+import { EndpointInsight, adjustHttpInsightIfNeeded } from "./EndpointInsight";
 
 export interface CodeObjectInsight extends Insight{
     codeObjectId: string,
     environment: string,
     scope: string,
     name: string,
-    importance: InsightImporance,
+    importance: InsightImportance,
     severity: decimal,
     decorators: CodeObjectDecorator[],
     actualStartTime?: Moment,
@@ -18,7 +16,7 @@ export interface CodeObjectInsight extends Insight{
     prefixedCodeObjectId: string,
 }
 
-export enum InsightImporance {
+export enum InsightImportance {
     spam = 9,
     clutter = 8,
     notInteresting=7,
@@ -68,7 +66,7 @@ export class InsightListViewItemsCreator implements IInsightListViewItemsCreator
         this.adjustToHttpIfNeeded(codeObjectInsight);
         const groupedByType = codeObjectInsight.groupBy(x => x.type);
         const items: IListViewItemBase [] = [];
-        for(let type in groupedByType)
+        for(const type in groupedByType)
         { 
             const creator = this._creators.get(type);
             if(creator)

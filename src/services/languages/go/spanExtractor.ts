@@ -49,14 +49,14 @@ export class GoSpanExtractor implements ISpanExtractor {
     }
     */
     async tryGetInstrumentationName(document: TextDocument,codeInspector: CodeInspector, symbolProvider: SymbolProvider, tokens: Token [], range: vscode.Range) : Promise<string | undefined>{
-        let tracerVariable = this.tryGetVariable(tokens, range);
+        const tracerVariable = this.tryGetVariable(tokens, range);
         if(tracerVariable === undefined){
             return undefined;
         }
-        let referencedDefinitionIdx = tracerVariable[1];
+        const referencedDefinitionIdx = tracerVariable[1];
         const searchIterationLimit = 10;
-        for (var i:number = 0; i < searchIterationLimit; i++) {
-            let currIndex = referencedDefinitionIdx+1+i;
+        for (let i = 0; i < searchIterationLimit; i++) {
+            const currIndex = referencedDefinitionIdx+1+i;
             if(currIndex >= tokens.length){
                 break;
             }
@@ -68,9 +68,9 @@ export class GoSpanExtractor implements ISpanExtractor {
                     const definition = await codeInspector.getDefinitionWithTokens(document,token.range.start,symbolProvider);
                     if(definition !== undefined)
                     {
-                        let tracerVariable = this.tryGetVariable(definition.tokens, definition.location.range);
+                        const tracerVariable = this.tryGetVariable(definition.tokens, definition.location.range);
                         if(tracerVariable!== undefined){
-                            let stringValueIndex = tracerVariable[1]+1;
+                            const stringValueIndex = tracerVariable[1]+1;
                             if (stringValueIndex< definition.tokens.length && definition.tokens[stringValueIndex].type === TokenType.string){
                                 return this.cleanText(definition.tokens[stringValueIndex].text);
                             }
@@ -115,7 +115,7 @@ export class GoSpanExtractor implements ISpanExtractor {
     ): Promise<SpanExtractorResult> {
         const results: SpanLocationInfo[] = [];
 
-        for(var symbol of symbolInfos){
+        for(const symbol of symbolInfos){
             Logger.info("Span discovering for function: "+symbol.displayName);
             try {
                 const funcStartTokenIndex = tokens.findIndex(x => x.range.intersection(symbol.range));
@@ -128,7 +128,7 @@ export class GoSpanExtractor implements ISpanExtractor {
                 }
 
                 for (let index = funcStartTokenIndex; index < funcEndTokenIndex; index++) {
-                    let token = tokens[index];
+                    const token = tokens[index];
                     if(token.type !== TokenType.function || token.text !== "Start"){
                         continue;
                     }
@@ -142,12 +142,11 @@ export class GoSpanExtractor implements ISpanExtractor {
                     }
                     const traceDefinition = await this._codeInspector.getDefinitionWithTokens(document,traceVarToken.range.start,symbolProvider);
 
-                    let references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,traceVarToken.range.start);
-                    let instrumentationLibraries = new Set();
-                    for(let refLocation of references)
+                    const references : vscode.Location[] = await vscode.commands.executeCommand("vscode.executeReferenceProvider", document.uri,traceVarToken.range.start);
+                    const instrumentationLibraries = new Set();
+                    for(const refLocation of references)
                     {
                         let _tokens: Token [];
-                        let _range: vscode.Range;
                         let _document: TextDocument;
                         if(refLocation.uri.fsPath !== document.uri.fsPath) { //defined in a different document
                             _document = await vscode.workspace.openTextDocument(refLocation.uri);
@@ -157,7 +156,7 @@ export class GoSpanExtractor implements ISpanExtractor {
                             _tokens = tokens;
                             _document = document;
                         }
-                        _range = refLocation.range;
+                        const _range: vscode.Range = refLocation.range;
                         const instrumentationName = await this.tryGetInstrumentationName(_document, this._codeInspector, symbolProvider, _tokens, _range);
                         if(instrumentationName !== undefined){
                             instrumentationLibraries.add(instrumentationName);
@@ -204,7 +203,7 @@ export class GoSpanExtractor implements ISpanExtractor {
 
 
     private cleanText(text: string): string {
-        return text.replace(/\"/g, '');
+        return text.replace(/"/g, '');
     }
 
 }

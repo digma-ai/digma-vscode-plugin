@@ -1,5 +1,3 @@
-import { UsageStatusResults } from "../../services/analyticsProvider";
-import { CodeObjectGroupEnvironments } from "../codeAnalytics/CodeObjectGroups/CodeObjectGroupEnvUsage";
 import { IListGroupItemBase } from "./IListViewGroupItem";
 
 export function sort(items: IListViewItemBase []): IListViewItemBase [] 
@@ -27,10 +25,10 @@ export interface IItemsInGroup extends IListViewItemBase
 
 export class InsightItemGroupRendererFactory {
 
-    public constructor( private emptyGroupItemtemplate: IListViewItemBase|undefined){}
+    public constructor( private emptyGroupItemTemplate: IListViewItemBase|undefined){}
 
     public getRenderer(group: IListGroupItemBase, sortIndex: number|undefined = undefined): InsightListGroupItemsRenderer{
-        return new InsightListGroupItemsRenderer(group,sortIndex,this.emptyGroupItemtemplate);
+        return new InsightListGroupItemsRenderer(group,sortIndex,this.emptyGroupItemTemplate);
 
     }
 }
@@ -40,7 +38,7 @@ export class InsightListGroupItemsRenderer implements IItemsInGroup
     private _items: IListViewItem [] = [];
 
     constructor(public group: IListGroupItemBase, public sortIndex: number|undefined = undefined,
-        private emptyGroupItemtemplate: IListViewItemBase|undefined)
+        private emptyGroupItemTemplate: IListViewItemBase|undefined)
     {
         this.groupId=group.groupId;
     }
@@ -64,8 +62,8 @@ export class InsightListGroupItemsRenderer implements IItemsInGroup
             return this.group.getHtml()  + html;
 
         }
-        // else if (this.emptyGroupItemtemplate){
-        //     html+=this.emptyGroupItemtemplate.getHtml();
+        // else if (this.emptyGroupItemTemplate){
+        //     html+=this.emptyGroupItemTemplate.getHtml();
         //     return this.group.getHtml()  + html;
         // }
         return html;

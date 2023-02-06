@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { integer } from 'vscode-languageclient';
 import { IConsumer, IMessage, MessageReceivedHandler } from '../views-ui/common/contracts';
 
 export interface WebViewProvider
@@ -51,7 +50,7 @@ export class WebViewUris
         return this.getUri("out", "views-ui", "common", "jquery-3.6.0.min.js");
     }
 
-    public get hosverIntentJs() : vscode.Uri
+    public get hoverIntentJs() : vscode.Uri
     {
         return this.getUri("node_modules", "superfish", "dist", "js", "hoverIntent.js");
     }
@@ -127,7 +126,7 @@ export class WebviewChannel implements vscode.Disposable
         this._webview = value;
         this._webview.onDidReceiveMessage(
             async (message: any) => {
-                let volatileIndexes:number [] = [];
+                const volatileIndexes:number [] = [];
                 for (let i = 0; i < this._consumers.length; i++) {
                     const consumer = this._consumers[i];
                     if(message.type === consumer.messageType) {
@@ -138,7 +137,7 @@ export class WebviewChannel implements vscode.Disposable
                         }
                     }
                 }
-                for(let idx of volatileIndexes) {
+                for(const idx of volatileIndexes) {
                     this._consumers.splice(idx, 1);
                 }
             },
@@ -147,7 +146,7 @@ export class WebviewChannel implements vscode.Disposable
         );
     }
  
-    public consume<T>(type: { new(): T ;}, handler: MessageReceivedHandler<T>, volatile: boolean = false)
+    public consume<T>(type: { new(): T ;}, handler: MessageReceivedHandler<T>, volatile = false)
     {
         this._consumers.push({
             messageType: type.name,
@@ -174,7 +173,7 @@ export class WebviewChannel implements vscode.Disposable
 
     public dispose() 
     {
-        for (let dis of this._disposables) {
+        for (const dis of this._disposables) {
             dis.dispose();
         }
     }

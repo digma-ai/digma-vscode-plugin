@@ -21,7 +21,7 @@ export class CodeObjectId {
         if ( parts.length < 2){
             return undefined;
         }
-        var codeObjectType: string = parts[0];
+        const codeObjectType: string = parts[0];
         return (<any>CodeObjectType)[codeObjectType];
     }
 
@@ -44,7 +44,7 @@ export interface CodeObjectInfo {
 }
 
 export class EmptyCodeObjectInfo implements CodeObjectInfo {
-    id: string = '';
+    id = '';
     get displayName(): string {
         return '';
     }

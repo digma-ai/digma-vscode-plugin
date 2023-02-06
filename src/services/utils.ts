@@ -1,5 +1,4 @@
-
-import moment = require('moment');
+import * as moment from 'moment';
 import * as vscode from 'vscode';
 import { Range } from 'vscode-languageclient';
 
@@ -21,8 +20,6 @@ declare global {
         firstOrDefault(predicate?: (item: T) => boolean): T;
         lastOrDefault(predicate?: (item: T) => boolean): T;
         single(predicate?: (item: T) => boolean): T;
-        all(predicate: (item: T) => boolean) : boolean;
-        any(predicate: (item: T) => boolean) : boolean;
         groupBy<TKey extends string | number>(predicate: (item: T) => TKey) : Dictionary<TKey, T[]>;
         toDictionary<TKey extends string | number, TValue>(keySelector: (item: T) => TKey, valueSelector: (item: T) => TValue) : Dictionary<TKey, TValue>;
     }
@@ -32,35 +29,23 @@ declare global {
 }
 Set.prototype.toArray = function(){
     return Array.from(this);
-}
+};
 Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
     return this.find(predicate || (x => true));
-}
+};
 Array.prototype.lastOrDefault = function (predicate: (item: any) => boolean) {
     return this.reverse().find(predicate || (x => true));
-}
+};
 Array.prototype.single = function (predicate: (item: any) => boolean) {
-    let items = this.filter(predicate || (x => true));
-    if(items.length < 1)
+    const items = this.filter(predicate || (x => true));
+    if(items.length < 1) {
         throw new Error(`Sequence contains no elements`);
-    if(items.length > 1)
+    }
+    if(items.length > 1) {
         throw new Error(`Sequence contains more than one element`);
+    }
     return items[0];
-}
-Array.prototype.all = function (predicate: (item: any) => boolean) {
-    for(let item of this){
-        if(!predicate(item))
-            return false;
-    }
-    return true;
-}
-Array.prototype.any = function (predicate: (item: any) => boolean) {
-    for(let item of this){
-        if(predicate(item))
-            return true;
-    }
-    return false;
-}
+};
 Array.prototype.groupBy = function (predicate: (item: any) => any) {
     const result = this.reduce(function (r, a) {
         const key = predicate(a);
@@ -69,18 +54,18 @@ Array.prototype.groupBy = function (predicate: (item: any) => any) {
         return r;
     }, Object.create(null));
     return result;
-}
+};
 Array.prototype.toDictionary = function(keySelector: (item: any) => any, valueSelector: (item: any) => any){
     const dict: Dictionary<any, any> = {};
     
-    for(let item of this){
+    for(const item of this){
         const key = keySelector(item);
         const value = valueSelector(item);
         dict[key] = value;
     }
 
     return dict;
-}
+};
 Array.range = n => Array.from({length: n}, (value, key) => key);
 
 declare module "vscode" {
@@ -90,11 +75,11 @@ declare module "vscode" {
 }
 
 vscode.Uri.prototype.toModulePath = function() {
-    let fileRelativePath = vscode.workspace.asRelativePath(this, true);
+    const fileRelativePath = vscode.workspace.asRelativePath(this, true);
     return fileRelativePath != this.path
         ? fileRelativePath
         : '';
-}
+};
 
 export async function fileExists(uri: vscode.Uri) : Promise<boolean>
 {
@@ -116,7 +101,7 @@ export class Future<T>{
     constructor(){
         this._value = <any>null;
         this._resolved = () => {};
-        this._promise = new Promise<T>((res)=>{ this._resolved=res });
+        this._promise = new Promise<T>((res)=>{ this._resolved=res; });
     }
 
     public wait(): Promise<T> {

@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 
 import { DocumentInfo, DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
 import { SymbolProvider, SymbolTree } from './languages/symbolProvider';
-import { Token, TokenType } from './languages/tokens';
+import { Token } from './languages/tokens';
 
 export interface Definition {
     document: vscode.TextDocument
@@ -21,12 +21,14 @@ export class CodeInspector {
         documentInfoProvider: DocumentInfoProvider,
     ): Promise<MethodInfo | undefined> {
         const definition = await this.getDefinition(usageDocument, usagePosition);
-        if (!definition)
+        if (!definition) {
             return;
+        }
 
         const docInfo = await documentInfoProvider.getDocumentInfo(definition.document);
-        if (!docInfo)
+        if (!docInfo) {
             return;
+        }
 
         const methodInfo = docInfo.methods.firstOrDefault(m => m.range.contains(definition.location.range.end));
         return methodInfo;
@@ -51,8 +53,9 @@ export class CodeInspector {
         symbolProvider: SymbolProvider,
     ): Promise<DefinitionWithTokens | undefined> {
         const definition = await this.getDefinition(usageDocument, usagePosition);
-        if (!definition)
+        if (!definition) {
             return;
+        }
 
         const tokens = await symbolProvider.getTokens(definition.document);
         return { ...definition, tokens };
@@ -131,14 +134,15 @@ export class CodeInspector {
         const value = results[0];
 
         const definitionLink = <vscode.DefinitionLink>value;
-        var location = <vscode.Location>value;
+        let location = <vscode.Location>value;
 
         //in some cases for example js language the return value is of type DefinitionLink
         location = new vscode.Location(definitionLink.targetUri ? definitionLink.targetUri : location.uri, definitionLink.targetSelectionRange ? definitionLink.targetSelectionRange : location.range);
 
         const document = await vscode.workspace.openTextDocument(location.uri);
-        if (!document)
+        if (!document) {
             return;
+        }
 
         return {
             document,

@@ -16,10 +16,10 @@ export class GoMethodExtractor implements IMethodExtractor{
         return match[1];
     }
 
-    private getPackageDefinationName(document: vscode.TextDocument): string| undefined{
+    private getPackageDefinitionName(document: vscode.TextDocument): string| undefined{
         const match = document.getText().match(/^package (.+)$/m);
         if(!match){
-            Logger.warn(`Could not find packakge name in '${document.uri.path}'`);
+            Logger.warn(`Could not find package name in '${document.uri.path}'`);
             return undefined;
         }
         return match[1]; 
@@ -42,7 +42,7 @@ export class GoMethodExtractor implements IMethodExtractor{
         if(!moduleName){
             return [];
         }
-        const packageDefinitionName = this.getPackageDefinationName(document);
+        const packageDefinitionName = this.getPackageDefinitionName(document);
         if(!packageDefinitionName){
             return [];
         }
@@ -63,7 +63,7 @@ export class GoMethodExtractor implements IMethodExtractor{
             // "AuthController.Error" => "AuthController.Error"
             // "(*AuthController).Error" => "(*AuthController).Error"
             // "(AuthController).Error" => "AuthController.Error"
-            let name = s.name.replace(/\(([^*]+)\)\.(.+)/, "$1.$2");
+            const name = s.name.replace(/\(([^*]+)\)\.(.+)/, "$1.$2");
             return {
                 id: packageDefinitionName === "main" ? packagePath + '$_$' + `main.${name}` : packagePath + '$_$' + name,
                 name: name,

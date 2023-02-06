@@ -115,13 +115,11 @@ ul.tree{
     text-overflow: ellipsis;
 }
 .right-ellipsis{
-    /* stylelint-disable-next-line scss/at-extend-no-missing-placeholder */
     @extend .ellipsis;
     direction: rtl;
     unicode-bidi: plaintext;
 }
 .left-ellipsis{
-    /* stylelint-disable-next-line scss/at-extend-no-missing-placeholder */
     @extend .ellipsis;
     direction: rtl;
     text-align: left;
