@@ -232,6 +232,11 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
 
         <body>
             <div id="root"></div>
+            <script nonce="${nonce}">
+                window.recentActivityRefreshInterval = 10 * 1000;
+                window.recentActivityExpirationLimit = 10 * 60 * 1000;
+            </script>
+            <script nonce= src="${digmaUiFolderPath}/vscode.js"></script>
             <script src="${digmaUiFolderPath}/vscode.js"></script>
             <script src="${digmaUiFolderPath}/main.js"></script>
         </body>
