@@ -44,7 +44,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
     ) {
     }
 
-    public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined> 
+public async provideHover(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Hover | undefined> 
     {
         const sourceDocInfo = await this._documentInfoProvider.getDocumentInfo(document);
         if(!sourceDocInfo) {
@@ -119,7 +119,7 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider
             const spanName = durationInsight.span.displayName;
            
             if (p50 || p95){
-                markdown.appendText(`${spanName} Duration: `)
+                markdown.appendText(`${spanName} Duration: `);
                 if (p50!=null){
                     markdown.appendText(`${p50.currentDuration.value} ${p50.currentDuration.unit} (Median) `);
                 }

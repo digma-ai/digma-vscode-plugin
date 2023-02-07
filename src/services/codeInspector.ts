@@ -15,7 +15,7 @@ export type DefinitionWithTokens = Definition & {
 
 export class CodeInspector {
 
-    public async getExecuteDefinitionMethodInfo(
+public async getExecuteDefinitionMethodInfo(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
         documentInfoProvider: DocumentInfoProvider,

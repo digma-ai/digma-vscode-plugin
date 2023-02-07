@@ -445,7 +445,7 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._overlay.hide();
         }
         this._currentCodeObject = codeObject;
-       // await vscode.commands.executeCommand(PerformanceDecorator.Commands.Show);
+        await vscode.commands.executeCommand(PerformanceDecorator.Commands.Show);
 
 
     }
