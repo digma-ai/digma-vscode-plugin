@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext)
     const documentInfoCache = new DocumentInfoCache(symbolProvider, analyticsProvider);
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState, documentInfoCache);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
-    const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
+    const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState, codeInspector);
     const spanLinkResolver = new SpanLinkResolver(symbolProvider,documentInfoProvider);
     const environmentManager = new EnvironmentManager(analyticsProvider, workspaceState);
     await environmentManager.initializeCurrentEnvironment();
