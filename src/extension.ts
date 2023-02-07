@@ -21,6 +21,7 @@ import { WorkspaceState } from "./state";
 import { CodeAnalyticsView } from "./views/codeAnalytics/codeAnalyticsView";
 import { ErrorsLineDecorator } from "./views/codeAnalytics/decorators/errorsLineDecorator";
 import { HotspotMarkerDecorator } from "./views/codeAnalytics/decorators/hotspotMarkerDecorator";
+import { PerformanceDecorator } from "./views/codeAnalytics/decorators/performanceDecorator";
 import { EnvSelectStatusBar } from "./views/codeAnalytics/StatusBar/envSelectStatusBar";
 import { InsightsStatusBar } from "./views/codeAnalytics/StatusBar/insightsStatusBar";
 import { RecentActivityViewProvider } from "./views/RecentActivity/RecentActivityViewProvider";
@@ -58,7 +59,8 @@ export async function activate(context: vscode.ExtensionContext) {
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
     const codeLensProvider = new AnalyticsCodeLens(
         documentInfoProvider,
-        workspaceState
+        workspaceState,
+        codeInspector
     );
     const spanLinkResolver = new SpanLinkResolver(
         symbolProvider,
@@ -85,7 +87,11 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(codeLensProvider);
     //context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(
-        new MethodCallErrorTooltip(documentInfoProvider, codeInspector)
+        new MethodCallErrorTooltip(
+            documentInfoProvider,
+            codeInspector,
+            workspaceState
+        )
     );
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
@@ -118,6 +124,13 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
+    context.subscriptions.push(
+        new PerformanceDecorator(
+            documentInfoProvider,
+            workspaceState,
+            codeInspector
+        )
+    );
     context.subscriptions.push(
         new HotspotMarkerDecorator(documentInfoProvider)
     );
