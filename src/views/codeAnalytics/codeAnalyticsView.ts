@@ -675,6 +675,9 @@ class CodeAnalyticsViewProvider
             this._overlay.hide();
         }
         this._currentCodeObject = codeObject;
+        //await vscode.commands.executeCommand(PerformanceDecorator.Commands.Show);
+
+
     }
 
     public async onTabRefreshRequested(

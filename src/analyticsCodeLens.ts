@@ -1,12 +1,20 @@
 import * as vscode from 'vscode';
 import { Settings } from './settings';
-import { DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
+import { DocumentInfo, DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
 import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
 import { WorkspaceState } from './state';
 import { CodeObjectInsight, InsightImportance } from './views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 import { CodeObjectLocationInfo } from './services/languages/extractors';
 import { UsageStatusResults } from './services/analyticsProvider';
+import { CodeInspector } from './services/codeInspector';
+import { Token } from './services/languages/tokens';
 
+export interface CodeLensData{
+    
+    methodInfo : MethodInfo;
+    insights: CodeObjectInsight[];
+    
+}
 export class AnalyticsCodeLens implements vscode.Disposable
 {
 
@@ -14,12 +22,23 @@ export class AnalyticsCodeLens implements vscode.Disposable
     private _disposables: vscode.Disposable[] = [];
 
     constructor(documentInfoProvider: DocumentInfoProvider,
-                state: WorkspaceState)
+                state: WorkspaceState, condeInspector: CodeInspector)
     {
-        this._provider = new CodelensProvider(documentInfoProvider,state);
+        this._provider = new CodelensProvider(documentInfoProvider,state,condeInspector);
 
         this._disposables.push(vscode.commands.registerCommand(CodelensProvider.clickCommand, async (methodInfo: MethodInfo, environment:string) => {
+            
             if(vscode.window.activeTextEditor) {
+                if (methodInfo.documentUri!== vscode.window.activeTextEditor.document.uri){
+                   
+                    const doc = await vscode.workspace.openTextDocument(methodInfo.documentUri);
+                    if (doc){
+                        await vscode.window.showTextDocument(doc, { preview: true });
+
+                    }
+
+                }
+
                 vscode.window.activeTextEditor.selection = new vscode.Selection(methodInfo.range.start, methodInfo.range.start);
             }
 
@@ -55,7 +74,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
     public readonly onDidChangeCodeLenses: vscode.Event<void> = this._onDidChangeCodeLenses.event;
 
     constructor(private _documentInfoProvider: DocumentInfoProvider,
-        private _state: WorkspaceState)
+        private _state: WorkspaceState, private _codeInspector: CodeInspector)
     {
     }
 
@@ -92,7 +111,6 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
     private async getCodeLens(methodInfo: MethodInfo,
                               codeObjectInfo:CodeObjectLocationInfo, 
                               insights: CodeObjectInsight[],
-                              state: UsageStatusResults,
                               environmentPrefix: boolean): Promise<vscode.CodeLens[]> {
         
         const lens: vscode.CodeLens[] = [];
@@ -165,7 +183,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                     = insights
                         .filter(x=>x.environment==this._state.environment);
                 
-                const lenses = await this.getCodeLens(methodInfo,codeObject,currentEnvInsights,usageStatus,false);
+                const lenses = await this.getCodeLens(methodInfo,codeObject,currentEnvInsights,false);
                 for (const lens of lenses){
                     codelens.push(lens);
                 }
@@ -176,7 +194,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                         .filter(x=>x.decorators && x.importance<InsightImportance.important)
                         .filter(x=>!currentEnvInsights.some(i=>i.type==x.type && i.importance==x.importance));
 
-                const otherEnvLenses = await this.getCodeLens(methodInfo,codeObject,otherEnvsInsightsToShow, usageStatus,true);
+                const otherEnvLenses = await this.getCodeLens(methodInfo,codeObject,otherEnvsInsightsToShow,true);
                 for (const lens of otherEnvLenses){
                     codelens.push(lens);
                 }         
@@ -185,7 +203,67 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             return codelens;
         
     }
+ 
+    public async getCodeLensesForFunctions (document: vscode.TextDocument, documentInfo: DocumentInfo, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> {
 
+        
+        const memoised: {[token:string]: CodeLensData} = {};
+        const functions = documentInfo.tokens.filter(x=>x.type==='function');
+        const lens : vscode.CodeLens[]= [];
+        for (const methodInfo of documentInfo.methods){
+
+             for (const func of functions.filter(x=>x.range.intersection(methodInfo.range))){
+
+                const funcKey = tokenKey(func.text, document.uri);
+                if (funcKey in memoised){
+                    const data = memoised[funcKey];
+                    const newLens =  await this.getCodeLens(data.methodInfo,getFakeCodeLocation(func),
+                                                            data.insights,false);
+                    lens.push(...newLens);
+                }
+
+                else {
+
+                    if (func.text === methodInfo.name && func.range === methodInfo.nameRange){
+                        continue;
+                    }
+                    const remoteMethodInfo = 
+                        await this._codeInspector.getExecuteDefinitionMethodInfo(document, func.range.start, this._documentInfoProvider);
+                    
+                    if(!remoteMethodInfo) {
+                        continue;
+                    }
+    
+                    const remoteDoc = await this._codeInspector.getDocumentInfo(document, func.range.start, this._documentInfoProvider);
+                    if(!remoteDoc) {
+                        continue;
+                    }
+    
+                    const insights = remoteDoc.insights.forMethod(remoteMethodInfo,this._state.environment);
+                    const funcLens = await this.getCodeLens(remoteMethodInfo,
+                         getFakeCodeLocation(func),insights,false);
+                    
+                    lens.push(...funcLens);
+                    memoised[funcKey]={ insights: insights, methodInfo: remoteMethodInfo};
+                }
+
+             }
+        }
+
+        return lens;
+
+
+        function getFakeCodeLocation(func: Token): CodeObjectLocationInfo {
+            return {
+                range: func.range, documentUri: documentInfo.uri, ids: [], displayName: func.text,
+                id: func.text, idsWithType: [func.text]
+            };
+        }
+
+        function tokenKey(token:string, uri: vscode.Uri) {
+            return `${uri}$$${token}`
+        }
+    }
     public async provideCodeLenses(document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.CodeLens[]> 
     {
         if (!Settings.enableCodeLens.value) 
@@ -209,7 +287,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
 
                 const lenses = await this.getCodeLens(methodInfo,methodInfo,
                     thisEnvInsights.filter(x=>x.scope=="Function"),
-                    documentInfo.usageData.getAll(),false);
+                    false);
                     
                 for (const lens of lenses){
                     methodCodeLens.push(lens);
@@ -272,7 +350,7 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
                         .filter(x=>x.decorators && x.importance<InsightImportance.important);
 
                 const otherEnvLenses = await this.getCodeLens(methodInfo,methodInfo,otherEnvsInsights,
-                     documentInfo.usageData.getAll(),true);
+                     true);
                 for (const lens of otherEnvLenses){
                     methodCodeLens.push(lens);
                 }
@@ -287,7 +365,8 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens>
             
         }
 
-  
+        const funcLenses = await this.getCodeLensesForFunctions(document,documentInfo,token);
+        codelens.push(...funcLenses);
 
         return codelens;
     }
