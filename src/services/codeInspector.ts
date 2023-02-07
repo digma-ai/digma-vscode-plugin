@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
+import { DocumentInfo, DocumentInfoProvider, MethodInfo } from './documentInfoProvider';
 import { SymbolProvider, SymbolTree } from './languages/symbolProvider';
 import { Token } from './languages/tokens';
 
@@ -15,7 +15,7 @@ export type DefinitionWithTokens = Definition & {
 
 export class CodeInspector {
 
-    public async getExecuteDefinitionMethodInfo(
+public async getExecuteDefinitionMethodInfo(
         usageDocument: vscode.TextDocument,
         usagePosition: vscode.Position,
         documentInfoProvider: DocumentInfoProvider,
@@ -32,6 +32,19 @@ export class CodeInspector {
 
         const methodInfo = docInfo.methods.firstOrDefault(m => m.range.contains(definition.location.range.end));
         return methodInfo;
+    }
+
+    public async getDocumentInfo(
+        usageDocument: vscode.TextDocument,
+        usagePosition: vscode.Position,
+        documentInfoProvider: DocumentInfoProvider,
+    ): Promise<DocumentInfo | undefined> {
+        const definition = await this.getDefinition(usageDocument, usagePosition);
+        if (!definition)
+            return;
+
+        const docInfo = await documentInfoProvider.getDocumentInfo(definition.document);
+        return docInfo;
     }
 
     public async getDefinitionWithTokens(

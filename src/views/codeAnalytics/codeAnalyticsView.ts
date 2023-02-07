@@ -36,6 +36,7 @@ import { EnvironmentManager } from '../../services/EnvironmentManager';
 import { Action } from "./InsightListView/Actions/Action";
 import { SpanLinkResolver } from "../../services/spanLinkResolver";
 import { DocumentInfoCache, ScanningStatus } from "../../services/DocumentInfoCache";
+import { PerformanceDecorator } from "./decorators/performanceDecorator";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 
@@ -444,6 +445,8 @@ class CodeAnalyticsViewProvider implements vscode.WebviewViewProvider,vscode.Dis
             this._overlay.hide();
         }
         this._currentCodeObject = codeObject;
+        //await vscode.commands.executeCommand(PerformanceDecorator.Commands.Show);
+
 
     }
 

@@ -23,6 +23,7 @@ import { EventManager } from './services/EventManager';
 import { Scheduler } from './services/Scheduler';
 import { DocumentInfoCache } from './services/DocumentInfoCache';
 import { SpanLinkResolver } from './services/spanLinkResolver';
+import { PerformanceDecorator } from './views/codeAnalytics/decorators/performanceDecorator';
 
 export async function activate(context: vscode.ExtensionContext) 
 {
@@ -47,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext)
     const documentInfoCache = new DocumentInfoCache(symbolProvider, analyticsProvider);
     const documentInfoProvider = new DocumentInfoProvider(analyticsProvider, symbolProvider, workspaceState, documentInfoCache);
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
-    const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState);
+    const codeLensProvider = new AnalyticsCodeLens(documentInfoProvider, workspaceState, codeInspector);
     const spanLinkResolver = new SpanLinkResolver(symbolProvider,documentInfoProvider);
     const environmentManager = new EnvironmentManager(analyticsProvider, workspaceState);
     await environmentManager.initializeCurrentEnvironment();
@@ -61,12 +62,13 @@ export async function activate(context: vscode.ExtensionContext)
 
     context.subscriptions.push(codeLensProvider);
     //context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
-    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInspector));
+    context.subscriptions.push(new MethodCallErrorTooltip(documentInfoProvider, codeInspector,workspaceState));
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
     context.subscriptions.push(new CodeAnalyticsView(analyticsProvider, documentInfoProvider,
         context.extensionUri, editorHelper, workspaceState, codeLensProvider, envStatusbar, environmentManager,spanLinkResolver, documentInfoCache));
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
+    context.subscriptions.push(new PerformanceDecorator(documentInfoProvider,workspaceState, codeInspector ));
     context.subscriptions.push(new HotspotMarkerDecorator(documentInfoProvider));
     context.subscriptions.push(new VsCodeDebugInstrumentation(analyticsProvider));
 
