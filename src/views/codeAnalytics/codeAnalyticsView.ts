@@ -166,7 +166,7 @@ export class CodeAnalyticsView implements vscode.Disposable {
                         );
                     }
                     await vscode.commands.executeCommand(
-                        "workbench.view.extension.digma"
+                        "workbench.view.extension.codeAnalytics"
                     );
                 }
             ),
