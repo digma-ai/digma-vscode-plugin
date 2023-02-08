@@ -4,7 +4,6 @@ import { EditorHelper } from "../../services/EditorHelper";
 import { CodeObjectLocationHints } from "../../services/languages/modulePathToUriConverters";
 import { SpanLinkResolver } from "../../services/spanLinkResolver";
 import { Settings } from "../../settings";
-import { WorkspaceState } from "../../state";
 import { JaegerPanel } from "../codeAnalytics/Jaeger/JaegerPanel";
 import { TracePanel } from "../codeAnalytics/Traces/tracePanel";
 
@@ -16,7 +15,6 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
     constructor(
         private readonly _extensionUri: vscode.Uri,
         private _analyticsProvider: AnalyticsProvider,
-        private _state: WorkspaceState,
         private _spanLinkResolver: SpanLinkResolver,
         private _editorHelper: EditorHelper
     ) {}
@@ -45,18 +43,19 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.action) {
                 case "RECENT_ACTIVITY/GET_DATA":
-                    const envs =
+                    const environments =
                         await this._analyticsProvider.getEnvironments();
                     const recentActivityData =
-                        await this._analyticsProvider.getRecentActivity(envs);
+                        await this._analyticsProvider.getRecentActivity(
+                            environments
+                        );
 
                     if (this._view) {
                         this._view.webview.postMessage({
                             type: "digma",
                             action: "RECENT_ACTIVITY/SET_DATA",
                             payload: {
-                                envs,
-                                currentEnv: this._state.environment,
+                                environments,
                                 entries: recentActivityData.entries
                             }
                         });
