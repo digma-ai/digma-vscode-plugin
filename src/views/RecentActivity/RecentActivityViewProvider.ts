@@ -8,6 +8,7 @@ import {
     isLocalEnvironmentMine
 } from "../../services/utils";
 import { Settings } from "../../settings";
+import { CodeAnalyticsView } from "../codeAnalytics/codeAnalyticsView";
 import { JaegerPanel } from "../codeAnalytics/Jaeger/JaegerPanel";
 import { TracePanel } from "../codeAnalytics/Traces/tracePanel";
 
@@ -73,7 +74,7 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
 
                     recentActivityData.entries.forEach((entry) => {
                         if (isLocalEnvironmentMine(entry.environment)) {
-                            entry.environment = "LOCAL";
+                            entry.environment = LOCAL_ENVIRONMENT_NAME;
                         }
                     });
 
@@ -109,6 +110,9 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
                                 file
                             );
                         this._editorHelper.openFileAndLine(doc, line);
+                        await vscode.commands.executeCommand(
+                            CodeAnalyticsView.Commands.Show
+                        );
                     }
                     break;
                 case "RECENT_ACTIVITY/GO_TO_TRACE":
