@@ -1,4 +1,3 @@
-import { nextTick } from 'process';
 import * as vscode from 'vscode';
 import { CodeInspector } from '../../../services/codeInspector';
 import { DocumentInfo, DocumentInfoProvider, LineInfo, MethodInfo } from '../../../services/documentInfoProvider';
@@ -42,7 +41,7 @@ export class PerformanceDecorator implements vscode.Disposable
         this._disposables.push(vscode.commands.registerCommand(PerformanceDecorator.Commands.Hide, this.onHide.bind(this)));
     }
 
-    private getDisplayDuration(totalDuration : number):string{
+private getDisplayDuration(totalDuration : number):string{
        
         let rawValue = (totalDuration / 1000000);
         let unit = "ms";
@@ -71,15 +70,34 @@ private getTotalDurationFromInsights(docInfo:DocumentInfo, method:MethodInfo) : 
             return;
         }
         
-        const totalDuration =  percentileInfo.filter(x=>x.percentile==0.5).map(x=>x.currentDuration.raw)
+        const p50 =  percentileInfo.filter(x=>x.percentile==0.5).map(x=>x.currentDuration.raw)
             .reduce((acc, val)=>acc + val,0);
 
-        if (totalDuration===0){
+        if (p50===0){
             return;
         }
 
-        return totalDuration;
+        return p50;
     }
+
+    private getPerformanceIssues(docInfo:DocumentInfo, method:MethodInfo) : string{
+        
+        const insights = docInfo.insights.forMethod(method,this._workspaceState.environment);
+        
+        if (insights.length==0){
+            return ""; 
+        }
+        const criticcalInsights = insights.filter(x=>x.importance<4)
+            .flatMap(x=>x.decorators).map(x=>x.title).join(" | ");
+
+        if (!criticcalInsights){
+            return "";
+        }
+        
+    
+        return criticcalInsights;
+    }
+
 
     private async discoverIndirectDurationRecursive( document: vscode.TextDocument, 
         docInfo:DocumentInfo,
@@ -152,6 +170,8 @@ private getTotalDurationFromInsights(docInfo:DocumentInfo, method:MethodInfo) : 
             
             let totalDuration : undefined | number = undefined;
             
+            let issues: string = "";
+
             if (func.text === methodInfo.name && func.range === methodInfo.nameRange){
                 totalDuration= this.getTotalDurationFromInsights(documentInfo,methodInfo);
             }
@@ -182,6 +202,7 @@ private getTotalDurationFromInsights(docInfo:DocumentInfo, method:MethodInfo) : 
                         continue;
                     }
                     totalDuration = this.getTotalDurationFromInsights(remoteDoc, remoteMethodInfo);
+                    issues = this.getPerformanceIssues(remoteDoc, remoteMethodInfo);
 
                     if (!totalDuration){
 
@@ -214,7 +235,9 @@ private getTotalDurationFromInsights(docInfo:DocumentInfo, method:MethodInfo) : 
 
                 const textLine = document.lineAt(func.range.start.line);
 
-                this.addPerformanceDecorator(totalDuration, decorators, new vscode.Range(textLine.range.end, textLine.range.end));
+                issues
+
+                this.addPerformanceDecorator(totalDuration, decorators, new vscode.Range(textLine.range.end, textLine.range.end),issues);
     
             }
 
@@ -268,14 +291,21 @@ private getTotalDurationFromInsights(docInfo:DocumentInfo, method:MethodInfo) : 
         //editor.setDecorations(this._textDecorationType, textDecorationOptions);
     }
 
-    private addPerformanceDecorator(totalDuration: number | undefined, decorators: vscode.DecorationOptions[], range: vscode.Range) {
+    private addPerformanceDecorator(totalDuration: number | undefined, decorators: vscode.DecorationOptions[], range: vscode.Range,issues:string) {
         if (totalDuration) {
+            let color = 'gray';
+            if (issues){
+
+                color='orange';
+            }
+            const duration = this.getDisplayDuration(totalDuration);
             decorators.push({
                 hoverMessage: "",
                 range: range,
                 renderOptions: {
                     after: {
-                        contentText: this.getDisplayDuration(totalDuration)
+                        contentText: `${issues} ${duration}`,
+                        color: color
                     }
                 }
             });
