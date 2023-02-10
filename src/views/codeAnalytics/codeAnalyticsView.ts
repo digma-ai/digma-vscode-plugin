@@ -676,8 +676,6 @@ class CodeAnalyticsViewProvider
         }
         this._currentCodeObject = codeObject;
         //await vscode.commands.executeCommand(PerformanceDecorator.Commands.Show);
-
-
     }
 
     public async onTabRefreshRequested(

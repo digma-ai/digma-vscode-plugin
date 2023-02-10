@@ -3,8 +3,11 @@ import { AnalyticsProvider, EntrySpan } from "../../services/analyticsProvider";
 import { EditorHelper } from "../../services/EditorHelper";
 import { CodeObjectLocationHints } from "../../services/languages/modulePathToUriConverters";
 import { SpanLinkResolver } from "../../services/spanLinkResolver";
+import {
+    isEnvironmentLocal,
+    isLocalEnvironmentMine
+} from "../../services/utils";
 import { Settings } from "../../settings";
-import { WorkspaceState } from "../../state";
 import { JaegerPanel } from "../codeAnalytics/Jaeger/JaegerPanel";
 import { TracePanel } from "../codeAnalytics/Traces/tracePanel";
 
@@ -16,7 +19,6 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
     constructor(
         private readonly _extensionUri: vscode.Uri,
         private _analyticsProvider: AnalyticsProvider,
-        private _state: WorkspaceState,
         private _spanLinkResolver: SpanLinkResolver,
         private _editorHelper: EditorHelper
     ) {}
@@ -45,18 +47,42 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async (data) => {
             switch (data.action) {
                 case "RECENT_ACTIVITY/GET_DATA":
-                    const envs =
+                    let environments =
                         await this._analyticsProvider.getEnvironments();
+
+                    // Leave only current local environment
+                    const currentLocalEnvironment = environments.find(
+                        (environment) => isLocalEnvironmentMine(environment)
+                    );
+
+                    environments = environments.filter(
+                        (environment) => !isEnvironmentLocal(environment)
+                    );
+
                     const recentActivityData =
-                        await this._analyticsProvider.getRecentActivity(envs);
+                        await this._analyticsProvider.getRecentActivity(
+                            environments
+                        );
+
+                    // Rename current local environment to LOCAL and put it at first place
+                    const LOCAL_ENVIRONMENT_NAME = "LOCAL";
+
+                    if (currentLocalEnvironment) {
+                        environments.unshift(LOCAL_ENVIRONMENT_NAME);
+                    }
+
+                    recentActivityData.entries.forEach((entry) => {
+                        if (isLocalEnvironmentMine(entry.environment)) {
+                            entry.environment = "LOCAL";
+                        }
+                    });
 
                     if (this._view) {
                         this._view.webview.postMessage({
                             type: "digma",
                             action: "RECENT_ACTIVITY/SET_DATA",
                             payload: {
-                                envs,
-                                currentEnv: this._state.environment,
+                                environments,
                                 entries: recentActivityData.entries
                             }
                         });

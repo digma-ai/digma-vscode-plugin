@@ -57,7 +57,11 @@ export interface ActivityEntry {
     latestTraceTimestamp: string;
     latestTraceDuration: Duration;
     slimAggregatedInsights: SlimInsight[];
-    isDisabled?: boolean;
+}
+
+export interface GetRecentActivityResponse {
+    accountId: string;
+    entries: ActivityEntry[];
 }
 
 type QueryParams = [string, any][] | undefined;
@@ -486,7 +490,7 @@ export class AnalyticsProvider {
     }
 
     public async getRecentActivity(environments: string[]) {
-        const response = await this.send<{ accountId: string; entries: [] }>(
+        const response = await this.send<GetRecentActivityResponse>(
             "POST",
             `/CodeAnalytics/codeObjects/recent_activity`,
             undefined,
