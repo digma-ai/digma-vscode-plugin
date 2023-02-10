@@ -105,13 +105,14 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
 
+
     const recentActivityProvider = new RecentActivityViewProvider(
         context.extensionUri,
         analyticsProvider,
-        workspaceState,
         spanLinkResolver,
         editorHelper
     );
+    
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
             RecentActivityViewProvider.viewType,
