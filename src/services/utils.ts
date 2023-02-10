@@ -1,47 +1,66 @@
-import * as moment from 'moment';
-import * as vscode from 'vscode';
-import { Range } from 'vscode-languageclient';
+import * as moment from "moment";
+import * as os from "os";
+import * as vscode from "vscode";
+import { Range } from "vscode-languageclient";
 
-export function getUri(webview: vscode.Webview, extensionUri: vscode.Uri, pathList: string[]) {
+export const isEnvironmentLocal = (environment: string) =>
+    environment.toLowerCase().endsWith("[local]");
+
+export const isLocalEnvironmentMine = (environment: string) => {
+    const hostname = os.hostname().toLowerCase();
+    const env = environment.toLowerCase();
+    return env.startsWith(hostname);
+};
+
+export function getUri(
+    webview: vscode.Webview,
+    extensionUri: vscode.Uri,
+    pathList: string[]
+) {
     return webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, ...pathList));
 }
 
 export type Dictionary<TKey extends keyof any, TValue> = Record<TKey, TValue>;
 
-export async function delay(ms: number) : Promise<any>{
-    return new Promise(res => setTimeout(res, ms));
+export async function delay(ms: number): Promise<any> {
+    return new Promise((res) => setTimeout(res, ms));
 }
 
 declare global {
-    interface Set<T>{
+    interface Set<T> {
         toArray(): T[];
     }
     interface Array<T> {
         firstOrDefault(predicate?: (item: T) => boolean): T;
         lastOrDefault(predicate?: (item: T) => boolean): T;
         single(predicate?: (item: T) => boolean): T;
-        groupBy<TKey extends string | number>(predicate: (item: T) => TKey) : Dictionary<TKey, T[]>;
-        toDictionary<TKey extends string | number, TValue>(keySelector: (item: T) => TKey, valueSelector: (item: T) => TValue) : Dictionary<TKey, TValue>;
+        groupBy<TKey extends string | number>(
+            predicate: (item: T) => TKey
+        ): Dictionary<TKey, T[]>;
+        toDictionary<TKey extends string | number, TValue>(
+            keySelector: (item: T) => TKey,
+            valueSelector: (item: T) => TValue
+        ): Dictionary<TKey, TValue>;
     }
     interface ArrayConstructor {
         range(n: number): number[];
     }
 }
-Set.prototype.toArray = function(){
+Set.prototype.toArray = function () {
     return Array.from(this);
 };
 Array.prototype.firstOrDefault = function (predicate: (item: any) => boolean) {
-    return this.find(predicate || (x => true));
+    return this.find(predicate || ((x) => true));
 };
 Array.prototype.lastOrDefault = function (predicate: (item: any) => boolean) {
-    return this.reverse().find(predicate || (x => true));
+    return this.reverse().find(predicate || ((x) => true));
 };
 Array.prototype.single = function (predicate: (item: any) => boolean) {
-    const items = this.filter(predicate || (x => true));
-    if(items.length < 1) {
+    const items = this.filter(predicate || ((x) => true));
+    if (items.length < 1) {
         throw new Error(`Sequence contains no elements`);
     }
-    if(items.length > 1) {
+    if (items.length > 1) {
         throw new Error(`Sequence contains more than one element`);
     }
     return items[0];
@@ -55,10 +74,13 @@ Array.prototype.groupBy = function (predicate: (item: any) => any) {
     }, Object.create(null));
     return result;
 };
-Array.prototype.toDictionary = function(keySelector: (item: any) => any, valueSelector: (item: any) => any){
+Array.prototype.toDictionary = function (
+    keySelector: (item: any) => any,
+    valueSelector: (item: any) => any
+) {
     const dict: Dictionary<any, any> = {};
-    
-    for(const item of this){
+
+    for (const item of this) {
         const key = keySelector(item);
         const value = valueSelector(item);
         dict[key] = value;
@@ -66,7 +88,7 @@ Array.prototype.toDictionary = function(keySelector: (item: any) => any, valueSe
 
     return dict;
 };
-Array.range = n => Array.from({length: n}, (value, key) => key);
+Array.range = (n) => Array.from({ length: n }, (value, key) => key);
 
 declare module "vscode" {
     interface Uri {
@@ -74,34 +96,32 @@ declare module "vscode" {
     }
 }
 
-vscode.Uri.prototype.toModulePath = function() {
+vscode.Uri.prototype.toModulePath = function () {
     const fileRelativePath = vscode.workspace.asRelativePath(this, true);
-    return fileRelativePath != this.path
-        ? fileRelativePath
-        : '';
+    return fileRelativePath != this.path ? fileRelativePath : "";
 };
 
-export async function fileExists(uri: vscode.Uri) : Promise<boolean>
-{
-    try{
+export async function fileExists(uri: vscode.Uri): Promise<boolean> {
+    try {
         await vscode.workspace.fs.stat(uri);
         return true;
-    }
-    catch{
+    } catch {
         return false;
     }
 }
 
-export class Future<T>{
+export class Future<T> {
     private _promise: Promise<T>;
     private _resolved: (value: T) => void;
     private _value: T;
     private _resolvingTimeStamp?: moment.Moment;
 
-    constructor(){
+    constructor() {
         this._value = <any>null;
         this._resolved = () => {};
-        this._promise = new Promise<T>((res)=>{ this._resolved=res; });
+        this._promise = new Promise<T>((res) => {
+            this._resolved = res;
+        });
     }
 
     public wait(): Promise<T> {
@@ -118,27 +138,25 @@ export class Future<T>{
         this._resolved(newValue);
     }
 
-    get resolvingTimeStamp(): moment.Moment | undefined{
+    get resolvingTimeStamp(): moment.Moment | undefined {
         return this._resolvingTimeStamp;
     }
 }
 
-
-const reISO = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(?:Z|(\+|-)([\d|:]*))?$/;
-export function momentJsDateParser(key: string, value: any): any 
-{
-    if (typeof value === 'string' && reISO.test(value)) 
-    {
+const reISO =
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)(?:Z|(\+|-)([\d|:]*))?$/;
+export function momentJsDateParser(key: string, value: any): any {
+    if (typeof value === "string" && reISO.test(value)) {
         return moment.utc(value);
     }
     return value;
-};
+}
 
 export function convertRange(sourceRange: Range): vscode.Range {
     const { start, end } = sourceRange;
     const targetRange = new vscode.Range(
         new vscode.Position(start.line, start.character),
-        new vscode.Position(end.line, end.character),
+        new vscode.Position(end.line, end.character)
     );
     return targetRange;
 }

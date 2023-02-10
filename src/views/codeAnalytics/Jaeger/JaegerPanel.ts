@@ -5,156 +5,161 @@ import { CodeObjectLocationHints } from "../../../services/languages/modulePathT
 import { SpanLinkResolver } from "../../../services/spanLinkResolver";
 
 interface Message {
-  command: string;
-  // TODO: change to unknown and use typeGuards
-  data: any;
+    command: string;
+    // TODO: change to unknown and use typeGuards
+    data: any;
 }
 
 interface GoToSpanLocationMessage extends Message {
-  data: {
-    name: string;
-    instrumentationLibrary: string;
-  };
+    data: {
+        name: string;
+        instrumentationLibrary: string;
+    };
 }
 
 interface GetTraceSpansLocationsMessage extends Message {
-  data: {
-    id: string;
-    name: string;
-    instrumentationLibrary: string;
-    codeObjectId: string|undefined;
-  }[];
+    data: {
+        id: string;
+        name: string;
+        instrumentationLibrary: string;
+        codeObjectId: string | undefined;
+    }[];
 }
 
 type SetSpansWithResolvedLocationMessageData = Record<
-  string,
-  { importance?: number }
+    string,
+    { importance?: number }
 >;
 
 export class JaegerPanel {
-  private _panel: vscode.WebviewPanel;
-  private _spanLinkResolver: SpanLinkResolver;
-  private _editorHelper: EditorHelper;
-  private _analyticsProvider: AnalyticsProvider;
-  constructor(
-    panel: vscode.WebviewPanel,
-    spanLinkResolver: SpanLinkResolver,
-    editorHelper: EditorHelper,
-    analyticsProvider: AnalyticsProvider
-  ) {
-    this._panel = panel;
-    this._spanLinkResolver = spanLinkResolver;
-    this._editorHelper = editorHelper;
-    this._analyticsProvider = analyticsProvider;
+    private _panel: vscode.WebviewPanel;
+    private _spanLinkResolver: SpanLinkResolver;
+    private _editorHelper: EditorHelper;
+    private _analyticsProvider: AnalyticsProvider;
+    constructor(
+        panel: vscode.WebviewPanel,
+        spanLinkResolver: SpanLinkResolver,
+        editorHelper: EditorHelper,
+        analyticsProvider: AnalyticsProvider
+    ) {
+        this._panel = panel;
+        this._spanLinkResolver = spanLinkResolver;
+        this._editorHelper = editorHelper;
+        this._analyticsProvider = analyticsProvider;
 
-    this._panel.webview.onDidReceiveMessage(async (message: Message) => {
-      switch (message.command) {
-        case "goToSpanLocation":
-          await this.onGoToSpanLocation(message);
-          break;
-        case "getTraceSpansLocations":
-          await this.onGetTraceSpansLocations(message);
-          break;
-      }
-    });
-  }
-
-  private async onGoToSpanLocation(message: GoToSpanLocationMessage) {
-    const span = message.data;
-    const spanLocation = await this._spanLinkResolver.searchForSpansByHints([
-      {
-        spanName: span.name,
-        instrumentationLibrary: span.instrumentationLibrary,
-        codeObjectId: undefined
-      },
-    ]);
-
-    if (spanLocation[0]) {
-      const codeUri = spanLocation[0].documentUri;
-      const lineNumber = spanLocation[0].range.end.line + 1;
-
-      if (codeUri && lineNumber) {
-        const doc = await this._editorHelper.openTextDocumentFromUri(
-          vscode.Uri.parse(codeUri.toString())
-        );
-        this._editorHelper.openFileAndLine(doc, lineNumber);
-      }
+        this._panel.webview.onDidReceiveMessage(async (message: Message) => {
+            switch (message.command) {
+                case "goToSpanLocation":
+                    await this.onGoToSpanLocation(message);
+                    break;
+                case "getTraceSpansLocations":
+                    await this.onGetTraceSpansLocations(message);
+                    break;
+            }
+        });
     }
-  }
 
-  private async onGetTraceSpansLocations(
-    message: GetTraceSpansLocationsMessage
-  ) {
-    const spans = message.data;
-    const hints:CodeObjectLocationHints[] = spans.map(s=>{
-        return {
-            spanName: s.name,
-            codeObjectId:s.codeObjectId,
-            instrumentationLibrary:s.instrumentationLibrary
-        };
-    });
-    const spanLocations = await this._spanLinkResolver.searchForSpansByHints(hints);
-    const spanWithLocations = spans.filter((span, i) => spanLocations[i]);
-    const spanCodeObjectIds = spanWithLocations.map(
-      (span) => `span:${span.instrumentationLibrary}$_$${span.name}`
-    );
+    private async onGoToSpanLocation(message: GoToSpanLocationMessage) {
+        const span = message.data;
+        const spanLocation = await this._spanLinkResolver.searchForSpansByHints(
+            [
+                {
+                    spanName: span.name,
+                    instrumentationLibrary: span.instrumentationLibrary,
+                    codeObjectId: undefined
+                }
+            ]
+        );
 
-    const insights = await this._analyticsProvider.getInsights(
-      spanCodeObjectIds,
-      true
-    );
-    const insightGroups = insights.groupBy((x) => x.codeObjectId);
+        if (spanLocation[0]) {
+            const codeUri = spanLocation[0].documentUri;
+            const lineNumber = spanLocation[0].range.end.line + 1;
 
-    const spansInfo = spanWithLocations.reduce(
-      (acc: SetSpansWithResolvedLocationMessageData, span) => {
-        const insightGroup =
-          insightGroups[`${span.instrumentationLibrary}$_$${span.name}`];
+            if (codeUri && lineNumber) {
+                const doc = await this._editorHelper.openTextDocumentFromUri(
+                    vscode.Uri.parse(codeUri.toString())
+                );
+                this._editorHelper.openFileAndLine(doc, lineNumber);
+            }
+        }
+    }
 
-        let importance;
-        if (insightGroup) {
-          const importanceArray: number[] = insightGroup.map(
-            (insight) => insight.importance
-          );
-          importance = Math.min(...importanceArray);
+    private async onGetTraceSpansLocations(
+        message: GetTraceSpansLocationsMessage
+    ) {
+        const spans = message.data;
+        const hints: CodeObjectLocationHints[] = spans.map((s) => {
+            return {
+                spanName: s.name,
+                codeObjectId: s.codeObjectId,
+                instrumentationLibrary: s.instrumentationLibrary
+            };
+        });
+        const spanLocations =
+            await this._spanLinkResolver.searchForSpansByHints(hints);
+        const spanWithLocations = spans.filter((span, i) => spanLocations[i]);
+        const spanCodeObjectIds = spanWithLocations.map(
+            (span) => `span:${span.instrumentationLibrary}$_$${span.name}`
+        );
+
+        const insights = await this._analyticsProvider.getInsights(
+            spanCodeObjectIds,
+            true
+        );
+        const insightGroups = insights.groupBy((x) => x.codeObjectId);
+
+        const spansInfo = spanWithLocations.reduce(
+            (acc: SetSpansWithResolvedLocationMessageData, span) => {
+                const insightGroup =
+                    insightGroups[
+                        `${span.instrumentationLibrary}$_$${span.name}`
+                    ];
+
+                let importance;
+                if (insightGroup) {
+                    const importanceArray: number[] = insightGroup.map(
+                        (insight) => insight.importance
+                    );
+                    importance = Math.min(...importanceArray);
+                }
+
+                acc[span.id] = {
+                    importance
+                };
+
+                return acc;
+            },
+            {}
+        );
+
+        this._panel.webview.postMessage({
+            command: "setSpansWithResolvedLocation",
+            data: spansInfo
+        });
+    }
+
+    public getHtml(
+        traceIds: string[],
+        traceIdLabels: string[] | undefined,
+        span: string,
+        jaegerAddress: string,
+        jaegerUri: vscode.Uri
+    ): string {
+        const webview = this._panel.webview;
+        const staticPath = `${jaegerUri}/static`;
+
+        let startPath = "";
+        if (traceIds.length === 1) {
+            startPath = `/trace/${traceIds[0]}`;
+        } else if (traceIds.length === 2 && traceIdLabels != null) {
+            const trace1 = traceIds[0].toLowerCase();
+            const trace2 = traceIds[1].toLowerCase();
+            startPath = `/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}`;
         }
 
-        acc[span.id] = {
-          importance,
-        };
+        const nonce = getNonce();
 
-        return acc;
-      },
-      {}
-    );
-
-    this._panel.webview.postMessage({
-      command: "setSpansWithResolvedLocation",
-      data: spansInfo,
-    });
-  }
-
-  public getHtml(
-    traceIds: string[],
-    traceIdLabels: string[] | undefined,
-    span: string,
-    jaegerAddress: string,
-    jaegerUri: vscode.Uri
-  ): string {
-    const webview = this._panel.webview;
-    const staticPath = `${jaegerUri}/static`;
-
-    let startPath = "";
-    if (traceIds.length === 1) {
-      startPath = `/trace/${traceIds[0]}`;
-    } else if (traceIds.length === 2 && traceIdLabels != null) {
-      const trace1 = traceIds[0].toLowerCase();
-      const trace2 = traceIds[1].toLowerCase();
-      startPath = `/trace/${trace1}...${trace2}?cohort=${trace1}&cohort=${trace2}`;
-    }
-
-    const nonce = getNonce();
-
-    const html = `
+        const html = `
       <!doctype html>
       <html lang="en">
 
@@ -171,7 +176,6 @@ export class JaegerPanel {
             "
          >
          <base href="/" data-inject-target="BASE_URL" />
-         <title>Jaeger UI</title>
          <script nonce="${nonce}">// Jaeger UI config data is embedded by the query-service via search-replace.
            // This is later merged with defaults into the redux \`state.config\` via
            // src/utils/config/get-config.js.
@@ -239,16 +243,16 @@ export class JaegerPanel {
       </html>
     `;
 
-    return html;
-  }
+        return html;
+    }
 }
 
 function getNonce() {
-  let text = "";
-  const possible =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
+    let text = "";
+    const possible =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }

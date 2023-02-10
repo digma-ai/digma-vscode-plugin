@@ -1,21 +1,23 @@
+import * as https from "https";
+import * as moment from "moment";
 import fetch from "node-fetch";
-import * as https from 'https';
-import * as vscode from 'vscode';
+import * as os from "os";
+import * as vscode from "vscode";
+import { decimal, integer } from "vscode-languageclient";
 import { Settings } from "../settings";
+import { WorkspaceState } from "../state";
+import {
+    Duration,
+    SpanInfo
+} from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
+import { Environment } from "./EnvironmentManager";
+import { ServerDiscoveredSpan } from "./languages/extractors";
 import { Logger } from "./logger";
 import { Dictionary, momentJsDateParser } from "./utils";
-import * as moment from 'moment';
-import { decimal, integer } from "vscode-languageclient";
-import * as os from 'os';
-import { SpanInfo } from "../views/codeAnalytics/InsightListView/CommonInsightObjects";
-import { WorkspaceState } from "../state";
-import { Environment } from './EnvironmentManager';
-import { ServerDiscoveredSpan } from "./languages/extractors";
-
 
 export enum Impact {
     High = "High",
-    Low = "Low",
+    Low = "Low"
 }
 
 export enum ErrorFlowsSortBy {
@@ -23,7 +25,7 @@ export enum ErrorFlowsSortBy {
     Trend = "Trend",
     Frequency = "Frequency",
     Impact = "Impact",
-    NewOrTrending = "NewOrTrending",
+    NewOrTrending = "NewOrTrending"
 }
 
 export enum EndpointType {
@@ -31,6 +33,35 @@ export enum EndpointType {
     HTTP,
     RPC,
     CONSUMER
+}
+
+export interface EntrySpan {
+    displayText: string;
+    serviceName: string;
+    scopeId: string;
+    spanCodeObjectId: string;
+    methodCodeObjectId: string | null;
+}
+
+export interface SlimInsight {
+    type: string;
+    codeObjectIds: string[];
+}
+
+export interface ActivityEntry {
+    environment: string;
+    traceFlowDisplayName: string;
+    firstEntrySpan: EntrySpan;
+    lastEntrySpan: EntrySpan | null;
+    latestTraceId: string;
+    latestTraceTimestamp: string;
+    latestTraceDuration: Duration;
+    slimAggregatedInsights: SlimInsight[];
+}
+
+export interface GetRecentActivityResponse {
+    accountId: string;
+    entries: ActivityEntry[];
 }
 
 type QueryParams = [string, any][] | undefined;
@@ -96,8 +127,8 @@ export interface ErrorFlowStack {
 
 export interface AffectedSpanPathResponse {
     path: {
-        serviceName: string,
-        spanName: string,
+        serviceName: string;
+        spanName: string;
     }[];
     lastOccurrence: moment.Moment;
 }
@@ -161,17 +192,17 @@ export interface CodeObjectSummary {
 }
 
 export class MethodCodeObjectSummary implements CodeObjectSummary {
-    type = 'MethodSummary';
-    codeObjectId = '';
-    environment = '';
+    type = "MethodSummary";
+    codeObjectId = "";
+    environment = "";
     insightsCount: integer = 0;
     errorsCount: integer = 0;
     score: integer = 0;
     executedCodes: ExecutedCodeSummary[] = [];
 }
 export class EndpointCodeObjectSummary implements CodeObjectSummary {
-    type = 'EndpointSummary';
-    codeObjectId = '';
+    type = "EndpointSummary";
+    codeObjectId = "";
     insightsCount: integer = 0;
     errorsCount: integer = 0;
     highUsage = false;
@@ -179,11 +210,11 @@ export class EndpointCodeObjectSummary implements CodeObjectSummary {
     slow = false;
 
     maxCallsIn1Min: integer = 0;
-    route = '';
+    route = "";
 }
 export class SpanCodeObjectSummary implements CodeObjectSummary {
-    type = 'SpanSummary';
-    codeObjectId = '';
+    type = "SpanSummary";
+    codeObjectId = "";
     insightsCount: integer = 0;
     errorsCount: integer = 0;
     isBottleneck = false;
@@ -201,7 +232,6 @@ export interface ExecutedCodeSummary {
 export interface UsageStatusResults {
     codeObjectStatuses: CodeObjectUsageStatus[];
     environmentStatuses: EnvironmentUsageStatus[];
-
 }
 
 export interface DurationRecord {
@@ -215,7 +245,6 @@ export interface SpanDurationData {
     p99Durations: DurationRecord[];
     p75Durations: DurationRecord[];
     p50Durations: DurationRecord[];
-
 }
 
 export interface PercentileDuration extends DurationRecord {
@@ -251,9 +280,8 @@ export interface EndpointSummary {
     maxCallsIn1Min: number;
 }
 
-
 export interface CodeObjectInsightHotSpotResponse {
-    score: number,
+    score: number;
 }
 
 export interface CodeObjectErrorResponse {
@@ -330,66 +358,79 @@ export interface DetailedErrorInfo {
 
 export interface CodeObjectErrorDetails extends CodeObjectErrorResponse {
     dayAvg: number;
-    originServices: OriginService[]
-    errors: DetailedErrorInfo[],
+    originServices: OriginService[];
+    errors: DetailedErrorInfo[];
 }
 
 export class AnalyticsProvider {
-    public constructor(private state: WorkspaceState) {
-    }
+    public constructor(private state: WorkspaceState) {}
 
     public async getEnvironments(): Promise<Environment[]> {
         try {
             const response = await this.send<string[]>(
-                'GET',
-                `/CodeAnalytics/environments`);
+                "GET",
+                `/CodeAnalytics/environments`
+            );
 
             return response;
-        }
-        catch (error) {
-            Logger.error('Failed to get environments', error);
+        } catch (error) {
+            Logger.error("Failed to get environments", error);
         }
         return [];
     }
 
-    public async getCodeObjectError(errorSourceUID: string): Promise<CodeObjectErrorDetails> {
+    public async getCodeObjectError(
+        errorSourceUID: string
+    ): Promise<CodeObjectErrorDetails> {
         const response = await this.send<CodeObjectErrorDetails>(
-            'GET',
+            "GET",
             `/CodeAnalytics/codeObjects/errors/${errorSourceUID}`
         );
         return response;
     }
 
-    public async getCodeObjectsErrors(codeObjectIds: string[]): Promise<CodeObjectErrorResponse[]> {
-        const params: [string, any][] = [["environment", this.state.environment]];
-        codeObjectIds.forEach(o => params.push(["codeObjectId", o]));
+    public async getCodeObjectsErrors(
+        codeObjectIds: string[]
+    ): Promise<CodeObjectErrorResponse[]> {
+        const params: [string, any][] = [
+            ["environment", this.state.environment]
+        ];
+        codeObjectIds.forEach((o) => params.push(["codeObjectId", o]));
 
         const response = await this.send<CodeObjectErrorResponse[]>(
-            'GET',
+            "GET",
             `/CodeAnalytics/codeObjects/errors`,
             params,
-            undefined);
+            undefined
+        );
 
         return response;
     }
 
-
-    public async getUsageStatus(codeObjectIds: string[], filterByInsightProviders: string[] | undefined = undefined): Promise<UsageStatusResults> {
-
+    public async getUsageStatus(
+        codeObjectIds: string[],
+        filterByInsightProviders: string[] | undefined = undefined
+    ): Promise<UsageStatusResults> {
         const response: UsageStatusResults = await this.send<any>(
-            'POST',
+            "POST",
             `/CodeAnalytics/codeObjects/status`,
             undefined,
             {
                 codeObjectIds: codeObjectIds,
                 filterByInsightProviders: filterByInsightProviders
-            });
+            }
+        );
         return response;
     }
 
-    public async getHtmlGraphForSpanPercentiles(spanName: string, instrumentationLib: string, environment: string, theme?: string): Promise<string> {
+    public async getHtmlGraphForSpanPercentiles(
+        spanName: string,
+        instrumentationLib: string,
+        environment: string,
+        theme?: string
+    ): Promise<string> {
         const response: string = await this.sendAndResponseBodyAsString(
-            'POST',
+            "POST",
             `/Graphs/graphForSpanPercentiles`,
             undefined,
             // SpanHistogramQuery
@@ -398,109 +439,137 @@ export class AnalyticsProvider {
                 spanName: spanName,
                 instrumentationLibrary: instrumentationLib,
                 theme: theme
-            });
+            }
+        );
         return response;
     }
 
-
     public async getGlobalInsights(environment: string): Promise<any[]> {
-
         const response: any[] = await this.send<any>(
-            'POST',
+            "POST",
             `/CodeAnalytics/insights`,
             undefined,
             {
                 environment: this.state.environment
-            });
+            }
+        );
         return response;
     }
 
-    public async getInsights(codeObjectIds: string[], currentEnv: boolean): Promise<any[]> {
-
+    public async getInsights(
+        codeObjectIds: string[],
+        currentEnv: boolean
+    ): Promise<any[]> {
         let environment = undefined;
         if (currentEnv) {
             environment = this.state.environment;
         }
         const response: any[] = await this.send<any>(
-            'POST',
+            "POST",
             `/CodeAnalytics/codeObjects/insights`,
             undefined,
             {
                 codeObjectIds: codeObjectIds,
                 environment: environment
-            });
+            }
+        );
         return response;
     }
 
     public async getSpans(environments?: string[]) {
         let params: QueryParams;
         if (environments) {
-            params = environments.map(env => ['environments', env]);
+            params = environments.map((env) => ["environments", env]);
         }
-        const response = await this.send<{ spans: ServerDiscoveredSpan[]}>(
-            'GET',
+        const response = await this.send<{ spans: ServerDiscoveredSpan[] }>(
+            "GET",
             `/CodeAnalytics/codeObjects/spans`,
             params
-            );
+        );
+        return response;
+    }
+
+    public async getRecentActivity(environments: string[]) {
+        const response = await this.send<GetRecentActivityResponse>(
+            "POST",
+            `/CodeAnalytics/codeObjects/recent_activity`,
+            undefined,
+            {
+                environments
+            }
+        );
         return response;
     }
 
     public async setInsightCustomStartTime(
         codeObjectId: string,
         insightType: string,
-        time: Date,
+        time: Date
     ): Promise<any> {
         const response: any[] = await this.send<any>(
-            'PUT',
+            "PUT",
             `/CodeAnalytics/insights/start-time`,
             undefined,
             {
                 Environment: this.state.environment,
                 CodeObjectId: codeObjectId,
                 InsightType: insightType,
-                Time: time,
+                Time: time
             },
-            false,
+            false
         );
         return response;
     }
 
-    public async getErrorSummary(codeObjectIds: string[], currentEnv: boolean): Promise<MethodCodeObjectSummary[]> {
-
+    public async getErrorSummary(
+        codeObjectIds: string[],
+        currentEnv: boolean
+    ): Promise<MethodCodeObjectSummary[]> {
         let environment = undefined;
         if (currentEnv) {
             environment = this.state.environment;
         }
         const response: any[] = await this.send<any>(
-            'POST',
+            "POST",
             `/CodeAnalytics/errors/codeobject_summary`,
             undefined,
             {
                 codeObjectIds: codeObjectIds,
                 environment: environment
-            });
+            }
+        );
         return response;
     }
 
-    public async getSummaries(symbolsIdentifiers: string[]): Promise<CodeObjectSummary[]> {
+    public async getSummaries(
+        symbolsIdentifiers: string[]
+    ): Promise<CodeObjectSummary[]> {
         try {
             const response = await this.send<CodeObjectSummary[]>(
-                'POST',
+                "POST",
                 `/CodeAnalytics/summary`,
                 undefined,
-                { codeObjectIds: symbolsIdentifiers, environment: this.state.environment });
+                {
+                    codeObjectIds: symbolsIdentifiers,
+                    environment: this.state.environment
+                }
+            );
 
             return response;
-        }
-        catch (error) {
-            Logger.error('Failed to get summary', error);
+        } catch (error) {
+            Logger.error("Failed to get summary", error);
         }
         return [];
     }
 
-    public async getErrorFlows(sort?: ErrorFlowsSortBy, filterByCodeObjectId?: string): Promise<ErrorFlowSummary[]> {
+    public async getErrorFlows(
+        sort?: ErrorFlowsSortBy,
+        filterByCodeObjectId?: string
+    ): Promise<ErrorFlowSummary[]> {
         try {
-            const params: [string, any][] = [["environment", this.state.environment]];
+            const params: [string, any][] = [
+                ["environment", this.state.environment]
+            ];
 
             if (sort) {
                 params.push(["sort", sort]);
@@ -511,31 +580,32 @@ export class AnalyticsProvider {
             }
 
             const response = await this.send<CodeObjectErrorFlowsResponse>(
-                'GET',
+                "GET",
                 `/CodeAnalytics/errorFlows`,
-                params);
+                params
+            );
 
             return response.errorFlows;
-        }
-        catch (error) {
-            Logger.error('Failed to get error flows', error);
+        } catch (error) {
+            Logger.error("Failed to get error flows", error);
         }
         return [];
     }
 
-    public async getErrorFlow(errorFlowId: string): Promise<ErrorFlowResponse | undefined> {
+    public async getErrorFlow(
+        errorFlowId: string
+    ): Promise<ErrorFlowResponse | undefined> {
         try {
             const response = await this.send<ErrorFlowResponse>(
-                'POST',
+                "POST",
                 `/CodeAnalytics/errorFlow`,
                 undefined,
                 { id: errorFlowId, environment: this.state.environment }
             );
 
             return response;
-        }
-        catch (error) {
-            Logger.error('Failed to get error flow', error);
+        } catch (error) {
+            Logger.error("Failed to get error flow", error);
         }
         return;
     }
@@ -544,41 +614,46 @@ export class AnalyticsProvider {
         try {
             const timestamp = Date.now().toString();
             const response = await this.send<undefined>(
-                'POST',
+                "POST",
                 `/CodeAnalytics/instrumentation/event`,
                 undefined,
-                { event: event.toString(), machineName: os.hostname(), timestamp: timestamp }
+                {
+                    event: event.toString(),
+                    machineName: os.hostname(),
+                    timestamp: timestamp
+                }
             );
 
             return response;
-        }
-        catch (error) {
-            Logger.error('Failed to get error flow', error);
+        } catch (error) {
+            Logger.error("Failed to get error flow", error);
         }
         return;
     }
 
-    public async getEvents(environments: Environment[], fromDate: Date): Promise<EventResponse> {
+    public async getEvents(
+        environments: Environment[],
+        fromDate: Date
+    ): Promise<EventResponse> {
         try {
             const response = await this.send<EventResponse>(
-                'POST',
+                "POST",
                 `/CodeAnalytics/events/latest`,
                 undefined,
-                { environments, fromDate },
+                { environments, fromDate }
             );
 
             return response;
-        }
-        catch (error) {
-            Logger.error('Failed to get events', error);
+        } catch (error) {
+            Logger.error("Failed to get events", error);
         }
         return {
-            events: [],
+            events: []
         };
     }
 
     private createSslAgent(): https.Agent {
-        // when NODE_TLS_REJECT_UNAUTHORIZED = 0, it allows allows insecure http 
+        // when NODE_TLS_REJECT_UNAUTHORIZED = 0, it allows allows insecure http
         process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = "0";
         return new https.Agent({ rejectUnauthorized: false });
     }
@@ -590,34 +665,40 @@ export class AnalyticsProvider {
         body?: any,
         respondAsJsonObject = true
     ): Promise<TResponse> {
-        let url = vscode.Uri.joinPath(vscode.Uri.parse(Settings.url.value), relativePath).toString();
-        const agent = url.startsWith('https')
+        let url = vscode.Uri.joinPath(
+            vscode.Uri.parse(Settings.url.value),
+            relativePath
+        ).toString();
+        const agent = url.startsWith("https")
             ? this.createSslAgent()
             : undefined;
 
         if (queryParams) {
-            url += '?';
-            queryParams.forEach(val => {
+            url += "?";
+            queryParams.forEach((val) => {
                 url += `${val[0]}=${encodeURIComponent(val[1])}&`;
             });
         }
-        const requestHeaders: any = { 'Content-Type': 'application/json' };
-        if (Settings.token.value !== undefined && Settings.token.value.trim() !== "") {
-            requestHeaders['Authorization'] = `Token ${Settings.token.value}`;
+        const requestHeaders: any = { "Content-Type": "application/json" };
+        if (
+            Settings.token.value !== undefined &&
+            Settings.token.value.trim() !== ""
+        ) {
+            requestHeaders["Authorization"] = `Token ${Settings.token.value}`;
         }
-        const customHeaderMatch = new RegExp(`^ *([^ ]+) *: *(.+[^ ]) *$`).exec(Settings.customHeader.value ?? '');
+        const customHeaderMatch = new RegExp(`^ *([^ ]+) *: *(.+[^ ]) *$`).exec(
+            Settings.customHeader.value ?? ""
+        );
         if (customHeaderMatch) {
             requestHeaders[customHeaderMatch[1]] = customHeaderMatch[2];
         }
 
-        const response = await fetch(
-            url,
-            {
-                agent: agent,
-                method: method,
-                headers: requestHeaders,
-                body: body ? JSON.stringify(body) : undefined,
-            });
+        const response = await fetch(url, {
+            agent: agent,
+            method: method,
+            headers: requestHeaders,
+            body: body ? JSON.stringify(body) : undefined
+        });
 
         if (!response.ok) {
             const txt = await response.text();
@@ -636,7 +717,13 @@ export class AnalyticsProvider {
         queryParams?: QueryParams,
         body?: any
     ): Promise<string> {
-        return this.send<string>(method, relativePath, queryParams, body, false);
+        return this.send<string>(
+            method,
+            relativePath,
+            queryParams,
+            body,
+            false
+        );
     }
 }
 
@@ -646,7 +733,9 @@ export class HttpError extends Error {
         public readonly statusText: string,
         public readonly responseText: string
     ) {
-        super(`Request failed with http code: [${status}] ${statusText}\nResponse: ${responseText}`);
+        super(
+            `Request failed with http code: [${status}] ${statusText}\nResponse: ${responseText}`
+        );
         Object.setPrototypeOf(this, HttpError.prototype);
     }
 }
@@ -674,8 +763,7 @@ export abstract class CodeObjectEvent {
     eventRecognitionTime?: Date;
 }
 
-export class CodeObjectDurationChangeEvent implements CodeObjectEventEntry
-{
+export class CodeObjectDurationChangeEvent implements CodeObjectEventEntry {
     eventTime?: Date;
     eventRecognitionTime?: Date;
     accountId?: string;
