@@ -62,7 +62,6 @@ import { OverlayView } from "./overlayView";
 import { EnvSelectStatusBar } from "./StatusBar/envSelectStatusBar";
 import { UsagesViewTab } from "./summaryViewTab";
 import { TracePanel } from "./Traces/tracePanel";
-// import { PerformanceDecorator } from "./decorators/performanceDecorator";
 //import { DigmaFileDecorator } from "../../decorators/fileDecorator";
 
 export class CodeAnalyticsView implements vscode.Disposable {

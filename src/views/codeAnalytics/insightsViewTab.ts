@@ -1,27 +1,28 @@
 import * as vscode from "vscode";
 import {
     AnalyticsProvider,
-    UsageStatusResults,
+    UsageStatusResults
 } from "../../services/analyticsProvider";
-import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
-import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { CodeObjectInfo } from "../../services/codeObject";
-import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
-import { Logger } from "../../services/logger";
-import { CodeObjectInsight, IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
-import { ListViewRender } from "../ListView/ListViewRender";
+import { ScanningStatus } from "../../services/DocumentInfoCache";
 import { DocumentInfoProvider } from "../../services/documentInfoProvider";
-import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
-import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
+import { Logger } from "../../services/logger";
+import { WorkspaceState } from "../../state";
+import { UiMessage } from "../../views-ui/codeAnalytics/contracts";
 import { EmptyGroupItemTemplate } from "../ListView/EmptyGroupItemTemplate";
 import { InsightItemGroupRendererFactory } from "../ListView/IListViewItem";
-import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
-import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
+import { ListViewRender } from "../ListView/ListViewRender";
 import { HandleDigmaBackendExceptions } from "../utils/handleDigmaBackendExceptions";
-import { WorkspaceState } from "../../state";
-import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
+import { WebviewChannel, WebViewUris } from "../webViewUtils";
 import { DuplicateSpanInsight } from "./AdminInsights/adminInsights";
-import { ScanningStatus } from "../../services/DocumentInfoCache";
+import { NoCodeObjectMessage } from "./AdminInsights/noCodeObjectMessage";
+import { NoEnvironmentSelectedMessage } from "./AdminInsights/noEnvironmentSelectedMessage";
+import { CodeObjectGroupDiscovery } from "./CodeObjectGroups/CodeObjectGroupDiscovery";
+import { CodeObjectGroupEnvironments } from "./CodeObjectGroups/CodeObjectGroupEnvUsage";
+import { ICodeObjectScopeGroupCreator } from "./CodeObjectGroups/ICodeObjectScopeGroupCreator";
+import { HtmlHelper, ICodeAnalyticsViewTab } from "./common";
+import { PerformanceDecorator } from "./decorators/performanceDecorator";
+import { CodeObjectInsight, IInsightListViewItemsCreator } from "./InsightListView/IInsightListViewItemsCreator";
 
 
 
@@ -173,6 +174,8 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
             this.refreshListViewRequested(codeObject);
 
         }
+        vscode.commands.executeCommand(PerformanceDecorator.Commands.Show);
+
     }
 
     public onUpdated(codeObject: CodeObjectInfo): void {
@@ -183,6 +186,9 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab
     }
 
     public onDeactivate(): void {
+
+        vscode.commands.executeCommand(PerformanceDecorator.Commands.Hide);
+
     }
 
     private refreshInitializationStatus(status: ScanningStatus) {

@@ -1,20 +1,13 @@
-import * as vscode from "vscode";
-import { Settings } from "./settings";
-import {
-    DocumentInfo,
-    DocumentInfoProvider,
-    MethodInfo
-} from "./services/documentInfoProvider";
-import { CodeAnalyticsView } from "./views/codeAnalytics/codeAnalyticsView";
-import { WorkspaceState } from "./state";
-import {
-    CodeObjectInsight,
-    InsightImportance
-} from "./views/codeAnalytics/InsightListView/IInsightListViewItemsCreator";
-import { CodeObjectLocationInfo } from "./services/languages/extractors";
-import { UsageStatusResults } from "./services/analyticsProvider";
-import { CodeInspector } from "./services/codeInspector";
-import { Token } from "./services/languages/tokens";
+import * as vscode from 'vscode';
+import { UsageStatusResults } from './services/analyticsProvider';
+import { CodeInspector } from './services/codeInspector';
+import { DocumentInfo, DocumentInfoProvider, MethodInfo } from './services/documentInfoProvider';
+import { CodeObjectLocationInfo } from './services/languages/extractors';
+import { Token } from './services/languages/tokens';
+import { Settings } from './settings';
+import { WorkspaceState } from './state';
+import { CodeAnalyticsView } from './views/codeAnalytics/codeAnalyticsView';
+import { CodeObjectInsight, InsightImportance } from './views/codeAnalytics/InsightListView/IInsightListViewItemsCreator';
 
 export interface CodeLensData {
     methodInfo: MethodInfo;
@@ -491,12 +484,12 @@ class CodelensProvider implements vscode.CodeLensProvider<vscode.CodeLens> {
             codelens.push(...uniqueLenses);
         }
 
-        const funcLenses = await this.getCodeLensesForFunctions(
-            document,
-            documentInfo,
-            token
-        );
-        codelens.push(...funcLenses);
+        // const funcLenses = await this.getCodeLensesForFunctions(
+        //     document,
+        //     documentInfo,
+        //     token
+        // );
+        // codelens.push(...funcLenses);
 
         return codelens;
     }

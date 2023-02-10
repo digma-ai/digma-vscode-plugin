@@ -59,8 +59,7 @@ export async function activate(context: vscode.ExtensionContext) {
     const editorHelper = new EditorHelper(sourceControl, documentInfoProvider);
     const codeLensProvider = new AnalyticsCodeLens(
         documentInfoProvider,
-        workspaceState,
-        codeInspector
+        workspaceState, codeInspector
     );
     const spanLinkResolver = new SpanLinkResolver(
         symbolProvider,
@@ -87,11 +86,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(codeLensProvider);
     //context.subscriptions.push(new ContextView(analyticsProvider, context.extensionUri));
     context.subscriptions.push(
-        new MethodCallErrorTooltip(
-            documentInfoProvider,
-            codeInspector,
-            workspaceState
-        )
+        new MethodCallErrorTooltip(documentInfoProvider, codeInspector,workspaceState)
     );
     context.subscriptions.push(sourceControl);
     context.subscriptions.push(documentInfoProvider);
@@ -110,12 +105,14 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
 
+
     const recentActivityProvider = new RecentActivityViewProvider(
         context.extensionUri,
         analyticsProvider,
         spanLinkResolver,
         editorHelper
     );
+    
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
             RecentActivityViewProvider.viewType,
@@ -123,13 +120,8 @@ export async function activate(context: vscode.ExtensionContext) {
         )
     );
     context.subscriptions.push(new ErrorsLineDecorator(documentInfoProvider));
-    context.subscriptions.push(
-        new PerformanceDecorator(
-            documentInfoProvider,
-            workspaceState,
-            codeInspector
-        )
-    );
+    context.subscriptions.push(new PerformanceDecorator(documentInfoProvider,workspaceState,codeInspector));
+
     context.subscriptions.push(
         new HotspotMarkerDecorator(documentInfoProvider)
     );
