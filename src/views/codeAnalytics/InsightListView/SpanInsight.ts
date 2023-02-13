@@ -1,3 +1,4 @@
+import * as entities from "entities";
 import * as moment from "moment";
 import { Uri } from "vscode";
 import { EndpointSchema } from "../../../services/analyticsProvider";
@@ -12,7 +13,6 @@ import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import { CodeObjectInsight, IInsightListViewItemsCreator, Insight } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
-import * as entities from "entities";
 
 export interface SpanUsagesInsight extends CodeObjectInsight
 {
@@ -196,6 +196,7 @@ export interface NPlusSpansInsight extends CodeObjectInsight {
 
 export interface SpanScalingInsight extends CodeObjectInsight {
     spanName: string;
+    spaninstrumentationLibrary: string;
     turningPointConcurrency: number;
     maxConcurrency: number;
     minDuration: Duration;
@@ -518,30 +519,40 @@ export class SpanScalingListViewItemsCreator implements IInsightListViewItemsCre
 
     }
 
-    public async createListViewItem(codeObjectsInsight: SpanScalingInsight): Promise<IListViewItem> {
-        
+    public async createListViewItem(insight: SpanScalingInsight): Promise<IListViewItem> {
+        const backwardsCompatibilityTitle = "Scaling Issue Found";
+        const backwardsCompatibilityDescription = `Significant performance degradation at ${insight.turningPointConcurrency} executions/second`;
+
+        const buttons = [
+            /*html*/ `
+            <div class="insight-main-value scaling-histogram-link list-item-button" data-span-name="${insight.spanName}" data-span-instrumentationlib="${insight.spaninstrumentationLibrary}">
+                Histogram
+            </div>`
+        ];
+
         const template = new InsightTemplateHtml({
             title: {
-                text:"Scaling Issue Found",
+                text: insight.shortDisplayInfo?.title || backwardsCompatibilityTitle,
                 tooltip: ""
             },
-            description: `Significant performance degradation at ${codeObjectsInsight.turningPointConcurrency} executions/second`,
+            description: insight.shortDisplayInfo?.description || backwardsCompatibilityDescription,
             icon: this._viewUris.image("scale.svg"),
             body: `<div class="flex-row">
                         <span>
-                            Tested concurrency: <b>${codeObjectsInsight.maxConcurrency}</b>
+                            Tested concurrency: <b>${insight.maxConcurrency}</b>
                         </sapn>
                         <span style="margin-left: 1em;">
-                            Duration: <b>${codeObjectsInsight.minDuration.value} ${codeObjectsInsight.minDuration.unit} - ${codeObjectsInsight.maxDuration.value} ${codeObjectsInsight.maxDuration.unit}<b/>
+                            Duration: <b>${insight.minDuration.value} ${insight.minDuration.unit} - ${insight.maxDuration.value} ${insight.maxDuration.unit}<b/>
                         </sapn>
                     </div>`,
-            insight: codeObjectsInsight,
+            insight: insight,
+            buttons: buttons
         }, this._viewUris);
 
         return {
             getHtml: () => template.renderHtml(),
             sortIndex: 0,
-            groupId: codeObjectsInsight.spanName
+            groupId: insight.spanName
         };
     }
 

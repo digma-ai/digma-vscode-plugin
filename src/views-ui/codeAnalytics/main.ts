@@ -215,11 +215,18 @@ window.addEventListener("load", () =>
         publish(new UiMessage.Notify.GoToFileAndLine(codeUri,Number(line)));
     });
 
-    $(document).on("click", ".histogram-link", function () {
+    $(document).on("click", ".duration-histogram-link", function () {
         const spanName = $(this).data("span-name");
         const spanInstrumentationLibrary = $(this).data("span-instrumentationlib");
 
-        publish(new UiMessage.Notify.OpenHistogramPanel(spanName,spanInstrumentationLibrary));
+        publish(new UiMessage.Notify.OpenDurationHistogramPanel(spanName,spanInstrumentationLibrary));
+    });
+
+    $(document).on("click", ".scaling-histogram-link", function () {
+        const spanName = $(this).data("span-name");
+        const spanInstrumentationLibrary = $(this).data("span-instrumentationlib");
+
+        publish(new UiMessage.Notify.OpenScalingHistogramPanel(spanName,spanInstrumentationLibrary));
     });
 
     $(document).on("click", ".custom-start-date-recalculate-link", function () {

@@ -444,6 +444,26 @@ export class AnalyticsProvider {
         return response;
     }
 
+    public async getHtmlGraphForSpanScaling(
+        spanName: string,
+        instrumentationLib: string,
+        environment: string,
+        theme?: string
+    ): Promise<string> {
+        const response: string = await this.sendAndResponseBodyAsString(
+            "POST",
+            `/Graphs/graphForSpanScaling`,
+            undefined,
+            {
+                environment: environment,
+                spanName: spanName,
+                instrumentationLibrary: instrumentationLib,
+                theme: theme
+            }
+        );
+        return response;
+    }
+
     public async getGlobalInsights(environment: string): Promise<any[]> {
         const response: any[] = await this.send<any>(
             "POST",

@@ -1,7 +1,7 @@
 import { Moment } from "moment";
 import { decimal } from "vscode-languageclient";
 import { IListViewItemBase } from "../../ListView/IListViewItem";
-import { EndpointInsight, adjustHttpInsightIfNeeded } from "./EndpointInsight";
+import { adjustHttpInsightIfNeeded, EndpointInsight } from "./EndpointInsight";
 
 export interface CodeObjectInsight extends Insight{
     codeObjectId: string,
@@ -14,6 +14,14 @@ export interface CodeObjectInsight extends Insight{
     actualStartTime?: Moment,
     customStartTime?: Moment,
     prefixedCodeObjectId: string,
+    shortDisplayInfo?: ShortDisplayInfo
+}
+
+export interface ShortDisplayInfo {
+    title?: string,
+    targetDisplayName?: string,
+    subtitle?: string,
+    description?: string
 }
 
 export enum InsightImportance {
