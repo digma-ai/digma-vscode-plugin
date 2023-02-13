@@ -32,7 +32,6 @@ import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
 import { ICodeAnalyticsViewTab } from "./common";
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
 import { ErrorsViewTab } from "./errorsViewTab";
-import { HistogramPanel } from "./Histogram/histogramPanel";
 import { Action } from "./InsightListView/Actions/Action";
 import {
     EPNPlusSpansListViewItemsCreator,
@@ -259,8 +258,12 @@ class CodeAnalyticsViewProvider
         );
 
         this._channel.consume(
-            UiMessage.Notify.OpenHistogramPanel,
-            this.onOpenHistogramRequested.bind(this)
+            UiMessage.Notify.OpenDurationHistogramPanel,
+            this.onOpenDurationHistogramRequested.bind(this)
+        );
+        this._channel.consume(
+            UiMessage.Notify.OpenScalingHistogramPanel,
+            this.onOpenScalingHistogramRequested.bind(this)
         );
         this._channel.consume(
             UiMessage.Notify.OpenTracePanel,
@@ -543,28 +546,54 @@ class CodeAnalyticsViewProvider
         }
     }
 
-    private async onOpenHistogramRequested(
-        e: UiMessage.Notify.OpenHistogramPanel
+    private async onOpenDurationHistogramRequested(
+        e: UiMessage.Notify.OpenDurationHistogramPanel
     ) {
-        const options: vscode.WebviewOptions = {
+        if(!e.span || !e.instrumentationLibrary){
+            Logger.error("onOpenDurationHistogramRequested error: span or instrumentationLibrary are falsy");
+            return;
+        }
+
+        const panel = this.createWebviewPanelForGraph(
+            "durationHistogramData", 
+            `Span ${e.span} Histogram`);
+
+        panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanPercentiles(
+            e.span,
+            e.instrumentationLibrary
+        );
+    }
+
+    private async onOpenScalingHistogramRequested(
+        e: UiMessage.Notify.OpenScalingHistogramPanel
+    ) {
+        if(!e.span || !e.instrumentationLibrary){
+            Logger.error("onOpenScalingHistogramRequested error: span or instrumentationLibrary are falsy");
+            return;
+        }
+
+        const panel = this.createWebviewPanelForGraph(
+            "scalingHistogramData", 
+            `Span ${e.span} Histogram`);
+
+        panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanScaling(
+            e.span,
+            e.instrumentationLibrary
+        );
+    }
+
+    private createWebviewPanelForGraph(viewType: string, title: string): vscode.WebviewPanel{
+         const options: vscode.WebviewOptions = {
             enableScripts: true,
             localResourceRoots: undefined
         };
         const panel = vscode.window.createWebviewPanel(
-            "histogramData", // Identifies the type of the webview. Used internally
-            `Span ${e.span!} Histogram`, // Title of the panel displayed to the user
+            viewType, // Identifies the type of the webview. Used internally
+            title, // Title of the panel displayed to the user
             vscode.ViewColumn.One,
             options // Webview options. More on these later.
         );
-
-        const histogram = new HistogramPanel(
-            this._analyticsProvider,
-            this._workspaceState
-        );
-        panel.webview.html = await histogram.getHtml(
-            e.span!,
-            e.instrumentationLibrary!
-        );
+        return panel;
     }
 
     public async onCodeSelectionChanged(

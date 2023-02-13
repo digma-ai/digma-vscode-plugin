@@ -134,7 +134,7 @@ export class SpanItemHtmlRendering{
 
         const buttons = [];
         buttons.push(/*html*/ `
-            <div class="insight-main-value histogram-link list-item-button" data-span-name="${insight.span.name}" data-span-instrumentationlib="${insight.span.instrumentationLibrary}">
+            <div class="insight-main-value duration-histogram-link list-item-button" data-span-name="${insight.span.name}" data-span-instrumentationlib="${insight.span.instrumentationLibrary}">
                 Histogram
             </div>`);
 
