@@ -549,26 +549,36 @@ class CodeAnalyticsViewProvider
     private async onOpenDurationHistogramRequested(
         e: UiMessage.Notify.OpenDurationHistogramPanel
     ) {
+        if(!e.span || !e.instrumentationLibrary){
+            Logger.error("onOpenDurationHistogramRequested error: span or instrumentationLibrary are falsy");
+            return;
+        }
+
         const panel = this.createWebviewPanelForGraph(
             "durationHistogramData", 
-            `Span ${e.span!} Histogram`);
+            `Span ${e.span} Histogram`);
 
         panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanPercentiles(
-            e.span!,
-            e.instrumentationLibrary!
+            e.span,
+            e.instrumentationLibrary
         );
     }
 
     private async onOpenScalingHistogramRequested(
         e: UiMessage.Notify.OpenScalingHistogramPanel
     ) {
+        if(!e.span || !e.instrumentationLibrary){
+            Logger.error("onOpenScalingHistogramRequested error: span or instrumentationLibrary are falsy");
+            return;
+        }
+
         const panel = this.createWebviewPanelForGraph(
             "scalingHistogramData", 
-            `Span ${e.span!} Histogram`);
+            `Span ${e.span} Histogram`);
 
         panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanScaling(
-            e.span!,
-            e.instrumentationLibrary!
+            e.span,
+            e.instrumentationLibrary
         );
     }
 
