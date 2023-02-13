@@ -196,7 +196,7 @@ export interface NPlusSpansInsight extends CodeObjectInsight {
 
 export interface SpanScalingInsight extends CodeObjectInsight {
     spanName: string;
-    spaninstrumentationLibrary: string;
+    spanInstrumentationLibrary: string;
     turningPointConcurrency: number;
     maxConcurrency: number;
     minDuration: Duration;
@@ -525,7 +525,7 @@ export class SpanScalingListViewItemsCreator implements IInsightListViewItemsCre
 
         const buttons = [
             /*html*/ `
-            <div class="insight-main-value scaling-histogram-link list-item-button" data-span-name="${insight.spanName}" data-span-instrumentationlib="${insight.spaninstrumentationLibrary}">
+            <div class="insight-main-value scaling-histogram-link list-item-button" data-span-name="${insight.spanName}" data-span-instrumentationlib="${insight.spanInstrumentationLibrary}">
                 Histogram
             </div>`
         ];
@@ -542,7 +542,7 @@ export class SpanScalingListViewItemsCreator implements IInsightListViewItemsCre
                             Tested concurrency: <b>${insight.maxConcurrency}</b>
                         </sapn>
                         <span style="margin-left: 1em;">
-                            Duration: <b>${insight.minDuration.value} ${insight.minDuration.unit} - ${insight.maxDuration.value} ${insight.maxDuration.unit}<b/>
+                            Duration: <b>${insight.minDuration.value} ${insight.minDuration.unit} - ${insight.maxDuration.value} ${insight.maxDuration.unit}</b>
                         </sapn>
                     </div>`,
             insight: insight,
