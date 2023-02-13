@@ -32,8 +32,6 @@ import { SpanGroup } from "./CodeObjectGroups/SpanGroup";
 import { ICodeAnalyticsViewTab } from "./common";
 import { ErrorFlowParameterDecorator } from "./decorators/errorFlowParameterDecorator";
 import { ErrorsViewTab } from "./errorsViewTab";
-import { DurationHistogramPanel } from "./Histogram/durationHistogramPanel";
-import { ScalingnHistogramPanel } from "./Histogram/scalingHistogramPanel";
 import { Action } from "./InsightListView/Actions/Action";
 import {
     EPNPlusSpansListViewItemsCreator,
@@ -551,22 +549,11 @@ class CodeAnalyticsViewProvider
     private async onOpenDurationHistogramRequested(
         e: UiMessage.Notify.OpenDurationHistogramPanel
     ) {
-        const options: vscode.WebviewOptions = {
-            enableScripts: true,
-            localResourceRoots: undefined
-        };
-        const panel = vscode.window.createWebviewPanel(
-            "durationHistogramData", // Identifies the type of the webview. Used internally
-            `Span ${e.span!} Histogram`, // Title of the panel displayed to the user
-            vscode.ViewColumn.One,
-            options // Webview options. More on these later.
-        );
+        const panel = this.createWebviewPanelForGraph(
+            "durationHistogramData", 
+            `Span ${e.span!} Histogram`);
 
-        const histogram = new DurationHistogramPanel(
-            this._analyticsProvider,
-            this._workspaceState
-        );
-        panel.webview.html = await histogram.getHtml(
+        panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanPercentiles(
             e.span!,
             e.instrumentationLibrary!
         );
@@ -575,25 +562,28 @@ class CodeAnalyticsViewProvider
     private async onOpenScalingHistogramRequested(
         e: UiMessage.Notify.OpenScalingHistogramPanel
     ) {
-        const options: vscode.WebviewOptions = {
+        const panel = this.createWebviewPanelForGraph(
+            "scalingHistogramData", 
+            `Span ${e.span!} Histogram`);
+
+        panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanScaling(
+            e.span!,
+            e.instrumentationLibrary!
+        );
+    }
+
+    private createWebviewPanelForGraph(viewType: string, title: string): vscode.WebviewPanel{
+         const options: vscode.WebviewOptions = {
             enableScripts: true,
             localResourceRoots: undefined
         };
         const panel = vscode.window.createWebviewPanel(
-            "scalingHistogramData", // Identifies the type of the webview. Used internally
-            `Span ${e.span!} Histogram`, // Title of the panel displayed to the user
+            viewType, // Identifies the type of the webview. Used internally
+            title, // Title of the panel displayed to the user
             vscode.ViewColumn.One,
             options // Webview options. More on these later.
         );
-
-        const histogram = new ScalingnHistogramPanel(
-            this._analyticsProvider,
-            this._workspaceState
-        );
-        panel.webview.html = await histogram.getHtml(
-            e.span!,
-            e.instrumentationLibrary!
-        );
+        return panel;
     }
 
     public async onCodeSelectionChanged(
