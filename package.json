@@ -186,7 +186,7 @@
         "watch:all": "tsc -w -p ./tsconfig.dev.json",
         "watch:views": "tsc -w -p ./src/views-ui/codeAnalytics/tsconfig.dev.json",
         "watch:sass": "sass --watch ./src:./out",
-        "watch:js": "copy-and-watch --watch \"s./rc/**/*.js\" ./out",
+        "watch:js": "copy-and-watch --watch \"./src/**/*.js\" ./out",
         "watch:jaeger": "copy-and-watch --watch \"./jaegerUi/**/*.{css,js,svg}\" ./out/views-ui/jaegerUi",
         "watch:digma-ui": "copy-and-watch --watch \"./digmaUi/**/*.{js,ttf}\" ./out/views-ui/digmaUi",
         "pretest": "npm run compile && npm run lint",
