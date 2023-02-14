@@ -51,13 +51,15 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
                     let environments =
                         await this._analyticsProvider.getEnvironments();
 
-                    // Leave only current local environment
-                    const currentLocalEnvironment = environments.find(
+                    const currentLocalEnvironmentIndex = environments.findIndex(
                         (environment) => isLocalEnvironmentMine(environment)
                     );
 
+                    // Leave only current local environment
                     environments = environments.filter(
-                        (environment) => !isEnvironmentLocal(environment)
+                        (environment, i) =>
+                            !isEnvironmentLocal(environment) ||
+                            i === currentLocalEnvironmentIndex
                     );
 
                     const recentActivityData =
@@ -66,17 +68,23 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
                         );
 
                     // Rename current local environment to LOCAL and put it at first place
-                    const LOCAL_ENVIRONMENT_NAME = "LOCAL";
+                    if (currentLocalEnvironmentIndex !== -1) {
+                        const originalLocalEnvironmentName =
+                            environments[currentLocalEnvironmentIndex];
+                        const LOCAL_ENVIRONMENT_NAME = "LOCAL";
 
-                    if (currentLocalEnvironment) {
+                        environments.splice(currentLocalEnvironmentIndex, 1);
                         environments.unshift(LOCAL_ENVIRONMENT_NAME);
-                    }
 
-                    recentActivityData.entries.forEach((entry) => {
-                        if (isLocalEnvironmentMine(entry.environment)) {
-                            entry.environment = LOCAL_ENVIRONMENT_NAME;
-                        }
-                    });
+                        recentActivityData.entries.forEach((entry) => {
+                            if (
+                                entry.environment ===
+                                originalLocalEnvironmentName
+                            ) {
+                                entry.environment = LOCAL_ENVIRONMENT_NAME;
+                            }
+                        });
+                    }
 
                     if (this._view) {
                         this._view.webview.postMessage({
