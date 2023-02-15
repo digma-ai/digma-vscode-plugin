@@ -343,7 +343,10 @@ class CodeAnalyticsViewProvider
         );
         listViewItemsCreator.add(
             "SpanScaling",
-            new SpanScalingListViewItemsCreator(this._webViewUris)
+            new SpanScalingListViewItemsCreator(
+                this._webViewUris,
+                _spanLinkResolver
+            )
         );
 
         listViewItemsCreator.add(
@@ -549,41 +552,52 @@ class CodeAnalyticsViewProvider
     private async onOpenDurationHistogramRequested(
         e: UiMessage.Notify.OpenDurationHistogramPanel
     ) {
-        if(!e.span || !e.instrumentationLibrary){
-            Logger.error("onOpenDurationHistogramRequested error: span or instrumentationLibrary are falsy");
+        if (!e.span || !e.instrumentationLibrary) {
+            Logger.error(
+                "onOpenDurationHistogramRequested error: span or instrumentationLibrary are falsy"
+            );
             return;
         }
 
         const panel = this.createWebviewPanelForGraph(
-            "durationHistogramData", 
-            `Span ${e.span} Histogram`);
-
-        panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanPercentiles(
-            e.span,
-            e.instrumentationLibrary
+            "durationHistogramData",
+            `Span ${e.span} Histogram`
         );
+
+        panel.webview.html =
+            await this._analyticsProvider.getHtmlGraphForSpanPercentiles(
+                e.span,
+                e.instrumentationLibrary
+            );
     }
 
     private async onOpenScalingHistogramRequested(
         e: UiMessage.Notify.OpenScalingHistogramPanel
     ) {
-        if(!e.span || !e.instrumentationLibrary){
-            Logger.error("onOpenScalingHistogramRequested error: span or instrumentationLibrary are falsy");
+        if (!e.span || !e.instrumentationLibrary) {
+            Logger.error(
+                "onOpenScalingHistogramRequested error: span or instrumentationLibrary are falsy"
+            );
             return;
         }
 
         const panel = this.createWebviewPanelForGraph(
-            "scalingHistogramData", 
-            `Span ${e.span} Histogram`);
-
-        panel.webview.html = await this._analyticsProvider.getHtmlGraphForSpanScaling(
-            e.span,
-            e.instrumentationLibrary
+            "scalingHistogramData",
+            `Span ${e.span} Histogram`
         );
+
+        panel.webview.html =
+            await this._analyticsProvider.getHtmlGraphForSpanScaling(
+                e.span,
+                e.instrumentationLibrary
+            );
     }
 
-    private createWebviewPanelForGraph(viewType: string, title: string): vscode.WebviewPanel{
-         const options: vscode.WebviewOptions = {
+    private createWebviewPanelForGraph(
+        viewType: string,
+        title: string
+    ): vscode.WebviewPanel {
+        const options: vscode.WebviewOptions = {
             enableScripts: true,
             localResourceRoots: undefined
         };
