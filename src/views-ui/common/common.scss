@@ -1,9 +1,8 @@
-
 body {
     padding-right: 5px;
 }
 
-.info-message{
+.info-message {
     display: flex;
     flex-direction: column;
     margin: 10px;
@@ -11,15 +10,15 @@ body {
     border-radius: 2px;
     align-items: center;
     opacity: 0.6;
-    .codicon{
+    .codicon {
         font-size: 20px;
     }
-    .text{
+    .text {
         text-align: center;
     }
 }
 
-.error-message{
+.error-message {
     display: flex;
     flex-direction: column;
     margin: 10px;
@@ -27,43 +26,43 @@ body {
     color: #ff8080;
     background: #ff808012;
     border-radius: 2px;
-    .codicon{
+    .codicon {
         font-size: 20px;
     }
-    .text{
+    .text {
         text-align: center;
     }
 }
 
-ul.tree{
+ul.tree {
     list-style-type: none;
     padding-left: 0;
     margin-top: 0;
 
-    ul{
+    ul {
         list-style-type: none;
         padding-left: 1em;
     }
     .collapsed {
         display: none;
     }
-    .has-items{
+    .has-items {
         cursor: pointer;
         user-select: none;
     }
-    .line{
+    .line {
         padding-left: 1.4em;
         padding-top: 0.2em;
         padding-bottom: 0.3em;
         position: relative;
         border-radius: 2px;
-        &:hover{
+        &:hover {
             background-color: var(--vscode-list-hoverBackground);
         }
         &.selected {
             background: var(--vscode-list-inactiveSelectionBackground);
         }
-        &>.codicon:first-of-type{
+        & > .codicon:first-of-type {
             position: absolute;
             left: 0;
         }
@@ -88,38 +87,38 @@ ul.tree{
     }
 }
 
-.loading-message{
+.loading-message {
     display: flex;
     flex-direction: column;
     margin: 10px;
     padding: 10px;
     border-radius: 2px;
     align-items: center;
-    vscode-progress-ring{
+    vscode-progress-ring {
         width: 20px;
         height: 20px;
     }
 }
 
-.link{
+.link {
     color: var(--link-foreground);
-    &:hover{
+    &:hover {
         text-decoration: underline;
         cursor: pointer;
     }
 }
 
-.ellipsis{
+.ellipsis {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
-.right-ellipsis{
+.right-ellipsis {
     @extend .ellipsis;
     direction: rtl;
     unicode-bidi: plaintext;
 }
-.left-ellipsis{
+.left-ellipsis {
     @extend .ellipsis;
     direction: rtl;
     text-align: left;
@@ -133,37 +132,48 @@ ul.tree{
     padding: 1px 1px 1px 8px;
     border: 1px solid var(--badge-background);
 }
-.filter-tag-label{
+.filter-tag-label {
     padding-bottom: 3px;
     padding-right: 5px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
 }
-.filter-tag-close{
+.filter-tag-close {
     margin: auto;
     border-radius: 10px;
     padding: 2px;
     cursor: pointer;
 }
-.filter-tag-close:hover{
+.filter-tag-close:hover {
     background: var(--button-icon-hover-background);
 }
 
-.flex-row{
+.flex-row {
     display: flex;
     flex-direction: row;
 }
-.flex-max-space-between{
+
+.flex-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-max-space-between {
     justify-content: space-between;
 }
-.flex-stretch{
+.flex-stretch {
     flex: 1;
 }
-.flex-wrap{
+.flex-wrap {
     flex-wrap: wrap;
 }
-.flex-v-center{
+.flex-v-center {
     display: flex;
     align-items: center;
+}
+
+.vertical-spacer {
+    margin-top: 5px;
+    margin-bottom: 5px;
 }

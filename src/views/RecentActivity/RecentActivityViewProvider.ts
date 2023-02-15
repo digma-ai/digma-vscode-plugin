@@ -273,6 +273,7 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
             <script nonce="${nonce}">
                 window.recentActivityRefreshInterval = 5 * 1000;
                 window.recentActivityExpirationLimit = 10 * 60 * 1000;
+                window.recentActivityDocumentationURL = "https://github.com/digma-ai/digma-vscode-plugin#%EF%B8%8F-extension-settings";
             </script>
             <script src="${digmaUiFolderPath}/vscode.js"></script>
             <script src="${digmaUiFolderPath}/main.js"></script>
