@@ -25,7 +25,7 @@ vscode-panel-view {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
-    .codeobject-link{
+    .codeobject-link {
         align-self: flex-start;
     }
 }
@@ -48,7 +48,7 @@ vscode-panel-view {
     box-sizing: border-box;
     border-radius: 4px;
 
-    &.insight{
+    &.insight {
         flex-direction: column;
     }
 }
@@ -83,7 +83,14 @@ vscode-panel-view {
     background: var(--vscode-sideBar-background);
     border-radius: 3px;
     padding: 1px 5px 2px 5px;
-    &:hover {
+    border: none;
+    color: inherit;
+
+    &:disabled {
+        opacity: 0.4;
+    }
+
+    &:hover:not([disabled]) {
         cursor: pointer;
         background: #7676768f;
     }
@@ -101,7 +108,9 @@ vscode-panel-view {
         min-width: unset;
         font-family: var(--font-family);
 
-        &, &:hover, &.sfHover {
+        &,
+        &:hover,
+        &.sfHover {
             background: transparent;
         }
 
@@ -122,7 +131,8 @@ vscode-panel-view {
         right: 0;
         min-width: unset;
 
-        li, li:hover {
+        li,
+        li:hover {
             color: var(--button-secondary-foreground);
             background: var(--button-secondary-background);
         }
@@ -161,7 +171,7 @@ vscode-panel-view {
     }
 }
 
-.list-item-content-area>div {
+.list-item-content-area > div {
     margin: 2px;
     font-size: var(--type-ramp-minus1-font-size);
     &:not(:first-child) {
@@ -401,8 +411,8 @@ vscode-panel-view {
         margin-bottom: calc(var(--design-unit) * 1px);
         padding: calc(var(--design-unit) * 1px);
         align-items: center;
-        >.stack-nav-previous,
-        >.stack-nav-next {
+        > .stack-nav-previous,
+        > .stack-nav-next {
             cursor: pointer;
             &.disabled {
                 opacity: 0.4;
@@ -431,7 +441,6 @@ vscode-panel-view {
     }
 }
 
-
 /* USED BY ErrorViewRender */
 
 .error-view .box {
@@ -444,7 +453,7 @@ vscode-panel-view {
     display: flex;
 }
 
-.error-title-box>span {
+.error-title-box > span {
     padding-left: 3px;
     display: inline-flex;
     font-weight: bold;
@@ -473,7 +482,7 @@ vscode-panel-view {
     grid-column: 2;
 }
 
-.error-params-box>div {
+.error-params-box > div {
     margin: 2px;
     padding: 4px;
 }
@@ -489,7 +498,6 @@ vscode-panel-view {
 .error-frames {
     display: none;
 }
-
 
 /* end of error view*/
 
@@ -525,7 +533,7 @@ vscode-panel-view {
     align-items: flex-start;
 }
 
-.grid-area>div {
+.grid-area > div {
     margin-top: 2px;
     margin-bottom: 2px;
     padding-right: 10px;
@@ -550,7 +558,7 @@ vscode-panel-view {
             }
         }
         .codicon {
-            margin: 0 3px
+            margin: 0 3px;
         }
     }
     .span-durations-insight-body {
@@ -559,7 +567,7 @@ vscode-panel-view {
         grid-template-columns: auto auto auto 1fr;
         column-gap: 10px;
         row-gap: 5px;
-        
+
         .change {
             opacity: 0.7;
         }
@@ -573,17 +581,16 @@ vscode-panel-view {
             opacity: 0.6;
         }
     }
-    .span-duration-breakdown-insight{
+    .span-duration-breakdown-insight {
         .span-name {
             margin-right: 5px;
-            font-weight:normal;
+            font-weight: normal;
         }
         .duration {
             font-weight: bold;
         }
-       
     }
-    .pagination-list{
+    .pagination-list {
         .prev {
             cursor: pointer;
             &.disabled {
@@ -605,7 +612,7 @@ vscode-panel-view {
     display: flex;
     align-items: center;
     margin-top: 10px;
-    color: #4F62AD;
+    color: #4f62ad;
     .codicon {
         margin-right: 5px;
         padding-top: 1px;

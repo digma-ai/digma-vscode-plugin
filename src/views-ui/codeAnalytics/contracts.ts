@@ -31,8 +31,12 @@ export namespace UiMessage
             constructor(public file?: string, public line?:number){}
         }
 
-        export class OpenHistogramPanel {
-            constructor(public span?: string, public instrumentationLibrary?:string){}
+        export class OpenDurationHistogramPanel {
+            constructor(public span?: string, public instrumentationLibrary?: string){}
+        }
+
+        export class OpenScalingHistogramPanel {
+            constructor(public span?: string, public instrumentationLibrary?: string){}
         }
 
         export class OpenTracePanel {

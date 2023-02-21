@@ -171,12 +171,14 @@ export class SpanItemHtmlRendering {
             }
 
             buttons.push(/*html*/ `
-                <span  class="insight-main-value ${linkClass}-link list-item-button" data-jaeger-address="${
+                <button disabled="${
+                    traceIdAtt.length < 2
+                }" class="insight-main-value ${linkClass}-link list-item-button" data-jaeger-address="${
                 Settings.jaegerAddress.value
             }" data-span-name="${insight.spanInfo?.name || insight.span.name}" 
                     ${traceLabelsAtt} ${traceIdAtt} >
                 Compare
-                </span>`);
+                </button>`);
         }
         const body = /*html*/ `
             <div class="span-durations-insight-body">

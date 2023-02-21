@@ -224,6 +224,7 @@ export interface SlowEndpointInfo {
     p95: Percentile;
     p99: Percentile;
 }
+
 export interface SpandSlowEndpointsInsight extends SpanInsight {
     /**
      * @deprecated Here for backwards compatibility. Please use `spanInfo`
@@ -243,15 +244,21 @@ export interface NPlusSpansInsight extends SpanInsight {
     duration: Duration;
 }
 
+export interface ScalingRootCauseSpanInfo extends SpanInfo {
+    sampleTraceId: string;
+}
+
 export interface SpanScalingInsight extends SpanInsight {
     /**
      * @deprecated Here for backwards compatibility. Please use `spanInfo`
      */
     spanName: string;
+    spanInstrumentationLibrary: string;
     turningPointConcurrency: number;
     maxConcurrency: number;
     minDuration: Duration;
     maxDuration: Duration;
+    rootCauseSpans: ScalingRootCauseSpanInfo[];
 }
 
 export class SpanDurationsListViewItemsCreator
@@ -661,28 +668,87 @@ export class NPlusSpansListViewItemsCreator
 export class SpanScalingListViewItemsCreator
     implements IInsightListViewItemsCreator
 {
-    constructor(private _viewUris: WebViewUris) {}
+    constructor(
+        private _viewUris: WebViewUris,
+        private _spanLinkResolver: SpanLinkResolver
+    ) {}
 
     public async createListViewItem(
-        codeObjectsInsight: SpanScalingInsight
+        insight: SpanScalingInsight
     ): Promise<IListViewItem> {
+        const backwardsCompatibilityTitle = "Scaling Issue Found";
+        const backwardsCompatibilityDescription = `Significant performance degradation at ${insight.turningPointConcurrency} executions/second`;
+
+        const hints = this._spanLinkResolver.codeHintsFromSpans(
+            insight.rootCauseSpans
+        );
+
+        const spanLocations =
+            await this._spanLinkResolver.searchForSpansByHints(hints);
+
+        const rootCauseSpans = insight.rootCauseSpans.length
+            ? `
+                <div class="flex-column vertical-spacer" style="gap: 5px;">
+                    <div>Caused by:</div>
+                    ${insight.rootCauseSpans.map((span, i) => {
+                        const spanName = span.displayName;
+                        const spanLocation = spanLocations[i];
+
+                        return `
+                        <div class="flex-row flex-max-space-between">
+                            <span title="${spanName}" data-code-uri="${
+                            spanLocation?.documentUri
+                        }" data-code-line="${
+                            spanLocation?.range.end.line! + 1
+                        }" class="span-name link">${spanName}</span>
+                            ${renderTraceLink(
+                                span.sampleTraceId,
+                                span.displayName
+                            )}
+                        </div>
+                        `;
+                    })}
+                </div>
+                `
+            : "";
+
+        const buttons = [
+            /*html*/ `
+            <div class="insight-main-value scaling-histogram-link list-item-button" data-span-name="${
+                insight.spanInfo?.name || insight.spanName
+            }" data-span-instrumentationlib="${
+                insight.spanInfo?.instrumentationLibrary ||
+                insight.spanInstrumentationLibrary
+            }">
+                Histogram
+            </div>
+            `
+        ];
+
         const template = new InsightTemplateHtml(
             {
                 title: {
-                    text: "Scaling Issue Found",
+                    text:
+                        insight.shortDisplayInfo?.title ||
+                        backwardsCompatibilityTitle,
                     tooltip: ""
                 },
-                description: `Significant performance degradation at ${codeObjectsInsight.turningPointConcurrency} executions/second`,
+                description:
+                    insight.shortDisplayInfo?.description ||
+                    backwardsCompatibilityDescription,
                 icon: this._viewUris.image("scale.svg"),
                 body: `<div class="flex-row">
                         <span>
-                            Tested concurrency: <b>${codeObjectsInsight.maxConcurrency}</b>
-                        </sapn>
+                            Tested concurrency: <b>${insight.maxConcurrency}</b>
+                        </span>
                         <span style="margin-left: 1em;">
-                            Duration: <b>${codeObjectsInsight.minDuration.value} ${codeObjectsInsight.minDuration.unit} - ${codeObjectsInsight.maxDuration.value} ${codeObjectsInsight.maxDuration.unit}<b/>
-                        </sapn>
-                    </div>`,
-                insight: codeObjectsInsight
+                            Duration: <b>${insight.minDuration.value} ${insight.minDuration.unit} - ${insight.maxDuration.value} ${insight.maxDuration.unit}</b>
+                        </span>
+                    </div>
+                    ${rootCauseSpans}
+                    `,
+                insight: insight,
+                buttons: buttons
             },
             this._viewUris
         );
@@ -690,8 +756,7 @@ export class SpanScalingListViewItemsCreator
         return {
             getHtml: () => template.renderHtml(),
             sortIndex: 0,
-            groupId:
-                codeObjectsInsight.spanInfo?.name || codeObjectsInsight.spanName
+            groupId: insight.spanInfo?.name || insight.spanName
         };
     }
 

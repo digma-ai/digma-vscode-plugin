@@ -4,23 +4,30 @@ import { IListViewItemBase } from "../../ListView/IListViewItem";
 import { SpanInfo } from "./CommonInsightObjects";
 import { adjustHttpInsightIfNeeded, EndpointInsight } from "./EndpointInsight";
 
-export interface CodeObjectInsight extends Insight {
-    codeObjectId: string;
-    environment: string;
-    scope: string;
-    name: string;
-    importance: InsightImportance;
-    severity: decimal;
-    decorators: CodeObjectDecorator[];
-    actualStartTime?: Moment;
-    customStartTime?: Moment;
-    prefixedCodeObjectId: string;
+export interface CodeObjectInsight extends Insight{
+    codeObjectId: string,
+    environment: string,
+    scope: string,
+    name: string,
+    importance: InsightImportance,
+    severity: decimal,
+    decorators: CodeObjectDecorator[],
+    actualStartTime?: Moment,
+    customStartTime?: Moment,
+    prefixedCodeObjectId: string,
+    shortDisplayInfo?: ShortDisplayInfo
+}
+
+export interface ShortDisplayInfo {
+    title?: string,
+    targetDisplayName?: string,
+    subtitle?: string,
+    description?: string
 }
 
 export interface SpanInsight extends CodeObjectInsight {
     spanInfo?: SpanInfo;
 }
-
 export enum InsightImportance {
     spam = 9,
     clutter = 8,

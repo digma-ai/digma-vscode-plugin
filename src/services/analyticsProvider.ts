@@ -64,6 +64,7 @@ export interface GetRecentActivityResponse {
     entries: ActivityEntry[];
 }
 
+
 type QueryParams = [string, any][] | undefined;
 
 export class EndpointSchema {
@@ -425,9 +426,7 @@ export class AnalyticsProvider {
 
     public async getHtmlGraphForSpanPercentiles(
         spanName: string,
-        instrumentationLib: string,
-        environment: string,
-        theme?: string
+        instrumentationLib: string
     ): Promise<string> {
         const response: string = await this.sendAndResponseBodyAsString(
             "POST",
@@ -435,13 +434,41 @@ export class AnalyticsProvider {
             undefined,
             // SpanHistogramQuery
             {
-                environment: environment,
+                environment: this.state.environment,
                 spanName: spanName,
                 instrumentationLibrary: instrumentationLib,
-                theme: theme
+                theme: this.getTheme()
             }
         );
         return response;
+    }
+
+    public async getHtmlGraphForSpanScaling(
+        spanName: string,
+        instrumentationLib: string
+    ): Promise<string> {
+        const response: string = await this.sendAndResponseBodyAsString(
+            "POST",
+            `/Graphs/graphForSpanScaling`,
+            undefined,
+            {
+                environment: this.state.environment,
+                spanName: spanName,
+                instrumentationLibrary: instrumentationLib,
+                theme: this.getTheme()
+            }
+        );
+        return response;
+    }
+
+    private getTheme(): string | null {
+        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark) {
+            return "dark";
+        }
+        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light) {
+            return "light";
+        }
+        return null;
     }
 
     public async getGlobalInsights(environment: string): Promise<any[]> {
