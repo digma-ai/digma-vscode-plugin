@@ -11,14 +11,17 @@ import { WebviewChannel, WebViewUris } from "../../webViewUtils";
 import { renderTraceLink } from "./Common/TraceLinkRender";
 import { Duration, Percentile, SpanInfo } from "./CommonInsightObjects";
 import {
-    CodeObjectInsight,
     IInsightListViewItemsCreator,
-    Insight
+    Insight,
+    SpanInsight
 } from "./IInsightListViewItemsCreator";
 import { InsightTemplateHtml } from "./ItemRender/insightTemplateHtml";
 import { SpanItemHtmlRendering } from "./ItemRender/SpanItemRendering";
 
-export interface SpanUsagesInsight extends CodeObjectInsight {
+export interface SpanUsagesInsight extends SpanInsight {
+    /**
+     * @deprecated Here for backwards compatibility. Please use `spanInfo`
+     */
     span: string;
     flows: {
         sampleTraceIds: string[];
@@ -123,7 +126,7 @@ export class SpanUsagesListViewItemsCreator
 
                 const traceHtml = renderTraceLink(
                     flow.sampleTraceIds?.firstOrDefault(),
-                    insight.span
+                    insight.spanInfo?.name || insight.span
                 );
 
                 return /*html*/ `<div class="flow-row flex-row item">
@@ -160,12 +163,15 @@ export class SpanUsagesListViewItemsCreator
         return {
             getHtml: () => template.renderHtml(),
             sortIndex: 0,
-            groupId: insight.span
+            groupId: insight.spanInfo?.name || insight.span
         };
     }
 }
 
-export interface SpanDurationsInsight extends CodeObjectInsight {
+export interface SpanDurationsInsight extends SpanInsight {
+    /**
+     * @deprecated The method should not be used
+     */
     span: SpanInfo;
     codeObjectId: string;
     periodicPercentiles: {
@@ -197,7 +203,10 @@ export interface SpanDurationBreakdownEntry {
     }[];
 }
 
-export interface SpanDurationBreakdownInsight extends CodeObjectInsight {
+export interface SpanDurationBreakdownInsight extends SpanInsight {
+    /**
+     * @deprecated Here for backwards compatibility. Please use `spanInfo`
+     */
     spanName: string;
     breakdownEntries: SpanDurationBreakdownEntry[];
 }
@@ -215,13 +224,20 @@ export interface SlowEndpointInfo {
     p95: Percentile;
     p99: Percentile;
 }
-export interface SpandSlowEndpointsInsight extends CodeObjectInsight {
+
+export interface SpandSlowEndpointsInsight extends SpanInsight {
+    /**
+     * @deprecated Here for backwards compatibility. Please use `spanInfo`
+     */
     span: SpanInfo;
     slowEndpoints: SlowEndpointInfo[];
 }
 
-export interface NPlusSpansInsight extends CodeObjectInsight {
+export interface NPlusSpansInsight extends SpanInsight {
     traceId: string;
+    /**
+     * @deprecated Here for backwards compatibility. Please use `spanInfo`
+     */
     span: SpanInfo;
     clientSpanName: string;
     occurrences: number;
@@ -230,10 +246,12 @@ export interface NPlusSpansInsight extends CodeObjectInsight {
 
 export interface ScalingRootCauseSpanInfo extends SpanInfo {
     sampleTraceId: string;
-    kind: string;
 }
 
-export interface SpanScalingInsight extends CodeObjectInsight {
+export interface SpanScalingInsight extends SpanInsight {
+    /**
+     * @deprecated Here for backwards compatibility. Please use `spanInfo`
+     */
     spanName: string;
     spanInstrumentationLibrary: string;
     turningPointConcurrency: number;
@@ -260,7 +278,7 @@ export class SpanDurationsListViewItemsCreator
         return {
             getHtml: () => renderer.spanDurationItemHtml(insight).renderHtml(),
             sortIndex: 0,
-            groupId: insight.span.name
+            groupId: insight.spanInfo?.name || insight.span.name
         };
     }
 }
@@ -336,7 +354,7 @@ export class SpanDurationBreakdownListViewItemsCreator
                     insight
                 ).renderHtml(),
             sortIndex: 55,
-            groupId: insight.spanName
+            groupId: insight.spanInfo?.name || insight.spanName
         };
     }
 
@@ -533,7 +551,9 @@ export class SpanEndpointBottlenecksListViewItemsCreator
         return {
             getHtml: () => template.renderHtml(),
             sortIndex: 0,
-            groupId: codeObjectsInsight.span.name
+            groupId:
+                codeObjectsInsight.spanInfo?.name ||
+                codeObjectsInsight.span.name
         };
     }
 
@@ -589,7 +609,7 @@ export class NPlusSpansListViewItemsCreator
     ): Promise<IListViewItem> {
         const traceHtml = renderTraceLink(
             codeObjectsInsight.traceId,
-            codeObjectsInsight.span.name
+            codeObjectsInsight.spanInfo?.name || codeObjectsInsight.span.name
         );
 
         const statsHtml = `
@@ -628,7 +648,9 @@ export class NPlusSpansListViewItemsCreator
         return {
             getHtml: () => template.renderHtml(),
             sortIndex: 0,
-            groupId: codeObjectsInsight.span.name
+            groupId:
+                codeObjectsInsight.spanInfo?.name ||
+                codeObjectsInsight.span.name
         };
     }
 
@@ -692,7 +714,12 @@ export class SpanScalingListViewItemsCreator
 
         const buttons = [
             /*html*/ `
-            <div class="insight-main-value scaling-histogram-link list-item-button" data-span-name="${insight.spanName}" data-span-instrumentationlib="${insight.spanInstrumentationLibrary}">
+            <div class="insight-main-value scaling-histogram-link list-item-button" data-span-name="${
+                insight.spanInfo?.name || insight.spanName
+            }" data-span-instrumentationlib="${
+                insight.spanInfo?.instrumentationLibrary ||
+                insight.spanInstrumentationLibrary
+            }">
                 Histogram
             </div>
             `
@@ -729,7 +756,7 @@ export class SpanScalingListViewItemsCreator
         return {
             getHtml: () => template.renderHtml(),
             sortIndex: 0,
-            groupId: insight.spanName
+            groupId: insight.spanInfo?.name || insight.spanName
         };
     }
 

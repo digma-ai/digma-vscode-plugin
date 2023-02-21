@@ -150,7 +150,12 @@ export class SpanItemHtmlRendering {
 
         const buttons = [];
         buttons.push(/*html*/ `
-            <div class="insight-main-value duration-histogram-link list-item-button" data-span-name="${insight.span.name}" data-span-instrumentationlib="${insight.span.instrumentationLibrary}">
+            <div class="insight-main-value histogram-link list-item-button" data-span-name="${
+                insight.spanInfo?.name || insight.span.name
+            }" data-span-instrumentationlib="${
+            insight.spanInfo?.instrumentationLibrary ||
+            insight.span.instrumentationLibrary
+        }">
                 Histogram
             </div>`);
 
@@ -170,7 +175,7 @@ export class SpanItemHtmlRendering {
                     traceIdAtt.length < 2
                 }" class="insight-main-value ${linkClass}-link list-item-button" data-jaeger-address="${
                 Settings.jaegerAddress.value
-            }" data-span-name="${insight.span.name}" 
+            }" data-span-name="${insight.spanInfo?.name || insight.span.name}" 
                     ${traceLabelsAtt} ${traceIdAtt} >
                 Compare
                 </button>`);
