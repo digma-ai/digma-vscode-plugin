@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
+import { WorkspaceState } from "../state";
 import { ErrorsViewTab } from "../views/codeAnalytics/errorsViewTab";
+import { SpanDurationsInsight } from "../views/codeAnalytics/InsightListView/SpanInsight";
+import { CodeInspector } from "./codeInspector";
 import {
     DocumentInfo,
     DocumentInfoProvider,
     MethodInfo
 } from "./documentInfoProvider";
 import { TokenType } from "./languages/tokens";
-import { CodeInspector } from "./codeInspector";
-import { WorkspaceState } from "../state";
-import { SpanDurationsInsight } from "../views/codeAnalytics/InsightListView/SpanInsight";
 
 export class MethodCallErrorTooltip implements vscode.Disposable {
     public static Commands = class {
@@ -166,7 +166,9 @@ class MethodCallErrorHoverProvider implements vscode.HoverProvider {
             const p95 = durationInsight.percentiles
                 .filter((x) => x.percentile == 0.95)
                 .firstOrDefault();
-            const spanName = durationInsight.span.displayName;
+            const spanName =
+                durationInsight.spanInfo?.displayName ||
+                durationInsight.span.displayName;
 
             if (p50 || p95) {
                 markdown.appendText(`${spanName} Duration: `);

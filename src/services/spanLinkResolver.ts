@@ -16,7 +16,7 @@ export class SpanLinkResolver{
         return spanInfos.map(s=> {
             return {
                 spanName: s.name,
-                codeObjectId:s.codeObjectId,
+                codeObjectId: s.methodCodeObjectId || s.codeObjectId,
                 instrumentationLibrary: s.instrumentationLibrary
             };
         });
