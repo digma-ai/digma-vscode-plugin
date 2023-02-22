@@ -309,7 +309,6 @@ class CodeAnalyticsViewProvider
             new SlowestSpansListViewItemsCreator(
                 this._webViewUris,
                 editorHelper,
-                _documentInfoProvider,
                 this._channel,
                 _spanLinkResolver
             )
@@ -332,7 +331,6 @@ class CodeAnalyticsViewProvider
             new EPNPlusSpansListViewItemsCreator(
                 this._webViewUris,
                 editorHelper,
-                _documentInfoProvider,
                 this._channel,
                 _spanLinkResolver
             )
@@ -455,6 +453,20 @@ class CodeAnalyticsViewProvider
                     this._documentInfoCache.scanningStatus;
             }
         }, 1000);
+
+        // Background refresh after initialization
+        setInterval(() => {
+            if (
+                this._activeTab &&
+                this.initializationStatus.isCompleted &&
+                this._documentInfoCache.scanningStatus.isCompleted
+            ) {
+                console.log("background refresh");
+                this.onTabRefreshRequested(
+                    new UiMessage.Notify.TabRefreshRequested()
+                );
+            }
+        }, 10 * 1000);
     }
 
     dispose() {
@@ -731,7 +743,10 @@ class CodeAnalyticsViewProvider
                 await this._documentInfoProvider.refresh(doc);
             }
 
-            this._activeTab.onRefreshRequested(this._currentCodeObject);
+            this._activeTab.onRefreshRequested(
+                this._currentCodeObject,
+                event.force
+            );
             this._envSelectStatusBar.refreshEnvironment();
         }
     }
