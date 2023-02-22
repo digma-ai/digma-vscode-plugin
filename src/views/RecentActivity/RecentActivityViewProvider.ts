@@ -11,6 +11,7 @@ import { Settings } from "../../settings";
 import { CodeAnalyticsView } from "../codeAnalytics/codeAnalyticsView";
 import { JaegerPanel } from "../codeAnalytics/Jaeger/JaegerPanel";
 import { TracePanel } from "../codeAnalytics/Traces/tracePanel";
+import { getNonce } from "../utils/getNonce";
 
 export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = "recentActivity";
@@ -282,15 +283,4 @@ export class RecentActivityViewProvider implements vscode.WebviewViewProvider {
         </html>
         `;
     }
-}
-
-// TODO: move to utils
-function getNonce() {
-    let text = "";
-    const possible =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }

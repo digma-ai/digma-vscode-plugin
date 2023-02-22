@@ -1,7 +1,5 @@
-export namespace UiMessage
-{
-    export namespace Notify
-    {
+export namespace UiMessage {
+    export namespace Notify {
         export class TabLoaded {
             constructor(public selectedViewId?: string) {}
         }
@@ -10,41 +8,56 @@ export namespace UiMessage
             constructor(public viewId?: string) {}
         }
 
-        export class TabRefreshRequested{
-            
+        export class TabRefreshRequested {
+            constructor(public force?: boolean) {}
         }
 
-        export class ChangeEnvironmentContext{
+        export class ChangeEnvironmentContext {
             constructor(public environment?: string) {}
-
         }
 
-        export class GoToLine{
-            constructor(public line?: number){}
+        export class GoToLine {
+            constructor(public line?: number) {}
         }
 
         export class GoToLineByFrameId {
-            constructor(public frameId?: number){}
+            constructor(public frameId?: number) {}
         }
 
         export class GoToFileAndLine {
-            constructor(public file?: string, public line?:number){}
+            constructor(public file?: string, public line?: number) {}
         }
 
         export class OpenDurationHistogramPanel {
-            constructor(public span?: string, public instrumentationLibrary?: string){}
+            constructor(
+                public span?: string,
+                public instrumentationLibrary?: string
+            ) {}
         }
 
         export class OpenScalingHistogramPanel {
-            constructor(public span?: string, public instrumentationLibrary?: string){}
+            constructor(
+                public span?: string,
+                public instrumentationLibrary?: string
+            ) {}
         }
 
         export class OpenTracePanel {
-            constructor(public traceIds?: string[], public traceLabels?:string[],  public span?:string, public jaegerAddress?:string){}
+            constructor(
+                public traceIds?: string[],
+                public traceLabels?: string[],
+                public span?: string,
+                public jaegerAddress?: string
+            ) {}
         }
 
         export class OpenJaegerPanel {
-          constructor(public traceIds?: string[], public traceLabels? :string[], public span?: string, public jaegerAddress?: string) {}
+            constructor(
+                public traceIds?: string[],
+                public traceLabels?: string[],
+                public span?: string,
+                public jaegerAddress?: string
+            ) {}
         }
 
         export class OpenRawTrace {
@@ -52,11 +65,11 @@ export namespace UiMessage
         }
 
         export class WorkspaceOnlyChanged {
-            constructor(public value?: boolean){}
+            constructor(public value?: boolean) {}
         }
 
         export class ErrorViewVisibilityChanged {
-            constructor(public visible?: boolean){}
+            constructor(public visible?: boolean) {}
         }
 
         export class NavigateErrorFlow {
@@ -64,28 +77,25 @@ export namespace UiMessage
         }
 
         export class OverlayVisibilityChanged {
-            constructor(public visible?: boolean, public id?:string){}
+            constructor(public visible?: boolean, public id?: string) {}
         }
 
         export class SetInsightCustomStartTime {
             constructor(
                 public codeObjectId?: string,
                 public insightType?: string,
-                public time?: Date,
+                public time?: Date
             ) {}
         }
     }
 
-    export namespace Get
-    {
-        export class ErrorDetails{
+    export namespace Get {
+        export class ErrorDetails {
             constructor(public errorSourceUID?: string) {}
         }
-       
     }
 
-    export namespace Set
-    {
+    export namespace Set {
         export class InsightsList {
             constructor(public htmlContent?: string) {}
         }
@@ -98,10 +108,6 @@ export namespace UiMessage
             constructor(public htmlContent?: string) {}
         }
 
-        export class SpanList {
-            constructor(public htmlContent?: string) {}
-        }
-
         export class ErrorsList {
             constructor(public htmlContent?: string) {}
         }
@@ -111,22 +117,20 @@ export namespace UiMessage
         }
 
         export class CurrentStackInfo {
-            constructor(public stackInfo?: {
-                stackNumber: number
-                totalStacks: number
-                canNavigateToPrevious: boolean,
-                canNavigateToNext: boolean,
-            }) {}
+            constructor(
+                public stackInfo?: {
+                    stackNumber: number;
+                    totalStacks: number;
+                    canNavigateToPrevious: boolean;
+                    canNavigateToNext: boolean;
+                }
+            ) {}
         }
 
         export class CodeObjectLabel {
             constructor(public htmlContent?: string) {}
         }
 
-        export class SpanObjectLabel {
-            constructor(public htmlContent?: string) {}
-        }
-        
         export class Overlay {
             constructor(public htmlContent?: string, public id?: string) {}
         }
@@ -137,6 +141,6 @@ export namespace UiMessage
     }
 }
 
-export class SetErrorViewContentUIEvent{
+export class SetErrorViewContentUIEvent {
     constructor(public htmlContent?: string) {}
 }

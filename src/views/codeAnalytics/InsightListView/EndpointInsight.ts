@@ -1,7 +1,6 @@
 import { Uri } from "vscode";
 import { decimal } from "vscode-languageclient";
 import { EndpointSchema } from "../../../services/analyticsProvider";
-import { DocumentInfoProvider } from "../../../services/documentInfoProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { CodeObjectLocationHints } from "../../../services/languages/modulePathToUriConverters";
 import { SpanLinkResolver } from "../../../services/spanLinkResolver";
@@ -152,15 +151,8 @@ export interface HighUsageInsight extends EndpointInsight {
 export interface SlowEndpointInsight extends EndpointInsight {
     endpointsMedian: Duration;
     endpointsMedianOfMedians: Duration;
-    // endpointsMedianOfP75: Duration;
     endpointsP75: Duration;
-    // min: Duration;
-    // max: Duration;
-    // mean: Duration;
     median: Duration;
-    // p75: Duration;
-    // p95: Duration;
-    // p99: Duration;
 }
 
 export class HighUsageListViewItemsCreator
@@ -199,7 +191,6 @@ export class SlowestSpansListViewItemsCreator
     constructor(
         private _viewUris: WebViewUris,
         private _editorHelper: EditorHelper,
-        private _documentInfoProvider: DocumentInfoProvider,
         private _channel: WebviewChannel,
         private _spanLinkResolver: SpanLinkResolver
     ) {
@@ -324,7 +315,6 @@ export class EPNPlusSpansListViewItemsCreator
     constructor(
         private _viewUris: WebViewUris,
         private _editorHelper: EditorHelper,
-        private _documentInfoProvider: DocumentInfoProvider,
         private _channel: WebviewChannel,
         private _spanLinkResolver: SpanLinkResolver
     ) {

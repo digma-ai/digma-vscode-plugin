@@ -3,6 +3,7 @@ import { AnalyticsProvider } from "../../../services/analyticsProvider";
 import { EditorHelper } from "../../../services/EditorHelper";
 import { CodeObjectLocationHints } from "../../../services/languages/modulePathToUriConverters";
 import { SpanLinkResolver } from "../../../services/spanLinkResolver";
+import { getNonce } from "../../utils/getNonce";
 
 interface Message {
     command: string;
@@ -245,14 +246,4 @@ export class JaegerPanel {
 
         return html;
     }
-}
-
-function getNonce() {
-    let text = "";
-    const possible =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
 }
