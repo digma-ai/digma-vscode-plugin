@@ -1,6 +1,11 @@
-import * as vscode from 'vscode';
-import { Settings } from '../../settings';
-import { AffectedSpanPathResponse, ErrorFlowFrame, ErrorFlowSummary, ParamStats } from "../../services/analyticsProvider";
+import * as vscode from "vscode";
+import {
+    AffectedSpanPathResponse,
+    ErrorFlowFrame,
+    ErrorFlowSummary,
+    ParamStats
+} from "../../services/analyticsProvider";
+import { Settings } from "../../settings";
 
 export interface ErrorFlowStackViewModel {
     stacks: StackViewModel[];
@@ -19,7 +24,7 @@ export interface StackViewModel {
 
 export interface FrameViewModel extends ErrorFlowFrame {
     id: number;
-    internalIndex: number;//frameIndex inside the stack
+    internalIndex: number; //frameIndex inside the stack
     selected: boolean;
     workspaceUri?: vscode.Uri;
     parameters: ParamStats[];
@@ -27,31 +32,24 @@ export interface FrameViewModel extends ErrorFlowFrame {
     spanKind: string;
 }
 
-interface AffectedPathViewModel extends AffectedSpanPathResponse{
-
-}
+interface AffectedPathViewModel extends AffectedSpanPathResponse {}
 
 export class ErrorFlowStackRenderer {
+    public constructor(private _viewModel?: ErrorFlowStackViewModel) {}
 
-    public constructor(
-        private _viewModel?: ErrorFlowStackViewModel
-    ) {
-
-    }
-
-    public getContentHtml(): string{
-        if (!this._viewModel?.stacks || this._viewModel.stacks.length===0){
+    public getContentHtml(): string {
+        if (!this._viewModel?.stacks || this._viewModel.stacks.length === 0) {
             return `
                 <br></br>
                 <p>No error flow selected.</p>
                 <span> Please select an error flow from the </span> <span style="font-weight: bold;"> Error Flow List </span> <span>panel to see its details here.</span>`;
         }
-        
-        let summaryHtml = '';
+
+        let summaryHtml = "";
         const summary = this._viewModel?.summary;
-        if(summary !== undefined) {
+        if (summary !== undefined) {
             const frequencyString = `${summary.frequency.avg}/${summary.frequency.unit}`;
-            
+
             summaryHtml = `
                 <div class="property-row" style="min-height:25px">
                     
@@ -73,11 +71,15 @@ export class ErrorFlowStackRenderer {
 
                             <div class="property-col" style?="margin-right:4px;">
                                 <span class="label">First: </span>
-                                <span class="value" title="${summary.firstOccurrenceTime}">${summary.firstOccurrenceTime.fromNow()}</span>
+                                <span class="value" title="${
+                                    summary.firstOccurenceTime
+                                }">${summary.firstOccurenceTime.fromNow()}</span>
                             </div>
                             <div class="property-col" style="margin-right:4px;">
                                 <span class="label">Last: </span>
-                                <span class="value" title="${summary.lastOccurrenceTime}">${summary.lastOccurrenceTime.fromNow()}</span>
+                                <span class="value" title="${
+                                    summary.lastOccurenceTime
+                                }">${summary.lastOccurenceTime.fromNow()}</span>
                             </div>
                             <div class="property-col" >
                                 <span class="label">Frequency: </span>
@@ -109,14 +111,16 @@ export class ErrorFlowStackRenderer {
         return summaryHtml + errorTracesTreeHtml + errorFramesListHtml;
     }
 
-    public getAlias(errorVm: ErrorFlowSummary) : string{
-
+    public getAlias(errorVm: ErrorFlowSummary): string {
         return `${errorVm.exceptionName} from ${errorVm.sourceFunction}`;
     }
 
-    private getFrameSpanToggleHtml():string{
-
-        const disabledState = (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0) ? 'disabled' : ''; 
+    private getFrameSpanToggleHtml(): string {
+        const disabledState =
+            !this._viewModel?.affectedSpanPaths ||
+            this._viewModel?.affectedSpanPaths.length === 0
+                ? "disabled"
+                : "";
 
         return `
         <div style="float:right;min-width:100px;"> 
@@ -129,58 +133,63 @@ export class ErrorFlowStackRenderer {
         </div>  `;
     }
 
-    private getAffectedPathSectionHtml()
-    {
-        const errorService = this._viewModel?.summary?.serviceName ?? '';
-        const errorSpanNames = this._viewModel?.stacks.flatMap(s => s.frames).filter(f => f.internalIndex == 0).map(f => f.spanName) ?? [];
+    private getAffectedPathSectionHtml() {
+        const errorService = this._viewModel?.summary?.serviceName ?? "";
+        const errorSpanNames =
+            this._viewModel?.stacks
+                .flatMap((s) => s.frames)
+                .filter((f) => f.internalIndex == 0)
+                .map((f) => f.spanName) ?? [];
 
-        function getTree(affectedPath: AffectedPathViewModel, level: any): string
-        {
+        function getTree(
+            affectedPath: AffectedPathViewModel,
+            level: any
+        ): string {
             const pathPart = affectedPath.path[level];
-            const exceptionIcon = pathPart.serviceName == errorService && errorSpanNames.includes(pathPart.spanName) 
-                ? '<span style="color: var(--vscode-charts-red);vertical-align: middle;" class="codicon codicon-symbol-event"> </span>'
-                : '';
+            const exceptionIcon =
+                pathPart.serviceName == errorService &&
+                errorSpanNames.includes(pathPart.spanName)
+                    ? '<span style="color: var(--vscode-charts-red);vertical-align: middle;" class="codicon codicon-symbol-event"> </span>'
+                    : "";
 
-            if(level == affectedPath.path.length-1)
-            {
-                return /*html*/`<li>
+            if (level == affectedPath.path.length - 1) {
+                return /*html*/ `<li>
                     <div class="line">
                         <span class="service-name">${pathPart.serviceName}</span>
                         <span class="span-name">${pathPart.spanName}</span>
                         ${exceptionIcon}
                     </div>
                 </li>`;
-            }
-            else
-            {
-               return /*html*/`<li>
+            } else {
+                return /*html*/ `<li>
                     <div class="line has-items">
                         <div class="codicon codicon-chevron-right"></div>
-                        <span class="service-name">${pathPart.serviceName}</span>
+                        <span class="service-name">${
+                            pathPart.serviceName
+                        }</span>
                         <span class="span-name">${pathPart.spanName}</span>
                         ${exceptionIcon}
                     </div>
                     <ul class="collapsed">
-                        ${getTree(affectedPath, level+1)}
+                        ${getTree(affectedPath, level + 1)}
                     </ul>
                 </li>`;
             }
-        };
-
-        if (!this._viewModel?.affectedSpanPaths || this._viewModel?.affectedSpanPaths.length===0){
-            return '';
         }
 
-        let trees = '';
-        for(const affectedPath of this._viewModel?.affectedSpanPaths) 
-        {
-            if(affectedPath.path.length > 1)
-            {
+        if (
+            !this._viewModel?.affectedSpanPaths ||
+            this._viewModel?.affectedSpanPaths.length === 0
+        ) {
+            return "";
+        }
+
+        let trees = "";
+        for (const affectedPath of this._viewModel?.affectedSpanPaths) {
+            if (affectedPath.path.length > 1) {
                 trees += getTree(affectedPath, 0);
-            }
-            else
-            {
-                trees += /*html*/`<li>
+            } else {
+                trees += /*html*/ `<li>
                         <div class="line">
                             <span class="service-name">${affectedPath.path[0].serviceName}</span>
                             <span class="span-name">${affectedPath.path[0].spanName}</span>
@@ -188,7 +197,7 @@ export class ErrorFlowStackRenderer {
                     </li>`;
             }
         }
-        
+
         return /*html*/ `
             <div>
                 <ul class="tree">
@@ -196,25 +205,25 @@ export class ErrorFlowStackRenderer {
                 </ul>
             </div>`;
     }
-    
-    public getFramesListSectionHtml()
-    {
-        const checked = Settings.hideFramesOutsideWorkspace.value ? "checked" : "";
+
+    public getFramesListSectionHtml() {
+        const checked = Settings.hideFramesOutsideWorkspace.value
+            ? "checked"
+            : "";
         let content = undefined;
-        if(this._viewModel)
-        {
-            const stacksHtml = ErrorFlowStackRenderer.getFlowStackHtml(this._viewModel?.stacks);
-            
-            content = stacksHtml 
-                ? /*html*/`<div class="list">${stacksHtml}</div>`
-                : /*html*/`<div class="no-frames-msg">All the frames are outside of the workspace. Uncheck "Workspace only" to show them.</div>`;
-        }
-        else
-        {
-            content = /*html*/`<div class="no-frames-msg">No error flow has been selected.</div>`;
+        if (this._viewModel) {
+            const stacksHtml = ErrorFlowStackRenderer.getFlowStackHtml(
+                this._viewModel?.stacks
+            );
+
+            content = stacksHtml
+                ? /*html*/ `<div class="list">${stacksHtml}</div>`
+                : /*html*/ `<div class="no-frames-msg">All the frames are outside of the workspace. Uncheck "Workspace only" to show them.</div>`;
+        } else {
+            content = /*html*/ `<div class="no-frames-msg">No error flow has been selected.</div>`;
         }
 
-        return /*html*/`
+        return /*html*/ `
             <div>
                 <div class="section-header-row" style="float:right;">
                     <vscode-checkbox class="workspace-only-checkbox" ${checked}>Workspace only</vscode-checkbox>
@@ -224,22 +233,29 @@ export class ErrorFlowStackRenderer {
             </div>`;
     }
 
-    public static getFlowStackHtml(stacks: StackViewModel[])
-    {
+    public static getFlowStackHtml(stacks: StackViewModel[]) {
         // if(Settings.hideFramesOutsideWorkspace.value && stack.frames.every(f => !f.workspaceUri))
         //     return '';
 
-        let html = '';
+        let html = "";
 
         for (const stack of stacks) {
-            let stackHtml = '';
-            const allOutsideWorkspaceClass = stack.frames.every(f => !f.workspaceUri) ? "all-outside-workspace" : "";
-            const hidden = Settings.hideFramesOutsideWorkspace.value && stack.frames.every(f => !f.workspaceUri) ? "hidden" : "";
+            let stackHtml = "";
+            const allOutsideWorkspaceClass = stack.frames.every(
+                (f) => !f.workspaceUri
+            )
+                ? "all-outside-workspace"
+                : "";
+            const hidden =
+                Settings.hideFramesOutsideWorkspace.value &&
+                stack.frames.every((f) => !f.workspaceUri)
+                    ? "hidden"
+                    : "";
             const frames = stack.frames;
-                //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
-            let lastSpan = '';
-            for (const frame of frames ){
-                if (frame.spanName !== lastSpan){
+            //.filter(f => !Settings.hideFramesOutsideWorkspace.value || f.workspaceUri);
+            let lastSpan = "";
+            for (const frame of frames) {
+                if (frame.spanName !== lastSpan) {
                     stackHtml += `
                     <div class="frame-span">
                         <span class="codicon codicon-telescope" title="OpenTelemetry"></span>
@@ -251,7 +267,7 @@ export class ErrorFlowStackRenderer {
                 stackHtml += ErrorFlowStackRenderer.getFrameItemHtml(frame);
             }
 
-            html += /*html*/`
+            html += /*html*/ `
                 <div class="${allOutsideWorkspaceClass}" ${hidden}>
                     <div class="flow-stack-title">${stack.exceptionType}</div>
                     <div class="flow-stack-message">${stack.exceptionMessage}</div>
@@ -263,49 +279,54 @@ export class ErrorFlowStackRenderer {
         return html;
     }
 
-    private static getFrameItemHtml(frame: FrameViewModel)
-    {
+    private static getFrameItemHtml(frame: FrameViewModel) {
         const pathParts = [];
         const modulePath = frame.modulePhysicalPath;
-        if(modulePath) {
+        if (modulePath) {
             pathParts.push(modulePath);
         }
         const functionName = frame.functionName?.trim();
-        if(functionName.length > 0) {
+        if (functionName.length > 0) {
             pathParts.push(functionName);
         }
-        const path = pathParts.join(' in ');
+        const path = pathParts.join(" in ");
         const pathTooltip = frame.workspaceUri?.fsPath ?? modulePath;
 
         const selectedClass = frame.selected ? "selected" : "";
         const disabledClass = frame.workspaceUri ? "" : "disabled";
-        const hidden = Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri ? "hidden" : "";
-        const showExceptionIcon = frame.internalIndex===0;
-        const exceptionHtml = '<span style="color:#f14c4c;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
-        let executedCodeHtml = '';
-        if(frame.executedCode){
+        const hidden =
+            Settings.hideFramesOutsideWorkspace.value && !frame.workspaceUri
+                ? "hidden"
+                : "";
+        const showExceptionIcon = frame.internalIndex === 0;
+        const exceptionHtml =
+            '<span style="color:#f14c4c;margin-right:5px" class="codicon codicon-symbol-event"> </span>';
+        let executedCodeHtml = "";
+        if (frame.executedCode) {
             executedCodeHtml = frame.workspaceUri
-            ? /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.executedCode}">${frame.executedCode}</vscode-link>`
-            : /*html*/`<span class="link-cell look-like-link" title="${frame.executedCode}">${frame.executedCode}</span>`;
-            if (showExceptionIcon){
-                executedCodeHtml = exceptionHtml+executedCodeHtml;
+                ? /*html*/ `<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${frame.executedCode}">${frame.executedCode}</vscode-link>`
+                : /*html*/ `<span class="link-cell look-like-link" title="${frame.executedCode}">${frame.executedCode}</span>`;
+            if (showExceptionIcon) {
+                executedCodeHtml = exceptionHtml + executedCodeHtml;
             }
         }
         let pathHtml = `<div class="left-ellipsis" title="${path}">${path}</div>`;
-        if(executedCodeHtml === ''){
-            if(frame.workspaceUri){
-                pathHtml = /*html*/`<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${pathTooltip}">${path}</vscode-link>`;
+        if (executedCodeHtml === "") {
+            if (frame.workspaceUri) {
+                pathHtml = /*html*/ `<vscode-link class="link-cell" data-frame-id="${frame.id}" title="${pathTooltip}">${path}</vscode-link>`;
             }
-            if (showExceptionIcon){
+            if (showExceptionIcon) {
                 pathHtml = `<div class="frame-code-path">${exceptionHtml}${pathHtml}</div>`;
             }
         }
-        let lineNumberHtml = '';
-        if(frame.lineNumber !== -1) {
+        let lineNumberHtml = "";
+        if (frame.lineNumber !== -1) {
             lineNumberHtml = `<div class="number-cell">line ${frame.lineNumber}</div>`;
         }
-        return /*html*/`
-            <li class="${frame.workspaceUri?'inside-workspace':'outside-workspace'}" ${hidden}>
+        return /*html*/ `
+            <li class="${
+                frame.workspaceUri ? "inside-workspace" : "outside-workspace"
+            }" ${hidden}>
                 <div class="line ${selectedClass} ${disabledClass}">
                     ${pathHtml}
                     <div class="bottom-line">

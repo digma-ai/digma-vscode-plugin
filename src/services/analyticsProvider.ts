@@ -64,7 +64,6 @@ export interface GetRecentActivityResponse {
     entries: ActivityEntry[];
 }
 
-
 type QueryParams = [string, any][] | undefined;
 
 export class EndpointSchema {
@@ -151,8 +150,8 @@ export interface ErrorFlowSummary {
     isNew: boolean;
     frequency: Frequency;
     impact: Impact;
-    lastOccurrenceTime: moment.Moment;
-    firstOccurrenceTime: moment.Moment;
+    lastOccurenceTime: moment.Moment;
+    firstOccurenceTime: moment.Moment;
     unhandled: boolean;
     unexpected: boolean;
     rootSpan: string;
@@ -294,8 +293,8 @@ export interface CodeObjectErrorResponse {
     characteristic: string;
     startsHere: boolean;
     endsHere: boolean;
-    firstOccurrenceTime: moment.Moment;
-    lastOccurrenceTime: moment.Moment;
+    firstOccurenceTime: moment.Moment;
+    lastOccurenceTime: moment.Moment;
 }
 
 export interface CodeObjectError {
@@ -305,8 +304,8 @@ export interface CodeObjectError {
     characteristic: string;
     startsHere: boolean;
     endsHere: boolean;
-    firstOccurrenceTime: moment.Moment;
-    lastOccurrenceTime: moment.Moment;
+    firstOccurenceTime: moment.Moment;
+    lastOccurenceTime: moment.Moment;
     dayAvg: integer;
     handledLocally: boolean;
     score: integer;
@@ -462,10 +461,14 @@ export class AnalyticsProvider {
     }
 
     private getTheme(): string | null {
-        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark) {
+        if (
+            vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark
+        ) {
             return "dark";
         }
-        if (vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light) {
+        if (
+            vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Light
+        ) {
             return "light";
         }
         return null;
