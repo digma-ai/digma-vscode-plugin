@@ -102,7 +102,11 @@ export class InsightsViewTab implements ICodeAnalyticsViewTab {
             }
 
             const methodInfo = docInfo.methods.single(
-                (x) => x.id == codeObject.id
+                (x) =>
+                    x.id == codeObject.id &&
+                    // Check display name for cases when there are multiple
+                    // methods with the same id in the document
+                    x.displayName === codeObject.displayName
             );
             const codeObjectsIds = methodInfo.getIds(true, true);
 
