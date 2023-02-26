@@ -60,13 +60,7 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           
-      - name: commit new version file
-        uses: stefanzweifel/git-auto-commit-action@v4.14.0
-        with:
-          # Commit message
-          commit_message: "bump version"
-          # Commit options (eg. --no-verify)
-          branch: main
+
 
 
 
