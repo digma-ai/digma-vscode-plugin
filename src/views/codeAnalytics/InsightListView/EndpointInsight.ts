@@ -377,20 +377,14 @@ export class EPNPlusSpansListViewItemsCreator
                         </div>
                     </div>
                     <div style="margin-top:0.5em" class="flex-row">
-                    ${
-                        span.internalSpan
-                            ? `
                         <span class="error-property flex-stretch">
                             <span class="label">Impact</span>
                             <span>${fractionSt}</span>
-                        </span>`
-                            : `
+                        </span>
                         <span class="error-property flex-stretch">
                             <span class="label">Repeats</span>
                             <span>${span.occurrences}</span>
                         </span>
-                    `
-                    }
                         <span class="error-property flex-stretch">
                             <span class="label">Duration</span>
                             <span>${span.duration.value} ${

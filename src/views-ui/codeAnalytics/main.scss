@@ -85,6 +85,7 @@ vscode-panel-view {
     padding: 1px 5px 2px 5px;
     border: none;
     color: inherit;
+    height: fit-content;
 
     &:disabled {
         opacity: 0.4;
