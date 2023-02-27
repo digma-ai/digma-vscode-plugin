@@ -348,8 +348,7 @@ export class EPNPlusSpansListViewItemsCreator
             }
 
             let fractionSt = "";
-            const fraction =
-                codeObjectsInsight.spans.firstOrDefault()?.fraction;
+            const fraction = span.fraction;
             if (fraction < 0.01) {
                 fractionSt = "minimal";
             } else {
