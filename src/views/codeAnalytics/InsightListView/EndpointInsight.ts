@@ -332,63 +332,86 @@ export class EPNPlusSpansListViewItemsCreator
     public async createListViewItem(
         codeObjectsInsight: EPNPlusSpansInsight
     ): Promise<IListViewItem> {
-        const spans = codeObjectsInsight.spans.filter((x) => x.internalSpan);
+        const items = [];
+        for (const span of codeObjectsInsight.spans) {
+            let result;
+            if (span.internalSpan) {
+                const hints: CodeObjectLocationHints[] =
+                    this._spanLinkResolver.codeHintsFromSpans([
+                        span.internalSpan
+                    ]);
 
-        const hints: CodeObjectLocationHints[] =
-            this._spanLinkResolver.codeHintsFromSpans(
-                spans.map((x) => x.internalSpan)
+                const spansLocations =
+                    await this._spanLinkResolver.searchForSpansByHints(hints);
+
+                result = spansLocations[0];
+            }
+
+            let fractionSt = "";
+            const fraction =
+                codeObjectsInsight.spans.firstOrDefault()?.fraction;
+            if (fraction < 0.01) {
+                fractionSt = "minimal";
+            } else {
+                fractionSt = `${fraction.toPrecision(1)} of request`;
+            }
+
+            const traceHtml = renderTraceLink(
+                span.traceId,
+                codeObjectsInsight.spanInfo?.name ||
+                    codeObjectsInsight.endpointSpan
             );
 
-        const spansLocations =
-            await this._spanLinkResolver.searchForSpansByHints(hints);
-
-        const items: string[] = [];
-
-        for (let i = 0; i < spansLocations.length; i++) {
-            const result = spansLocations[i];
-            const slowSpan = spans[i];
-
             items.push(`
-                <div class="endpoint-bottleneck-insight" >
-                    <div class="span-name flex-row ${
-                        result ? "link" : ""
-                    }" data-code-uri="${result?.documentUri}" data-code-line="${
-                result?.range.end.line! + 1
-            }">
-                        <span class="left-ellipsis">${
-                            slowSpan.internalSpan.displayName
-                        }</span>
+                <div class="item vertical-spacer">
+                    <div class="endpoint-bottleneck-insight">
+                        <div class="span-name flex-row ${
+                            result ? "link" : ""
+                        }" data-code-uri="${
+                result?.documentUri
+            }" data-code-line="${result?.range.end.line! + 1}">
+                            <span class="left-ellipsis">${
+                                span.internalSpan
+                                    ? span.internalSpan.displayName
+                                    : span.clientSpan.displayName
+                            }</span>
+                        </div>
                     </div>
-                </div>`);
+                    <div style="margin-top:0.5em" class="flex-row">
+                    ${
+                        span.internalSpan
+                            ? `
+                        <span class="error-property flex-stretch">
+                            <span class="label">Impact</span>
+                            <span>${fractionSt}</span>
+                        </span>`
+                            : `
+                        <span class="error-property flex-stretch">
+                            <span class="label">Repeats</span>
+                            <span>${span.occurrences}</span>
+                        </span>
+                    `
+                    }
+                        <span class="error-property flex-stretch">
+                            <span class="label">Duration</span>
+                            <span>${span.duration.value} ${
+                span.duration.unit
+            }</span>
+                        </span>
+                        ${traceHtml}
+                    </div>
+                </div>
+            `);
         }
 
-        const traceHtml = renderTraceLink(
-            codeObjectsInsight.spans.firstOrDefault()?.traceId,
-            codeObjectsInsight.spanInfo?.name || codeObjectsInsight.endpointSpan
-        );
-
-        let fractionSt = "";
-        const fraction = codeObjectsInsight.spans.firstOrDefault()?.fraction;
-        if (fraction < 0.01) {
-            fractionSt = "minimal";
-        } else {
-            fractionSt = `${fraction.toPrecision(1)} of request`;
-        }
-        const statsHtml = `
-        <div style="margin-top:0.5em" class="flex-row">
-                            
-            <span class="error-property flex-stretch">
-                <span class="label">Impact</span>
-                <span>${fractionSt}</span>
-            </span>
-            <span class="error-property flex-stretch">
-                <span class="label">Duration</span>
-                <span>${
-                    codeObjectsInsight.spans.firstOrDefault().duration.value
-                } ${
-            codeObjectsInsight.spans.firstOrDefault().duration.unit
-        }</span>
-            </span>
+        const bodyHtml = /*html*/ `
+            <div class="pagination-list" data-current-page="1" data-records-per-page="1">
+                ${items.join("")}
+                <div class="pagination-nav">
+                    <a class="prev">Prev</a>
+                    <a class="next">Next</a>
+                    <span class="page"></span>
+                </div>
             </div>
         `;
 
@@ -401,11 +424,10 @@ export class EPNPlusSpansListViewItemsCreator
                 },
                 description: "Check the following locations:",
                 icon: this._viewUris.image("sql.png"),
-                body: ` <div>
-                        ${items.join("")}
+                body: `<div>
+                        ${bodyHtml}
                     </div>
-                    ${statsHtml}`,
-                buttons: [traceHtml],
+                   `,
                 insight: codeObjectsInsight
             },
             this._viewUris
