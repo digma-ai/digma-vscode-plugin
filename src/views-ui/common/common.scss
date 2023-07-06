@@ -10,9 +10,11 @@ body {
     border-radius: 2px;
     align-items: center;
     opacity: 0.6;
+
     .codicon {
         font-size: 20px;
     }
+
     .text {
         text-align: center;
     }
@@ -26,9 +28,11 @@ body {
     color: #ff8080;
     background: #ff808012;
     border-radius: 2px;
+
     .codicon {
         font-size: 20px;
     }
+
     .text {
         text-align: center;
     }
@@ -43,29 +47,36 @@ ul.tree {
         list-style-type: none;
         padding-left: 1em;
     }
+
     .collapsed {
         display: none;
     }
+
     .has-items {
         cursor: pointer;
         user-select: none;
     }
+
     .line {
         padding-left: 1.4em;
         padding-top: 0.2em;
         padding-bottom: 0.3em;
         position: relative;
         border-radius: 2px;
+
         &:hover {
             background-color: var(--vscode-list-hoverBackground);
         }
+
         &.selected {
             background: var(--vscode-list-inactiveSelectionBackground);
         }
+
         & > .codicon:first-of-type {
             position: absolute;
             left: 0;
         }
+
         &.has-items.active + * {
             display: block;
         }
@@ -94,6 +105,7 @@ ul.tree {
     padding: 10px;
     border-radius: 2px;
     align-items: center;
+
     vscode-progress-ring {
         width: 20px;
         height: 20px;
@@ -102,24 +114,33 @@ ul.tree {
 
 .link {
     color: var(--link-foreground);
+
     &:hover {
         text-decoration: underline;
         cursor: pointer;
     }
 }
 
-.ellipsis {
+%ellipsis {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+.ellipsis {
+    @extend %ellipsis;
+}
+
 .right-ellipsis {
-    @extend .ellipsis;
+    @extend %ellipsis;
+
     direction: rtl;
     unicode-bidi: plaintext;
 }
+
 .left-ellipsis {
-    @extend .ellipsis;
+    @extend %ellipsis;
+
     direction: rtl;
     text-align: left;
 }
@@ -132,6 +153,7 @@ ul.tree {
     padding: 1px 1px 1px 8px;
     border: 1px solid var(--badge-background);
 }
+
 .filter-tag-label {
     padding-bottom: 3px;
     padding-right: 5px;
@@ -139,12 +161,14 @@ ul.tree {
     white-space: nowrap;
     overflow: hidden;
 }
+
 .filter-tag-close {
     margin: auto;
     border-radius: 10px;
     padding: 2px;
     cursor: pointer;
 }
+
 .filter-tag-close:hover {
     background: var(--button-icon-hover-background);
 }
@@ -162,12 +186,15 @@ ul.tree {
 .flex-max-space-between {
     justify-content: space-between;
 }
+
 .flex-stretch {
     flex: 1;
 }
+
 .flex-wrap {
     flex-wrap: wrap;
 }
+
 .flex-v-center {
     display: flex;
     align-items: center;
