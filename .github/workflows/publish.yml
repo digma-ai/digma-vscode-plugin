@@ -19,13 +19,13 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Ready everything
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
           ref: ${{ github.head_ref }}
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version-file: ".nvmrc"
       - run: npm ci
 
       - name: Get tag
@@ -40,13 +40,13 @@ jobs:
 
       - name: Publish to Visual Studio Marketplace
         id: publishToMarketplace
-        uses: HaaLeo/publish-vscode-extension@v1
+        uses: HaaLeo/publish-vscode-extension@v2
         with:
           pat: ${{ secrets.VS_MARKETPLACE_TOKEN }}
           registryUrl: https://marketplace.visualstudio.com
 
       - name: Publish to Open VSX Registry
-        uses: HaaLeo/publish-vscode-extension@v1
+        uses: HaaLeo/publish-vscode-extension@v2
         with:
           pat: ${{ secrets.OVSX_TOKEN }}
 
