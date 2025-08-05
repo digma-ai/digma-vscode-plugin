@@ -24,7 +24,7 @@ jobs:
 
       - run: npm ci
 
-      - run: npm run compile
+      - run: npm run build
 
       - name: Get artifact name
         id: get-artifact-name
