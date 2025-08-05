@@ -95,14 +95,15 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run build",
     "clean": "rimraf ./out",
-    "compile": "tsc",
+    "build": "tsc",
     "watch": "tsc -w -p ./tsconfig.dev.json",
     "lint": "eslint --cache .",
     "fix:prettier": "prettier --write './**/*.{json,md,ts}'",
     "precommit": "lint-staged",
-    "prepare": "husky"
+    "prepare": "husky",
+    "package": "vsce package"
   },
   "lint-staged": {
     "*.{json,ts}": [
@@ -122,6 +123,7 @@
     "@eslint/js": "^9.32.0",
     "@types/express": "^5.0.3",
     "@types/vscode": "^1.94.0",
+    "@vscode/vsce": "^3.6.0",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
     "jiti": "^2.5.1",

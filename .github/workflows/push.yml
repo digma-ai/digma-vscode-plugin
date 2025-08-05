@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "main"
+      - "next"
     # Github Actions don't support YAML anchors yet, so we have to repeat
     # the paths-ignore in both push and pull_request events.
     # More info: https://github.com/actions/runner/issues/1182
@@ -15,6 +16,7 @@ on:
   pull_request:
     branches:
       - "main"
+      - "next"
     paths-ignore:
       - ".husky/**"
       - ".vscode/**"
@@ -28,7 +30,7 @@ jobs:
       contents: read
     uses: ./.github/workflows/lint.yml
 
-  build-jetbrains:
+  build:
     name: Build
     permissions:
       contents: read
