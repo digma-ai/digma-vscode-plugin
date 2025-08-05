@@ -50,5 +50,3 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: ${{ steps.publishToVSMarketplace.outputs.vsixPath }}
-          asset_name: digma-${{ steps.version.outputs.version }}.vsix
-          tag: ${{ github.ref }}
