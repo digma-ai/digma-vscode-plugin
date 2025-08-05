@@ -95,21 +95,27 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run build",
     "clean": "rimraf ./out",
-    "build": "tsc",
-    "watch": "tsc -w -p ./tsconfig.dev.json",
+    "build:dev": "npm run clean && node esbuild.js",
+    "build:prod": "npm run clean && node esbuild.js --production",
+    "check-types": "tsc --noEmit",
+    "compile:dev": "npm run check-types && npm run build:dev",
+    "compile:prod": "npm run check-types && npm run build:prod",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit -w -p ./tsconfig.dev.json",
     "lint": "eslint --cache .",
-    "fix:prettier": "prettier --write './**/*.{json,md,ts}'",
+    "fix:prettier": "prettier --write './**/*.{js,json,md,ts}'",
     "precommit": "lint-staged",
     "prepare": "husky",
+    "vscode:prepublish": "npm run compile:prod",
     "package": "vsce package"
   },
   "lint-staged": {
-    "*.{json,ts}": [
+    "*.{js,json,ts}": [
       "eslint --cache"
     ],
-    "*.{json,md,ts}": [
+    "*.{js,json,md,ts}": [
       "prettier --write"
     ]
   },
@@ -124,10 +130,13 @@
     "@types/express": "^5.0.3",
     "@types/vscode": "^1.94.0",
     "@vscode/vsce": "^3.6.0",
+    "esbuild": "^0.25.8",
     "eslint": "^9.32.0",
     "eslint-config-prettier": "^10.1.8",
+    "globals": "^16.3.0",
     "jiti": "^2.5.1",
     "lint-staged": "^16.1.4",
+    "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3",

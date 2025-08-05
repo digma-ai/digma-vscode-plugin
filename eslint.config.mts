@@ -1,5 +1,6 @@
 import eslint from "@eslint/js";
 import eslintConfigPrettier from "eslint-config-prettier/flat";
+import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
@@ -15,6 +16,9 @@ export default tseslint.config(
         project: "./tsconfig.eslint.json",
         tsconfigRootDir: import.meta.dirname,
         ecmaVersion: 2023
+      },
+      globals: {
+        ...globals.node
       }
     },
     rules: {
