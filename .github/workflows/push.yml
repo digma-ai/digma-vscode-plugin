@@ -48,6 +48,7 @@ jobs:
         run: echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
       - name: Build
+        id: build
         uses: HaaLeo/publish-vscode-extension@v2
         with:
           dryRun: true
@@ -57,4 +58,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: digma-${{ steps.version.outputs.version }}.vsix
-          path: ${{ steps.publishToVSMarketplace.outputs.vsixPath }}
+          path: ${{ steps.build.outputs.vsixPath }}
