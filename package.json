@@ -1,245 +1,141 @@
 {
-    "name": "digma",
-    "displayName": "Digma Continuous Feedback",
-    "description": "Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
-    "version": "0.5.48",
-    "publisher": "digma",
-    "icon": "digma.png",
-    "engines": {
-        "vscode": "^1.63.0"
+  "name": "digma",
+  "displayName": "Digma Continuous Feedback",
+  "description": "Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
+  "version": "0.6.0",
+  "publisher": "digma",
+  "icon": "digma.png",
+  "engines": {
+    "vscode": "^1.94.0"
+  },
+  "keywords": [
+    "OpenTelemetry",
+    "Observability",
+    "IntelliSense",
+    "IntelliCode",
+    "Flask",
+    "FastAPI",
+    "ASP.NET",
+    "C#",
+    "eBPF",
+    "Jaeger",
+    "Python",
+    "dotnet",
+    "Continuous Delivery",
+    "DevOps"
+  ],
+  "badges": [
+    {
+      "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
+      "description": "Star Digma on GitHub",
+      "href": "bit.ly/36LyUcr"
     },
-    "keywords": [
-        "OpenTelemetry",
-        "Observability",
-        "IntelliSense",
-        "IntelliCode",
-        "Flask",
-        "FastAPI",
-        "ASP.NET",
-        "C#",
-        "eBPF",
-        "Jaeger",
-        "Python",
-        "dotnet",
-        "Continuous Delivery",
-        "DevOps"
-    ],
-    "badges": [
-        {
-            "url": "https://img.shields.io/github/stars/digma-ai/digma?style=social",
-            "description": "Star Digma on GitHub",
-            "href": "bit.ly/36LyUcr"
-        },
-        {
-            "url": "https://img.shields.io/twitter/follow/doppleware?style=social",
-            "description": "Follow us on Twitter",
-            "href": "bit.ly/3reNG2z"
-        },
-        {
-            "url": "https://img.shields.io/visual-studio-marketplace/r/digma.digma?logo=visual-studio-code&style=social",
-            "description": "Rate us in VSCode Marketplace",
-            "href": "bit.ly/36Lzird"
-        },
-        {
-            "url": "https://img.shields.io/youtube/views/MnJIyVVqPDU?style=social",
-            "description": "Watch a Digma demo video",
-            "href": "bit.ly/379pVli"
-        },
-        {
-            "url": "https://img.shields.io/badge/Blog-black?style=flat&logo=medium&logoColor=white&link=https://medium.com/@roni-dover",
-            "description": "Read Digma blog",
-            "href": "https://medium.com/@roni-dover"
-        }
-    ],
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/digma-ai/digma-vscode-plugin"
+    {
+      "url": "https://img.shields.io/twitter/follow/doppleware?style=social",
+      "description": "Follow us on Twitter",
+      "href": "bit.ly/3reNG2z"
     },
-    "bugs": {
-        "url": "https://github.com/digma-ai/digma-vscode-plugin/issues"
+    {
+      "url": "https://img.shields.io/visual-studio-marketplace/r/digma.digma?logo=visual-studio-code&style=social",
+      "description": "Rate us in VSCode Marketplace",
+      "href": "bit.ly/36Lzird"
     },
-    "homepage": "https://github.com/digma-ai/digma-vscode-plugin",
-    "categories": [
-        "Programming Languages",
-        "Visualization",
-        "Linters",
-        "Debuggers"
-    ],
-    "activationEvents": [
-        "onStartupFinished",
-        "onWebviewPanel:codeAnalytics"
-    ],
-    "main": "./out/extension.js",
-    "contributes": {
-        "views": {
-            "codeAnalytics": [
-                {
-                    "type": "webview",
-                    "id": "codeAnalytics",
-                    "name": "Code Analytics"
-                }
-            ],
-            "recentActivity": [
-                {
-                    "type": "webview",
-                    "id": "recentActivity",
-                    "name": "Recent Activity"
-                }
-            ]
-        },
-        "viewsContainers": {
-            "activitybar": [
-                {
-                    "id": "codeAnalytics",
-                    "title": "Digma",
-                    "icon": "icon.png"
-                }
-            ],
-            "panel": [
-                {
-                    "id": "recentActivity",
-                    "title": "Digma",
-                    "icon": "icon.png"
-                }
-            ]
-        },
-        "commands": [
-            {
-                "command": "digma.changeSelectedEnvironment",
-                "title": "Digma: Select deployment environment"
-            }
-        ],
-        "configuration": {
-            "properties": {
-                "digma.enableCodeLens": {
-                    "type": "boolean",
-                    "default": true
-                },
-                "digma.url": {
-                    "type": "string",
-                    "default": "https://localhost:5051"
-                },
-                "digma.jaegerAddress": {
-                    "type": "string"
-                },
-                "digma.jaegerLinkMode": {
-                    "type": "string",
-                    "default": "Internal",
-                    "enum": [
-                        "Internal",
-                        "External",
-                        "Embedded"
-                    ]
-                },
-                "digma.hideFramesOutsideWorkspace": {
-                    "type": "boolean",
-                    "default": true
-                },
-                "digma.sourceControl": {
-                    "type": "string",
-                    "default": "None",
-                    "enum": [
-                        "None",
-                        "Git"
-                    ]
-                },
-                "digma.token": {
-                    "type": "string"
-                },
-                "digma.customHeader": {
-                    "type": "string",
-                    "description": "Specify a custom header to requests sent to Digma server. Useful in case Digma is deployed behind an ingress component, and need be routed (Example: \"Host:digma.loremipsum.com\")."
-                },
-                "digma.enableNotifications": {
-                    "type": "boolean",
-                    "default": false
-                },
-                "digma.enableDebugOutput": {
-                    "type": "boolean",
-                    "default": false,
-                    "description": "For troubleshooting only."
-                }
-            }
-        }
+    {
+      "url": "https://img.shields.io/youtube/views/MnJIyVVqPDU?style=social",
+      "description": "Watch a Digma demo video",
+      "href": "bit.ly/379pVli"
     },
-    "dependencies": {
-        "@vscode/codicons": "0.0.20",
-        "@vscode/webview-ui-toolkit": "^0.8.5",
-        "entities": "^4.4.0",
-        "moment": "^2.29.4",
-        "node-fetch": "^2.6.6",
-        "superfish": "^1.7.10",
-        "vscode-languageclient": "^7.0.0"
-    },
-    "scripts": {
-        "vscode:prepublish": "npm run compile",
-        "clean": "rimraf ./out",
-        "compile": "npm run clean && npm run compile:all && npm run compile:views && npm run compile:sass && npm run copy:js && npm run copy:jaeger && npm run copy:digma-ui",
-        "compile:all": "tsc",
-        "compile:views": "tsc -p ./src/views-ui/codeAnalytics/tsconfig.json",
-        "compile:sass": "sass --no-source-map ./src:./out",
-        "copy:js": "copy-and-watch \"./src/**/*.js\" ./out",
-        "copy:jaeger": "copy-and-watch \"./jaegerUi/**/*.{css,js,svg}\" ./out/views-ui/jaegerUi",
-        "copy:digma-ui": "copy-and-watch \"./digmaUi/**/*.{js,ttf}\" ./out/views-ui/digmaUi",
-        "watch": "npm run watch:all || npm run watch:views || npm run watch:sass || npm run watch:js || npm run watch:jaeger || num run watch:digma-ui",
-        "watch:all": "tsc -w -p ./tsconfig.dev.json",
-        "watch:views": "tsc -w -p ./src/views-ui/codeAnalytics/tsconfig.dev.json",
-        "watch:sass": "sass --watch ./src:./out",
-        "watch:js": "copy-and-watch --watch \"./src/**/*.js\" ./out",
-        "watch:jaeger": "copy-and-watch --watch \"./jaegerUi/**/*.{css,js,svg}\" ./out/views-ui/jaegerUi",
-        "watch:digma-ui": "copy-and-watch --watch \"./digmaUi/**/*.{js,ttf}\" ./out/views-ui/digmaUi",
-        "pretest": "npm run compile && npm run lint",
-        "lint": "eslint src --ext ts",
-        "lint:eslint": "eslint --cache .",
-        "lint:stylelint": "stylelint './src/**/*.scss'",
-        "fix:prettier": "prettier --write './**/*.{js,json,ts,scss}'",
-        "test": "node ./out/test/runTest.js",
-        "precommit": "lint-staged"
-    },
-    "lint-staged": {
-        "*.{js,ts}": [
-            "eslint --cache"
-        ],
-        "src/**/*.scss": [
-            "stylelint"
-        ],
-        "*.{js,json,ts,scss}": [
-            "prettier --write"
-        ]
-    },
-    "devDependencies": {
-        "@types/chai": "^4.3.0",
-        "@types/glob": "^7.1.4",
-        "@types/jquery": "^3.5.14",
-        "@types/mocha": "^9.0.0",
-        "@types/node": "14.x",
-        "@types/node-fetch": "^2.5.10",
-        "@types/vscode": "^1.63.0",
-        "@types/vscode-webview": "^1.57.0",
-        "@typescript-eslint/eslint-plugin": "^5.1.0",
-        "@typescript-eslint/parser": "^5.1.0",
-        "@vscode/test-electron": "^1.6.2",
-        "chai": "^4.3.6",
-        "concurrently": "^7.0.0",
-        "copy-and-watch": "^0.1.6",
-        "eslint": "^8.1.0",
-        "eslint-config-prettier": "^8.6.0",
-        "glob": "^7.1.7",
-        "husky": "^8.0.3",
-        "lint-staged": "^13.2.2",
-        "mocha": "^9.1.3",
-        "prettier": "^2.8.1",
-        "rimraf": "^3.0.2",
-        "sass": "^1.54.4",
-        "stylelint": "^15.10.1",
-        "stylelint-config-standard-scss": "^10.0.0",
-        "typescript": "^4.4.4"
-    },
-    "__metadata": {
-        "id": "2e214876-5bea-4ee6-8026-222de5313d92",
-        "publisherDisplayName": "Digma",
-        "publisherId": "caa21fe0-eb8b-43fd-9197-ae8fb8b1b5df",
-        "isPreReleaseVersion": false
+    {
+      "url": "https://img.shields.io/badge/Blog-black?style=flat&logo=medium&logoColor=white&link=https://medium.com/@roni-dover",
+      "description": "Read Digma blog",
+      "href": "https://medium.com/@roni-dover"
     }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/digma-ai/digma-vscode-plugin"
+  },
+  "bugs": {
+    "url": "https://github.com/digma-ai/digma-vscode-plugin/issues"
+  },
+  "homepage": "https://github.com/digma-ai/digma-vscode-plugin",
+  "categories": [
+    "Programming Languages",
+    "Visualization",
+    "Linters",
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "properties": {
+        "digma.apiUrl": {
+          "type": "string",
+          "default": "https://localhost:5051",
+          "description": "Digma API URL"
+        },
+        "digma.apiToken": {
+          "type": "string",
+          "default": "",
+          "description": "Digma API token"
+        },
+        "digma.login": {
+          "type": "string",
+          "description": "Digma user login"
+        },
+        "digma.password": {
+          "type": "string",
+          "description": "Digma user password"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "clean": "rimraf ./out",
+    "compile": "tsc",
+    "watch": "tsc -w -p ./tsconfig.dev.json",
+    "lint": "eslint --cache .",
+    "fix:prettier": "prettier --write './**/*.{json,md,ts}'",
+    "precommit": "lint-staged",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{json,ts}": [
+      "eslint --cache"
+    ],
+    "*.{json,md,ts}": [
+      "prettier --write"
+    ]
+  },
+  "__metadata": {
+    "id": "2e214876-5bea-4ee6-8026-222de5313d92",
+    "publisherDisplayName": "Digma",
+    "publisherId": "caa21fe0-eb8b-43fd-9197-ae8fb8b1b5df",
+    "isPreReleaseVersion": false
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.32.0",
+    "@types/express": "^5.0.3",
+    "@types/vscode": "^1.94.0",
+    "eslint": "^9.32.0",
+    "eslint-config-prettier": "^10.1.8",
+    "jiti": "^2.5.1",
+    "lint-staged": "^16.1.4",
+    "prettier": "^3.6.2",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.38.0"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "date-fns": "^4.1.0",
+    "express": "^5.1.0",
+    "husky": "^9.1.7",
+    "path-to-regexp": "^8.2.0"
+  }
 }

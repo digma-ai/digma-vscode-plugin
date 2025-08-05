@@ -1,0 +1,22 @@
+name: Lint
+
+on:
+  workflow_call:
+
+jobs:
+  lint:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        id: setup-node
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint

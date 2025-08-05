@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  workflow_call:
+    outputs:
+      artifact-name:
+        value: ${{ jobs.build.outputs.artifact-name }}
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      actions: write
+    runs-on: ubuntu-latest
+    outputs:
+      artifact-name: ${{ steps.get-artifact-name.outputs.artifact_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        id: setup-node
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npm run compile
+
+      - name: Get artifact name
+        id: get-artifact-name
+        run: |
+          git fetch --tags
+          LATEST_TAG=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          NAME="dist-${{ inputs.platform }}-$LATEST_TAG"
+          echo "ARTIFACT_NAME=$NAME" >> $GITHUB_ENV
+          echo "artifact_name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: dist/

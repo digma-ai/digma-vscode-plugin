@@ -1,59 +1,23 @@
-import * as vscode from 'vscode';
+import vscode from "vscode";
+import type { PackageJSON } from "./types";
 
-export enum SourceControlType{
-    None = "None",
-    Git = "Git"
+export interface Settings {
+  apiUrl?: string;
+  apiToken?: string;
+  login?: string;
+  password?: string;
 }
 
-export class SettingsKey<T>
-{
-    constructor(
-        private _key: string,
-        private _defaultValue: T) 
-    {
-    }
+export const getExtensionSettings = (
+  context: vscode.ExtensionContext
+): Settings => {
+  const extensionName = (context.extension.packageJSON as PackageJSON).name;
+  const config = vscode.workspace.getConfiguration(extensionName);
 
-    public get key() : string {
-        return `digma.${this._key}`;
-    }
-
-    public get value() : T {
-        return this.section.get(this._key, this._defaultValue);
-    }
-
-    public async set(value: T): Promise<void>
-    {
-        return await this.section.update(this._key, value);
-    }
-
-    private get section(): vscode.WorkspaceConfiguration{
-        return vscode.workspace.getConfiguration("digma");
-    } 
-}
-
-
-export class Settings 
-{
-    public static readonly url = new SettingsKey('url', '');
-
-    public static readonly enableCodeLens = new SettingsKey('enableCodeLens', true);
-
-    public static readonly enableDebugOutput = new SettingsKey('enableDebugOutput', false);
-
-    // public static readonly environment = new SettingsKey('environment', '');
-
-    public static readonly jaegerAddress = new SettingsKey('jaegerAddress', '');
-    public static readonly jaegerMode = new SettingsKey('jaegerLinkMode', '');
-
-
-    public static readonly hideFramesOutsideWorkspace = new SettingsKey('hideFramesOutsideWorkspace', true);
-
-    public static readonly sourceControl = new SettingsKey('sourceControl', SourceControlType.None);
-   
-    public static readonly token = new SettingsKey('token', '');
-
-    public static readonly customHeader = new SettingsKey('customHeader', '');
-
-    public static readonly enableNotifications = new SettingsKey('enableNotifications', false);
-
-}
+  return {
+    apiUrl: config.get<string>("apiUrl"),
+    apiToken: config.get<string>("apiToken"),
+    login: config.get<string>("login"),
+    password: config.get<string>("password")
+  };
+};
