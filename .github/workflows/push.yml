@@ -51,7 +51,7 @@ jobs:
         uses: HaaLeo/publish-vscode-extension@v2
         with:
           dryRun: true
-          pat: ""
+          pat: "pat" # placeholder for dry run
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
