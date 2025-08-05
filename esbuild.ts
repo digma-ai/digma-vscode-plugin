@@ -28,10 +28,7 @@ async function main() {
   }
 }
 
-/**
- * @type {import('esbuild').Plugin}
- */
-const esbuildProblemMatcherPlugin = {
+const esbuildProblemMatcherPlugin: esbuild.Plugin = {
   name: "esbuild-problem-matcher",
 
   setup(build) {

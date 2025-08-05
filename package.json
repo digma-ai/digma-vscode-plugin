@@ -96,26 +96,26 @@
   },
   "scripts": {
     "clean": "rimraf ./out",
-    "build:dev": "npm run clean && node esbuild.js",
-    "build:prod": "npm run clean && node esbuild.js --production",
+    "build:dev": "npm run clean && node esbuild.ts",
+    "build:prod": "npm run clean && node esbuild.ts --production",
     "check-types": "tsc --noEmit",
     "compile:dev": "npm run check-types && npm run build:dev",
     "compile:prod": "npm run check-types && npm run build:prod",
     "watch": "npm-run-all -p watch:*",
-    "watch:esbuild": "node esbuild.js --watch",
-    "watch:tsc": "tsc --noEmit -w -p ./tsconfig.dev.json",
+    "watch:esbuild": "node esbuild.ts --watch",
+    "watch:tsc": "tsc --noEmit -w",
     "lint": "eslint --cache .",
-    "fix:prettier": "prettier --write './**/*.{js,json,md,ts}'",
+    "fix:prettier": "prettier --write './**/*.{json,md,ts}'",
     "precommit": "lint-staged",
     "prepare": "husky",
     "vscode:prepublish": "npm run compile:prod",
     "package": "vsce package"
   },
   "lint-staged": {
-    "*.{js,json,ts}": [
+    "*.{json,ts}": [
       "eslint --cache"
     ],
-    "*.{js,json,md,ts}": [
+    "*.{json,md,ts}": [
       "prettier --write"
     ]
   },
