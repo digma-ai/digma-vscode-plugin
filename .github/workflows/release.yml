@@ -6,14 +6,8 @@ on:
       - "v*.*.*"
 
 jobs:
-  lint:
-    name: Lint
-    permissions:
-      contents: read
-    uses: ./.github/workflows/lint.yml
-
-  build-publish:
-    name: Build & Publish
+  lint-build-publish:
+    name: Lint & build & publish
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -29,6 +23,8 @@ jobs:
           cache: "npm"
 
       - run: npm ci
+
+      - run: npm run lint
 
       - name: Get version
         id: version
@@ -56,4 +52,3 @@ jobs:
           file: ${{ steps.publishToVSMarketplace.outputs.vsixPath }}
           asset_name: digma-${{ steps.version.outputs.version }}.vsix
           tag: ${{ github.ref }}
-          overwrite: true
