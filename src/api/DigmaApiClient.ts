@@ -39,7 +39,7 @@ export class DigmaApiClient {
   }
 
   private isAuthenticationRequired(url: string): boolean {
-    return this.authEndpoints.some((endpoint) => url.endsWith(endpoint));
+    return this.authEndpoints.some((endpoint) => !url.endsWith(endpoint));
   }
 
   private setupInterceptors(): void {
@@ -47,7 +47,7 @@ export class DigmaApiClient {
     this.instance.interceptors.request.use(
       async (config) => {
         // Skip token check for authentication endpoints
-        if (config.url && this.isAuthenticationRequired(config.url)) {
+        if (config.url && !this.isAuthenticationRequired(config.url)) {
           return config;
         }
 
@@ -76,7 +76,7 @@ export class DigmaApiClient {
         // Skip retry for authentication endpoints to avoid loops
         if (
           originalRequest?.url &&
-          this.isAuthenticationRequired(originalRequest.url)
+          !this.isAuthenticationRequired(originalRequest.url)
         ) {
           return Promise.reject(error);
         }
@@ -114,7 +114,7 @@ export class DigmaApiClient {
 
   private isTokenExpired(session: UserSession): boolean {
     const expiration = new Date(session.expiration).valueOf();
-    return expiration < Date.now();
+    return expiration <= Date.now();
   }
 
   private async handleTokenRefresh(): Promise<void> {
