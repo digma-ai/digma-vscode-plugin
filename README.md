@@ -1,14 +1,6 @@
-# Digma Continuous Feedback
+# Digma agentic AI SRE
 
-Digma is VS Code extension for automatically identifying and fixing performance issues in your code. It enables developers to find the root cause of bottlenecks, scaling problems and query issues in the code.
-
-## Example of issues Digma detects automatically
-
-- Bottlenecks and concurrency anti-patterns
-- Query inefficiencies
-- Scaling problems
-- N+1 Selects
-- Performance regressions
+Autonomous identification, root cause analysis and remediation of code and infrastructure issues
 
 For more info check out our [website](https://digma.ai)
 
@@ -16,12 +8,13 @@ For more info check out our [website](https://digma.ai)
 
 This extension contributes the following settings:
 
-| Key              | Type   | Default                  | Description         |
-| ---------------- | ------ | ------------------------ | ------------------- |
-| `digma.apiUrl`   | string | `https://localhost:5051` | Digma API URL       |
-| `digma.apiToken` | string | -                        | Digma API token     |
-| `digma.login`    | string | -                        | Digma user login    |
-| `digma.password` | string | -                        | Digma user password |
+| Key                       | Type    | Default                  | Description                 |
+| ------------------------- | ------- | ------------------------ | --------------------------- |
+| `digma.url`               | string  | `https://localhost:5051` | API URL                     |
+| `digma.token`             | string  | -                        | API token                   |
+| `digma.login`             | string  | -                        | User login                  |
+| `digma.password`          | string  | -                        | User password               |
+| `digma.copySettingsToMcp` | boolean | false                    | Copy settings to MCP server |
 
 ## Build
 

@@ -2,7 +2,8 @@ import express from "express";
 import net from "net";
 import vscode from "vscode";
 import { DigmaApiClient } from "./api/DigmaApiClient";
-import { getExtensionSettings } from "./settings";
+import { registerMcpServer } from "./registerMcpServer";
+import { SettingsManager } from "./SettingsManager";
 import type { PackageJSON } from "./types";
 import { attachIncidentFileToChatContext } from "./uris/handlers/context";
 import { UriRouter } from "./uris/UriRouter";
@@ -11,6 +12,7 @@ const START_PORT = 33100;
 const END_PORT = 33199;
 
 let digmaClient: DigmaApiClient | null = null;
+// let mcpServerDisposable: vscode.Disposable | null = null;
 
 const findAvailablePort = async (
   start: number,
@@ -37,35 +39,22 @@ const isPortAvailable = (port: number): Promise<boolean> => {
 async function initializeClient(
   context: vscode.ExtensionContext
 ): Promise<void> {
-  const { apiUrl, apiToken, login, password } = getExtensionSettings(context);
+  const settingsManager = new SettingsManager(context);
 
-  if (!apiUrl) {
-    vscode.window.showErrorMessage(
-      "Digma API URL is not configured. Please set it in the extension settings."
-    );
-    return;
-  }
+  const url = await settingsManager.getSetting<string>("url");
+  const token = await settingsManager.getSetting<string>("token");
+  const login = await settingsManager.getSetting<string>("login");
+  const password = await settingsManager.getSetting<string>("password");
 
-  if (!apiToken) {
-    vscode.window.showWarningMessage(
-      "API token is not configured. Please set it in the extension settings."
-    );
-    return;
-  }
-
-  if (!login || !password) {
-    vscode.window.showErrorMessage(
-      "Digma login credentials are not configured. Please set them in the extension settings."
-    );
+  if (!token || !url || !login || !password) {
     return;
   }
 
   // Initialize the client
-  digmaClient = new DigmaApiClient(apiUrl, apiToken);
+  digmaClient = new DigmaApiClient(url, token);
 
   try {
-    await digmaClient.login({ username: login, password });
-    vscode.window.showInformationMessage("Successfully logged in to Digma.");
+    await digmaClient.login({ username: login, password: password });
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error("Digma login failed:", error);
@@ -92,8 +81,35 @@ export async function activate(context: vscode.ExtensionContext) {
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(
     async (event) => {
       const extensionName = (context.extension.packageJSON as PackageJSON).name;
-      if (event.affectsConfiguration(extensionName)) {
+      if (
+        event.affectsConfiguration(`${extensionName}.url`) ||
+        event.affectsConfiguration(`${extensionName}.token`) ||
+        event.affectsConfiguration(`${extensionName}.login`) ||
+        event.affectsConfiguration(`${extensionName}.password`)
+      ) {
+        const settingsManager = new SettingsManager(context);
+        await settingsManager.setSetting("copySettingsToMcp", false);
+
         await initializeClient(context);
+      }
+
+      // Update MCP server configuration
+      if (event.affectsConfiguration(`${extensionName}.copySettingsToMcp`)) {
+        const settingsManager = new SettingsManager(context);
+        const url = await settingsManager.getSetting<string>("url");
+        const token = await settingsManager.getSetting<string>("token");
+        const copySettingsToMcp =
+          await settingsManager.getSetting<boolean>("copySettingsToMcp");
+
+        if (copySettingsToMcp && url && token) {
+          try {
+            registerMcpServer(url, token);
+          } catch (error) {
+            // eslint-disable-next-line no-console
+            console.error("MCP server registration failed:", error);
+            vscode.window.showErrorMessage("Failed to register MCP server.");
+          }
+        }
       }
     }
   );
@@ -165,6 +181,11 @@ export function deactivate() {
   if (digmaClient) {
     digmaClient = null;
   }
+
+  // if (mcpServerDisposable) {
+  //   mcpServerDisposable.dispose();
+  //   mcpServerDisposable = null;
+  // }
 }
 
 export function getDigmaClient(): DigmaApiClient {

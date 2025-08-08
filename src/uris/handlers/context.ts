@@ -4,7 +4,7 @@ import os from "os";
 import path from "path";
 import vscode from "vscode";
 import { getDigmaClient } from "../../extension";
-import { getIdeCommand } from "../../ideCommands";
+import { getIdeCommand } from "../../ides/ideCommands";
 
 export const attachIncidentFileToChatContext = async (incidentId: string) => {
   try {

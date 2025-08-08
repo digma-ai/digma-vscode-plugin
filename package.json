@@ -1,8 +1,8 @@
 {
   "name": "digma",
-  "displayName": "Digma Continuous Feedback",
-  "description": "Code insights and Observability for OpenTelemetry. .NET, Python, more coming soon.",
-  "version": "0.5.48",
+  "displayName": "Digma agentic AI SRE",
+  "description": "Autonomous identification, root cause analysis and remediation of code and infrastructure issues",
+  "version": "0.6.0",
   "publisher": "digma",
   "icon": "digma.png",
   "engines": {
@@ -73,23 +73,35 @@
   "contributes": {
     "configuration": {
       "properties": {
-        "digma.apiUrl": {
+        "digma.url": {
           "type": "string",
+          "title": "URL",
           "default": "https://localhost:5051",
-          "description": "Digma API URL"
+          "description": "API URL",
+          "order": 0
         },
-        "digma.apiToken": {
+        "digma.token": {
           "type": "string",
           "default": "",
-          "description": "Digma API token"
+          "description": "API token",
+          "order": 1
         },
         "digma.login": {
           "type": "string",
-          "description": "Digma user login"
+          "description": "User login",
+          "order": 2
         },
         "digma.password": {
           "type": "string",
-          "description": "Digma user password"
+          "description": "User password",
+          "order": 3
+        },
+        "digma.copySettingsToMcp": {
+          "type": "boolean",
+          "title": "Copy settings to MCP",
+          "default": false,
+          "description": "Copy settings to MCP server",
+          "order": 4
         }
       }
     }
