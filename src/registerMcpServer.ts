@@ -1,44 +1,74 @@
 import * as fs from "fs";
 import * as path from "path";
 import vscode from "vscode";
-import { getIdeFolderUri } from "./ides/getIdeFolderUri";
+import { getGlobalMcpFolderPath } from "./ides/getGlobalMcpFolderPath";
+import { getWorkspaceSettingsFolderPath } from "./ides/getWorkspaceSettingsFolderPath";
 
-export interface MCPServerConfig {
+export interface CursorMCPServerConfig {
+  url: string;
+}
+
+export interface CursorMCPConfig {
+  mcpServers?: Record<string, CursorMCPServerConfig>;
+}
+
+export interface VSCodeMCPServerConfig {
   url: string;
   type?: "http";
 }
 
 export interface VSCodeMCPConfig {
-  servers?: Record<string, MCPServerConfig>;
+  servers?: Record<string, VSCodeMCPServerConfig>;
 }
 
-export interface CursorMCPConfig {
-  mcpServers?: Record<string, MCPServerConfig>;
+export interface WindsurfMCPServerConfig {
+  serverUrl: string;
 }
+
+export interface WindsurfMCPConfig {
+  mcpServers?: Record<string, WindsurfMCPServerConfig>;
+}
+
+export type MCPConfigScope = "workspace" | "global";
 
 const MCP_SERVER_LABEL = "digma";
 
-const updateMcpConfig = (url: string, token: string): void => {
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-  if (!workspaceFolder) {
-    throw new Error("No workspace folder found");
+const getMcpConfigFileName = (ideName: string): string => {
+  switch (ideName) {
+    case "Cursor":
+    case "Visual Studio Code":
+      return "mcp.json";
+    case "Windsurf":
+      return "mcp-config.json";
+    default:
+      throw new Error(`Unsupported IDE: ${ideName}`);
   }
+};
 
+const updateMcpConfig = (
+  url: string,
+  token: string,
+  scope?: vscode.ConfigurationTarget
+): void => {
   const ideName = vscode.env.appName;
-  const ideFolderPath = getIdeFolderUri(ideName)?.fsPath;
 
-  if (!ideFolderPath) {
-    throw new Error(`No settings folder found for IDE: ${ideName}`);
+  let folderPath = getWorkspaceSettingsFolderPath(ideName);
+
+  if (scope === vscode.ConfigurationTarget.Global) {
+    folderPath = getGlobalMcpFolderPath(ideName);
   }
 
-  const mcpConfigPath = path.join(ideFolderPath, "mcp.json");
+  const fileName = getMcpConfigFileName(ideName);
 
-  if (!fs.existsSync(ideFolderPath)) {
-    fs.mkdirSync(ideFolderPath, { recursive: true });
+  const mcpConfigPath = path.join(folderPath, fileName);
+
+  if (!fs.existsSync(folderPath)) {
+    fs.mkdirSync(folderPath, { recursive: true });
   }
 
   const digmaMCPServerUrl = `${url}/mcp/${token}`;
-  let updatedMcpConfig: VSCodeMCPConfig | CursorMCPConfig;
+
+  let updatedMcpConfig: VSCodeMCPConfig | CursorMCPConfig | WindsurfMCPConfig;
 
   if (fs.existsSync(mcpConfigPath)) {
     const configContent = fs.readFileSync(mcpConfigPath, "utf8");
@@ -53,6 +83,40 @@ const updateMcpConfig = (url: string, token: string): void => {
       }
 
       switch (ideName) {
+        case "Cursor": {
+          const parsedConfig = mcpConfig as CursorMCPConfig;
+          const existingServers = parsedConfig.mcpServers ?? {};
+          const existingDigmaServer = existingServers[MCP_SERVER_LABEL] ?? {};
+
+          updatedMcpConfig = {
+            ...parsedConfig,
+            mcpServers: {
+              ...existingServers,
+              [MCP_SERVER_LABEL]: {
+                ...existingDigmaServer,
+                url: digmaMCPServerUrl
+              }
+            }
+          } as CursorMCPConfig;
+          break;
+        }
+        case "Windsurf": {
+          const parsedConfig = mcpConfig as WindsurfMCPConfig;
+          const existingServers = parsedConfig.mcpServers ?? {};
+          const existingDigmaServer = existingServers[MCP_SERVER_LABEL] ?? {};
+
+          updatedMcpConfig = {
+            ...parsedConfig,
+            mcpServers: {
+              ...existingServers,
+              [MCP_SERVER_LABEL]: {
+                ...existingDigmaServer,
+                serverUrl: digmaMCPServerUrl
+              }
+            }
+          } as WindsurfMCPConfig;
+          break;
+        }
         case "Visual Studio Code": {
           const parsedConfig = mcpConfig as VSCodeMCPConfig;
           const existingServers = parsedConfig.servers ?? {};
@@ -71,23 +135,6 @@ const updateMcpConfig = (url: string, token: string): void => {
           } as VSCodeMCPConfig;
           break;
         }
-        case "Cursor": {
-          const parsedConfig = mcpConfig as CursorMCPConfig;
-          const existingServers = parsedConfig.mcpServers ?? {};
-          const existingDigmaServer = existingServers[MCP_SERVER_LABEL] ?? {};
-
-          updatedMcpConfig = {
-            ...parsedConfig,
-            mcpServers: {
-              ...existingServers,
-              [MCP_SERVER_LABEL]: {
-                ...existingDigmaServer,
-                url: digmaMCPServerUrl
-              }
-            }
-          } as CursorMCPConfig;
-          break;
-        }
         default:
           throw new Error(`Unsupported IDE: ${ideName}`);
       }
@@ -100,6 +147,15 @@ const updateMcpConfig = (url: string, token: string): void => {
   } else {
     // Create new config if file doesn't exist
     switch (ideName) {
+      case "Cursor":
+        updatedMcpConfig = {
+          mcpServers: {
+            [MCP_SERVER_LABEL]: {
+              url: digmaMCPServerUrl
+            }
+          }
+        } as CursorMCPConfig;
+        break;
       case "Visual Studio Code":
         updatedMcpConfig = {
           servers: {
@@ -110,14 +166,14 @@ const updateMcpConfig = (url: string, token: string): void => {
           }
         } as VSCodeMCPConfig;
         break;
-      case "Cursor":
+      case "Windsurf":
         updatedMcpConfig = {
           mcpServers: {
             [MCP_SERVER_LABEL]: {
-              url: digmaMCPServerUrl
+              serverUrl: digmaMCPServerUrl
             }
           }
-        } as CursorMCPConfig;
+        } as WindsurfMCPConfig;
         break;
       default:
         throw new Error(`Unsupported IDE: ${ideName}`);
@@ -131,9 +187,13 @@ const updateMcpConfig = (url: string, token: string): void => {
   );
 };
 
-export const registerMcpServer = (url: string, token: string) => {
+export const registerMcpServer = (
+  url: string,
+  token: string,
+  scope?: vscode.ConfigurationTarget
+) => {
   try {
-    updateMcpConfig(url, token);
+    updateMcpConfig(url, token, scope);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     vscode.window.showErrorMessage(

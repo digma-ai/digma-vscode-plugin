@@ -37,10 +37,8 @@ const isPortAvailable = (port: number): Promise<boolean> => {
 };
 
 async function initializeClient(
-  context: vscode.ExtensionContext
+  settingsManager: SettingsManager
 ): Promise<void> {
-  const settingsManager = new SettingsManager(context);
-
   const url = await settingsManager.getSetting<string>("url");
   const token = await settingsManager.getSetting<string>("token");
   const login = await settingsManager.getSetting<string>("login");
@@ -75,7 +73,8 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  await initializeClient(context);
+  const settingsManager = new SettingsManager(context);
+  await initializeClient(settingsManager);
 
   // Listen for configuration changes
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(
@@ -87,23 +86,50 @@ export async function activate(context: vscode.ExtensionContext) {
         event.affectsConfiguration(`${extensionName}.login`) ||
         event.affectsConfiguration(`${extensionName}.password`)
       ) {
-        const settingsManager = new SettingsManager(context);
-        await settingsManager.setSetting("copySettingsToMcp", false);
+        const changedScope = settingsManager.detectChangedScope([
+          "url",
+          "token",
+          "login",
+          "password"
+        ]);
 
-        await initializeClient(context);
+        const copySettingsToMcp = await settingsManager.getSetting<boolean>(
+          "copySettingsToMcp",
+          changedScope
+        );
+
+        if (changedScope && copySettingsToMcp) {
+          await settingsManager.setSetting(
+            "copySettingsToMcp",
+            false,
+            changedScope
+          );
+        }
+
+        await initializeClient(settingsManager);
       }
 
       // Update MCP server configuration
       if (event.affectsConfiguration(`${extensionName}.copySettingsToMcp`)) {
-        const settingsManager = new SettingsManager(context);
-        const url = await settingsManager.getSetting<string>("url");
-        const token = await settingsManager.getSetting<string>("token");
-        const copySettingsToMcp =
-          await settingsManager.getSetting<boolean>("copySettingsToMcp");
+        const changedScope = settingsManager.detectChangedScope([
+          "copySettingsToMcp"
+        ]);
+        const url = await settingsManager.getSetting<string>(
+          "url",
+          changedScope
+        );
+        const token = await settingsManager.getSetting<string>(
+          "token",
+          changedScope
+        );
+        const copySettingsToMcp = await settingsManager.getSetting<boolean>(
+          "copySettingsToMcp",
+          changedScope
+        );
 
-        if (copySettingsToMcp && url && token) {
+        if (changedScope && copySettingsToMcp && url && token) {
           try {
-            registerMcpServer(url, token);
+            registerMcpServer(url, token, changedScope);
           } catch (error) {
             // eslint-disable-next-line no-console
             console.error("MCP server registration failed:", error);
