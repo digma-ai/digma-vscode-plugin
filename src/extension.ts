@@ -6,6 +6,7 @@ import { registerMcpServer } from "./registerMcpServer";
 import { SettingsManager } from "./SettingsManager";
 import type { PackageJSON } from "./types";
 import { attachIncidentFileToChatContext } from "./uris/handlers/context";
+import { openWebviewWithUrl } from "./uris/handlers/webview";
 import { UriRouter } from "./uris/UriRouter";
 
 const START_PORT = 33100;
@@ -13,6 +14,12 @@ const END_PORT = 33199;
 
 let digmaClient: DigmaApiClient | null = null;
 // let mcpServerDisposable: vscode.Disposable | null = null;
+
+const getBaseDomain = (url: string): string => {
+  const hostname = new URL(url).hostname;
+  const parts = hostname.split(".");
+  return parts.slice(-2).join(".");
+};
 
 const findAvailablePort = async (
   start: number,
@@ -63,6 +70,9 @@ async function initializeClient(
 export async function activate(context: vscode.ExtensionContext) {
   const uriRouter = new UriRouter();
 
+  const settingsManager = new SettingsManager(context);
+  await initializeClient(settingsManager);
+
   uriRouter.route(
     "/chat/context/add/file/incident/:incidentId",
     async (params) => {
@@ -73,8 +83,25 @@ export async function activate(context: vscode.ExtensionContext) {
     }
   );
 
-  const settingsManager = new SettingsManager(context);
-  await initializeClient(settingsManager);
+  uriRouter.route("/webview/open", async (_, query) => {
+    const url = query?.url;
+
+    const settingsUrl = await settingsManager.getSetting<string>("url");
+    if (settingsUrl && url) {
+      const settingsBaseDomain = getBaseDomain(settingsUrl);
+      const urlBaseDomain = getBaseDomain(url);
+
+      if (settingsBaseDomain === urlBaseDomain) {
+        openWebviewWithUrl(url);
+      } else {
+        vscode.window.showErrorMessage(
+          "URL must be from the same base domain as configured"
+        );
+      }
+    } else {
+      vscode.window.showErrorMessage("URL parameter is required for webview");
+    }
+  });
 
   // Listen for configuration changes
   const configChangeListener = vscode.workspace.onDidChangeConfiguration(
