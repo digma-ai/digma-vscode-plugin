@@ -1,21 +1,12 @@
 .github/
 .husky/
 .vscode/
-.vscode-test/
-digmaUi/
-jaegerUi/
+node_modules/
 src/
-out/test/
-out/**/*.test.js
-.eslintrc.js
 .gitignore
+.nvmrc
 .prettierignore
 .prettierrc
-.stylelintignore
-.stylelintrc
+esbuild.js
+eslint.config.mts
 tsconfig*.json
-
-# TODO: delete as not used
-workspace.xml
-after.png
-before.png

@@ -1,0 +1,57 @@
+name: Lint & build
+
+on:
+  push:
+    branches:
+      - "main"
+      - "next"
+    # Github Actions don't support YAML anchors yet, so we have to repeat
+    # the paths-ignore in both push and pull_request events.
+    # More info: https://github.com/actions/runner/issues/1182
+    paths-ignore:
+      - ".husky/**"
+      - ".vscode/**"
+      - "LICENSE"
+      - "README.md"
+  pull_request:
+    branches:
+      - "main"
+      - "next"
+    paths-ignore:
+      - ".husky/**"
+      - ".vscode/**"
+      - "LICENSE"
+      - "README.md"
+
+jobs:
+  lint-build:
+    name: Lint & build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          ref: ${{ github.head_ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: ".nvmrc"
+          cache: "npm"
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - name: Build
+        id: build
+        uses: HaaLeo/publish-vscode-extension@v2
+        with:
+          dryRun: true
+          pat: "pat" # placeholder for dry run
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.build.outputs.vsixPath }}
+          path: ${{ steps.build.outputs.vsixPath }}
